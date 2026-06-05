@@ -56,6 +56,44 @@ export default async function SettingsPage() {
 
         <section className="mt-6 rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-sm">
           <h2 className="font-serif text-lg font-semibold tracking-tight">
+            年度稅務報表
+          </h2>
+          <p className="mt-1 text-xs text-[var(--c-muted)]">
+            該年度的賣出 / 配息 / 利息整理成 CSV，給海外所得申報參考。
+            實際申報請對照券商扣繳憑單，本表非官方憑單。
+          </p>
+          <form
+            action="/api/export/tax-csv"
+            method="GET"
+            className="mt-4 flex flex-wrap items-end gap-3"
+          >
+            <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+              年度
+              <select
+                name="year"
+                defaultValue={new Date().getFullYear()}
+                className="mt-1 rounded border border-[var(--c-border)] bg-[var(--c-surface)] px-3 py-2 text-sm text-[var(--c-text)]"
+              >
+                {Array.from({ length: 6 }, (_, i) => new Date().getFullYear() - i).map(
+                  (y) => (
+                    <option key={y} value={y}>
+                      {y}
+                    </option>
+                  ),
+                )}
+              </select>
+            </label>
+            <button
+              type="submit"
+              className="rounded-sm border border-[var(--c-border)] bg-[var(--c-surface)] px-4 py-2 text-sm font-medium text-[var(--c-text)] hover:bg-[var(--c-page)]"
+            >
+              下載 CSV
+            </button>
+          </form>
+        </section>
+
+        <section className="mt-6 rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-sm">
+          <h2 className="font-serif text-lg font-semibold tracking-tight">
             雙因素驗證（MFA）
           </h2>
           <p className="mt-1 text-xs text-[var(--c-muted)]">
