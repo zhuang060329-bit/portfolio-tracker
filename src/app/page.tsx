@@ -10,6 +10,7 @@ import { computeXirr } from "@/lib/xirr";
 import { fetchUsDailyClose } from "@/lib/prices/twelvedata";
 import { fetchUsdTwdHistory } from "@/lib/prices/fx";
 import { getUnreadCount } from "@/lib/notifications";
+import { QuickAddFab } from "@/components/QuickAddFab";
 
 // 抓 0050（FinMind）作為大盤基準。1 小時快取。
 async function fetchTw0050(startDate: string) {
@@ -285,6 +286,20 @@ export default async function Home({
   return (
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active="portfolio" userEmail={user?.email} unreadCount={unreadCount} />
+      {/* FAB 只列非手動 active 帳戶（手動帳戶不適用 addByAmount） */}
+      <QuickAddFab
+        accounts={activeAccounts
+          .filter((a) => a.price_market !== "manual")
+          .map((a) => ({
+            id: a.id,
+            name: a.name,
+            symbol: a.symbol,
+            price_market: a.price_market,
+            native_currency: a.native_currency,
+            last_unit_price: a.last_unit_price,
+            last_fx_rate: a.last_fx_rate,
+          }))}
+      />
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         {/* === 總淨資產 hero === */}
