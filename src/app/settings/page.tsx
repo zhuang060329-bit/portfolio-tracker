@@ -56,6 +56,22 @@ export default async function SettingsPage() {
 
         <section className="mt-6 rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-sm">
           <h2 className="font-serif text-lg font-semibold tracking-tight">
+            What-if 模擬
+          </h2>
+          <p className="mt-1 text-xs text-[var(--c-muted)]">
+            用你實際的投入時點與金額，模擬假設全部買 S&amp;P 500 / Nasdaq 100 / 0050
+            的結果，對比實際組合。
+          </p>
+          <Link
+            href="/whatif"
+            className="mt-4 inline-flex items-center gap-2 rounded-sm border border-[var(--c-border)] bg-[var(--c-surface)] px-3 py-1.5 text-sm text-[var(--c-text)] hover:bg-[var(--c-page)]"
+          >
+            → 開啟模擬器
+          </Link>
+        </section>
+
+        <section className="mt-6 rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-sm">
+          <h2 className="font-serif text-lg font-semibold tracking-tight">
             年度稅務報表
           </h2>
           <p className="mt-1 text-xs text-[var(--c-muted)]">
