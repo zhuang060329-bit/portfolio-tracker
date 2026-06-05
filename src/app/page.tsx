@@ -8,6 +8,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { AllocationTargets, type AllocRow } from "@/components/AllocationTargets";
 import { computeXirr } from "@/lib/xirr";
 import { fetchUsDailyClose } from "@/lib/prices/twelvedata";
+import { fetchUsdTwdHistory } from "@/lib/prices/fx";
 
 // 抓 0050（FinMind）作為大盤基準。1 小時快取。
 async function fetchTw0050(startDate: string) {
@@ -211,49 +212,73 @@ export default async function Home({
   const hasLine = lineData.length >= 2;
   const hasPie = pieData.length >= 1 && total > 0;
 
-  // 大盤對照：從第一筆 snapshot 日開始，平行抓 0050（FinMind）+ SPY/QQQ（TwelveData）。
-  // 全部用原始 close 存進 perfMap，由 client PerformancePanel 依當前範圍 re-normalize。
+  // 大盤對照：從第一筆 snapshot 日開始，平行抓 0050 + SPY/QQQ + USD/TWD 歷史匯率。
+  //
+  // 為什麼要抓匯率？組合用 TWD 估值，SPY/QQQ 是 USD close；如果直接各自 normalize，
+  // 美元匯率變化會偷偷算在組合那邊（美元漲時看起來「我贏 SPY」其實是匯率贏），
+  // 兩條線不在同一個 base。修法：把 SPY/QQQ 的 USD close × 當日匯率換成 TWD 後再存。
+  //
+  // 週末/假日匯率沒資料，用「最近一個交易日」forward-fill。
   const startDate = hasLine ? lineData[0].date : "";
-  const [tw0050, spy, qqq] = hasLine
+  const [tw0050, spyUsd, qqqUsd, fxHistory] = hasLine
     ? await Promise.all([
         fetchTw0050(startDate),
         fetchUsDailyClose("SPY", startDate),
         fetchUsDailyClose("QQQ", startDate),
+        fetchUsdTwdHistory(startDate),
       ])
-    : [[], [], []];
+    : [[], [], [], []];
+
+  // 建立日期 -> 匯率 map，並 forward-fill：
+  // 取日期 d 的匯率時，若 d 本身沒值，用 <= d 的最近一筆。
+  const fxSorted = [...fxHistory].sort((a, b) => a.date.localeCompare(b.date));
+  function fxAt(date: string): number | null {
+    // 線性掃描：fxSorted 通常 <500 筆，效能不是問題。
+    let last: number | null = null;
+    for (const r of fxSorted) {
+      if (r.date <= date) last = r.rate;
+      else break;
+    }
+    return last;
+  }
 
   const perfMap = new Map<string, PerfDatum>();
-  // portfolio 原始 TWD 估值（未 normalize）
+  // portfolio 原始 TWD 估值（未 normalize，由 client 依範圍 re-normalize）
   for (const p of lineData) {
     perfMap.set(p.date, { date: p.date, portfolio: p.value });
   }
-  // 三條 benchmark 用 key 區分
+  // 0050 本身就是 TWD，直接用 close
   for (const r of tw0050) {
     const ex = perfMap.get(r.date) ?? { date: r.date };
     ex.tw0050 = Number(r.close);
     perfMap.set(r.date, ex);
   }
-  for (const r of spy) {
+  // SPY / QQQ 必須換成 TWD 才能跟組合在同一個 base 比較
+  for (const r of spyUsd) {
+    const fx = fxAt(r.date);
+    if (fx === null) continue;
     const ex = perfMap.get(r.date) ?? { date: r.date };
-    ex.spy = Number(r.close);
+    ex.spy = Number(r.close) * fx;
     perfMap.set(r.date, ex);
   }
-  for (const r of qqq) {
+  for (const r of qqqUsd) {
+    const fx = fxAt(r.date);
+    if (fx === null) continue;
     const ex = perfMap.get(r.date) ?? { date: r.date };
-    ex.qqq = Number(r.close);
+    ex.qqq = Number(r.close) * fx;
     perfMap.set(r.date, ex);
   }
   const perfData = [...perfMap.values()].sort((a, b) =>
     a.date.localeCompare(b.date),
   );
   const perfSeries: PerfSeries[] = [
-    { key: "spy", label: "S&P 500（SPY）", color: "#3B82F6", dash: "6 4" },
-    { key: "qqq", label: "Nasdaq 100（QQQ）", color: "#A855F7", dash: "4 4" },
+    { key: "spy", label: "S&P 500（SPY，TWD）", color: "#3B82F6", dash: "6 4" },
+    { key: "qqq", label: "Nasdaq 100（QQQ，TWD）", color: "#A855F7", dash: "4 4" },
     { key: "tw0050", label: "0050（台股）", color: "#10B981", dash: "2 4" },
   ];
   const hasPerf =
     perfData.length >= 2 &&
-    (tw0050.length > 0 || spy.length > 0 || qqq.length > 0);
+    (tw0050.length > 0 || spyUsd.length > 0 || qqqUsd.length > 0);
 
   return (
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
@@ -374,7 +399,7 @@ export default async function Home({
                   績效對照
                 </h2>
                 <p className="mt-1 text-xs text-[var(--c-muted)]">
-                  與 S&amp;P 500、Nasdaq 100、台股 0050 比較。每條線以所選範圍起點 = 100 normalize；點下方標籤可切換顯示。
+                  與 S&amp;P 500、Nasdaq 100、台股 0050 比較。SPY/QQQ 已換算成 TWD，與組合同幣別；每條線以所選範圍起點 = 100 normalize；點下方標籤可切換顯示。
                 </p>
                 <div className="mt-3">
                   <PerformancePanel data={perfData} benchmarks={perfSeries} />

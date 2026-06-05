@@ -63,3 +63,39 @@ export async function fetchUsDailyClose(
     return [];
   }
 }
+
+// USD/TWD 歷史 daily close。給績效對照用：把 USD 計價的 SPY/QQQ
+// 乘上當日 USD/TWD 換算成 TWD 等值再 normalize，否則匯率波動會
+// 算在「我的組合」（TWD 計價）這邊，比較不公平。
+export async function fetchUsdTwdHistory(
+  startDate: string,
+): Promise<Map<string, number>> {
+  const map = new Map<string, number>();
+  if (!startDate) return map;
+  const key = process.env.TWELVE_DATA_API_KEY;
+  if (!key) return map;
+  try {
+    const url =
+      `https://api.twelvedata.com/time_series` +
+      `?symbol=USD/TWD` +
+      `&interval=1day` +
+      `&start_date=${startDate}` +
+      `&order=asc` +
+      `&outputsize=5000` +
+      `&apikey=${key}`;
+    const res = await fetch(url, { next: { revalidate: 3600 } });
+    if (!res.ok) return map;
+    const json = (await res.json()) as {
+      values?: { datetime: string; close: string }[];
+      status?: string;
+    };
+    if (json.status === "error" || !Array.isArray(json.values)) return map;
+    for (const v of json.values) {
+      const fx = Number(v.close);
+      if (Number.isFinite(fx) && fx > 0) map.set(v.datetime, fx);
+    }
+    return map;
+  } catch {
+    return map;
+  }
+}
