@@ -209,7 +209,7 @@ export default function LoginPage() {
         </div>
 
         <p className="mt-4 text-[10px] text-[var(--c-faint)]">
-          本站採邀請制，未在 allowlist 的 email 註冊會被拒絕。請聯絡管理員把你的 email 加入。
+          首次註冊需點擊驗證信中的連結才能登入。
         </p>
       </div>
     </main>

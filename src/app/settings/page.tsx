@@ -53,7 +53,7 @@ export default async function SettingsPage() {
               href="/admin/allowlist"
               className="mt-4 inline-flex items-center gap-2 rounded-sm border border-[var(--c-border)] bg-[var(--c-surface)] px-3 py-1.5 text-sm text-[var(--c-text)] hover:bg-[var(--c-page)]"
             >
-              → 邀請名單管理
+              → 使用者管理
             </Link>
           </section>
         )}

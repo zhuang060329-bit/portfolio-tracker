@@ -4,32 +4,37 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { AppHeader } from "@/components/AppHeader";
 import { isAdmin } from "@/lib/admin";
-import { AllowlistManager, type Row } from "./AllowlistManager";
+import { UsersManager, type UserRow } from "./AllowlistManager";
 
-export default async function AdminAllowlist() {
+export default async function AdminUsers() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // 非 admin 直接 404（不讓他知道有這頁）
   if (!user || !isAdmin(user.email)) {
     notFound();
   }
 
-  // 用 service client 讀 allowed_emails（一般使用者 RLS 全擋）
+  // 用 service-role 列出所有 auth.users（一般 client 無權讀）
   const svc = createServiceClient();
-  const { data } = await svc
-    .from("allowed_emails")
-    .select("email, note, added_at")
-    .order("added_at", { ascending: false });
+  const { data, error } = await svc.auth.admin.listUsers({
+    page: 1,
+    perPage: 200,
+  });
 
-  const rows = (data ?? []) as Row[];
+  const rows: UserRow[] = (data?.users ?? []).map((u) => ({
+    id: u.id,
+    email: u.email ?? "（無 email）",
+    created_at: u.created_at,
+    last_sign_in_at: u.last_sign_in_at ?? null,
+    confirmed: !!u.email_confirmed_at,
+  }));
 
   return (
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active={null} userEmail={user.email} />
-      <main className="mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         <div className="mb-4 text-sm">
           <Link
             href="/settings"
@@ -40,15 +45,22 @@ export default async function AdminAllowlist() {
         </div>
         <header>
           <h1 className="font-serif text-3xl font-semibold tracking-tight">
-            邀請名單
+            使用者管理
           </h1>
           <p className="mt-2 text-sm text-[var(--c-muted)]">
-            管理可以註冊的 email。家人 / 朋友的 email 加進來，他們才能在 /login 建立帳號。
+            已開放註冊，任何 email 都能建立帳號（須驗證信箱）。
+            從這裡看誰註冊了，必要時可以踢出特定帳號。
           </p>
         </header>
 
+        {error && (
+          <p className="mt-4 rounded bg-red-50 dark:bg-red-950/40 px-3 py-2 text-sm text-red-700 dark:text-red-300">
+            讀取使用者列表失敗：{error.message}
+          </p>
+        )}
+
         <div className="mt-6">
-          <AllowlistManager rows={rows} />
+          <UsersManager rows={rows} currentUserId={user.id} />
         </div>
       </main>
     </div>

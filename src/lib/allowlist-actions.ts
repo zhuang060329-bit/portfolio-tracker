@@ -7,63 +7,33 @@ import { isAdmin } from "@/lib/admin";
 
 export type FormState = { error?: string } | undefined;
 
-async function requireAdmin(): Promise<{
-  user: { email: string };
-  error: null;
-} | { user: null; error: string }> {
+async function requireAdmin() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user || !isAdmin(user.email)) {
-    return { user: null, error: "需要 admin 權限" };
+    return { ok: false as const, error: "需要 admin 權限" };
   }
-  return { user: { email: user.email! }, error: null };
+  return { ok: true as const, currentUserId: user.id };
 }
 
-export async function addAllowedEmail(
+// 刪除使用者：呼叫 Supabase Admin API。CASCADE 會清掉該使用者的 profiles / accounts / transactions 等所有資料。
+export async function deleteUser(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const { user, error: authErr } = await requireAdmin();
-  if (!user) return { error: authErr! };
+  const auth = await requireAdmin();
+  if (!auth.ok) return { error: auth.error };
 
-  const email = String(formData.get("email") ?? "").trim().toLowerCase();
-  const noteRaw = String(formData.get("note") ?? "").trim();
-  const note = noteRaw || null;
-
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return { error: "Email 格式不正確" };
+  const userId = String(formData.get("userId") ?? "").trim();
+  if (!userId) return { error: "缺少 userId" };
+  if (userId === auth.currentUserId) {
+    return { error: "不能刪除自己" };
   }
 
   const svc = createServiceClient();
-  const { error } = await svc
-    .from("allowed_emails")
-    .insert({ email, note });
-  if (error) {
-    if (error.code === "23505") return { error: "這個 email 已在名單上" };
-    return { error: error.message };
-  }
-
-  revalidatePath("/admin/allowlist");
-  return undefined;
-}
-
-export async function removeAllowedEmail(
-  _prev: FormState,
-  formData: FormData,
-): Promise<FormState> {
-  const { user, error: authErr } = await requireAdmin();
-  if (!user) return { error: authErr! };
-
-  const email = String(formData.get("email") ?? "").trim().toLowerCase();
-  if (!email) return { error: "缺少 email" };
-
-  const svc = createServiceClient();
-  const { error } = await svc
-    .from("allowed_emails")
-    .delete()
-    .eq("email", email);
+  const { error } = await svc.auth.admin.deleteUser(userId);
   if (error) return { error: error.message };
 
   revalidatePath("/admin/allowlist");
