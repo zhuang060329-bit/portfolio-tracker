@@ -194,6 +194,40 @@ export default async function Home({
         86_400_000
       : 0;
   const xirrShowable = xirr !== null && xirrSpanDays >= 30;
+
+  // 被動收入：dividend + interest 的 cashflow_twd 加總（cashflow > 0 表示收到）。
+  // 拆出來看，比混在「已實現損益」裡更貼近 FIRE 視角。
+  const { data: incomeRows } = await supabase
+    .from("transactions")
+    .select("created_at,type,cashflow_twd")
+    .in("type", ["dividend", "interest"]);
+  const incomeAll = ((incomeRows ?? []) as {
+    created_at: string;
+    type: string;
+    cashflow_twd: number | null;
+  }[]).filter((r) => Number(r.cashflow_twd ?? 0) > 0);
+
+  const nowMs = now.getTime();
+  const ytdStartMs = new Date(`${now.getFullYear()}-01-01T00:00:00+08:00`).getTime();
+  const rolling12mStartMs = nowMs - 365 * 86_400_000;
+
+  let incomeYtd = 0;
+  let incomeRolling12m = 0;
+  let dividendAll = 0;
+  let interestAll = 0;
+  for (const r of incomeAll) {
+    const t = new Date(r.created_at).getTime();
+    const amt = Number(r.cashflow_twd ?? 0);
+    if (t >= ytdStartMs) incomeYtd += amt;
+    if (t >= rolling12mStartMs) incomeRolling12m += amt;
+    if (r.type === "dividend") dividendAll += amt;
+    else if (r.type === "interest") interestAll += amt;
+  }
+  const monthlyAvg12m = incomeRolling12m / 12;
+  // 配息率（年化）：過去 12 個月被動收入 / 現持有成本。成本 = totalCost。
+  const yieldOnCost =
+    totalCost > 0 ? (incomeRolling12m / totalCost) * 100 : 0;
+  const hasIncome = incomeAll.length > 0;
   const latestUpdate = list
     .map((a) => a.last_priced_at)
     .filter((x): x is string => !!x)
@@ -550,6 +584,50 @@ export default async function Home({
                 快照不足 30 天，指標暫不顯示（樣本太少結果不可靠）。
               </p>
             )}
+          </section>
+        )}
+
+        {/* === 被動收入 === */}
+        {hasIncome && (
+          <section className="mt-8 rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-sm">
+            <h2 className="font-serif text-lg font-semibold tracking-tight">
+              被動收入
+            </h2>
+            <p className="mt-1 text-xs text-[var(--c-muted)]">
+              配息與利息合計，從已實現損益中拆出來看。配息率以過去 12 個月被動收入 ÷ 現持有成本估算。
+            </p>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <MetricCard
+                label="今年累積"
+                value={`NT$ ${fmtTwd(incomeYtd)}`}
+                tone="text-emerald-700 dark:text-emerald-400"
+                hint={`${now.getFullYear()} 年 1/1 起`}
+              />
+              <MetricCard
+                label="近 12 個月"
+                value={`NT$ ${fmtTwd(incomeRolling12m)}`}
+                tone="text-emerald-700 dark:text-emerald-400"
+                hint="rolling 12-month"
+              />
+              <MetricCard
+                label="月均"
+                value={`NT$ ${fmtTwd(monthlyAvg12m)}`}
+                hint="近 12 個月 ÷ 12"
+              />
+              <MetricCard
+                label="配息率（YoC）"
+                value={`${yieldOnCost.toFixed(2)}%`}
+                tone={
+                  yieldOnCost >= 4
+                    ? "text-emerald-700 dark:text-emerald-400"
+                    : "text-[var(--c-muted)]"
+                }
+                hint="年化配息 / 持有成本"
+              />
+            </div>
+            <p className="mt-3 text-[10px] text-[var(--c-faint)]">
+              累計 配息 NT$ {fmtTwd(dividendAll)} · 利息 NT$ {fmtTwd(interestAll)}
+            </p>
           </section>
         )}
 
