@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AccountActions } from "./AccountActions";
 import { RecurringPlans, type Plan } from "./RecurringPlans";
-import { NetWorthLine } from "@/components/PortfolioCharts";
+import { NetWorthPanel } from "@/components/NetWorthPanel";
 import { AppHeader } from "@/components/AppHeader";
 import { computeXirr } from "@/lib/xirr";
 
@@ -285,7 +285,7 @@ export default async function AccountDetail({
                 此帳戶每日估值（基於 account_snapshots）
               </p>
               <div className="mt-3">
-                <NetWorthLine data={lineData} />
+                <NetWorthPanel data={lineData} />
               </div>
             </div>
           </section>

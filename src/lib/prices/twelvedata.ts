@@ -28,3 +28,38 @@ export const twelveDataProvider: PriceProvider = {
     };
   },
 };
+
+// 美股歷史 daily close。用來畫基準線（S&P 500 / Nasdaq 100）。
+// 回傳 [{date: 'YYYY-MM-DD', close: number}]，依日期由舊到新排序。
+// startDate 格式 'YYYY-MM-DD'。失敗回空陣列（前端會 fallback）。
+export async function fetchUsDailyClose(
+  symbol: string,
+  startDate: string,
+): Promise<{ date: string; close: number }[]> {
+  if (!startDate) return [];
+  const key = process.env.TWELVE_DATA_API_KEY;
+  if (!key) return [];
+  try {
+    // Twelve Data time_series；用 outputsize=5000 拿夠久。
+    const url =
+      `https://api.twelvedata.com/time_series` +
+      `?symbol=${encodeURIComponent(symbol)}` +
+      `&interval=1day` +
+      `&start_date=${startDate}` +
+      `&order=asc` +
+      `&outputsize=5000` +
+      `&apikey=${key}`;
+    const res = await fetch(url, { next: { revalidate: 3600 } });
+    if (!res.ok) return [];
+    const json = (await res.json()) as {
+      values?: { datetime: string; close: string }[];
+      status?: string;
+    };
+    if (json.status === "error" || !Array.isArray(json.values)) return [];
+    return json.values
+      .map((v) => ({ date: v.datetime, close: Number(v.close) }))
+      .filter((r) => Number.isFinite(r.close) && r.close > 0);
+  } catch {
+    return [];
+  }
+}

@@ -140,17 +140,53 @@ export function NetWorthLine({ data }: { data: LineDatum[] }) {
   );
 }
 
-// 投資組合 vs 基準（normalized 起點 = 100）
-type NormDatum = { date: string; portfolio?: number; benchmark?: number };
+// 投資組合 vs 多基準（normalized 起點 = 100）。
+// data 一列 = 一個日期；portfolio 為必出現的 key，其他 benchmark 由 series 定義動態渲染。
+// date 是字串，其餘動態 key 都是 number | undefined；用聯合型別避免 index signature 把 date 拖下水。
+export type PerfDatum = {
+  date: string;
+  portfolio?: number;
+  [key: string]: number | string | undefined;
+};
+
+export type PerfSeries = {
+  key: string;
+  label: string;
+  color: string;
+  dash?: string;
+};
+
 export function PerformanceLine({
   data,
-  benchmarkName,
+  benchmarks,
 }: {
-  data: NormDatum[];
-  benchmarkName: string;
+  data: PerfDatum[];
+  benchmarks: PerfSeries[];
 }) {
+  // 動態算 Y 軸範圍：把所有 series 的值掃過去，給 ±2% 緩衝，避免折線壓在軸線。
+  const allVals: number[] = [];
+  for (const d of data) {
+    if (typeof d.portfolio === "number") allVals.push(d.portfolio);
+    for (const b of benchmarks) {
+      const v = d[b.key];
+      if (typeof v === "number") allVals.push(v);
+    }
+  }
+  const minV = allVals.length ? Math.min(...allVals) : 95;
+  const maxV = allVals.length ? Math.max(...allVals) : 105;
+  const pad = Math.max(1, (maxV - minV) * 0.1);
+  const yDomain: [number, number] = [
+    Math.floor(minV - pad),
+    Math.ceil(maxV + pad),
+  ];
+
+  const labelMap = Object.fromEntries(
+    benchmarks.map((b) => [b.key, b.label]),
+  );
+  labelMap["portfolio"] = "我的組合";
+
   return (
-    <ResponsiveContainer width="100%" height={280}>
+    <ResponsiveContainer width="100%" height={300}>
       <LineChart data={data} margin={{ top: 10, right: 16, left: 8, bottom: 0 }}>
         <CartesianGrid stroke="var(--c-border)" strokeDasharray="3 3" vertical={false} />
         <XAxis
@@ -168,11 +204,12 @@ export function PerformanceLine({
           axisLine={{ stroke: "var(--c-border)" }}
           tickLine={false}
           width={48}
+          domain={yDomain}
         />
         <Tooltip
           formatter={(v, name) => [
             `${Number(v).toFixed(2)} (${(Number(v) - 100 >= 0 ? "+" : "−")}${Math.abs(Number(v) - 100).toFixed(2)}%)`,
-            name === "portfolio" ? "我的組合" : benchmarkName,
+            labelMap[String(name)] ?? String(name),
           ]}
           labelStyle={{ color: "var(--c-text)", fontSize: 12 }}
           contentStyle={{
@@ -186,9 +223,7 @@ export function PerformanceLine({
           verticalAlign="bottom"
           iconType="line"
           wrapperStyle={{ fontSize: 12, color: "var(--c-muted)" }}
-          formatter={(value) =>
-            value === "portfolio" ? "我的組合" : benchmarkName
-          }
+          formatter={(value) => labelMap[String(value)] ?? String(value)}
         />
         <Line
           type="monotone"
@@ -198,17 +233,22 @@ export function PerformanceLine({
           dot={false}
           activeDot={{ r: 6 }}
           connectNulls
+          isAnimationActive={false}
         />
-        <Line
-          type="monotone"
-          dataKey="benchmark"
-          stroke="#3B82F6"
-          strokeWidth={2}
-          strokeDasharray="6 4"
-          dot={false}
-          activeDot={{ r: 5 }}
-          connectNulls
-        />
+        {benchmarks.map((b) => (
+          <Line
+            key={b.key}
+            type="monotone"
+            dataKey={b.key}
+            stroke={b.color}
+            strokeWidth={2}
+            strokeDasharray={b.dash ?? "6 4"}
+            dot={false}
+            activeDot={{ r: 5 }}
+            connectNulls
+            isAnimationActive={false}
+          />
+        ))}
       </LineChart>
     </ResponsiveContainer>
   );

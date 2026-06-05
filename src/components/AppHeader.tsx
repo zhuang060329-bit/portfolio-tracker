@@ -18,7 +18,7 @@ export function AppHeader({
             href="/"
             className="font-serif text-lg font-semibold tracking-tight text-[var(--c-text)]"
           >
-            Portfolio Tracker
+            StackWorth
           </Link>
           <nav className="hidden h-full items-center md:flex">
             <NavItem href="/" active={active === "portfolio"} label="總覽" />

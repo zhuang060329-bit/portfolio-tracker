@@ -91,7 +91,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] p-8 shadow-sm">
         <div className="flex flex-col gap-2">
           <h1 className="font-serif text-2xl font-semibold tracking-tight text-[var(--c-text)]">
-            Portfolio Tracker
+            StackWorth
           </h1>
           <p className="text-sm text-[var(--c-muted)]">
             {mode === "signUp"

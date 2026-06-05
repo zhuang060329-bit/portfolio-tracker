@@ -1,6 +1,6 @@
 {
-  "name": "Portfolio Tracker",
-  "short_name": "Portfolio",
+  "name": "StackWorth",
+  "short_name": "StackWorth",
   "description": "個人投資組合追蹤工具",
   "start_url": "/",
   "scope": "/",

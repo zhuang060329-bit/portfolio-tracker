@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import {
-  AllocationPie,
-  NetWorthLine,
-  PerformanceLine,
-} from "@/components/PortfolioCharts";
+import { AllocationPie } from "@/components/PortfolioCharts";
+import type { PerfDatum, PerfSeries } from "@/components/PortfolioCharts";
+import { NetWorthPanel } from "@/components/NetWorthPanel";
+import { PerformancePanel } from "@/components/PerformancePanel";
 import { AppHeader } from "@/components/AppHeader";
 import { AllocationTargets, type AllocRow } from "@/components/AllocationTargets";
 import { computeXirr } from "@/lib/xirr";
+import { fetchUsDailyClose } from "@/lib/prices/twelvedata";
 
 // 抓 0050（FinMind）作為大盤基準。1 小時快取。
 async function fetchTw0050(startDate: string) {
@@ -211,34 +211,49 @@ export default async function Home({
   const hasLine = lineData.length >= 2;
   const hasPie = pieData.length >= 1 && total > 0;
 
-  // 大盤對照：抓 0050 從第一筆 snapshot 日開始
-  const benchRows = hasLine ? await fetchTw0050(lineData[0].date) : [];
-  const portBase = lineData[0]?.value ?? 0;
-  const benchBase = benchRows[0]?.close ?? 0;
-  const perfMap = new Map<
-    string,
-    { date: string; portfolio?: number; benchmark?: number }
-  >();
-  if (portBase > 0) {
-    for (const p of lineData) {
-      perfMap.set(p.date, {
-        date: p.date,
-        portfolio: (p.value / portBase) * 100,
-      });
-    }
+  // 大盤對照：從第一筆 snapshot 日開始，平行抓 0050（FinMind）+ SPY/QQQ（TwelveData）。
+  // 全部用原始 close 存進 perfMap，由 client PerformancePanel 依當前範圍 re-normalize。
+  const startDate = hasLine ? lineData[0].date : "";
+  const [tw0050, spy, qqq] = hasLine
+    ? await Promise.all([
+        fetchTw0050(startDate),
+        fetchUsDailyClose("SPY", startDate),
+        fetchUsDailyClose("QQQ", startDate),
+      ])
+    : [[], [], []];
+
+  const perfMap = new Map<string, PerfDatum>();
+  // portfolio 原始 TWD 估值（未 normalize）
+  for (const p of lineData) {
+    perfMap.set(p.date, { date: p.date, portfolio: p.value });
   }
-  if (benchBase > 0) {
-    for (const b of benchRows) {
-      const ex = perfMap.get(b.date);
-      const benchVal = (Number(b.close) / benchBase) * 100;
-      if (ex) ex.benchmark = benchVal;
-      else perfMap.set(b.date, { date: b.date, benchmark: benchVal });
-    }
+  // 三條 benchmark 用 key 區分
+  for (const r of tw0050) {
+    const ex = perfMap.get(r.date) ?? { date: r.date };
+    ex.tw0050 = Number(r.close);
+    perfMap.set(r.date, ex);
+  }
+  for (const r of spy) {
+    const ex = perfMap.get(r.date) ?? { date: r.date };
+    ex.spy = Number(r.close);
+    perfMap.set(r.date, ex);
+  }
+  for (const r of qqq) {
+    const ex = perfMap.get(r.date) ?? { date: r.date };
+    ex.qqq = Number(r.close);
+    perfMap.set(r.date, ex);
   }
   const perfData = [...perfMap.values()].sort((a, b) =>
     a.date.localeCompare(b.date),
   );
-  const hasPerf = perfData.length >= 2 && benchRows.length > 0;
+  const perfSeries: PerfSeries[] = [
+    { key: "spy", label: "S&P 500（SPY）", color: "#3B82F6", dash: "6 4" },
+    { key: "qqq", label: "Nasdaq 100（QQQ）", color: "#A855F7", dash: "4 4" },
+    { key: "tw0050", label: "0050（台股）", color: "#10B981", dash: "2 4" },
+  ];
+  const hasPerf =
+    perfData.length >= 2 &&
+    (tw0050.length > 0 || spy.length > 0 || qqq.length > 0);
 
   return (
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
@@ -344,7 +359,7 @@ export default async function Home({
                 </p>
                 <div className="mt-3">
                   {hasLine ? (
-                    <NetWorthLine data={lineData} />
+                    <NetWorthPanel data={lineData} />
                   ) : (
                     <div className="flex h-[260px] items-center justify-center text-sm text-[var(--c-faint)]">
                       明天會有第二筆快照，折線才會出現。
@@ -356,13 +371,13 @@ export default async function Home({
             {hasPerf && (
               <div className="rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-sm">
                 <h2 className="font-serif text-lg font-semibold tracking-tight">
-                  績效對照 0050
+                  績效對照
                 </h2>
                 <p className="mt-1 text-xs text-[var(--c-muted)]">
-                  兩條線都以起點 = 100 normalize；高於 100 代表報酬為正、低於則為負。
+                  與 S&amp;P 500、Nasdaq 100、台股 0050 比較。每條線以所選範圍起點 = 100 normalize；點下方標籤可切換顯示。
                 </p>
                 <div className="mt-3">
-                  <PerformanceLine data={perfData} benchmarkName="0050（台股）" />
+                  <PerformancePanel data={perfData} benchmarks={perfSeries} />
                 </div>
               </div>
             )}
