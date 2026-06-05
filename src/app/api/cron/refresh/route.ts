@@ -1,0 +1,158 @@
+import { NextResponse } from "next/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { createServiceClient } from "@/lib/supabase/service";
+import { getQuote } from "@/lib/prices/router";
+import { todayTaipei } from "@/lib/dates";
+import type { Market } from "@/lib/prices/types";
+import {
+  applyContribution,
+  nextMonthlyAfter,
+  type ContributionAccount,
+} from "@/lib/contributions";
+
+// Vercel Cron 每日呼叫此路由。
+// 1) 刷所有非手動帳戶的最新市價（更新 accounts.last_* + upsert 今日 snapshot）。
+// 2) 執行所有 active 且 next_run_date <= today 的定期定額計劃。
+// Vercel 會自動帶 Authorization: Bearer ${CRON_SECRET} 進來，cron 路由須驗。
+
+// 強制動態，不被 build-time 預渲染。
+export const dynamic = "force-dynamic";
+
+async function refreshAccountPrices(supabase: SupabaseClient) {
+  const { data, error } = await supabase
+    .from("accounts")
+    .select("id,user_id,price_market,symbol,quantity")
+    .neq("price_market", "manual")
+    .not("symbol", "is", null)
+    .eq("status", "active");
+  if (error) return { ok: 0, failed: 0, errors: [error.message] };
+
+  let ok = 0;
+  let failed = 0;
+  const errors: string[] = [];
+  for (const acc of data ?? []) {
+    try {
+      const quote = await getQuote(
+        acc.price_market as Market,
+        acc.symbol as string,
+        "TWD",
+      );
+      const qty = Number(acc.quantity);
+      const valueBase = qty * quote.unitPrice * quote.fxToBase;
+
+      await supabase
+        .from("accounts")
+        .update({
+          last_unit_price: quote.unitPrice,
+          last_fx_rate: quote.fxToBase,
+          last_priced_at: quote.asOf,
+        })
+        .eq("id", acc.id);
+
+      await supabase.from("account_snapshots").upsert(
+        {
+          user_id: acc.user_id,
+          account_id: acc.id,
+          snapshot_date: todayTaipei(),
+          quantity: qty,
+          unit_price: quote.unitPrice,
+          fx_rate: quote.fxToBase,
+          value_base: valueBase,
+        },
+        { onConflict: "account_id,snapshot_date" },
+      );
+
+      ok++;
+    } catch (e) {
+      failed++;
+      errors.push(`${acc.symbol}: ${(e as Error).message}`);
+    }
+  }
+  return { ok, failed, errors };
+}
+
+async function runDuePlans(supabase: SupabaseClient) {
+  const today = todayTaipei();
+  const { data, error } = await supabase
+    .from("recurring_plans")
+    .select("id,user_id,account_id,amount_twd,day_of_month,next_run_date")
+    .eq("active", true)
+    .lte("next_run_date", today);
+  if (error) return { ok: 0, failed: 0, errors: [error.message] };
+
+  let ok = 0;
+  let failed = 0;
+  const errors: string[] = [];
+  for (const plan of data ?? []) {
+    try {
+      const { data: account, error: aErr } = await supabase
+        .from("accounts")
+        .select(
+          "id,user_id,price_market,symbol,quantity,native_currency,last_unit_price,last_fx_rate,cost_basis_twd,cost_basis_native,realized_pnl_twd,status",
+        )
+        .eq("id", plan.account_id)
+        .single();
+      if (aErr || !account) {
+        failed++;
+        errors.push(`plan ${plan.id}: 找不到帳戶`);
+        continue;
+      }
+      if (account.status === "archived") {
+        failed++;
+        errors.push(`plan ${plan.id}: 帳戶已歸檔，跳過`);
+        continue;
+      }
+
+      const res = await applyContribution({
+        supabase,
+        userId: plan.user_id,
+        account: account as ContributionAccount,
+        twd: Number(plan.amount_twd),
+        priceOverride: null,
+        fxOverride: null,
+        occurredAt: new Date(),
+        noteSuffix: "定期定額(cron)",
+      });
+      if (!res.ok) {
+        failed++;
+        errors.push(`plan ${plan.id}: ${res.error}`);
+        continue;
+      }
+
+      await supabase
+        .from("recurring_plans")
+        .update({
+          last_run_date: today,
+          next_run_date: nextMonthlyAfter(today, plan.day_of_month),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", plan.id);
+
+      ok++;
+    } catch (e) {
+      failed++;
+      errors.push(`plan ${plan.id}: ${(e as Error).message}`);
+    }
+  }
+  return { ok, failed, errors };
+}
+
+export async function GET(request: Request) {
+  const auth = request.headers.get("authorization");
+  const expected = `Bearer ${process.env.CRON_SECRET ?? ""}`;
+  if (!process.env.CRON_SECRET || auth !== expected) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  const supabase = createServiceClient();
+  const refresh = await refreshAccountPrices(supabase);
+  const plans = await runDuePlans(supabase);
+
+  return NextResponse.json({
+    ok: true,
+    at: new Date().toISOString(),
+    today: todayTaipei(),
+    refresh,
+    plans,
+  });
+}

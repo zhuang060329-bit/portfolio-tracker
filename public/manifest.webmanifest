@@ -1,0 +1,20 @@
+{
+  "name": "Portfolio Tracker",
+  "short_name": "Portfolio",
+  "description": "個人投資組合追蹤工具",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F5F4EE",
+  "theme_color": "#C96342",
+  "lang": "zh-Hant",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

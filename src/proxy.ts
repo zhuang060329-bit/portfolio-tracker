@@ -1,0 +1,15 @@
+import { type NextRequest } from "next/server";
+import { updateSession } from "@/lib/supabase/proxy";
+
+// Next 16 的 Proxy（前身為 Middleware）。每個 request 先刷新 Supabase session，
+// 未登入則導向 /login。
+export async function proxy(request: NextRequest) {
+  return await updateSession(request);
+}
+
+export const config = {
+  // 排除靜態資源、圖檔與 cron route（cron 自己驗 CRON_SECRET）。其餘路徑都跑 proxy。
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|api/cron|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
+};
