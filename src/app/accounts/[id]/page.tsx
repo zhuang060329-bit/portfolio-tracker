@@ -6,6 +6,7 @@ import { RecurringPlans, type Plan } from "./RecurringPlans";
 import { NetWorthPanel } from "@/components/NetWorthPanel";
 import { AppHeader } from "@/components/AppHeader";
 import { computeXirr } from "@/lib/xirr";
+import { getUnreadCount } from "@/lib/notifications";
 
 const MARKET_LABEL: Record<string, string> = {
   us: "美股",
@@ -56,6 +57,7 @@ export default async function AccountDetail({
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const unreadCount = await getUnreadCount();
 
   const { data: account } = await supabase
     .from("accounts")
@@ -156,7 +158,7 @@ export default async function AccountDetail({
 
   return (
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
-      <AppHeader active="accounts" userEmail={user?.email} />
+      <AppHeader active="accounts" userEmail={user?.email} unreadCount={unreadCount} />
 
       <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         <div className="mb-4 text-sm">

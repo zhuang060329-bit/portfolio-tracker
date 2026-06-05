@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { AppHeader } from "@/components/AppHeader";
+import { getUnreadCount } from "@/lib/notifications";
 
 export default async function NewAccountIndex() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const unreadCount = await getUnreadCount();
 
   const items = [
     {
@@ -31,7 +33,7 @@ export default async function NewAccountIndex() {
 
   return (
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
-      <AppHeader active="accounts" userEmail={user?.email} />
+      <AppHeader active="accounts" userEmail={user?.email} unreadCount={unreadCount} />
       <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         <div className="mb-4 text-sm">
           <Link href="/" className="text-[var(--c-muted)] hover:text-[var(--c-text)]">

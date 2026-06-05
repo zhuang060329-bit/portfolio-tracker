@@ -9,6 +9,7 @@ import {
   nextMonthlyAfter,
   type ContributionAccount,
 } from "@/lib/contributions";
+import { scanAlerts } from "@/lib/alerts-scan";
 
 // Vercel Cron 每日呼叫此路由。
 // 1) 刷所有非手動帳戶的最新市價（更新 accounts.last_* + upsert 今日 snapshot）。
@@ -147,6 +148,8 @@ export async function GET(request: Request) {
   const supabase = createServiceClient();
   const refresh = await refreshAccountPrices(supabase);
   const plans = await runDuePlans(supabase);
+  // 抓完價、跑完定期定額之後再掃警示，這樣警示用到的是當天最新的資料。
+  const alerts = await scanAlerts(supabase);
 
   return NextResponse.json({
     ok: true,
@@ -154,5 +157,6 @@ export async function GET(request: Request) {
     today: todayTaipei(),
     refresh,
     plans,
+    alerts,
   });
 }

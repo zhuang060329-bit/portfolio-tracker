@@ -10,6 +10,7 @@
 | 4 | `realized-pnl-cashflow.sql` | enum 加 sell/dividend/interest + `accounts.realized_pnl_twd` + `transactions.{realized_pnl, cashflow_twd}` | ✅ |
 | 5 | `batch2-schema.sql` | `accounts.{status, cost_basis_native}` + `profiles.allocation_targets` | ✅ |
 | 6 | `open-signup.sql` | 移除舊版的 email allowlist trigger（如果跑過 email-allowlist.sql 的話）。改為開放註冊，admin 從 /admin/allowlist 頁面看誰註冊、踢人 | ⭐ 推薦 |
+| 7 | `alerts.sql` | `alerts` + `notifications` 兩張表 + RLS（價格警示、配置失衡提醒） | ✅ |
 
 ## 注意事項
 

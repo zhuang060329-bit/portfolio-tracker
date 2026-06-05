@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { AppHeader } from "@/components/AppHeader";
 import { ImportCsv } from "./ImportCsv";
+import { getUnreadCount } from "@/lib/notifications";
 
 const TXN_LABEL: Record<string, string> = {
   create: "新建帳戶",
@@ -63,6 +64,7 @@ export default async function ActivityPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const unreadCount = await getUnreadCount();
 
   const { data } = await supabase
     .from("transactions")
@@ -76,7 +78,7 @@ export default async function ActivityPage() {
 
   return (
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
-      <AppHeader active="activity" userEmail={user?.email} />
+      <AppHeader active="activity" userEmail={user?.email} unreadCount={unreadCount} />
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         <header className="flex items-start justify-between gap-4">
           <div>

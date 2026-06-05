@@ -9,6 +9,7 @@ import { AllocationTargets, type AllocRow } from "@/components/AllocationTargets
 import { computeXirr } from "@/lib/xirr";
 import { fetchUsDailyClose } from "@/lib/prices/twelvedata";
 import { fetchUsdTwdHistory } from "@/lib/prices/fx";
+import { getUnreadCount } from "@/lib/notifications";
 
 // 抓 0050（FinMind）作為大盤基準。1 小時快取。
 async function fetchTw0050(startDate: string) {
@@ -109,6 +110,7 @@ export default async function Home({
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const unreadCount = await getUnreadCount();
 
   const { data: accounts } = await supabase
     .from("accounts")
@@ -282,7 +284,7 @@ export default async function Home({
 
   return (
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
-      <AppHeader active="portfolio" userEmail={user?.email} />
+      <AppHeader active="portfolio" userEmail={user?.email} unreadCount={unreadCount} />
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         {/* === 總淨資產 hero === */}
