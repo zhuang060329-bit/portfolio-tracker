@@ -51,8 +51,13 @@ export default function LoginPage() {
       if (e1) {
         setError(e1.message);
       } else {
-        setMessage(`已寄出驗證信到 ${email}，點信中連結確認後就能登入。`);
-        switchMode("signIn");
+        // 保留在 signUp mode 顯示成功訊息，使用者讀完自己按「返回登入」
+        setMessage(
+          `驗證信已寄到 ${email}\n` +
+            `請打開信箱，點信中的「Confirm your mail」連結完成註冊。\n` +
+            `信可能會在 1-2 分鐘內到，也可能跑去垃圾信件夾。`,
+        );
+        setPassword("");
       }
     } else if (mode === "reset") {
       const { error: e2 } = await supabase.auth.resetPasswordForEmail(email, {
@@ -62,8 +67,10 @@ export default function LoginPage() {
       if (e2) {
         setError(e2.message);
       } else {
-        setMessage(`若 ${email} 為已註冊帳號，重設密碼信已寄出。`);
-        switchMode("signIn");
+        setMessage(
+          `若 ${email} 為已註冊帳號，重設密碼信已寄出。\n` +
+            `打開信箱點連結後即可設定新密碼。`,
+        );
       }
     } else {
       const { error: e3 } = await supabase.auth.signInWithPassword({
@@ -145,14 +152,21 @@ export default function LoginPage() {
             </label>
           )}
           {error && (
-            <p className="rounded bg-red-50 dark:bg-red-950/40 px-2 py-1 text-xs text-red-700 dark:text-red-300">
+            <p className="rounded bg-red-50 dark:bg-red-950/40 px-3 py-2 text-xs text-red-700 dark:text-red-300">
               {error}
             </p>
           )}
           {message && (
-            <p className="rounded bg-emerald-50 dark:bg-emerald-950/40 px-2 py-1 text-xs text-emerald-800 dark:text-emerald-300">
-              {message}
-            </p>
+            <div
+              role="status"
+              aria-live="polite"
+              className="rounded-md border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-3 text-sm text-emerald-800 dark:text-emerald-300"
+            >
+              <div className="flex items-start gap-2">
+                <span className="text-base leading-5">✓</span>
+                <p className="whitespace-pre-line leading-snug">{message}</p>
+              </div>
+            </div>
           )}
           <button
             type="submit"
