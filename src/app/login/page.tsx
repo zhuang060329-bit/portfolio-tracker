@@ -3,15 +3,23 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
+type Mode = "signIn" | "signUp" | "reset";
+
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [mode, setMode] = useState<Mode>("signIn");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
   const supabase = createClient();
+
+  function switchMode(next: Mode) {
+    setMode(next);
+    setError(null);
+    setMessage(null);
+  }
 
   async function signInGoogle() {
     setLoading(true);
@@ -33,33 +41,39 @@ export default function LoginPage() {
     setError(null);
     setMessage(null);
 
-    if (isSignUp) {
+    if (mode === "signUp") {
       const { error: e1 } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
       });
       setLoading(false);
       if (e1) {
         setError(e1.message);
       } else {
-        setMessage(
-          "已寄出驗證信到 " + email + "，點信中的連結確認後就能登入。",
-        );
-        setIsSignUp(false);
+        setMessage(`已寄出驗證信到 ${email}，點信中連結確認後就能登入。`);
+        switchMode("signIn");
+      }
+    } else if (mode === "reset") {
+      const { error: e2 } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      });
+      setLoading(false);
+      if (e2) {
+        setError(e2.message);
+      } else {
+        setMessage(`若 ${email} 為已註冊帳號，重設密碼信已寄出。`);
+        switchMode("signIn");
       }
     } else {
-      const { error: e2 } = await supabase.auth.signInWithPassword({
+      const { error: e3 } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-      if (e2) {
+      if (e3) {
         setLoading(false);
-        setError(e2.message);
+        setError(e3.message);
       } else {
-        // 登入成功，proxy 會處理導向（含 MFA 升級）
         window.location.href = "/";
       }
     }
@@ -73,29 +87,36 @@ export default function LoginPage() {
             Portfolio Tracker
           </h1>
           <p className="text-sm text-[var(--c-muted)]">
-            {isSignUp ? "建立帳號" : "登入以管理你的資產"}
+            {mode === "signUp"
+              ? "建立帳號"
+              : mode === "reset"
+                ? "重設密碼"
+                : "登入以管理你的資產"}
           </p>
         </div>
 
-        {/* Google 登入（中國境內可能無法使用）*/}
-        <button
-          type="button"
-          onClick={signInGoogle}
-          disabled={loading}
-          className="mt-6 w-full rounded-sm bg-[var(--c-accent)] px-6 py-3 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90 disabled:opacity-50"
+        {mode !== "reset" && (
+          <>
+            <button
+              type="button"
+              onClick={signInGoogle}
+              disabled={loading}
+              className="mt-6 w-full rounded-sm bg-[var(--c-accent)] px-6 py-3 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90 disabled:opacity-50"
+            >
+              {loading ? "處理中…" : "使用 Google 登入"}
+            </button>
+            <div className="my-5 flex items-center gap-3">
+              <div className="h-px flex-1 bg-[var(--c-border)]" />
+              <span className="text-xs text-[var(--c-faint)]">或 Email</span>
+              <div className="h-px flex-1 bg-[var(--c-border)]" />
+            </div>
+          </>
+        )}
+
+        <form
+          onSubmit={submitEmail}
+          className={`flex flex-col gap-3 ${mode === "reset" ? "mt-6" : ""}`}
         >
-          {loading ? "處理中…" : "使用 Google 登入"}
-        </button>
-
-        {/* 分隔線 */}
-        <div className="my-5 flex items-center gap-3">
-          <div className="h-px flex-1 bg-[var(--c-border)]" />
-          <span className="text-xs text-[var(--c-faint)]">或 Email</span>
-          <div className="h-px flex-1 bg-[var(--c-border)]" />
-        </div>
-
-        {/* Email + Password 表單 */}
-        <form onSubmit={submitEmail} className="flex flex-col gap-3">
           <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
             Email
             <input
@@ -108,19 +129,21 @@ export default function LoginPage() {
               className="rounded border border-[var(--c-border)] px-3 py-2 text-sm text-[var(--c-text)]"
             />
           </label>
-          <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
-            密碼
-            <input
-              type="password"
-              required
-              minLength={8}
-              autoComplete={isSignUp ? "new-password" : "current-password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder={isSignUp ? "至少 8 個字元" : ""}
-              className="rounded border border-[var(--c-border)] px-3 py-2 text-sm text-[var(--c-text)]"
-            />
-          </label>
+          {mode !== "reset" && (
+            <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+              密碼
+              <input
+                type="password"
+                required
+                minLength={8}
+                autoComplete={mode === "signUp" ? "new-password" : "current-password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={mode === "signUp" ? "至少 8 個字元" : ""}
+                className="rounded border border-[var(--c-border)] px-3 py-2 text-sm text-[var(--c-text)]"
+              />
+            </label>
+          )}
           {error && (
             <p className="rounded bg-red-50 dark:bg-red-950/40 px-2 py-1 text-xs text-red-700 dark:text-red-300">
               {error}
@@ -136,24 +159,54 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full rounded-sm bg-[var(--c-btn-strong-bg)] px-6 py-2.5 text-sm font-semibold text-[var(--c-btn-strong-text)] shadow-sm hover:opacity-90 disabled:opacity-50"
           >
-            {loading ? "處理中…" : isSignUp ? "建立帳號" : "Email 登入"}
+            {loading
+              ? "處理中…"
+              : mode === "signUp"
+                ? "建立帳號"
+                : mode === "reset"
+                  ? "寄出重設信"
+                  : "Email 登入"}
           </button>
         </form>
 
-        <p className="mt-4 text-center text-xs text-[var(--c-muted)]">
-          {isSignUp ? "已有帳號？" : "首次使用？"}
-          <button
-            type="button"
-            onClick={() => {
-              setIsSignUp(!isSignUp);
-              setError(null);
-              setMessage(null);
-            }}
-            className="ml-1 underline hover:text-[var(--c-text)]"
-          >
-            {isSignUp ? "登入" : "建立帳號"}
-          </button>
-        </p>
+        <div className="mt-4 flex flex-col items-center gap-1 text-xs text-[var(--c-muted)]">
+          {mode === "signIn" && (
+            <>
+              <button
+                type="button"
+                onClick={() => switchMode("signUp")}
+                className="underline hover:text-[var(--c-text)]"
+              >
+                首次使用？建立帳號
+              </button>
+              <button
+                type="button"
+                onClick={() => switchMode("reset")}
+                className="underline hover:text-[var(--c-text)]"
+              >
+                忘記密碼？
+              </button>
+            </>
+          )}
+          {mode === "signUp" && (
+            <button
+              type="button"
+              onClick={() => switchMode("signIn")}
+              className="underline hover:text-[var(--c-text)]"
+            >
+              已有帳號？登入
+            </button>
+          )}
+          {mode === "reset" && (
+            <button
+              type="button"
+              onClick={() => switchMode("signIn")}
+              className="underline hover:text-[var(--c-text)]"
+            >
+              ← 返回登入
+            </button>
+          )}
+        </div>
 
         <p className="mt-4 text-[10px] text-[var(--c-faint)]">
           本站採邀請制，未在 allowlist 的 email 註冊會被拒絕。請聯絡管理員把你的 email 加入。

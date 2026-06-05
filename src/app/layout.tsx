@@ -16,6 +16,7 @@ export const metadata: Metadata = {
   title: "Portfolio Tracker",
   description: "個人投資組合追蹤工具",
   manifest: "/manifest.webmanifest",
+  robots: { index: false, follow: false, nocache: true },
 };
 
 // FOUC 預防：開機立即套 theme，免得白色閃一下。
