@@ -7,10 +7,43 @@ import { PerformancePanel } from "@/components/PerformancePanel";
 import { AppHeader } from "@/components/AppHeader";
 import { AllocationTargets, type AllocRow } from "@/components/AllocationTargets";
 import { computeXirr } from "@/lib/xirr";
+import {
+  computeMaxDrawdown,
+  computeSharpe,
+  computeTwr,
+} from "@/lib/metrics";
 import { fetchUsDailyClose } from "@/lib/prices/twelvedata";
 import { fetchUsdTwdHistory } from "@/lib/prices/fx";
 import { getUnreadCount } from "@/lib/notifications";
 import { QuickAddFab } from "@/components/QuickAddFab";
+
+function MetricCard({
+  label,
+  value,
+  tone = "",
+  hint,
+}: {
+  label: string;
+  value: string;
+  tone?: string;
+  hint?: string;
+}) {
+  return (
+    <div className="rounded-md border border-[var(--c-border)] bg-[var(--c-surface-soft)] p-3">
+      <div className="text-[10px] tracking-wider text-[var(--c-faint)]">
+        {label}
+      </div>
+      <div
+        className={`mt-1 font-serif text-xl font-semibold tabular-nums [font-variant-numeric:lining-nums_tabular-nums] ${tone}`}
+      >
+        {value}
+      </div>
+      {hint && (
+        <div className="mt-0.5 text-[10px] text-[var(--c-faint)]">{hint}</div>
+      )}
+    </div>
+  );
+}
 
 // 抓 0050（FinMind）作為大盤基準。1 小時快取。
 async function fetchTw0050(startDate: string) {
@@ -214,6 +247,29 @@ export default async function Home({
   const lineData = [...byDate.entries()].map(([date, value]) => ({ date, value }));
   const hasLine = lineData.length >= 2;
   const hasPie = pieData.length >= 1 && total > 0;
+
+  // 進階指標：用 account_snapshots（lineData）+ 同樣的 cashflows。
+  // TWR 把現金流影響扣掉，看「策略本身」報酬；最大回撤看下行風險；
+  // Sharpe 用 252 交易日年化、台幣定存約 1.5% 當無風險利率。
+  // 30 天以下不顯示（樣本太少不可靠）。
+  const snapshotsForMetrics = lineData.map((p) => ({
+    date: p.date,
+    value: p.value,
+  }));
+  const cashflowsForMetrics = cashflows.map((c) => ({
+    date: c.when.toISOString().slice(0, 10),
+    amount: c.amount,
+  }));
+  const twrShowable = snapshotsForMetrics.length >= 30;
+  const twrResult = twrShowable
+    ? computeTwr(snapshotsForMetrics, cashflowsForMetrics)
+    : null;
+  const drawdown = twrShowable
+    ? computeMaxDrawdown(snapshotsForMetrics)
+    : null;
+  const sharpe = twrShowable
+    ? computeSharpe(snapshotsForMetrics, cashflowsForMetrics, 0.015)
+    : null;
 
   // 大盤對照：從第一筆 snapshot 日開始，平行抓 0050 + SPY/QQQ + USD/TWD 歷史匯率。
   //
@@ -424,6 +480,76 @@ export default async function Home({
               </div>
             )}
             {allocRows.length > 0 && <AllocationTargets rows={allocRows} />}
+          </section>
+        )}
+
+        {/* === 進階績效指標 === */}
+        {(twrResult || drawdown || sharpe !== null) && (
+          <section className="mt-8 rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-sm">
+            <h2 className="font-serif text-lg font-semibold tracking-tight">
+              績效指標
+            </h2>
+            <p className="mt-1 text-xs text-[var(--c-muted)]">
+              基於每日淨值快照計算。TWR 剔除現金流時機影響，反映策略本身；
+              最大回撤看下行風險；Sharpe 用台幣定存 1.5% 當無風險利率。
+            </p>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {twrResult && (
+                <MetricCard
+                  label="TWR（累積）"
+                  value={`${twrResult.total >= 0 ? "+" : "−"}${(Math.abs(twrResult.total) * 100).toFixed(2)}%`}
+                  tone={
+                    twrResult.total > 0
+                      ? "text-emerald-700 dark:text-emerald-400"
+                      : twrResult.total < 0
+                        ? "text-rose-700 dark:text-rose-400"
+                        : ""
+                  }
+                  hint="策略本身報酬，不受現金流時機影響"
+                />
+              )}
+              {twrResult && (
+                <MetricCard
+                  label="TWR（年化）"
+                  value={`${twrResult.annualized >= 0 ? "+" : "−"}${(Math.abs(twrResult.annualized) * 100).toFixed(2)}%`}
+                  tone={
+                    twrResult.annualized > 0
+                      ? "text-emerald-700 dark:text-emerald-400"
+                      : twrResult.annualized < 0
+                        ? "text-rose-700 dark:text-rose-400"
+                        : ""
+                  }
+                  hint="可與 SPY / 0050 同時間區間比較"
+                />
+              )}
+              {drawdown && (
+                <MetricCard
+                  label="最大回撤"
+                  value={`−${(Math.abs(drawdown.pct) * 100).toFixed(2)}%`}
+                  tone="text-rose-700 dark:text-rose-400"
+                  hint={`${drawdown.peakDate} → ${drawdown.troughDate}`}
+                />
+              )}
+              {sharpe !== null && (
+                <MetricCard
+                  label="Sharpe ratio"
+                  value={sharpe.toFixed(2)}
+                  tone={
+                    sharpe > 1
+                      ? "text-emerald-700 dark:text-emerald-400"
+                      : sharpe < 0
+                        ? "text-rose-700 dark:text-rose-400"
+                        : "text-[var(--c-muted)]"
+                  }
+                  hint=">1 算優秀；<0 表示報酬不如無風險利率"
+                />
+              )}
+            </div>
+            {!twrShowable && (
+              <p className="mt-3 text-[10px] text-[var(--c-faint)]">
+                快照不足 30 天，指標暫不顯示（樣本太少結果不可靠）。
+              </p>
+            )}
           </section>
         )}
 
