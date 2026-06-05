@@ -17,12 +17,12 @@ export default async function SettingsPage() {
       <main className="mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         <div className="mb-4 text-sm">
           <Link href="/" className="text-[var(--c-muted)] hover:text-[var(--c-text)]">
-            ← Back to portfolio
+            ← 回總覽
           </Link>
         </div>
         <header>
           <h1 className="font-serif text-3xl font-semibold tracking-tight">
-            Settings
+            設定
           </h1>
           <p className="mt-2 text-sm text-[var(--c-muted)]">
             帳號 · 安全。登入：{user?.email}
@@ -31,7 +31,7 @@ export default async function SettingsPage() {
 
         <section className="mt-6 rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-sm">
           <h2 className="font-serif text-lg font-semibold tracking-tight">
-            Multi-factor authentication
+            雙因素驗證（MFA）
           </h2>
           <p className="mt-1 text-xs text-[var(--c-muted)]">
             啟用後，登入時除 Google 帳號外還需手機 Authenticator 產生的 6 位數驗證碼。
@@ -44,7 +44,7 @@ export default async function SettingsPage() {
         {admin && (
           <section className="mt-6 rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-sm">
             <h2 className="font-serif text-lg font-semibold tracking-tight">
-              Admin
+              管理員
             </h2>
             <p className="mt-1 text-xs text-[var(--c-muted)]">
               只有管理員看得到。

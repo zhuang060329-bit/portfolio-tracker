@@ -20,12 +20,12 @@ export default function NewManualPage() {
             href="/accounts/new"
             className="text-[var(--c-muted)] hover:text-[var(--c-text)]"
           >
-            ← Back to add account
+            ← 回新增帳戶
           </Link>
         </div>
         <header>
           <h1 className="font-serif text-3xl font-semibold tracking-tight">
-            Add manual account
+            新增手動帳戶
           </h1>
           <p className="mt-2 text-sm text-[var(--c-muted)]">
             手動帳戶不自動抓價，餘額之後可在帳戶詳情頁手動修改。

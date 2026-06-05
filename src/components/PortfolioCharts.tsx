@@ -31,8 +31,9 @@ type PieDatum = { label: string; value: number };
 type LineDatum = { date: string; value: number };
 
 export function AllocationPie({ data }: { data: PieDatum[] }) {
+  const total = data.reduce((s, d) => s + d.value, 0);
   return (
-    <ResponsiveContainer width="100%" height={260}>
+    <ResponsiveContainer width="100%" height={280}>
       <PieChart>
         <Pie
           data={data}
@@ -45,6 +46,10 @@ export function AllocationPie({ data }: { data: PieDatum[] }) {
           paddingAngle={2}
           stroke="var(--c-surface-soft)"
           strokeWidth={2}
+          label={({ percent }: { percent?: number }) =>
+            percent && percent >= 0.05 ? `${(percent * 100).toFixed(0)}%` : ""
+          }
+          labelLine={false}
         >
           {data.map((_, i) => (
             <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
@@ -63,6 +68,21 @@ export function AllocationPie({ data }: { data: PieDatum[] }) {
           verticalAlign="bottom"
           iconType="circle"
           wrapperStyle={{ fontSize: 12, color: "var(--c-muted)" }}
+          // 在 legend 上補百分比，免得使用者只看顏色猜不到比例
+          formatter={(value: string, entry) => {
+            const v = Number(
+              (entry?.payload as { value?: number } | undefined)?.value ?? 0,
+            );
+            const pct = total > 0 ? (v / total) * 100 : 0;
+            return (
+              <span style={{ color: "var(--c-text)" }}>
+                {value}
+                <span style={{ color: "var(--c-muted)", marginLeft: 6 }}>
+                  {pct.toFixed(1)}%
+                </span>
+              </span>
+            );
+          }}
         />
       </PieChart>
     </ResponsiveContainer>
@@ -95,6 +115,7 @@ export function NetWorthLine({ data }: { data: LineDatum[] }) {
           axisLine={{ stroke: "var(--c-border)" }}
           tickLine={false}
           width={48}
+          domain={["dataMin - dataMin * 0.02", "dataMax + dataMax * 0.02"]}
         />
         <Tooltip
           formatter={(v) => fmtTwd(Number(v))}
@@ -110,9 +131,9 @@ export function NetWorthLine({ data }: { data: LineDatum[] }) {
           type="monotone"
           dataKey="value"
           stroke="var(--c-accent)"
-          strokeWidth={2}
+          strokeWidth={2.5}
           dot={{ fill: "var(--c-accent)", r: 3 }}
-          activeDot={{ r: 5 }}
+          activeDot={{ r: 6 }}
         />
       </LineChart>
     </ResponsiveContainer>
@@ -151,7 +172,7 @@ export function PerformanceLine({
         <Tooltip
           formatter={(v, name) => [
             `${Number(v).toFixed(2)} (${(Number(v) - 100 >= 0 ? "+" : "−")}${Math.abs(Number(v) - 100).toFixed(2)}%)`,
-            name === "portfolio" ? "Portfolio" : benchmarkName,
+            name === "portfolio" ? "我的組合" : benchmarkName,
           ]}
           labelStyle={{ color: "var(--c-text)", fontSize: 12 }}
           contentStyle={{
@@ -166,26 +187,26 @@ export function PerformanceLine({
           iconType="line"
           wrapperStyle={{ fontSize: 12, color: "var(--c-muted)" }}
           formatter={(value) =>
-            value === "portfolio" ? "Portfolio" : benchmarkName
+            value === "portfolio" ? "我的組合" : benchmarkName
           }
         />
         <Line
           type="monotone"
           dataKey="portfolio"
           stroke="var(--c-accent)"
-          strokeWidth={2}
+          strokeWidth={2.5}
           dot={false}
-          activeDot={{ r: 5 }}
+          activeDot={{ r: 6 }}
           connectNulls
         />
         <Line
           type="monotone"
           dataKey="benchmark"
-          stroke="#8B6F47"
+          stroke="#3B82F6"
           strokeWidth={2}
-          strokeDasharray="4 4"
+          strokeDasharray="6 4"
           dot={false}
-          activeDot={{ r: 4 }}
+          activeDot={{ r: 5 }}
           connectNulls
         />
       </LineChart>

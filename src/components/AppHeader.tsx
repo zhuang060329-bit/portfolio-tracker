@@ -21,16 +21,16 @@ export function AppHeader({
             Portfolio Tracker
           </Link>
           <nav className="hidden h-full items-center md:flex">
-            <NavItem href="/" active={active === "portfolio"} label="Portfolio" />
+            <NavItem href="/" active={active === "portfolio"} label="總覽" />
             <NavItem
               href="/accounts/new"
               active={active === "accounts"}
-              label="Accounts"
+              label="帳戶"
             />
             <NavItem
               href="/activity"
               active={active === "activity"}
-              label="Activity"
+              label="紀錄"
             />
           </nav>
         </div>
@@ -39,7 +39,7 @@ export function AppHeader({
             <Link
               href="/settings"
               className="hidden text-[var(--c-muted)] hover:text-[var(--c-text)] sm:inline"
-              title="Settings"
+              title="設定"
             >
               {userEmail}
             </Link>
@@ -50,7 +50,7 @@ export function AppHeader({
               type="submit"
               className="rounded-sm border border-[var(--c-border)] bg-[var(--c-surface)] px-3 py-1.5 text-xs font-medium text-[var(--c-text)] hover:bg-[var(--c-page)]"
             >
-              Sign out
+              登出
             </button>
           </form>
         </div>

@@ -36,7 +36,7 @@ const fmtTwd = (n: number) =>
   n.toLocaleString("zh-TW", { maximumFractionDigits: 0 });
 
 const pnlClass = (n: number) =>
-  n > 0 ? "text-rose-700 dark:text-rose-400" : n < 0 ? "text-emerald-700 dark:text-emerald-400" : "text-[var(--c-muted)]";
+  n > 0 ? "text-emerald-700 dark:text-emerald-400" : n < 0 ? "text-rose-700 dark:text-rose-400" : "text-[var(--c-muted)]";
 const pnlSign = (n: number) => (n > 0 ? "+" : n < 0 ? "−" : "");
 
 export function AccountActions({

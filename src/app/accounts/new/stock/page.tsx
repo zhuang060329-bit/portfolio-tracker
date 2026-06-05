@@ -20,12 +20,12 @@ export default function NewStockPage() {
             href="/accounts/new"
             className="text-[var(--c-muted)] hover:text-[var(--c-text)]"
           >
-            ← Back to add account
+            ← 回新增帳戶
           </Link>
         </div>
         <header>
           <h1 className="font-serif text-3xl font-semibold tracking-tight">
-            Add stock account
+            新增股票帳戶
           </h1>
           <p className="mt-2 text-sm text-[var(--c-muted)]">
             建立時即時抓一次價格驗證 symbol；失敗會提示重輸。

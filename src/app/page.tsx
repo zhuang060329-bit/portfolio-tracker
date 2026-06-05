@@ -45,10 +45,10 @@ type AccountRow = {
   status: string;
 };
 
-// PnL 顯示工具：台灣股市文化 — 紅漲綠跌。
+// PnL 顯示工具：國際慣例 — 賺綠虧紅（與英文金融介面一致）。
 function pnlClass(n: number): string {
-  if (n > 0) return "text-rose-700 dark:text-rose-400";
-  if (n < 0) return "text-emerald-700 dark:text-emerald-400";
+  if (n > 0) return "text-emerald-700 dark:text-emerald-400";
+  if (n < 0) return "text-rose-700 dark:text-rose-400";
   return "text-[var(--c-muted)]";
 }
 function pnlSign(n: number): string {
@@ -71,10 +71,10 @@ const ASSET_CLASS_LABEL: Record<string, string> = {
 };
 
 const MARKET_LABEL: Record<string, string> = {
-  us: "US Equity",
-  tw: "TW Equity",
-  crypto: "Crypto",
-  manual: "Manual",
+  us: "美股",
+  tw: "台股",
+  crypto: "加密貨幣",
+  manual: "手動",
 };
 
 function valueOf(a: AccountRow): number {
@@ -145,8 +145,18 @@ export default async function Home({
   }[])
     .map((r) => ({ amount: Number(r.cashflow_twd), when: new Date(r.created_at) }))
     .filter((c) => Number.isFinite(c.amount) && c.amount !== 0);
-  if (total > 0) cashflows.push({ amount: total, when: new Date() });
+  const now = new Date();
+  if (total > 0) cashflows.push({ amount: total, when: now });
   const xirr = computeXirr(cashflows);
+  // 資料 < 30 天時，年化會把短期波動放大成失真值（例如 5 天虧 10% 變 -99% 年化），
+  // 直接隱藏比顯示誤導值好。
+  const xirrSpanDays =
+    cashflows.length > 1
+      ? (now.getTime() -
+          Math.min(...cashflows.map((c) => c.when.getTime()))) /
+        86_400_000
+      : 0;
+  const xirrShowable = xirr !== null && xirrSpanDays >= 30;
   const latestUpdate = list
     .map((a) => a.last_priced_at)
     .filter((x): x is string => !!x)
@@ -235,10 +245,10 @@ export default async function Home({
       <AppHeader active="portfolio" userEmail={user?.email} />
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-        {/* === Total balance hero === */}
+        {/* === 總淨資產 hero === */}
         <section className="border-b border-[var(--c-border)] pb-8">
           <p className="text-xs font-semibold uppercase tracking-wider text-[var(--c-muted)]">
-            Total balance
+            總淨資產
           </p>
           <p className="mt-2 flex items-baseline gap-2 font-serif">
             <span className="text-2xl font-medium text-[var(--c-muted)] sm:text-3xl">
@@ -251,13 +261,13 @@ export default async function Home({
           {totalCost > 0 && (
             <div className="mt-3 flex flex-wrap items-baseline gap-x-6 gap-y-1 text-sm tabular-nums [font-variant-numeric:lining-nums_tabular-nums]">
               <span>
-                <span className="text-[var(--c-muted)]">Cost</span>
+                <span className="text-[var(--c-muted)]">成本</span>
                 <span className="ml-2 text-[var(--c-text)]">
                   NT$ {fmtTwd(totalCost)}
                 </span>
               </span>
               <span>
-                <span className="text-[var(--c-muted)]">Unrealized</span>
+                <span className="text-[var(--c-muted)]">未實現</span>
                 <span className={`ml-2 font-medium ${pnlClass(totalPnl)}`}>
                   {pnlSign(totalPnl)}NT$ {fmtTwd(Math.abs(totalPnl))}
                 </span>
@@ -267,38 +277,44 @@ export default async function Home({
                 </span>
               </span>
               {totalRealized !== 0 && (
-                <span>
-                  <span className="text-[var(--c-muted)]">Realized</span>
-                  <span
-                    className={`ml-2 font-medium ${pnlClass(totalRealized)}`}
-                  >
-                    {pnlSign(totalRealized)}NT$ {fmtTwd(Math.abs(totalRealized))}
+                <>
+                  <span>
+                    <span className="text-[var(--c-muted)]">已實現</span>
+                    <span
+                      className={`ml-2 font-medium ${pnlClass(totalRealized)}`}
+                    >
+                      {pnlSign(totalRealized)}NT$ {fmtTwd(Math.abs(totalRealized))}
+                    </span>
                   </span>
-                </span>
+                  <span>
+                    <span className="text-[var(--c-muted)]">總報酬</span>
+                    <span className={`ml-2 font-medium ${pnlClass(totalReturn)}`}>
+                      {pnlSign(totalReturn)}NT$ {fmtTwd(Math.abs(totalReturn))}
+                    </span>
+                  </span>
+                </>
               )}
-              <span>
-                <span className="text-[var(--c-muted)]">Total return</span>
-                <span className={`ml-2 font-medium ${pnlClass(totalReturn)}`}>
-                  {pnlSign(totalReturn)}NT$ {fmtTwd(Math.abs(totalReturn))}
-                </span>
-              </span>
-              {xirr !== null && (
+              {xirrShowable && xirr !== null && (
                 <span>
-                  <span className="text-[var(--c-muted)]">XIRR</span>
+                  <span className="text-[var(--c-muted)]">年化（XIRR）</span>
                   <span className={`ml-2 font-medium ${pnlClass(xirr)}`}>
                     {pnlSign(xirr)}
                     {Math.abs(xirr * 100).toFixed(2)}%
                   </span>
-                  <span className="ml-1 text-[10px] text-[var(--c-faint)]">/年</span>
+                </span>
+              )}
+              {!xirrShowable && xirr !== null && (
+                <span className="text-[10px] text-[var(--c-faint)]">
+                  年化暫不顯示（資料未滿 30 天，短期年化會嚴重失真）
                 </span>
               )}
             </div>
           )}
           <p className="mt-2 text-sm text-[var(--c-muted)]">
-            Last priced{" "}
+            報價更新於{" "}
             <span className="text-[var(--c-text)]">{fmtDate(latestUpdate ?? null)}</span>
             <span className="mx-2 text-[var(--c-faint)]">·</span>
-            {list.length} account{list.length === 1 ? "" : "s"}
+            共 {list.length} 個帳戶
           </p>
         </section>
 
@@ -309,7 +325,7 @@ export default async function Home({
               {hasPie && (
                 <div className="rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-sm">
                   <h2 className="font-serif text-lg font-semibold tracking-tight">
-                    Allocation
+                    資產配置
                   </h2>
                   <p className="mt-1 text-xs text-[var(--c-muted)]">依資產類別分佈</p>
                   <div className="mt-3">
@@ -319,7 +335,7 @@ export default async function Home({
               )}
               <div className="rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-sm">
                 <h2 className="font-serif text-lg font-semibold tracking-tight">
-                  Net worth trend
+                  淨資產趨勢
                 </h2>
                 <p className="mt-1 text-xs text-[var(--c-muted)]">
                   {hasLine
@@ -331,7 +347,7 @@ export default async function Home({
                     <NetWorthLine data={lineData} />
                   ) : (
                     <div className="flex h-[260px] items-center justify-center text-sm text-[var(--c-faint)]">
-                      Trend will appear after the second daily snapshot.
+                      明天會有第二筆快照，折線才會出現。
                     </div>
                   )}
                 </div>
@@ -340,13 +356,13 @@ export default async function Home({
             {hasPerf && (
               <div className="rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-sm">
                 <h2 className="font-serif text-lg font-semibold tracking-tight">
-                  Performance vs 0050
+                  績效對照 0050
                 </h2>
                 <p className="mt-1 text-xs text-[var(--c-muted)]">
                   兩條線都以起點 = 100 normalize；高於 100 代表報酬為正、低於則為負。
                 </p>
                 <div className="mt-3">
-                  <PerformanceLine data={perfData} benchmarkName="0050 (TW)" />
+                  <PerformanceLine data={perfData} benchmarkName="0050（台股）" />
                 </div>
               </div>
             )}
@@ -359,7 +375,7 @@ export default async function Home({
           <div className="flex items-end justify-between gap-3">
             <div>
               <h2 className="font-serif text-2xl font-semibold tracking-tight">
-                Your holdings
+                持有資產
               </h2>
               <p className="mt-1 text-sm text-[var(--c-muted)]">
                 所有帳戶的目前估值，TWD 為基準幣別。
@@ -382,14 +398,14 @@ export default async function Home({
               href="/accounts/new"
               className="shrink-0 rounded-sm bg-[var(--c-accent)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
             >
-              + Add account
+              ＋ 新增帳戶
             </Link>
           </div>
 
           {list.length === 0 ? (
             <div className="mt-6 rounded-md border border-dashed border-[var(--c-border)] bg-[var(--c-surface)] px-6 py-12 text-center">
               <p className="text-sm text-[var(--c-muted)]">
-                還沒有任何帳戶。點右上「+ Add account」建立第一個。
+                還沒有任何帳戶。點右上「＋ 新增帳戶」建立第一個。
               </p>
             </div>
           ) : (
@@ -397,27 +413,27 @@ export default async function Home({
               {/* 桌機：表格 */}
               <div className="mt-6 hidden overflow-hidden rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] shadow-sm md:block">
                 <table className="w-full text-sm">
-                  <thead className="border-b border-[var(--c-border)] bg-[var(--c-surface-soft)] text-xs uppercase tracking-wider text-[var(--c-muted)]">
+                  <thead className="border-b border-[var(--c-border)] bg-[var(--c-surface-soft)] text-xs tracking-wider text-[var(--c-muted)]">
                     <tr>
-                      <th className="px-4 py-3 text-left font-semibold">Account</th>
-                      <th className="px-4 py-3 text-left font-semibold">Market</th>
-                      <th className="px-4 py-3 text-right font-semibold">Holdings</th>
+                      <th className="px-4 py-3 text-left font-semibold">帳戶</th>
+                      <th className="px-4 py-3 text-left font-semibold">市場</th>
+                      <th className="px-4 py-3 text-right font-semibold">持有</th>
                       <th className="px-4 py-3 text-right font-semibold">
-                        Price (native)
+                        單價（原幣）
                       </th>
                       <th className="px-4 py-3 text-right font-semibold">
-                        Cost (TWD)
+                        成本（TWD）
                       </th>
                       <th className="px-4 py-3 text-right font-semibold">
-                        Value (TWD)
+                        市值（TWD）
                       </th>
                       <th className="px-4 py-3 text-right font-semibold">
-                        Unrealized
+                        未實現
                       </th>
                       <th className="px-4 py-3 text-right font-semibold">
-                        Realized
+                        已實現
                       </th>
-                      <th className="px-4 py-3 text-left font-semibold">As of</th>
+                      <th className="px-4 py-3 text-left font-semibold">更新日</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--c-border-soft)]">
@@ -445,8 +461,8 @@ export default async function Home({
                               </span>
                             )}
                             {a.status === "archived" && (
-                              <span className="ml-2 rounded-sm bg-amber-100 dark:bg-amber-900/50 px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-amber-800 dark:text-amber-300">
-                                Archived
+                              <span className="ml-2 rounded-sm bg-amber-100 dark:bg-amber-900/50 px-1.5 py-0.5 text-[10px] tracking-wider text-amber-800 dark:text-amber-300">
+                                已歸檔
                               </span>
                             )}
                           </td>
@@ -512,7 +528,7 @@ export default async function Home({
                         colSpan={4}
                         className="px-4 py-3 text-right font-semibold text-[var(--c-muted)]"
                       >
-                        Total
+                        合計
                       </td>
                       <td className="px-4 py-3 text-right tabular-nums text-[var(--c-muted)]">
                         {fmtTwd(totalCost)}
@@ -582,24 +598,24 @@ export default async function Home({
                       {a.price_market !== "manual" && (
                         <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
                           <div>
-                            <div className="text-[10px] uppercase tracking-wider text-[var(--c-faint)]">
-                              Holdings
+                            <div className="text-[10px] tracking-wider text-[var(--c-faint)]">
+                              持有
                             </div>
                             <div className="tabular-nums text-[var(--c-muted)]">
                               {fmtNum(Number(a.quantity), 8)}
                             </div>
                           </div>
                           <div>
-                            <div className="text-[10px] uppercase tracking-wider text-[var(--c-faint)]">
-                              Cost
+                            <div className="text-[10px] tracking-wider text-[var(--c-faint)]">
+                              成本
                             </div>
                             <div className="tabular-nums text-[var(--c-muted)]">
                               {fmtTwd(cost)}
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className="text-[10px] uppercase tracking-wider text-[var(--c-faint)]">
-                              Unrealized
+                            <div className="text-[10px] tracking-wider text-[var(--c-faint)]">
+                              未實現
                             </div>
                             <div
                               className={`font-semibold tabular-nums [font-variant-numeric:lining-nums_tabular-nums] ${pnlClass(pnl)}`}
@@ -616,8 +632,8 @@ export default async function Home({
                       )}
                       {realized !== 0 && (
                         <div className="mt-2 flex justify-between border-t border-[var(--c-border-soft)] pt-2 text-xs">
-                          <span className="text-[10px] uppercase tracking-wider text-[var(--c-faint)]">
-                            Realized
+                          <span className="text-[10px] tracking-wider text-[var(--c-faint)]">
+                            已實現
                           </span>
                           <span
                             className={`font-medium tabular-nums ${pnlClass(realized)}`}
@@ -630,8 +646,8 @@ export default async function Home({
                   );
                 })}
                 <div className="flex items-center justify-between rounded-md bg-[var(--c-accent)] px-4 py-3 text-white">
-                  <span className="text-xs uppercase tracking-wider opacity-90">
-                    Total
+                  <span className="text-xs tracking-wider opacity-90">
+                    合計
                   </span>
                   <span className="font-serif text-lg font-semibold tabular-nums [font-variant-numeric:lining-nums_tabular-nums]">
                     NT$ {fmtTwd(total)}
@@ -640,11 +656,11 @@ export default async function Home({
                 {totalCost > 0 && (
                   <div className="rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] px-4 py-2 text-xs">
                     <div className="flex justify-between">
-                      <span className="text-[var(--c-muted)]">Cost</span>
+                      <span className="text-[var(--c-muted)]">成本</span>
                       <span className="tabular-nums">NT$ {fmtTwd(totalCost)}</span>
                     </div>
                     <div className="mt-1 flex justify-between">
-                      <span className="text-[var(--c-muted)]">Unrealized</span>
+                      <span className="text-[var(--c-muted)]">未實現</span>
                       <span
                         className={`font-medium tabular-nums ${pnlClass(totalPnl)}`}
                       >
@@ -655,7 +671,7 @@ export default async function Home({
                     </div>
                     {totalRealized !== 0 && (
                       <div className="mt-1 flex justify-between">
-                        <span className="text-[var(--c-muted)]">Realized</span>
+                        <span className="text-[var(--c-muted)]">已實現</span>
                         <span
                           className={`font-medium tabular-nums ${pnlClass(totalRealized)}`}
                         >
@@ -664,9 +680,9 @@ export default async function Home({
                         </span>
                       </div>
                     )}
-                    {xirr !== null && (
+                    {xirrShowable && xirr !== null && (
                       <div className="mt-1 flex justify-between">
-                        <span className="text-[var(--c-muted)]">XIRR / 年</span>
+                        <span className="text-[var(--c-muted)]">年化 XIRR</span>
                         <span
                           className={`font-medium tabular-nums ${pnlClass(xirr)}`}
                         >

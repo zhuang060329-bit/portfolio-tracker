@@ -32,12 +32,12 @@ export function AllocationTargets({ rows }: { rows: AllocRow[] }) {
 
   return (
     <div className="rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-sm">
-      <h2 className="font-serif text-lg font-semibold tracking-tight">Targets</h2>
+      <h2 className="font-serif text-lg font-semibold tracking-tight">配置目標</h2>
       <p className="mt-1 text-xs text-[var(--c-muted)]">
         配置目標 vs 實際；偏離 ±5% 以上會標紅。設 0 = 不設目標。
       </p>
       <form action={action} className="mt-3 flex flex-col gap-2">
-        <div className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-x-3 gap-y-1 text-xs uppercase tracking-wider text-[var(--c-faint)]">
+        <div className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-x-3 gap-y-1 text-xs tracking-wider text-[var(--c-faint)]">
           <div>類別</div>
           <div className="w-16 text-right">實際</div>
           <div className="w-20 text-right">目標</div>

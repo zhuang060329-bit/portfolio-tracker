@@ -8,10 +8,10 @@ import { AppHeader } from "@/components/AppHeader";
 import { computeXirr } from "@/lib/xirr";
 
 const MARKET_LABEL: Record<string, string> = {
-  us: "US Equity",
-  tw: "TW Equity",
-  crypto: "Crypto",
-  manual: "Manual",
+  us: "美股",
+  tw: "台股",
+  crypto: "加密貨幣",
+  manual: "手動",
 };
 
 const TXN_LABEL: Record<string, string> = {
@@ -125,7 +125,7 @@ export default async function AccountDetail({
     ? Number(account.quantity) * curPrice * (curFx - avgCostFx)
     : 0;
   const tone = (n: number) =>
-    n > 0 ? "text-rose-700 dark:text-rose-400" : n < 0 ? "text-emerald-700 dark:text-emerald-400" : "text-[var(--c-muted)]";
+    n > 0 ? "text-emerald-700 dark:text-emerald-400" : n < 0 ? "text-rose-700 dark:text-rose-400" : "text-[var(--c-muted)]";
   const sign = (n: number) => (n > 0 ? "+" : n < 0 ? "−" : "");
   const pnlClass = tone(pnl);
   const pnlSign = sign(pnl);
@@ -140,10 +140,19 @@ export default async function AccountDetail({
       when: new Date(t.created_at),
     }))
     .filter((c) => Number.isFinite(c.amount) && c.amount !== 0);
+  const now = new Date();
   if (valueBase > 0) {
-    accountCashflows.push({ amount: valueBase, when: new Date() });
+    accountCashflows.push({ amount: valueBase, when: now });
   }
   const accountXirr = computeXirr(accountCashflows);
+  // 跨度不足 30 天就不顯示年化（避免短期波動年化後失真）
+  const accountXirrSpan =
+    accountCashflows.length > 1
+      ? (now.getTime() -
+          Math.min(...accountCashflows.map((c) => c.when.getTime()))) /
+        86_400_000
+      : 0;
+  const accountXirrShowable = accountXirr !== null && accountXirrSpan >= 30;
 
   return (
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
@@ -155,7 +164,7 @@ export default async function AccountDetail({
             href="/"
             className="text-[var(--c-muted)] transition-colors hover:text-[var(--c-text)]"
           >
-            ← Back to portfolio
+            ← 回總覽
           </Link>
         </div>
 
@@ -166,7 +175,7 @@ export default async function AccountDetail({
               此帳戶已歸檔。cron 不會自動抓價，首頁總值不計入此帳戶。
             </div>
           )}
-          <p className="text-xs uppercase tracking-wider text-[var(--c-muted)]">
+          <p className="text-xs tracking-wider text-[var(--c-muted)]">
             {MARKET_LABEL[account.price_market] ?? account.price_market}
             {account.symbol ? ` · ${account.symbol}` : ""}
           </p>
@@ -182,11 +191,11 @@ export default async function AccountDetail({
           {!isManual && cost > 0 && (
             <div className="mt-3 flex flex-wrap items-baseline gap-x-6 gap-y-1 text-sm tabular-nums [font-variant-numeric:lining-nums_tabular-nums]">
               <span>
-                <span className="text-[var(--c-muted)]">Cost</span>
+                <span className="text-[var(--c-muted)]">成本</span>
                 <span className="ml-2 text-[var(--c-text)]">NT$ {fmtTwd(cost)}</span>
               </span>
               <span>
-                <span className="text-[var(--c-muted)]">Unrealized</span>
+                <span className="text-[var(--c-muted)]">未實現</span>
                 <span className={`ml-2 font-medium ${pnlClass}`}>
                   {pnlSign}NT$ {fmtTwd(Math.abs(pnl))}
                 </span>
@@ -196,29 +205,33 @@ export default async function AccountDetail({
                 </span>
               </span>
               {realized !== 0 && (
-                <span>
-                  <span className="text-[var(--c-muted)]">Realized</span>
-                  <span className={`ml-2 font-medium ${tone(realized)}`}>
-                    {sign(realized)}NT$ {fmtTwd(Math.abs(realized))}
+                <>
+                  <span>
+                    <span className="text-[var(--c-muted)]">已實現</span>
+                    <span className={`ml-2 font-medium ${tone(realized)}`}>
+                      {sign(realized)}NT$ {fmtTwd(Math.abs(realized))}
+                    </span>
                   </span>
-                </span>
-              )}
-              {realized !== 0 && (
-                <span>
-                  <span className="text-[var(--c-muted)]">Total return</span>
-                  <span className={`ml-2 font-medium ${tone(totalReturn)}`}>
-                    {sign(totalReturn)}NT$ {fmtTwd(Math.abs(totalReturn))}
+                  <span>
+                    <span className="text-[var(--c-muted)]">總報酬</span>
+                    <span className={`ml-2 font-medium ${tone(totalReturn)}`}>
+                      {sign(totalReturn)}NT$ {fmtTwd(Math.abs(totalReturn))}
+                    </span>
                   </span>
-                </span>
+                </>
               )}
-              {accountXirr !== null && (
+              {accountXirrShowable && accountXirr !== null && (
                 <span>
-                  <span className="text-[var(--c-muted)]">XIRR</span>
+                  <span className="text-[var(--c-muted)]">年化 XIRR</span>
                   <span className={`ml-2 font-medium ${tone(accountXirr)}`}>
                     {sign(accountXirr)}
                     {Math.abs(accountXirr * 100).toFixed(2)}%
                   </span>
-                  <span className="ml-1 text-[10px] text-[var(--c-faint)]">/年</span>
+                </span>
+              )}
+              {!accountXirrShowable && accountXirr !== null && (
+                <span className="text-[10px] text-[var(--c-faint)]">
+                  年化暫不顯示（資料未滿 30 天）
                 </span>
               )}
             </div>
@@ -243,7 +256,7 @@ export default async function AccountDetail({
             </p>
           )}
           <p className="mt-2 text-sm text-[var(--c-muted)]">
-            Last priced{" "}
+            報價更新於{" "}
             <span className="text-[var(--c-text)]">{fmtDate(account.last_priced_at)}</span>
             {!isManual && (
               <>
@@ -253,7 +266,7 @@ export default async function AccountDetail({
                 {Number(account.last_fx_rate) !== 1 && (
                   <>
                     {" "}
-                    × FX {fmtNum(Number(account.last_fx_rate), 4)}
+                    × 匯率 {fmtNum(Number(account.last_fx_rate), 4)}
                   </>
                 )}
               </>
@@ -266,7 +279,7 @@ export default async function AccountDetail({
           <section className="mt-6">
             <div className="rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-sm">
               <h2 className="font-serif text-lg font-semibold tracking-tight">
-                Trend
+                帳戶趨勢
               </h2>
               <p className="mt-1 text-xs text-[var(--c-muted)]">
                 此帳戶每日估值（基於 account_snapshots）
@@ -280,7 +293,7 @@ export default async function AccountDetail({
 
         {/* === Actions === */}
         <section className="mt-6">
-          <h2 className="font-serif text-lg font-semibold tracking-tight">Actions</h2>
+          <h2 className="font-serif text-lg font-semibold tracking-tight">操作</h2>
           <div className="mt-3">
             <AccountActions
               accountId={account.id}
@@ -300,7 +313,7 @@ export default async function AccountDetail({
         {!isManual && (
           <section className="mt-8">
             <h2 className="font-serif text-lg font-semibold tracking-tight">
-              Recurring plans
+              定期定額
             </h2>
             <p className="mt-1 text-xs text-[var(--c-muted)]">
               定期定額計劃。「立即執行」會依當下市價換算股數買入，並把下次執行日推到下個月。
@@ -316,16 +329,16 @@ export default async function AccountDetail({
           <h2 className="font-serif text-lg font-semibold tracking-tight">變動記錄</h2>
           <div className="mt-3 overflow-hidden rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] shadow-sm">
             <table className="w-full text-sm">
-              <thead className="border-b border-[var(--c-border)] bg-[var(--c-surface-soft)] text-xs uppercase tracking-wider text-[var(--c-muted)]">
+              <thead className="border-b border-[var(--c-border)] bg-[var(--c-surface-soft)] text-xs tracking-wider text-[var(--c-muted)]">
                 <tr>
-                  <th className="px-4 py-3 text-left font-semibold">Type</th>
-                  <th className="px-4 py-3 text-right font-semibold">Qty after</th>
-                  <th className="px-4 py-3 text-right font-semibold">Price</th>
-                  <th className="px-4 py-3 text-right font-semibold">FX</th>
-                  <th className="px-4 py-3 text-right font-semibold">Value (TWD)</th>
-                  <th className="px-4 py-3 text-right font-semibold">Cashflow</th>
-                  <th className="px-4 py-3 text-right font-semibold">Realized</th>
-                  <th className="px-4 py-3 text-left font-semibold">When</th>
+                  <th className="px-4 py-3 text-left font-semibold">類型</th>
+                  <th className="px-4 py-3 text-right font-semibold">持有後</th>
+                  <th className="px-4 py-3 text-right font-semibold">單價</th>
+                  <th className="px-4 py-3 text-right font-semibold">匯率</th>
+                  <th className="px-4 py-3 text-right font-semibold">市值（TWD）</th>
+                  <th className="px-4 py-3 text-right font-semibold">現金流</th>
+                  <th className="px-4 py-3 text-right font-semibold">已實現</th>
+                  <th className="px-4 py-3 text-left font-semibold">時間</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--c-border-soft)]">
@@ -371,7 +384,7 @@ export default async function AccountDetail({
                         {fmtTwd(Number(t.value_after_base ?? 0))}
                       </td>
                       <td
-                        className={`px-4 py-2.5 text-right tabular-nums ${cf === null ? "text-[var(--c-faint)]" : cf > 0 ? "text-rose-700 dark:text-rose-400" : cf < 0 ? "text-emerald-700 dark:text-emerald-400" : "text-[var(--c-muted)]"}`}
+                        className={`px-4 py-2.5 text-right tabular-nums ${cf === null ? "text-[var(--c-faint)]" : cf > 0 ? "text-emerald-700 dark:text-emerald-400" : cf < 0 ? "text-rose-700 dark:text-rose-400" : "text-[var(--c-muted)]"}`}
                       >
                         {cf === null
                           ? "—"

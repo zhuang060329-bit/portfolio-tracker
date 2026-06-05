@@ -81,10 +81,10 @@ export default async function ActivityPage() {
         <header className="flex items-start justify-between gap-4">
           <div>
             <h1 className="font-serif text-3xl font-semibold tracking-tight">
-              Activity
+              變動紀錄
             </h1>
             <p className="mt-2 text-sm text-[var(--c-muted)]">
-              所有帳戶最近的變動記錄，依時間倒序最多 200 筆。
+              所有帳戶的最近紀錄，依時間倒序，最多 200 筆。
             </p>
           </div>
           <a
@@ -92,9 +92,40 @@ export default async function ActivityPage() {
             download
             className="shrink-0 rounded-sm border border-[var(--c-border)] bg-[var(--c-surface)] px-4 py-2 text-sm font-medium text-[var(--c-text)] shadow-sm hover:bg-[var(--c-surface-soft)]"
           >
-            Download CSV
+            下載 CSV
           </a>
         </header>
+
+        {/* 統計摘要 — 避免表格上方一片空白 */}
+        {rows.length > 0 && (() => {
+          const byType = new Map<string, number>();
+          for (const r of rows) byType.set(r.type, (byType.get(r.type) ?? 0) + 1);
+          const summary = [...byType.entries()].sort((a, b) => b[1] - a[1]);
+          return (
+            <section className="mt-6 grid gap-3 sm:grid-cols-[auto_1fr] sm:items-center sm:gap-6 rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] p-4 shadow-sm">
+              <div>
+                <div className="text-[10px] tracking-wider text-[var(--c-faint)]">
+                  總筆數
+                </div>
+                <div className="font-serif text-2xl font-semibold tabular-nums">
+                  {rows.length}
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
+                {summary.map(([type, count]) => (
+                  <span key={type} className="text-[var(--c-muted)]">
+                    <span
+                      className={`mr-1 inline-flex rounded-sm px-1.5 py-0.5 text-[10px] ${TXN_TONE[type] ?? "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300"}`}
+                    >
+                      {TXN_LABEL[type] ?? type}
+                    </span>
+                    <span className="tabular-nums">{count}</span>
+                  </span>
+                ))}
+              </div>
+            </section>
+          );
+        })()}
 
         <div className="mt-6">
           <ImportCsv />
@@ -111,20 +142,20 @@ export default async function ActivityPage() {
             {/* 桌機表格 */}
             <div className="mt-6 hidden overflow-hidden rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] shadow-sm md:block">
               <table className="w-full text-sm">
-                <thead className="border-b border-[var(--c-border)] bg-[var(--c-surface-soft)] text-xs uppercase tracking-wider text-[var(--c-muted)]">
+                <thead className="border-b border-[var(--c-border)] bg-[var(--c-surface-soft)] text-xs tracking-wider text-[var(--c-muted)]">
                   <tr>
-                    <th className="px-4 py-3 text-left font-semibold">When</th>
-                    <th className="px-4 py-3 text-left font-semibold">Account</th>
-                    <th className="px-4 py-3 text-left font-semibold">Type</th>
+                    <th className="px-4 py-3 text-left font-semibold">時間</th>
+                    <th className="px-4 py-3 text-left font-semibold">帳戶</th>
+                    <th className="px-4 py-3 text-left font-semibold">類型</th>
                     <th className="px-4 py-3 text-right font-semibold">
-                      Qty after
+                      持有後
                     </th>
-                    <th className="px-4 py-3 text-right font-semibold">Price</th>
-                    <th className="px-4 py-3 text-right font-semibold">FX</th>
+                    <th className="px-4 py-3 text-right font-semibold">單價</th>
+                    <th className="px-4 py-3 text-right font-semibold">匯率</th>
                     <th className="px-4 py-3 text-right font-semibold">
-                      Value (TWD)
+                      市值（TWD）
                     </th>
-                    <th className="px-4 py-3 text-left font-semibold">Note</th>
+                    <th className="px-4 py-3 text-left font-semibold">備註</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--c-border-soft)]">

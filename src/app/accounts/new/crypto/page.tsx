@@ -20,12 +20,12 @@ export default function NewCryptoPage() {
             href="/accounts/new"
             className="text-[var(--c-muted)] hover:text-[var(--c-text)]"
           >
-            ← Back to add account
+            ← 回新增帳戶
           </Link>
         </div>
         <header>
           <h1 className="font-serif text-3xl font-semibold tracking-tight">
-            Add crypto account
+            新增加密貨幣帳戶
           </h1>
           <p className="mt-2 text-sm text-[var(--c-muted)]">
             以 CoinGecko id 識別幣種（不是交易所 ticker）。建立時會抓 TWD 報價驗證。
