@@ -2,6 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import {
+  HEADER_ALIASES,
+  findHeaderIndex,
+  normalizeType,
+  parseAmount,
+  parseFlexibleDate,
+} from "@/lib/csv-import-helpers";
 
 export type ImportResult =
   | {
@@ -43,10 +50,11 @@ function parseCsvLine(line: string): string[] {
   return cols;
 }
 
-// CSV 匯入：僅支援 dividend / interest 兩種型別。
-// 必要欄位 header（不分大小寫）：date, account, type, amount_twd
-// 選填欄位：note
-// type 必須是 'dividend' 或 'interest'，amount_twd 為正數。
+// CSV 匯入：支援 dividend / interest 兩種型別，欄位可中英文。
+// 必要欄位（含別名）：date / account / type / amount
+// 選填：note
+// type 可以是 dividend / interest / 配息 / 股息 / 利息 等
+// 日期支援 ISO / yyyy/m/d / m/d/yyyy 多種格式
 // account 用名稱比對，找不到就跳過該列。
 export async function importIncomeCsv(
   _prev: ImportResult,
@@ -73,16 +81,16 @@ export async function importIncomeCsv(
   const header = parseCsvLine(lines[0]).map((h) =>
     h.trim().toLowerCase().replace(/^"|"$/g, ""),
   );
-  const idx = (name: string) => header.indexOf(name);
-  const dateI = idx("date");
-  const accI = idx("account");
-  const typeI = idx("type");
-  const amountI = idx("amount_twd");
-  const noteI = idx("note");
+  const dateI = findHeaderIndex(header, HEADER_ALIASES.date);
+  const accI = findHeaderIndex(header, HEADER_ALIASES.account);
+  const typeI = findHeaderIndex(header, HEADER_ALIASES.type);
+  const amountI = findHeaderIndex(header, HEADER_ALIASES.amount);
+  const noteI = findHeaderIndex(header, HEADER_ALIASES.note);
   if (dateI < 0 || accI < 0 || typeI < 0 || amountI < 0) {
     return {
       ok: false,
-      error: "CSV 缺少必要欄位：date / account / type / amount_twd",
+      error:
+        "CSV 缺少必要欄位：日期(date) / 帳戶(account) / 類型(type) / 金額(amount / amount_twd)",
     };
   }
 
@@ -114,8 +122,8 @@ export async function importIncomeCsv(
     const cols = parseCsvLine(lines[i]);
     const dateStr = (cols[dateI] ?? "").trim();
     const accName = (cols[accI] ?? "").trim();
-    const type = (cols[typeI] ?? "").trim().toLowerCase();
-    const amount = Number(cols[amountI]);
+    const typeRaw = (cols[typeI] ?? "").trim();
+    const amount = parseAmount(cols[amountI] ?? "");
     const note = noteI >= 0 ? (cols[noteI] ?? "").trim() || null : null;
 
     if (!dateStr || !accName) {
@@ -123,20 +131,23 @@ export async function importIncomeCsv(
       errors.push(`第 ${i + 1} 列：date / account 為空`);
       continue;
     }
-    if (type !== "dividend" && type !== "interest") {
+    const type = normalizeType(typeRaw);
+    if (!type) {
       skipped++;
-      errors.push(`第 ${i + 1} 列：type 須為 dividend 或 interest`);
+      errors.push(
+        `第 ${i + 1} 列：type "${typeRaw}" 無法辨識（須為配息/股息/dividend 或利息/interest）`,
+      );
       continue;
     }
     if (!Number.isFinite(amount) || amount <= 0) {
       skipped++;
-      errors.push(`第 ${i + 1} 列：amount_twd 須為正數`);
+      errors.push(`第 ${i + 1} 列：金額須為正數`);
       continue;
     }
-    const occurredAt = new Date(dateStr);
-    if (Number.isNaN(occurredAt.getTime())) {
+    const occurredAt = parseFlexibleDate(dateStr);
+    if (!occurredAt) {
       skipped++;
-      errors.push(`第 ${i + 1} 列：date 格式無效`);
+      errors.push(`第 ${i + 1} 列：date "${dateStr}" 格式無效`);
       continue;
     }
     const acc = accByName.get(accName);

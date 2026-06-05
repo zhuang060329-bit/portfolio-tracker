@@ -12,7 +12,7 @@ export function ImportCsv() {
   return (
     <details className="rounded-md border border-[var(--c-border)] bg-[var(--c-surface)]">
       <summary className="cursor-pointer select-none px-4 py-3 text-sm font-medium">
-        Import CSV（僅支援配息 / 利息）
+        匯入 CSV（配息 / 利息，支援中英文欄位）
       </summary>
       <form
         action={action}
@@ -20,15 +20,20 @@ export function ImportCsv() {
         encType="multipart/form-data"
       >
         <div className="rounded-sm border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3 py-2 text-xs text-[var(--c-muted)]">
-          <p className="font-medium text-[var(--c-text)]">CSV 格式：</p>
+          <p className="font-medium text-[var(--c-text)]">支援的欄位（任一即可）</p>
+          <ul className="mt-1 list-disc pl-4 text-[11px]">
+            <li>日期：date / 日期 / 成交日（接受 2026-05-01 / 2026/5/1 / 5/1/2026）</li>
+            <li>帳戶：account / 帳戶 / 標的（須與帳戶名稱完全一致）</li>
+            <li>類型：type / 類型（配息 / 股息 / dividend / 利息 / interest）</li>
+            <li>金額：amount / amount_twd / 金額（正數，會自動去除逗號與 NT$）</li>
+            <li>備註：note / 備註（選填）</li>
+          </ul>
+          <p className="mt-2 font-medium text-[var(--c-text)]">範例：</p>
           <code className="block mt-1 font-mono text-[11px]">
-            date,account,type,amount_twd,note<br />
-            2026-05-01,QQQM 國泰證券,dividend,200,Q1 配息<br />
-            2026-04-15,玉山活儲,interest,50,
+            日期,帳戶,類型,金額,備註<br />
+            2026-05-01,QQQM 國泰證券,配息,NT$ 1,200,Q1 配息<br />
+            2026/4/15,玉山活儲,利息,50,
           </code>
-          <p className="mt-1">
-            account 需與你建立的帳戶名稱完全一致。type 限 dividend / interest。amount_twd 為正數。
-          </p>
         </div>
         <input
           name="file"
