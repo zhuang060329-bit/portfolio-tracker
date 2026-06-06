@@ -1,15 +1,31 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Newsreader, Space_Grotesk, Noto_Sans_TC } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Midnight Ledger 字型配置：
+// - Newsreader：大數字 / 標題（serif，財經刊物感）
+// - Space Grotesk：介面與數字（sans，含 tabular nums feature）
+// - Noto Sans TC：中文 fallback（preload=false 避免增加首載 weight）
+const fontSerif = Newsreader({
+  variable: "--font-serif",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const fontSans = Space_Grotesk({
+  variable: "--font-sans",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
+
+const fontTc = Noto_Sans_TC({
+  variable: "--font-tc",
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -19,8 +35,24 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false, nocache: true },
 };
 
-// FOUC 預防：開機立即套 theme，免得白色閃一下。
-const themeInit = `(function(){try{var t=localStorage.getItem('theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.dataset.theme=t;}catch(e){}})();`;
+// FOUC 預防：
+// 三態主題（light / dark / system），預設 system → 跟隨 prefers-color-scheme。
+// 寫到 dataset.theme 的是「解析後」的二態（light or dark），給 CSS 變數用。
+// localStorage 同時保留：
+//   themePref：使用者選的（light/dark/system）
+//   theme：解析後值（給跨分頁 storage event 同步）
+const themeInit = `(function(){try{
+  var pref = localStorage.getItem('themePref') || localStorage.getItem('theme') || 'system';
+  if (pref !== 'light' && pref !== 'dark') pref = 'system';
+  var resolved = pref === 'system'
+    ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+    : pref;
+  document.documentElement.dataset.theme = resolved;
+  document.documentElement.dataset.themePref = pref;
+}catch(e){
+  document.documentElement.dataset.theme = 'dark';
+  document.documentElement.dataset.themePref = 'system';
+}})();`;
 
 export default function RootLayout({
   children,
@@ -31,7 +63,7 @@ export default function RootLayout({
     <html
       lang="zh-Hant"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${fontSerif.variable} ${fontSans.variable} ${fontTc.variable} h-full antialiased`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />

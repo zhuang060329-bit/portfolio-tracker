@@ -3,40 +3,70 @@
 /* Tailwind v4：讓 `dark:` 變體跟著我們的 [data-theme="dark"] 切換 */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
-/* === Claude 風 palette（淺色 / 暗色雙模式）=== */
+/*
+ * === Midnight Ledger palette ===
+ * 深色優先（:root = 深色 token），淺色由 [data-theme="light"] 覆蓋。
+ * 變數名稱沿用既有 --c-* 慣例，舊頁面繼續編譯，只換值。
+ * 新增 --c-up / --c-down（賺綠虧紅）、--c-accent-soft、--c-line-strong、--c-shadow。
+ */
 :root {
-  --c-page: #f5f4ee;
-  --c-surface: #ffffff;
-  --c-surface-soft: #faf9f5;
-  --c-text: #1a1a1a;
-  --c-muted: #6b6863;
-  --c-faint: #c6c3bc;
-  --c-accent: #c96342;
-  --c-border: #e4e2d9;
-  --c-border-soft: #efede5;
-  /* 次要按鈕（高對比，永遠跟 surface 反色）*/
-  --c-btn-strong-bg: #1a1a1a;
-  --c-btn-strong-text: #ffffff;
+  --c-page: #14130E;
+  --c-surface: #1C1A14;
+  --c-surface-soft: #232017;
+  --c-text: #ECE6D6;
+  --c-muted: #A39C87;
+  --c-faint: #6E6857;
+  --c-accent: #D7A33F;
+  --c-accent-soft: rgba(215, 163, 63, 0.14);
+  --c-border: rgba(236, 229, 209, 0.09);
+  --c-border-soft: rgba(236, 229, 209, 0.05);
+  --c-line-strong: rgba(236, 229, 209, 0.16);
+  --c-up: #6FB98C;
+  --c-down: #E08664;
+  /* 強對比按鈕（永遠跟 surface 反色）*/
+  --c-btn-strong-bg: #ECE6D6;
+  --c-btn-strong-text: #1a1408;
+  --c-shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 28px rgba(0,0,0,.28);
 }
 
-[data-theme="dark"] {
-  --c-page: #1a1816;
-  --c-surface: #26241f;
-  --c-surface-soft: #211f1b;
-  --c-text: #ece9e0;
-  --c-muted: #9b968b;
-  --c-faint: #5e5b54;
-  --c-accent: #d97757;
-  --c-border: #3a3631;
-  --c-border-soft: #2e2b27;
-  --c-btn-strong-bg: #ece9e0;
-  --c-btn-strong-text: #1a1816;
+[data-theme="light"] {
+  --c-page: #F3F0E7;
+  --c-surface: #FBF9F3;
+  --c-surface-soft: #F3F0E5;
+  --c-text: #211E16;
+  --c-muted: #6B6555;
+  --c-faint: #A8A28E;
+  --c-accent: #B07A1E;
+  --c-accent-soft: rgba(176, 122, 30, 0.12);
+  --c-border: rgba(40, 36, 24, 0.10);
+  --c-border-soft: rgba(40, 36, 24, 0.05);
+  --c-line-strong: rgba(40, 36, 24, 0.18);
+  --c-up: #2F8F5B;
+  --c-down: #C2562F;
+  --c-btn-strong-bg: #211E16;
+  --c-btn-strong-text: #FBF9F3;
+  --c-shadow: 0 1px 2px rgba(40,36,24,.05), 0 10px 30px rgba(40,36,24,.07);
 }
 
+/* === 字型角色 ===
+ * --font-serif → Newsreader（大數字、標題）
+ * --font-sans → Space Grotesk（介面預設）
+ * --font-tc → Noto Sans TC（中文 fallback）
+ * Tailwind 的 font-serif / font-sans 透過 layout.tsx 的 className 餵入。
+ */
 body {
   background: var(--c-page);
   color: var(--c-text);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), var(--font-tc),
+    "Noto Sans TC", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  transition: background 0.4s ease, color 0.4s ease;
+}
+
+/* tabular nums 工具類（jsx 設計裡的 .tnum 等價） */
+.tnum {
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1;
 }
 
 /* === <details> 平滑展開 === */
@@ -77,7 +107,9 @@ details[open] > summary::before {
 }
 
 /* === 連結 / 按鈕 hover 統一節奏 === */
-a, button, [role="button"] {
+a,
+button,
+[role="button"] {
   transition-property: background-color, border-color, color, fill, stroke,
     opacity, box-shadow, transform;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
@@ -85,14 +117,18 @@ a, button, [role="button"] {
 }
 
 /* === input / textarea：暗色模式下需要可讀的底色 === */
-input, textarea, select {
+input,
+textarea,
+select {
   background-color: var(--c-surface);
   color: var(--c-text);
 }
-input::placeholder, textarea::placeholder {
+input::placeholder,
+textarea::placeholder {
   color: var(--c-faint);
 }
-input:disabled, textarea:disabled {
+input:disabled,
+textarea:disabled {
   background-color: var(--c-surface-soft);
   color: var(--c-faint);
 }
