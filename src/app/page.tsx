@@ -14,6 +14,7 @@ import {
 } from "@/lib/metrics";
 import { fetchUsDailyClose } from "@/lib/prices/twelvedata";
 import { fetchUsdTwdHistory } from "@/lib/prices/fx";
+import { fetchTwDailyClose } from "@/lib/prices/finmind";
 import { getUnreadCount } from "@/lib/notifications";
 import { QuickAddFab } from "@/components/QuickAddFab";
 
@@ -45,24 +46,6 @@ function MetricCard({
   );
 }
 
-// 抓 0050（FinMind）作為大盤基準。1 小時快取。
-async function fetchTw0050(startDate: string) {
-  if (!startDate) return [];
-  try {
-    const url = `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=0050&start_date=${startDate}`;
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${process.env.FINMIND_TOKEN ?? ""}` },
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) return [];
-    const json = await res.json();
-    return ((json?.data ?? []) as { date: string; close: number }[]).filter(
-      (r) => Number.isFinite(Number(r.close)),
-    );
-  } catch {
-    return [];
-  }
-}
 
 type AccountRow = {
   id: string;
@@ -315,7 +298,7 @@ export default async function Home({
   const startDate = hasLine ? lineData[0].date : "";
   const [tw0050, spyUsd, qqqUsd, fxHistory] = hasLine
     ? await Promise.all([
-        fetchTw0050(startDate),
+        fetchTwDailyClose("0050", startDate),
         fetchUsDailyClose("SPY", startDate),
         fetchUsDailyClose("QQQ", startDate),
         fetchUsdTwdHistory(startDate),

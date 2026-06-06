@@ -67,6 +67,8 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
     Number.isFinite(twdNum) && twdNum > 0 && perShare > 0
       ? twdNum / perShare
       : 0;
+  // 選了帳戶但帳戶沒市價：本元件無法自動換算股數，直接擋下並引導去詳情頁
+  const accountMissingPrice = !!account && !(perShare > 0);
 
   if (accounts.length === 0) return null;
 
@@ -204,6 +206,11 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
                 </div>
               )}
 
+              {accountMissingPrice && (
+                <p className="rounded bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+                  此帳戶目前沒有市價，先到帳戶詳情頁按「更新價格」抓一次再回來。
+                </p>
+              )}
               {state?.error && (
                 <p className="rounded bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
                   {state.error}
@@ -212,7 +219,12 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
 
               <button
                 type="submit"
-                disabled={pending || !accountId || !(twdNum > 0)}
+                disabled={
+                  pending ||
+                  !accountId ||
+                  !(twdNum > 0) ||
+                  accountMissingPrice
+                }
                 className="mt-2 rounded-sm bg-[var(--c-accent)] px-5 py-3 text-sm font-semibold text-white shadow-sm hover:opacity-90 disabled:opacity-50"
               >
                 {pending ? "記錄中…" : "確認加碼"}

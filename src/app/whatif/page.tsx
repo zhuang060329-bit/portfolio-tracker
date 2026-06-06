@@ -4,28 +4,11 @@ import { AppHeader } from "@/components/AppHeader";
 import { getUnreadCount } from "@/lib/notifications";
 import { fetchUsDailyClose } from "@/lib/prices/twelvedata";
 import { fetchUsdTwdHistory } from "@/lib/prices/fx";
+import { fetchTwDailyClose } from "@/lib/prices/finmind";
 import { simulateBuyAndHold, type DailyClose } from "@/lib/whatif";
 
 const fmtTwd = (n: number) =>
   n.toLocaleString("zh-TW", { maximumFractionDigits: 0 });
-
-async function fetchTw0050(startDate: string) {
-  if (!startDate) return [];
-  try {
-    const url = `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=0050&start_date=${startDate}`;
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${process.env.FINMIND_TOKEN ?? ""}` },
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) return [];
-    const json = await res.json();
-    return ((json?.data ?? []) as { date: string; close: number }[]).filter(
-      (r) => Number.isFinite(Number(r.close)),
-    );
-  } catch {
-    return [];
-  }
-}
 
 export default async function WhatIfPage() {
   const supabase = await createClient();
@@ -80,7 +63,7 @@ export default async function WhatIfPage() {
   // 抓三個 ETF 歷史 close + USD/TWD（給 SPY/QQQ 換算）
   const [tw0050, spyUsd, qqqUsd, fxHistory] = hasData
     ? await Promise.all([
-        fetchTw0050(firstDate),
+        fetchTwDailyClose("0050", firstDate),
         fetchUsDailyClose("SPY", firstDate),
         fetchUsDailyClose("QQQ", firstDate),
         fetchUsdTwdHistory(firstDate),

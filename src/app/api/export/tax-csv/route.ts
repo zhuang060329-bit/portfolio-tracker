@@ -99,6 +99,7 @@ export async function GET(request: Request) {
   }
 
   // CSV header
+  // 註：單價/匯率僅 sell 紀錄有意義；dividend / interest 兩欄為空（金額看現金流入欄）。
   const header = [
     "日期",
     "類型",
@@ -106,8 +107,8 @@ export async function GET(request: Request) {
     "市場",
     "標的代號",
     "原幣",
-    "成交單價（原幣）",
-    "匯率",
+    "成交單價（僅賣出）",
+    "匯率（僅賣出）",
     "現金流入（TWD）",
     "已實現損益（TWD）",
     "備註",
@@ -119,6 +120,7 @@ export async function GET(request: Request) {
   for (const r of rows) {
     const acc = r.accounts;
     const date = r.created_at.slice(0, 10);
+    // dividend / interest 的 unit_price / fx_rate 是 null（由 importIncomeCsv 寫入），輸出為空字串
     lines.push(
       [
         csvEscape(date),
