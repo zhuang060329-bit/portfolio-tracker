@@ -1,40 +1,51 @@
 import { AppHeader } from "@/components/AppHeader";
 
+const sk = "animate-pulse rounded bg-[var(--c-surface-soft)]";
+const card =
+  "rounded-2xl border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] sm:px-6";
+
 export default function WhatIfLoading() {
   return (
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
-      <AppHeader active={null} />
-      <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-        <div className="mb-4 h-4 w-24 animate-pulse rounded bg-[var(--c-border)]" />
-        <div className="h-9 w-40 animate-pulse rounded bg-[var(--c-border)]" />
-        <div className="mt-3 h-3 w-96 max-w-full animate-pulse rounded bg-[var(--c-border)]" />
-        <section className="mt-6 grid gap-3 sm:grid-cols-2">
-          {[0, 1].map((i) => (
-            <div
-              key={i}
-              className="rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] p-4 shadow-sm"
-            >
-              <div className="h-3 w-16 animate-pulse rounded bg-[var(--c-border)]" />
-              <div className="mt-2 h-7 w-32 animate-pulse rounded bg-[var(--c-border)]" />
-              <div className="mt-2 h-3 w-24 animate-pulse rounded bg-[var(--c-border)]" />
-            </div>
-          ))}
-        </section>
-        <div className="mt-8 h-6 w-48 animate-pulse rounded bg-[var(--c-border)]" />
-        <div className="mt-4 flex flex-col gap-3">
-          {[0, 1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] p-4 shadow-sm"
-            >
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 animate-pulse rounded bg-[var(--c-border)]" />
-                <div className="h-4 w-36 animate-pulse rounded bg-[var(--c-border)]" />
-                <div className="ml-auto h-5 w-28 animate-pulse rounded bg-[var(--c-border)]" />
+      <AppHeader active="whatif" />
+      <main className="mx-auto max-w-[980px] px-7 py-9 pb-28">
+        <div className={`mb-4 h-4 w-20 ${sk}`} />
+        <div className={`h-9 w-40 ${sk}`} />
+        <div className={`mt-2 h-3 w-80 max-w-full ${sk}`} />
+
+        {/* tabs */}
+        <div className={`mt-5 h-11 w-56 rounded-[11px] ${sk}`} />
+
+        {/* 雙欄：控制 + 結果 */}
+        <div className="mt-5 grid grid-cols-1 items-start gap-[18px] min-[880px]:grid-cols-[350px_1fr]">
+          <section className={card}>
+            <div className={`h-5 w-24 ${sk}`} />
+            <div className={`mt-2 h-3 w-40 ${sk}`} />
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="mt-5">
+                <div className="flex justify-between">
+                  <div className={`h-3 w-24 ${sk}`} />
+                  <div className={`h-3 w-16 ${sk}`} />
+                </div>
+                <div className={`mt-2.5 h-1.5 w-full ${sk}`} />
               </div>
-              <div className="mt-2 h-3 w-24 animate-pulse rounded bg-[var(--c-border)]" />
+            ))}
+          </section>
+
+          <section className={card}>
+            <div className={`h-3 w-28 ${sk}`} />
+            <div className={`mt-2 h-11 w-56 ${sk}`} />
+            <div className={`mt-3 h-3 w-64 ${sk}`} />
+            <div className={`mt-5 h-[280px] ${sk} opacity-50`} />
+            <div className="mt-5 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-[var(--c-border)] bg-[var(--c-border)] sm:grid-cols-4">
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="bg-[var(--c-surface)] px-4 py-3.5">
+                  <div className={`h-3 w-16 ${sk}`} />
+                  <div className={`mt-2 h-5 w-20 ${sk}`} />
+                </div>
+              ))}
             </div>
-          ))}
+          </section>
         </div>
       </main>
     </div>
