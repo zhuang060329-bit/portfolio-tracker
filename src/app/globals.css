@@ -128,6 +128,40 @@ details[open] > summary::before {
   }
 }
 
+/* === What-if 推算滑桿（thumb 需原生 CSS，無法用 Tailwind inline）=== */
+.proj-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+.proj-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--c-accent);
+  border: 3px solid var(--c-surface);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.proj-range::-webkit-slider-thumb:hover {
+  transform: scale(1.12);
+}
+.proj-range::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--c-accent);
+  border: 3px solid var(--c-surface);
+  cursor: pointer;
+}
+
 /* === 連結 / 按鈕 hover 統一節奏 === */
 a,
 button,

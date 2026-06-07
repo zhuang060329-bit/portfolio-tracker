@@ -6,9 +6,11 @@ import { fetchUsDailyClose } from "@/lib/prices/twelvedata";
 import { fetchUsdTwdHistory } from "@/lib/prices/fx";
 import { fetchTwDailyClose } from "@/lib/prices/finmind";
 import { simulateBuyAndHold, type DailyClose } from "@/lib/whatif";
-
-const fmtTwd = (n: number) =>
-  n.toLocaleString("zh-TW", { maximumFractionDigits: 0 });
+import {
+  WhatIfClient,
+  type CfRow,
+  type CounterfactualData,
+} from "./WhatIfClient";
 
 export default async function WhatIfPage() {
   const supabase = await createClient();
@@ -17,7 +19,7 @@ export default async function WhatIfPage() {
   } = await supabase.auth.getUser();
   const unreadCount = await getUnreadCount();
 
-  // 抓使用者所有 cashflow_twd
+  // 所有 cashflow_twd（給回測）
   const { data: cfRows } = await supabase
     .from("transactions")
     .select("created_at,cashflow_twd")
@@ -38,7 +40,7 @@ export default async function WhatIfPage() {
     .filter((c) => c.amount < 0)
     .reduce((s, c) => s + Math.abs(c.amount), 0);
 
-  // 抓使用者目前實際組合估值（重用首頁邏輯）
+  // 目前實際組合估值（= 未來推算的起點本金）
   const { data: accs } = await supabase
     .from("accounts")
     .select(
@@ -60,7 +62,7 @@ export default async function WhatIfPage() {
   const firstDate = cashflows[0]?.date ?? "";
   const hasData = cashflows.length > 0 && totalInvested > 0 && !!firstDate;
 
-  // 抓三個 ETF 歷史 close + USD/TWD（給 SPY/QQQ 換算）
+  // 三個 ETF 歷史 close + USD/TWD（換算 SPY/QQQ）
   const [tw0050, spyUsd, qqqUsd, fxHistory] = hasData
     ? await Promise.all([
         fetchTwDailyClose("0050", firstDate),
@@ -70,7 +72,6 @@ export default async function WhatIfPage() {
       ])
     : [[], [], [], []];
 
-  // forward-fill 匯率
   const fxSorted = [...fxHistory].sort((a, b) => a.date.localeCompare(b.date));
   function fxAt(date: string): number | null {
     let last: number | null = null;
@@ -81,19 +82,16 @@ export default async function WhatIfPage() {
     return last;
   }
 
-  // 把 SPY/QQQ 換成 TWD 報價序列
   const spyTwd: DailyClose[] = spyUsd
     .map((r) => {
       const fx = fxAt(r.date);
-      if (fx === null) return null;
-      return { date: r.date, close: Number(r.close) * fx };
+      return fx === null ? null : { date: r.date, close: Number(r.close) * fx };
     })
     .filter((x): x is DailyClose => x !== null);
   const qqqTwd: DailyClose[] = qqqUsd
     .map((r) => {
       const fx = fxAt(r.date);
-      if (fx === null) return null;
-      return { date: r.date, close: Number(r.close) * fx };
+      return fx === null ? null : { date: r.date, close: Number(r.close) * fx };
     })
     .filter((x): x is DailyClose => x !== null);
   const tw0050Prices: DailyClose[] = tw0050.map((r) => ({
@@ -101,192 +99,87 @@ export default async function WhatIfPage() {
     close: Number(r.close),
   }));
 
-  const sims = hasData
-    ? [
-        {
-          label: "S&P 500（SPY）",
-          accent: "#3B82F6",
-          result: simulateBuyAndHold(cashflows, spyTwd),
-        },
-        {
-          label: "Nasdaq 100（QQQ）",
-          accent: "#A855F7",
-          result: simulateBuyAndHold(cashflows, qqqTwd),
-        },
-        {
-          label: "0050（台股）",
-          accent: "#10B981",
-          result: simulateBuyAndHold(cashflows, tw0050Prices),
-        },
-      ]
-    : [];
+  let counterfactual: CounterfactualData | null = null;
+  if (hasData) {
+    const actualReturnPct =
+      totalInvested > 0 ? (actualValue - totalInvested) / totalInvested : 0;
+    const sims: CfRow[] = [
+      {
+        label: "S&P 500",
+        sym: "SPY",
+        color: "#7FA8C9",
+        ...resultOf(simulateBuyAndHold(cashflows, spyTwd)),
+        actual: false,
+      },
+      {
+        label: "Nasdaq 100",
+        sym: "QQQ",
+        color: "#C58BD6",
+        ...resultOf(simulateBuyAndHold(cashflows, qqqTwd)),
+        actual: false,
+      },
+      {
+        label: "台股 0050",
+        sym: "0050",
+        color: "#7FBFA3",
+        ...resultOf(simulateBuyAndHold(cashflows, tw0050Prices)),
+        actual: false,
+      },
+    ];
+    const rows: CfRow[] = [
+      ...sims,
+      {
+        label: "我的實際組合",
+        sym: null,
+        color: "var(--c-accent)",
+        finalValue: actualValue,
+        returnPct: actualReturnPct,
+        actual: true,
+        skipped: 0,
+      },
+    ].sort((a, b) => b.returnPct - a.returnPct);
 
-  const actualReturnPct =
-    totalInvested > 0 ? (actualValue - totalInvested) / totalInvested : 0;
-
-  // 排名（包含實際組合）
-  const all = sims.map((s) => ({
-    label: s.label,
-    accent: s.accent,
-    finalValue: s.result.finalValue,
-    returnPct: s.result.returnPct,
-    skipped: s.result.skippedCashflows,
-  }));
-  all.push({
-    label: "我的實際組合",
-    accent: "var(--c-accent)",
-    finalValue: actualValue,
-    returnPct: actualReturnPct,
-    skipped: 0,
-  });
-  all.sort((a, b) => b.returnPct - a.returnPct);
+    counterfactual = {
+      invested: totalInvested,
+      firstDate,
+      contributions: cashflows.filter((c) => c.amount < 0).length,
+      rows,
+    };
+  }
 
   return (
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
-      <AppHeader active={null} userEmail={user?.email} unreadCount={unreadCount} />
-      <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      <AppHeader active="whatif" userEmail={user?.email} unreadCount={unreadCount} />
+      <main className="mx-auto max-w-[980px] px-7 py-9 pb-28">
         <div className="mb-4 text-sm">
           <Link href="/" className="text-[var(--c-muted)] hover:text-[var(--c-text)]">
             ← 回總覽
           </Link>
         </div>
-        <header>
-          <h1 className="font-serif text-3xl font-semibold tracking-tight">
-            What-if 模擬
+        <header className="mb-5">
+          <h1 className="font-serif text-3xl font-medium tracking-tight">
+            What-if 試算
           </h1>
-          <p className="mt-2 text-sm text-[var(--c-muted)]">
-            把你實際的投入時點與金額拿來，假設全部買 S&amp;P 500 / Nasdaq 100 / 0050
-            並 Buy and Hold，今天會值多少？
+          <p className="mt-1.5 text-[13.5px] text-[var(--c-muted)]">
+            推算未來淨值與 FIRE 進度，或回看「當初如果全買 ETF」的對照。
           </p>
         </header>
 
-        {!hasData ? (
-          <div className="mt-6 rounded-md border border-dashed border-[var(--c-border)] bg-[var(--c-surface)] px-6 py-12 text-center">
-            <p className="text-sm text-[var(--c-muted)]">
-              還沒有任何投入紀錄，先到帳戶頁建立帳戶並加碼後再回來。
-            </p>
-          </div>
-        ) : (
-          <>
-            <section className="mt-6 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] p-4 shadow-sm">
-                <div className="text-[10px] tracking-wider text-[var(--c-faint)]">
-                  累積投入
-                </div>
-                <div className="mt-1 font-serif text-2xl font-semibold tabular-nums">
-                  NT$ {fmtTwd(totalInvested)}
-                </div>
-                <div className="mt-1 text-[10px] text-[var(--c-faint)]">
-                  從 {firstDate} 起 · 共 {cashflows.filter((c) => c.amount < 0).length} 筆投入
-                </div>
-              </div>
-              <div className="rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] p-4 shadow-sm">
-                <div className="text-[10px] tracking-wider text-[var(--c-faint)]">
-                  目前實際組合
-                </div>
-                <div
-                  className={`mt-1 font-serif text-2xl font-semibold tabular-nums ${
-                    actualReturnPct > 0
-                      ? "text-emerald-700 dark:text-emerald-400"
-                      : actualReturnPct < 0
-                        ? "text-rose-700 dark:text-rose-400"
-                        : ""
-                  }`}
-                >
-                  NT$ {fmtTwd(actualValue)}
-                </div>
-                <div className="mt-1 text-[10px] text-[var(--c-faint)]">
-                  報酬 {actualReturnPct >= 0 ? "+" : "−"}
-                  {Math.abs(actualReturnPct * 100).toFixed(2)}%
-                </div>
-              </div>
-            </section>
-
-            <section className="mt-8">
-              <h2 className="font-serif text-xl font-semibold tracking-tight">
-                如果全部買 ETF 並 Buy and Hold
-              </h2>
-              <p className="mt-1 text-xs text-[var(--c-muted)]">
-                假設：每次投入用該日 ETF 收盤價買入；之後不主動賣出、不考慮交易成本。
-              </p>
-              <div className="mt-4 grid gap-3">
-                {all.map((row) => {
-                  const diff = row.finalValue - actualValue;
-                  const isActual = row.label === "我的實際組合";
-                  return (
-                    <div
-                      key={row.label}
-                      className={`rounded-md border bg-[var(--c-surface)] p-4 shadow-sm ${
-                        isActual
-                          ? "border-[var(--c-accent)] border-2"
-                          : "border-[var(--c-border)]"
-                      }`}
-                    >
-                      <div className="flex flex-wrap items-baseline justify-between gap-3">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className="inline-block h-3 w-3 rounded-sm"
-                            style={{ backgroundColor: row.accent }}
-                          />
-                          <span className="font-medium">{row.label}</span>
-                          {isActual && (
-                            <span className="rounded-sm bg-[var(--c-accent)]/10 px-1.5 py-0.5 text-[10px] text-[var(--c-accent)]">
-                              實際
-                            </span>
-                          )}
-                        </div>
-                        <div className="font-serif text-xl font-semibold tabular-nums [font-variant-numeric:lining-nums_tabular-nums]">
-                          NT$ {fmtTwd(row.finalValue)}
-                        </div>
-                      </div>
-                      <div className="mt-2 flex flex-wrap items-baseline justify-between gap-3 text-xs">
-                        <span
-                          className={
-                            row.returnPct > 0
-                              ? "text-emerald-700 dark:text-emerald-400"
-                              : row.returnPct < 0
-                                ? "text-rose-700 dark:text-rose-400"
-                                : "text-[var(--c-muted)]"
-                          }
-                        >
-                          報酬 {row.returnPct >= 0 ? "+" : "−"}
-                          {Math.abs(row.returnPct * 100).toFixed(2)}%
-                        </span>
-                        {!isActual && (
-                          <span
-                            className={
-                              diff > 0
-                                ? "text-emerald-700 dark:text-emerald-400"
-                                : diff < 0
-                                  ? "text-rose-700 dark:text-rose-400"
-                                  : "text-[var(--c-muted)]"
-                            }
-                          >
-                            vs 實際 {diff >= 0 ? "+" : "−"} NT$ {fmtTwd(Math.abs(diff))}
-                          </span>
-                        )}
-                        {row.skipped > 0 && (
-                          <span className="text-[10px] text-amber-700 dark:text-amber-300">
-                            {row.skipped} 筆投入找不到價格被跳過
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <p className="mt-4 text-[10px] text-[var(--c-faint)]">
-                假設說明：(1) 投入 = transactions.cashflow_twd 為負的紀錄；
-                (2) 配息 / 賣出當作沒發生，等同 buy-and-hold；
-                (3) SPY / QQQ 用該日收盤 × 當日 USD/TWD；
-                (4) 沒考慮交易成本、滑價、ETF 配息與再投資；
-                (5) 過去績效不代表未來。
-              </p>
-            </section>
-          </>
-        )}
+        <WhatIfClient netWorth={actualValue} counterfactual={counterfactual} />
       </main>
     </div>
   );
+}
+
+// 把 simulateBuyAndHold 結果整成 CfRow 需要的欄位
+function resultOf(r: {
+  finalValue: number;
+  returnPct: number;
+  skippedCashflows: number;
+}): Pick<CfRow, "finalValue" | "returnPct" | "skipped"> {
+  return {
+    finalValue: r.finalValue,
+    returnPct: r.returnPct,
+    skipped: r.skippedCashflows,
+  };
 }
