@@ -10,7 +10,7 @@
  * 新增 --c-up / --c-down（賺綠虧紅）、--c-accent-soft、--c-line-strong、--c-shadow。
  */
 :root {
-  --c-page: #14130E;
+  --c-page: #110F0B;
   --c-surface: #1C1A14;
   --c-surface-soft: #232017;
   --c-text: #ECE6D6;
@@ -18,15 +18,16 @@
   --c-faint: #6E6857;
   --c-accent: #D7A33F;
   --c-accent-soft: rgba(215, 163, 63, 0.14);
-  --c-border: rgba(236, 229, 209, 0.09);
-  --c-border-soft: rgba(236, 229, 209, 0.05);
-  --c-line-strong: rgba(236, 229, 209, 0.16);
+  --c-border: rgba(236, 229, 209, 0.13);
+  --c-border-soft: rgba(236, 229, 209, 0.06);
+  --c-line-strong: rgba(236, 229, 209, 0.18);
   --c-up: #6FB98C;
   --c-down: #E08664;
   /* 強對比按鈕（永遠跟 surface 反色）*/
   --c-btn-strong-bg: #ECE6D6;
   --c-btn-strong-text: #1a1408;
-  --c-shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 28px rgba(0,0,0,.28);
+  /* 內側頂部高光 + 外側環境陰影 — 讓卡片從深色背景浮起 */
+  --c-shadow: inset 0 1px 0 rgba(236,229,209,0.07), 0 2px 8px rgba(0,0,0,0.55), 0 10px 32px rgba(0,0,0,0.38);
 }
 
 /* === Direction A 設計 token：半徑收斂（取代散落的 9 種圓角）===
@@ -39,22 +40,23 @@
 }
 
 [data-theme="light"] {
-  --c-page: #F3F0E7;
+  --c-page: #EAE6D8;
   --c-surface: #FBF9F3;
-  --c-surface-soft: #F3F0E5;
+  --c-surface-soft: #F2EFE4;
   --c-text: #211E16;
   --c-muted: #6B6555;
   --c-faint: #A8A28E;
   --c-accent: #B07A1E;
   --c-accent-soft: rgba(176, 122, 30, 0.12);
-  --c-border: rgba(40, 36, 24, 0.10);
-  --c-border-soft: rgba(40, 36, 24, 0.05);
-  --c-line-strong: rgba(40, 36, 24, 0.18);
+  --c-border: rgba(40, 36, 24, 0.12);
+  --c-border-soft: rgba(40, 36, 24, 0.06);
+  --c-line-strong: rgba(40, 36, 24, 0.20);
   --c-up: #2F8F5B;
   --c-down: #C2562F;
   --c-btn-strong-bg: #211E16;
   --c-btn-strong-text: #FBF9F3;
-  --c-shadow: 0 1px 2px rgba(40,36,24,.05), 0 10px 30px rgba(40,36,24,.07);
+  /* 頂部白色反光 + 外側輕陰影 — 淺色版卡片浮起感 */
+  --c-shadow: inset 0 1px 0 rgba(255,255,255,0.95), 0 1px 3px rgba(40,36,24,.12), 0 10px 28px rgba(40,36,24,.09);
 }
 
 /* === 字型角色 ===

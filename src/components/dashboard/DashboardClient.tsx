@@ -305,8 +305,8 @@ function TrendSection({
   const chgPct = enoughValue && sliced[0].value ? (chg / sliced[0].value) * 100 : 0;
 
   return (
-    <section className="mt-4 border-t border-[var(--c-border)] pt-5 pb-1">
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+    <section className="mt-5 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] shadow-[var(--c-shadow)]">
+      <div className="mb-3 flex flex-col gap-3 px-5 pt-5 sm:flex-row sm:items-start sm:justify-between sm:gap-4 sm:px-6">
         <div>
           <h2 className="font-serif text-[19px] font-medium tracking-tight">
             {mode === "value" ? "淨資產趨勢" : "績效對照"}
@@ -368,7 +368,7 @@ function TrendSection({
         <ChartEmpty>此區間沒有可對照的資料。</ChartEmpty>
       )}
 
-      <div className="mt-3.5 flex flex-wrap items-center justify-between gap-4">
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-4 px-5 pb-4 sm:px-6">
         <div className="inline-flex gap-0.5">
           {RANGES.map((r) => (
             <button
@@ -703,7 +703,7 @@ function Holdings({
       : `${sign(day)}${Math.abs(day * 100).toFixed(2)}%`;
 
   return (
-    <section className={SECTION}>
+    <section className="px-5 pb-5 pt-5 sm:px-6">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
           <h2 className="font-serif text-[19px] font-medium tracking-tight">
@@ -939,9 +939,9 @@ export function DashboardClient({ data }: { data: DashboardData }) {
         today={data.today}
       />
 
-      {/* 指標四格（#3 架構重組：從 Hero 移到圖表下方，讓使用者看完數字即看趨勢）*/}
-      <section className="mt-5 border-t border-[var(--c-border)] pt-5">
-        <div className="grid grid-cols-2 gap-px overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-border)] sm:grid-cols-4">
+      {/* 指標四格：物理卡片 shadow + 更強邊框（Vestox 卡片重量感）*/}
+      <section className="mt-4">
+        <div className="grid grid-cols-2 gap-px overflow-hidden rounded-[var(--r-card)] border border-[var(--c-line-strong)] bg-[var(--c-border)] shadow-[var(--c-shadow)] sm:grid-cols-4">
           <HeroStat
             label="總成本"
             value={`NT$ ${fmtTwd(s.totalCost)}`}
@@ -981,31 +981,34 @@ export function DashboardClient({ data }: { data: DashboardData }) {
         </div>
       </section>
 
-      <section className={SECTION}>
-        {metricsHasContent ? (
-          <div className="grid grid-cols-1 gap-7 min-[920px]:grid-cols-2 min-[920px]:gap-0">
-            <div className="min-[920px]:pr-7">{alloc}</div>
-            <div className="border-t border-[var(--c-border)] pt-7 min-[920px]:border-l min-[920px]:border-t-0 min-[920px]:pl-7 min-[920px]:pt-0">
-              <MetricsCard s={s} />
-            </div>
-          </div>
-        ) : (
-          <>
+      {/* 配置 + 指標：並列兩張卡片（Vestox 區塊物理感）*/}
+      {metricsHasContent ? (
+        <section className="mt-4 grid grid-cols-1 gap-4 min-[920px]:grid-cols-2">
+          <div className="overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] sm:p-6">
             {alloc}
-            <p className="mt-5 border-t border-[var(--c-border)] pt-4 text-[12.5px] text-[var(--c-faint)]">
-              績效指標待每日淨值快照滿 30 天後顯示（目前樣本不足）。
-            </p>
-          </>
-        )}
-      </section>
+          </div>
+          <div className="overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] sm:p-6">
+            <MetricsCard s={s} />
+          </div>
+        </section>
+      ) : (
+        <section className="mt-4 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] sm:p-6">
+          {alloc}
+          <p className="mt-5 border-t border-[var(--c-border)] pt-4 text-[12.5px] text-[var(--c-faint)]">
+            績效指標待每日淨值快照滿 30 天後顯示（目前樣本不足）。
+          </p>
+        </section>
+      )}
 
-      <Holdings
-        holdings={data.holdings}
-        total={s.total}
-        marketLabel={data.marketLabel}
-        archivedCount={data.archivedCount}
-        showArchived={data.showArchived}
-      />
+      <div className="mt-4 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] shadow-[var(--c-shadow)]">
+        <Holdings
+          holdings={data.holdings}
+          total={s.total}
+          marketLabel={data.marketLabel}
+          archivedCount={data.archivedCount}
+          showArchived={data.showArchived}
+        />
+      </div>
     </div>
   );
 }
