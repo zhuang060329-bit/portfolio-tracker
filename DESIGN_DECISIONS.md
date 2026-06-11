@@ -123,5 +123,11 @@
 - 驗證：tsc ✅ eslint ✅ next build ✅。
 - 動過檔案：`src/app/settings/SettingsApp.tsx`、`DESIGN_DECISIONS.md`。
 
+### Block 5 — 提醒去卡片化 + 配置 marker 可見度（D8, D9）
+- **D9**：總覽配置卡「目標」marker（細直線）太淡看不見 → 加高（-top/-bottom 3px）、滿對比 `bg-text`、加 1px page 色描邊讓它從實際長條跳出來、置中對齊。
+- **D8（提醒頁）**：新增提醒面板去盒裝（移除 border+shadow+surface）；警示卡改帳本列（border-b 分隔，移除盒框）；列表加頂部分隔線分區。type 選擇卡、條件預覽、距觸發進度條、toggle/刪除等功能不動。
+- 驗證：tsc ✅ eslint ✅ next build ✅。
+- 動過檔案：`src/components/dashboard/DashboardClient.tsx`、`src/app/alerts/AlertsClient.tsx`、`DESIGN_DECISIONS.md`。
+
 ---
-**流程修正**：自 Block 4 起，每塊完成即 push `design-pass-2`，Vercel 預覽自動更新；不再只留本地。
+**流程**：Block 1–4 已合進 `main`（正式站）。自此每塊完成即 push `design-pass-2` 並 ff-merge 到 `main` 部署，讓使用者在正式網址看得到。

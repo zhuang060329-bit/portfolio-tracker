@@ -558,9 +558,10 @@ function AllocationCard({
                   }}
                 />
                 {a.target > 0 && (
+                  // 目標 marker：加高、滿對比、加 1px page 色描邊讓它在實際長條上跳出來（D9）
                   <span
-                    className="absolute -top-0.5 -bottom-0.5 w-0.5 rounded-sm bg-[var(--c-text)] opacity-55"
-                    style={{ left: `${Math.min(100, a.target)}%` }}
+                    className="absolute -top-[3px] -bottom-[3px] w-[2px] rounded-full bg-[var(--c-text)] shadow-[0_0_0_1px_var(--c-page)]"
+                    style={{ left: `calc(${Math.min(100, a.target)}% - 1px)` }}
                     title={`目標 ${a.target}%`}
                   />
                 )}

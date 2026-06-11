@@ -201,10 +201,7 @@ function CreatePanel({ accounts }: { accounts: AlertAccount[] }) {
   }
 
   return (
-    <form
-      action={action}
-      className="rounded-2xl border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] sm:px-6"
-    >
+    <form action={action} className="pt-1">
       <h2 className="font-serif text-[19px] font-medium tracking-tight">
         新增提醒
       </h2>
@@ -356,8 +353,9 @@ function AlertCard({
     : a.accountSymbol || a.accountName || "—";
 
   return (
+    // 去卡片化：警示改帳本列（靠底線分隔），不再盒裝（D8）
     <div
-      className={`grid grid-cols-[auto_1fr] items-center gap-3 rounded-[14px] border border-[var(--c-border)] bg-[var(--c-surface)] p-4 shadow-[var(--c-shadow)] sm:grid-cols-[auto_1fr_auto] sm:gap-[15px] sm:px-[18px] ${
+      className={`grid grid-cols-[auto_1fr] items-center gap-3 border-b border-[var(--c-border)] py-4 sm:grid-cols-[auto_1fr_auto] sm:gap-[15px] ${
         a.active ? "" : "opacity-[0.58]"
       }`}
     >
@@ -498,10 +496,10 @@ export function AlertsClient({
   const paused = alerts.filter((a) => !a.active);
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col">
       <CreatePanel accounts={accounts} />
 
-      <div className="flex flex-col gap-2.5">
+      <div className="mt-7 flex flex-col border-t border-[var(--c-border)] pt-5">
         <ListHead on label="啟用中" count={active.length} />
         {active.length === 0 ? (
           <div className="rounded-[14px] border border-dashed border-[var(--c-border)] px-5 py-[22px] text-center text-[13.5px] text-[var(--c-muted)]">
