@@ -115,3 +115,13 @@
 - 驗證：tsc ✅ eslint ✅ next build ✅ vitest 45 ✅。
 - RWD：桌機＝時間軸｜摘要 2 欄；手機＝單欄、摘要在底。**待你實機確認**：手機摘要在底是否要改到頂、桌機 sticky top 84px 與 header 高度是否吻合。
 - 動過檔案：`src/app/activity/ActivityClient.tsx`、`DESIGN_DECISIONS.md`。
+
+### Block 4 — 設定去卡片化（D8）
+- 設定頁是全站盒裝卡片堆疊最典型的一頁（6 個 rounded-2xl 大卡）。把 `Section` 盒殼改成帳本式分區（頂部 hairline + 標題，內容落頁面背景），與 Block 2 一致；首段不加頂線。
+- 容器 `gap-4` 移除，分區靠 `mt-9 + border-t + pt-7` 自我間隔；footer 註記加頂線。
+- scroll-spy、三態主題、配置目標 live editor、MFA 卡、通知/匯出/刪帳等功能與內部 Row/Segmented/Toggle 全不動，只換外層容器樣式。
+- 驗證：tsc ✅ eslint ✅ next build ✅。
+- 動過檔案：`src/app/settings/SettingsApp.tsx`、`DESIGN_DECISIONS.md`。
+
+---
+**流程修正**：自 Block 4 起，每塊完成即 push `design-pass-2`，Vercel 預覽自動更新；不再只留本地。

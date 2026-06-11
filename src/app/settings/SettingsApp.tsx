@@ -111,8 +111,8 @@ export function SettingsApp({
         </nav>
       </aside>
 
-      {/* 主體 6 個 section */}
-      <div className="flex min-w-0 flex-col gap-4">
+      {/* 主體 6 個 section（去卡片化：帳本式分區，靠頂部分隔線）*/}
+      <div className="flex min-w-0 flex-col">
         <Section id="account" title="帳號" elRef={registerEl("account")}>
           <AccountInner user={user} />
         </Section>
@@ -156,7 +156,7 @@ export function SettingsApp({
         >
           <DataInner />
         </Section>
-        <p className="mt-2 text-center text-xs text-[var(--c-faint)]">
+        <p className="mt-9 border-t border-[var(--c-border)] pt-6 text-center text-xs text-[var(--c-faint)]">
           StackWorth · 以 TWD 為基準幣別
         </p>
       </div>
@@ -186,7 +186,7 @@ function Section({
       ref={elRef}
       id={id}
       style={{ scrollMarginTop: 84 }}
-      className="rounded-2xl border border-[var(--c-border)] bg-[var(--c-surface)] p-6 shadow-[var(--c-shadow)]"
+      className="mt-9 border-t border-[var(--c-border)] pt-7 first:mt-0 first:border-t-0 first:pt-1"
     >
       <div className="mb-4">
         <h2 className="font-serif text-[19px] font-medium tracking-tight text-[var(--c-text)]">
