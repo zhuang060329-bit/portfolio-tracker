@@ -19,6 +19,7 @@ import {
   type PerfPoint,
   type SeriesPoint,
 } from "./DashboardCharts";
+import { fmtUpdatedAt } from "@/lib/format";
 
 /* ---------- 對外資料型別（page.tsx 餵入）---------- */
 export type DashSummary = {
@@ -126,7 +127,7 @@ function Card({
 }) {
   return (
     <section
-      className={`rounded-2xl border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] sm:px-6 ${className}`}
+      className={`rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] sm:px-6 ${className}`}
     >
       {children}
     </section>
@@ -199,7 +200,8 @@ function Hero({
             <span className="text-xs text-[var(--c-faint)]">較前一日快照</span>
           )}
           <span className="text-[12.5px] text-[var(--c-muted)]">
-            報價更新於 {s.lastUpdate ?? "—"} · {s.accounts} 個帳戶
+            報價更新於 {s.lastUpdate ? fmtUpdatedAt(s.lastUpdate) : "—"} ·{" "}
+            {s.accounts} 個帳戶
           </span>
         </div>
       </div>
@@ -219,16 +221,16 @@ function Hero({
         </div>
       )}
 
-      {/* 副指標四格 */}
-      <div className="mt-2 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-[var(--c-border)] bg-[var(--c-border)] sm:col-span-2 sm:grid-cols-4">
+      {/* 副指標四格 —— 與 hero 主數字、表格同屬「全位數」情境，統一 fmtTwd（D6）*/}
+      <div className="mt-2 grid grid-cols-2 gap-px overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-border)] sm:col-span-2 sm:grid-cols-4">
         <HeroStat
           label="總成本"
-          value={`NT$ ${fmtCompact(s.totalCost)}`}
+          value={`NT$ ${fmtTwd(s.totalCost)}`}
           sub="cost basis"
         />
         <HeroStat
           label="未實現損益"
-          value={`${sign(s.unrealized)}${fmtCompact(Math.abs(s.unrealized))}`}
+          value={`${sign(s.unrealized)}${fmtTwd(Math.abs(s.unrealized))}`}
           tone={toneCls(s.unrealized)}
           sub={`${sign(s.unrealizedPct)}${Math.abs(s.unrealizedPct).toFixed(1)}%`}
         />
@@ -237,7 +239,7 @@ function Hero({
           value={
             s.totalRealized === 0
               ? "—"
-              : `${sign(s.totalRealized)}${fmtCompact(Math.abs(s.totalRealized))}`
+              : `${sign(s.totalRealized)}${fmtTwd(Math.abs(s.totalRealized))}`
           }
           tone={toneCls(s.totalRealized)}
           sub="realized"

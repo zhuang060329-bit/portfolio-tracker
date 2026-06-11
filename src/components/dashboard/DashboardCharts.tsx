@@ -11,18 +11,12 @@ import {
   useRef,
   useState,
 } from "react";
+import { fmtFull, fmtCompact } from "@/lib/format";
 
-// 完整千分位（表格、tooltip 用）
-export const fmtTwd = (n: number) =>
-  Math.round(n).toLocaleString("en-US");
-
-// 億／萬 緊湊格式（hero 副指標、donut 中心、被動收入用）
-export const fmtCompact = (n: number) => {
-  const a = Math.abs(n);
-  if (a >= 1e8) return (n / 1e8).toFixed(2) + "億";
-  if (a >= 1e4) return (n / 1e4).toFixed(0) + "萬";
-  return Math.round(n).toLocaleString("en-US");
-};
+// 數字格式集中到 lib/format（Direction A 數字系統）。
+// 保留 fmtTwd 名稱供既有匯入端不變；fmtCompact 直接 re-export。
+export const fmtTwd = fmtFull;
+export { fmtCompact };
 
 // 資產類別配色：設計稿只給 5 類，這裡補滿 9 類 + fallback。
 export const ALLOC_COLORS: Record<string, string> = {
