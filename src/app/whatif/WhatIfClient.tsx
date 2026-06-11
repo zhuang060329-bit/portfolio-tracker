@@ -166,7 +166,8 @@ function ProjectionChart({
       >
         <defs>
           <linearGradient id="projFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="var(--c-accent)" stopOpacity="0.22" />
+            <stop offset="0" stopColor="var(--c-accent)" stopOpacity="0.28" />
+            <stop offset="0.65" stopColor="var(--c-accent)" stopOpacity="0.07" />
             <stop offset="1" stopColor="var(--c-accent)" stopOpacity="0" />
           </linearGradient>
         </defs>
@@ -199,10 +200,10 @@ function ProjectionChart({
         <path
           d={contribLine}
           fill="none"
-          stroke="var(--c-muted)"
+          stroke="var(--c-text)"
           strokeWidth="1.4"
-          strokeDasharray="5 4"
-          opacity="0.8"
+          strokeDasharray="4 5"
+          opacity="0.35"
         />
         <path
           d={valLine}

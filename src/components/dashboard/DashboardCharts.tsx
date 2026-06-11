@@ -176,8 +176,8 @@ export function TrendChart({
       >
         <defs>
           <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="var(--c-accent)" stopOpacity="0.20" />
-            <stop offset="0.7" stopColor="var(--c-accent)" stopOpacity="0.04" />
+            <stop offset="0" stopColor="var(--c-accent)" stopOpacity="0.30" />
+            <stop offset="0.6" stopColor="var(--c-accent)" stopOpacity="0.10" />
             <stop offset="1" stopColor="var(--c-accent)" stopOpacity="0" />
           </linearGradient>
         </defs>
@@ -213,7 +213,7 @@ export function TrendChart({
           d={line}
           fill="none"
           stroke="var(--c-accent)"
-          strokeWidth="2.25"
+          strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"
           style={{

@@ -209,45 +209,6 @@ function Hero({
         </div>
       )}
 
-      {/* 副指標四格 —— 與 hero 主數字、表格同屬「全位數」情境，統一 fmtTwd（D6）*/}
-      <div className="mt-2 grid grid-cols-2 gap-px overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-border)] sm:col-span-2 sm:grid-cols-4">
-        <HeroStat
-          label="總成本"
-          value={`NT$ ${fmtTwd(s.totalCost)}`}
-          sub="cost basis"
-        />
-        <HeroStat
-          label="未實現損益"
-          value={`${sign(s.unrealized)}${fmtTwd(Math.abs(s.unrealized))}`}
-          tone={toneCls(s.unrealized)}
-          sub={`${sign(s.unrealizedPct)}${Math.abs(s.unrealizedPct).toFixed(1)}%`}
-          primary
-        />
-        <HeroStat
-          label="已實現"
-          value={
-            s.totalRealized === 0
-              ? "—"
-              : `${sign(s.totalRealized)}${fmtTwd(Math.abs(s.totalRealized))}`
-          }
-          tone={toneCls(s.totalRealized)}
-          sub="realized"
-        />
-        {s.xirrShowable && s.xirr != null ? (
-          <HeroStat
-            label="年化 XIRR"
-            value={`${sign(s.xirr)}${(Math.abs(s.xirr) * 100).toFixed(1)}%`}
-            tone={toneCls(s.xirr)}
-            sub="money-weighted"
-          />
-        ) : (
-          <HeroStat
-            label="年化 XIRR"
-            value="—"
-            sub="資料未滿 30 天"
-          />
-        )}
-      </div>
     </section>
   );
 }
@@ -344,7 +305,7 @@ function TrendSection({
   const chgPct = enoughValue && sliced[0].value ? (chg / sliced[0].value) * 100 : 0;
 
   return (
-    <section className={`${SECTION} pb-1`}>
+    <section className="mt-4 border-t border-[var(--c-border)] pt-5 pb-1">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
         <div>
           <h2 className="font-serif text-[19px] font-medium tracking-tight">
@@ -956,19 +917,20 @@ function Th({
 
 /* ---------- 組合 ---------- */
 export function DashboardClient({ data }: { data: DashboardData }) {
+  const s = data.summary;
   const alloc = (
     <AllocationCard
       allocation={data.allocation}
       allocTargets={data.allocTargets}
-      total={data.summary.total}
+      total={s.total}
     />
   );
   // D3：指標 + 被動收入都沒料時，不留半欄空盒——配置改滿版 + 一行說明。
-  const metricsHasContent = data.summary.twrShowable || data.summary.hasIncome;
+  const metricsHasContent = s.twrShowable || s.hasIncome;
 
   return (
     <div className="flex flex-col">
-      <Hero s={data.summary} series={data.series} />
+      <Hero s={s} series={data.series} />
       <TrendSection
         series={data.series}
         perf={data.perf}
@@ -977,12 +939,54 @@ export function DashboardClient({ data }: { data: DashboardData }) {
         today={data.today}
       />
 
+      {/* 指標四格（#3 架構重組：從 Hero 移到圖表下方，讓使用者看完數字即看趨勢）*/}
+      <section className="mt-5 border-t border-[var(--c-border)] pt-5">
+        <div className="grid grid-cols-2 gap-px overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-border)] sm:grid-cols-4">
+          <HeroStat
+            label="總成本"
+            value={`NT$ ${fmtTwd(s.totalCost)}`}
+            sub="cost basis"
+          />
+          <HeroStat
+            label="未實現損益"
+            value={`${sign(s.unrealized)}${fmtTwd(Math.abs(s.unrealized))}`}
+            tone={toneCls(s.unrealized)}
+            sub={`${sign(s.unrealizedPct)}${Math.abs(s.unrealizedPct).toFixed(1)}%`}
+            primary
+          />
+          <HeroStat
+            label="已實現"
+            value={
+              s.totalRealized === 0
+                ? "—"
+                : `${sign(s.totalRealized)}${fmtTwd(Math.abs(s.totalRealized))}`
+            }
+            tone={toneCls(s.totalRealized)}
+            sub="realized"
+          />
+          {s.xirrShowable && s.xirr != null ? (
+            <HeroStat
+              label="年化 XIRR"
+              value={`${sign(s.xirr)}${(Math.abs(s.xirr) * 100).toFixed(1)}%`}
+              tone={toneCls(s.xirr)}
+              sub="money-weighted"
+            />
+          ) : (
+            <HeroStat
+              label="年化 XIRR"
+              value="—"
+              sub="資料未滿 30 天"
+            />
+          )}
+        </div>
+      </section>
+
       <section className={SECTION}>
         {metricsHasContent ? (
           <div className="grid grid-cols-1 gap-7 min-[920px]:grid-cols-2 min-[920px]:gap-0">
             <div className="min-[920px]:pr-7">{alloc}</div>
             <div className="border-t border-[var(--c-border)] pt-7 min-[920px]:border-l min-[920px]:border-t-0 min-[920px]:pl-7 min-[920px]:pt-0">
-              <MetricsCard s={data.summary} />
+              <MetricsCard s={s} />
             </div>
           </div>
         ) : (
@@ -997,7 +1001,7 @@ export function DashboardClient({ data }: { data: DashboardData }) {
 
       <Holdings
         holdings={data.holdings}
-        total={data.summary.total}
+        total={s.total}
         marketLabel={data.marketLabel}
         archivedCount={data.archivedCount}
         showArchived={data.showArchived}
