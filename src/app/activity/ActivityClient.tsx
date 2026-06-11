@@ -257,6 +257,26 @@ export function ActivityClient({
     return out;
   }, [filtered]);
 
+  // 「顯示中摘要」：依目前篩選（chips/搜尋）即時彙總現金流，填寬螢幕右側欄（D5）。
+  const summary = useMemo(() => {
+    let inflow = 0;
+    let outflow = 0;
+    for (const r of filtered) {
+      const a = r.amount ?? 0;
+      if (a > 0) inflow += a;
+      else if (a < 0) outflow += a;
+    }
+    const dates = filtered.map((r) => r.date); // 已依時間倒序
+    return {
+      count: filtered.length,
+      net: inflow + outflow,
+      inflow,
+      outflow,
+      earliest: dates.length ? dates[dates.length - 1] : null,
+      latest: dates.length ? dates[0] : null,
+    };
+  }, [filtered]);
+
   return (
     <>
       {/* 類型 chips（兼統計，可篩選）*/}
@@ -357,7 +377,8 @@ export function ActivityClient({
           )}
         </div>
       ) : (
-        <div className="mt-7">
+        <div className="mt-7 flex flex-col gap-8 min-[920px]:grid min-[920px]:grid-cols-[1fr_236px] min-[920px]:items-start min-[920px]:gap-10">
+          <div className="min-w-0">
           {groups.map((g) => {
             const lab = dateLabel(g.date, today, yesterday);
             const dayNet = g.items.reduce((s, r) => s + (r.amount ?? 0), 0);
@@ -402,8 +423,91 @@ export function ActivityClient({
               </section>
             );
           })}
+          </div>
+          <SummaryRail s={summary} />
         </div>
       )}
     </>
+  );
+}
+
+/* ---------- 顯示中摘要欄（依目前篩選即時彙總，填寬螢幕右側 D5）---------- */
+function SummaryRail({
+  s,
+}: {
+  s: {
+    count: number;
+    net: number;
+    inflow: number;
+    outflow: number;
+    earliest: string | null;
+    latest: string | null;
+  };
+}) {
+  const period =
+    s.earliest && s.latest
+      ? s.earliest === s.latest
+        ? s.earliest
+        : `${s.earliest} – ${s.latest}`
+      : "—";
+  return (
+    <aside className="min-[920px]:sticky min-[920px]:top-[84px]">
+      <div className="border-t border-[var(--c-border)] pt-4">
+        <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--c-muted)]">
+          顯示中摘要
+        </h3>
+        <dl className="mt-3 flex flex-col">
+          <RailRow k="筆數" v={`${s.count} 筆`} />
+          <RailRow
+            k="淨現金流"
+            v={fmtAmt(s.net)}
+            vClass={
+              s.net > 0
+                ? "text-[var(--c-up)]"
+                : s.net < 0
+                  ? "text-[var(--c-down)]"
+                  : "text-[var(--c-text)]"
+            }
+          />
+          <RailRow
+            k="流入"
+            v={s.inflow > 0 ? fmtAmt(s.inflow) : "—"}
+            vClass={s.inflow > 0 ? "text-[var(--c-up)]" : "text-[var(--c-faint)]"}
+          />
+          <RailRow
+            k="流出"
+            v={s.outflow < 0 ? fmtAmt(s.outflow) : "—"}
+            vClass={s.outflow < 0 ? "text-[var(--c-down)]" : "text-[var(--c-faint)]"}
+          />
+          <RailRow k="期間" v={period} small />
+        </dl>
+        <p className="mt-3 text-[10.5px] text-[var(--c-faint)]">
+          依目前篩選即時計算
+        </p>
+      </div>
+    </aside>
+  );
+}
+
+function RailRow({
+  k,
+  v,
+  vClass = "text-[var(--c-text)]",
+  small,
+}: {
+  k: string;
+  v: string;
+  vClass?: string;
+  small?: boolean;
+}) {
+  return (
+    <div className="flex items-baseline justify-between gap-3 border-b border-[var(--c-border)] py-2 last:border-b-0">
+      <dt className="text-xs text-[var(--c-muted)]">{k}</dt>
+      <dd
+        className={`tnum font-medium ${small ? "text-[11px]" : "text-[13px]"} ${vClass}`}
+      >
+        {v}
+      </dd>
+    </div>
   );
 }

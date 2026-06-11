@@ -106,3 +106,12 @@
 - 驗證：tsc ✅ eslint ✅ next build ✅ vitest 45 ✅。
 - RWD：桌機＝配置｜指標 2 欄帶垂直分隔，持有資產扁平表；手機＝全部單欄、帳本列。無 box 後不再有等高空盒。**待你實機確認**：手機去盒裝後密度是否過緊、分隔線在深色下對比是否足夠。
 - 動過檔案：`src/components/dashboard/DashboardClient.tsx`、`DESIGN_DECISIONS.md`。
+
+### Block 3 — 活動：密度 + 右側空白填實（D5）
+- 寬螢幕（≥920px）時間軸改 2 欄：左＝時間軸（收窄成 1fr）、右＝「顯示中摘要」欄（236px，sticky）。右半頁不再空白。
+- 摘要欄依「目前篩選（chips/搜尋）」即時彙總：筆數、淨現金流、流入、流出、期間。client 端算（`summary` useMemo over filtered），無後端。
+- 摘要欄去卡片化（帳本式 key-value + hairline 分隔），與 Block 2 一致。
+- 手機（<920px）摘要欄落在時間軸下方（ledger footer 慣例）。
+- 驗證：tsc ✅ eslint ✅ next build ✅ vitest 45 ✅。
+- RWD：桌機＝時間軸｜摘要 2 欄；手機＝單欄、摘要在底。**待你實機確認**：手機摘要在底是否要改到頂、桌機 sticky top 84px 與 header 高度是否吻合。
+- 動過檔案：`src/app/activity/ActivityClient.tsx`、`DESIGN_DECISIONS.md`。
