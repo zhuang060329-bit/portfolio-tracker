@@ -78,7 +78,7 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="快速加碼"
-        className="fixed bottom-5 right-5 z-40 grid h-14 w-14 place-items-center rounded-[18px] bg-[var(--c-accent)] text-[#1a1408] shadow-[0_6px_20px_rgba(0,0,0,0.35)] transition-transform hover:-translate-y-0.5 active:scale-95 sm:bottom-8 sm:right-8"
+        className="fixed bottom-5 right-5 z-40 grid h-14 w-14 place-items-center rounded-[18px] bg-[var(--c-accent)] text-[#1a1408] shadow-[0_6px_20px_rgba(0,0,0,0.35)] transition-transform hover:-translate-y-0.5 active:scale-95 sm:hidden"
       >
         <svg
           viewBox="0 0 24 24"

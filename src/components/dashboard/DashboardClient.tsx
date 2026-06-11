@@ -156,8 +156,8 @@ function Hero({
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--c-muted)]">
           總淨資產 · NET WORTH
         </p>
-        <h1 className="mt-3 flex items-baseline gap-2.5 font-serif">
-          <span className="text-2xl font-normal text-[var(--c-muted)] sm:text-[28px]">
+        <h1 className="mt-3 flex items-baseline gap-2 font-serif">
+          <span className="text-[14px] font-medium text-[var(--c-muted)]">
             NT$
           </span>
           <span className="text-[clamp(44px,7vw,72px)] font-medium leading-[0.95] tracking-[-0.025em] tnum">
@@ -221,6 +221,7 @@ function Hero({
           value={`${sign(s.unrealized)}${fmtTwd(Math.abs(s.unrealized))}`}
           tone={toneCls(s.unrealized)}
           sub={`${sign(s.unrealizedPct)}${Math.abs(s.unrealizedPct).toFixed(1)}%`}
+          primary
         />
         <HeroStat
           label="已實現"
@@ -256,19 +257,21 @@ function HeroStat({
   value,
   tone,
   sub,
+  primary,
 }: {
   label: string;
   value: string;
   tone?: Tone;
   sub?: string;
+  primary?: boolean;
 }) {
   return (
-    <div className="bg-[var(--c-surface)] px-4 py-4 sm:px-[18px]">
+    <div className={`bg-[var(--c-surface)] px-4 ${primary ? "py-5" : "py-4"} sm:px-[18px]`}>
       <div className="text-[11.5px] font-medium text-[var(--c-muted)]">
         {label}
       </div>
       <div
-        className={`mt-1.5 font-serif text-[25px] font-medium tracking-tight tnum ${
+        className={`mt-1.5 font-serif ${primary ? "text-[27px]" : "text-[21px]"} font-medium tracking-tight tnum ${
           tone ? TONE_TEXT[tone] : ""
         }`}
       >

@@ -22,7 +22,7 @@ export { fmtCompact };
 export const ALLOC_COLORS: Record<string, string> = {
   stock: "var(--c-accent)",
   fund: "#7FA8C9",
-  crypto: "#C58BD6",
+  crypto: "#C5956B",
   precious_metal: "#E0B15F",
   liquid_cash: "#7FBFA3",
   other_investment: "#B0926A",
