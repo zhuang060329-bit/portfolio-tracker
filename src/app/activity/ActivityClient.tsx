@@ -155,7 +155,8 @@ function LedgerRow({
           </div>
         </div>
 
-        <div className="mt-2 flex flex-wrap gap-x-[18px] gap-y-1.5">
+        {/* 詳情欄：[label value] × N — grid 對齊（D6）*/}
+        <div className="mt-2 grid w-fit grid-cols-[auto_auto] gap-x-2 gap-y-1">
           {r.market !== "manual" && r.price != null && (
             <Kv label="單價" value={fmtNum(r.price, 4)} />
           )}
@@ -188,10 +189,10 @@ function Kv({
   strong?: boolean;
 }) {
   return (
-    <span className="inline-flex items-baseline gap-1.5 whitespace-nowrap text-[12.5px]">
-      <i className="not-italic text-[var(--c-faint)]">{label}</i>
+    <span className="contents">
+      <i className="not-italic text-[12px] text-[var(--c-faint)]">{label}</i>
       <b
-        className={`tnum ${
+        className={`tnum text-[12.5px] ${
           strong
             ? "font-semibold text-[var(--c-text)]"
             : "font-medium text-[var(--c-muted)]"
