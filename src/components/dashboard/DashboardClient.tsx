@@ -375,9 +375,9 @@ function TrendSection({
               key={r.k}
               type="button"
               onClick={() => setRange(r.k)}
-              className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-colors ${
+              className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-all duration-150 ${
                 range === r.k
-                  ? "bg-[var(--c-accent-soft)] text-[var(--c-accent)]"
+                  ? "bg-[var(--c-accent-soft)] text-[var(--c-accent)] shadow-[inset_0_-2px_0_var(--c-accent)]"
                   : "text-[var(--c-muted)] hover:text-[var(--c-text)]"
               }`}
             >
@@ -426,8 +426,8 @@ function LegendBtn({
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 rounded-full border border-[var(--c-border)] px-2.5 py-1 text-xs font-medium text-[var(--c-text)] transition-opacity ${
-        on ? "" : "opacity-40"
+      className={`inline-flex items-center gap-1.5 rounded-full border border-[var(--c-border)] px-2.5 py-1 text-xs font-medium text-[var(--c-text)] transition-all duration-150 hover:border-[var(--c-line-strong)] hover:bg-[var(--c-surface-soft)] ${
+        on ? "" : "opacity-40 hover:opacity-60"
       }`}
     >
       <span

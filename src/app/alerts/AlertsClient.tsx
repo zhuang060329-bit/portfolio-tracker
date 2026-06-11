@@ -218,10 +218,10 @@ function CreatePanel({ accounts }: { accounts: AlertAccount[] }) {
               type="button"
               onClick={() => setType(k)}
               style={{ "--tc": t.color } as React.CSSProperties}
-              className={`flex flex-col items-start gap-[3px] rounded-xl border p-[14px] text-left transition-all ${
+              className={`flex flex-col items-start gap-[3px] rounded-xl border p-[14px] text-left transition-all duration-150 ${
                 on
-                  ? "border-[color-mix(in_srgb,var(--tc)_55%,transparent)] bg-[color-mix(in_srgb,var(--tc)_10%,var(--c-surface))] shadow-[0_0_0_3px_color-mix(in_srgb,var(--tc)_12%,transparent)]"
-                  : "border-[var(--c-border)] bg-[var(--c-surface-soft)] hover:border-[var(--c-line-strong)]"
+                  ? "border-[color-mix(in_srgb,var(--tc)_60%,transparent)] bg-[color-mix(in_srgb,var(--tc)_11%,var(--c-surface))] shadow-[0_0_0_2px_color-mix(in_srgb,var(--tc)_20%,transparent),0_4px_14px_rgba(0,0,0,0.18)]"
+                  : "border-[var(--c-border)] bg-[var(--c-surface-soft)] hover:-translate-y-[1px] hover:border-[var(--c-line-strong)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.14)]"
               }`}
             >
               <span
