@@ -117,22 +117,10 @@ function useCountUp(target: number, dur = 1100) {
   return val;
 }
 
-/* ---------- 卡片殼 ---------- */
-function Card({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <section
-      className={`rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] sm:px-6 ${className}`}
-    >
-      {children}
-    </section>
-  );
-}
+/* ---------- 區段標題（去卡片化後，分區靠頂部分隔線 + 標題）---------- */
+// Direction A：不再用 border+shadow 盒裝卡片，改成帳本式分區。
+// SECTION = 各區段共用的「頂部 hairline + 上內距」class。
+const SECTION = "mt-7 border-t border-[var(--c-border)] pt-7";
 
 function CardHead({ title, sub }: { title: string; sub?: React.ReactNode }) {
   return (
@@ -353,7 +341,7 @@ function TrendSection({
   const chgPct = enoughValue && sliced[0].value ? (chg / sliced[0].value) * 100 : 0;
 
   return (
-    <Card className="pb-4">
+    <section className={`${SECTION} pb-1`}>
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
           <h2 className="font-serif text-[19px] font-medium tracking-tight">
@@ -455,7 +443,7 @@ function TrendSection({
           </div>
         )}
       </div>
-    </Card>
+    </section>
   );
 }
 
@@ -509,7 +497,7 @@ function AllocationCard({
   const sel = hoverCls ? allocation.find((a) => a.cls === hoverCls) : null;
 
   return (
-    <Card>
+    <div>
       <CardHead title="資產配置" sub="實際 vs 目標" />
       <div className="grid grid-cols-1 items-center gap-5 sm:grid-cols-[auto_1fr] sm:gap-7">
         <div className="relative mx-auto h-[188px] w-[188px]">
@@ -587,7 +575,7 @@ function AllocationCard({
           </p>
         </div>
       </div>
-    </Card>
+    </div>
   );
 }
 
@@ -624,7 +612,7 @@ function MetricsCard({ s }: { s: DashSummary }) {
       : null;
 
   return (
-    <Card>
+    <div>
       <CardHead title="績效指標" sub="基於每日淨值快照" />
       {metrics ? (
         <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-[var(--c-border)] bg-[var(--c-border)]">
@@ -645,8 +633,8 @@ function MetricsCard({ s }: { s: DashSummary }) {
           ))}
         </div>
       ) : (
-        <p className="rounded-xl border border-dashed border-[var(--c-border)] px-4 py-6 text-center text-xs text-[var(--c-faint)]">
-          快照不足 30 天，指標暫不顯示（樣本太少結果不可靠）。
+        <p className="text-[12.5px] text-[var(--c-faint)]">
+          每日淨值快照滿 30 天後，這裡會顯示 TWR、最大回撤、Sharpe。
         </p>
       )}
 
@@ -668,7 +656,7 @@ function MetricsCard({ s }: { s: DashSummary }) {
           </p>
         </div>
       )}
-    </Card>
+    </div>
   );
 }
 
@@ -750,10 +738,10 @@ function Holdings({
       : `${sign(day)}${Math.abs(day * 100).toFixed(2)}%`;
 
   return (
-    <section className="mt-2">
+    <section className={SECTION}>
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
-          <h2 className="font-serif text-2xl font-medium tracking-tight">
+          <h2 className="font-serif text-[19px] font-medium tracking-tight">
             持有資產
           </h2>
           {archivedCount > 0 && (
@@ -771,7 +759,7 @@ function Holdings({
         </div>
         <Link
           href="/accounts/new"
-          className="shrink-0 rounded-[9px] bg-[var(--c-accent)] px-4 py-2.5 text-[13.5px] font-semibold text-[#1a1408] transition hover:brightness-110"
+          className="shrink-0 rounded-[var(--r-control)] bg-[var(--c-accent)] px-4 py-2.5 text-[13.5px] font-semibold text-[#1a1408] transition hover:brightness-110"
         >
           ＋ 新增帳戶
         </Link>
@@ -783,8 +771,8 @@ function Holdings({
         </div>
       ) : (
         <>
-          {/* 桌機表格 */}
-          <div className="hidden overflow-hidden rounded-2xl border border-[var(--c-border)] bg-[var(--c-surface)] shadow-[var(--c-shadow)] md:block">
+          {/* 桌機表格（去盒裝：扁平帳本表，靠列分隔線）*/}
+          <div className="hidden md:block">
             <table className="w-full border-collapse text-[13.5px]">
               <thead>
                 <tr className="bg-[var(--c-surface-soft)] text-[11px] font-semibold uppercase tracking-[0.04em] text-[var(--c-muted)]">
@@ -881,8 +869,8 @@ function Holdings({
             </table>
           </div>
 
-          {/* 手機卡片 */}
-          <div className="flex flex-col gap-2.5 md:hidden">
+          {/* 手機：帳本列（去盒裝，靠底線分隔）*/}
+          <div className="border-t border-[var(--c-border)] md:hidden">
             {rows.map((h) => {
               const pnl = h.value - h.cost;
               const pct = h.cost > 0 ? (pnl / h.cost) * 100 : 0;
@@ -891,7 +879,7 @@ function Holdings({
                 <Link
                   key={h.id}
                   href={`/accounts/${h.id}`}
-                  className={`block rounded-[13px] border border-[var(--c-border)] bg-[var(--c-surface)] p-4 shadow-[var(--c-shadow)] ${
+                  className={`block border-b border-[var(--c-border)] py-3.5 ${
                     h.status === "archived" ? "opacity-60" : ""
                   }`}
                 >
@@ -964,8 +952,18 @@ function Th({
 
 /* ---------- 組合 ---------- */
 export function DashboardClient({ data }: { data: DashboardData }) {
+  const alloc = (
+    <AllocationCard
+      allocation={data.allocation}
+      allocTargets={data.allocTargets}
+      total={data.summary.total}
+    />
+  );
+  // D3：指標 + 被動收入都沒料時，不留半欄空盒——配置改滿版 + 一行說明。
+  const metricsHasContent = data.summary.twrShowable || data.summary.hasIncome;
+
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col">
       <Hero s={data.summary} series={data.series} />
       <TrendSection
         series={data.series}
@@ -974,14 +972,25 @@ export function DashboardClient({ data }: { data: DashboardData }) {
         hasPerf={data.hasPerf}
         today={data.today}
       />
-      <div className="grid grid-cols-1 gap-5 min-[920px]:grid-cols-2">
-        <AllocationCard
-          allocation={data.allocation}
-          allocTargets={data.allocTargets}
-          total={data.summary.total}
-        />
-        <MetricsCard s={data.summary} />
-      </div>
+
+      <section className={SECTION}>
+        {metricsHasContent ? (
+          <div className="grid grid-cols-1 gap-7 min-[920px]:grid-cols-2 min-[920px]:gap-0">
+            <div className="min-[920px]:pr-7">{alloc}</div>
+            <div className="border-t border-[var(--c-border)] pt-7 min-[920px]:border-l min-[920px]:border-t-0 min-[920px]:pl-7 min-[920px]:pt-0">
+              <MetricsCard s={data.summary} />
+            </div>
+          </div>
+        ) : (
+          <>
+            {alloc}
+            <p className="mt-5 border-t border-[var(--c-border)] pt-4 text-[12.5px] text-[var(--c-faint)]">
+              績效指標待每日淨值快照滿 30 天後顯示（目前樣本不足）。
+            </p>
+          </>
+        )}
+      </section>
+
       <Holdings
         holdings={data.holdings}
         total={data.summary.total}

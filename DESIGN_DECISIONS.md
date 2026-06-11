@@ -96,3 +96,13 @@
 - 驗證：tsc ✅ eslint ✅ next build ✅ vitest 45 ✅。
 - RWD：Block 1 不改版面；唯一寬度相關變化＝hero 副指標改全位數（略長）。目前資料（4 萬級）桌機/手機 2×2 皆容得下；**待觀察**：8 位數以上大組合在手機半寬格的字級溢出，留待 Block 2 總覽改版時一併處理字級。
 - 動過檔案：`src/lib/format.ts`(新)、`src/components/dashboard/DashboardCharts.tsx`、`src/components/dashboard/DashboardClient.tsx`、`src/app/globals.css`、`DESIGN_DECISIONS.md`。
+
+### Block 2 — 總覽去卡片化 + 填實指標空卡（D3, D8）
+- 移除 `Card` 盒殼元件（border+shadow+surface 圓角盒）；改帳本式分區：各區段 = 頂部 hairline + 上內距（共用 `SECTION` const = `mt-7 border-t pt-7`）。
+- 趨勢 / 配置 / 指標 / 持有資產 全部去盒裝，內容直接落在 page 背景，靠分隔線分區（解 D8 卡片瀑布）。
+- 配置 + 指標併成同一區段：桌機 2 欄中間用垂直分隔線（border-l），手機上下排用水平線。
+- **D3**：指標 + 被動收入都沒料時，不再渲染半欄空盒——配置改滿版 + 一行「待快照滿 30 天」說明；指標區空狀態的虛線盒也改成精簡單行。
+- 持有資產：桌機表格拿掉外框/陰影成扁平帳本表（靠列分隔線）；手機卡片改成去盒裝帳本列（底線分隔）。標題字級與其他區段對齊（24→19px）。`+新增帳戶` 按鈕半徑改 `--r-control`。
+- 驗證：tsc ✅ eslint ✅ next build ✅ vitest 45 ✅。
+- RWD：桌機＝配置｜指標 2 欄帶垂直分隔，持有資產扁平表；手機＝全部單欄、帳本列。無 box 後不再有等高空盒。**待你實機確認**：手機去盒裝後密度是否過緊、分隔線在深色下對比是否足夠。
+- 動過檔案：`src/components/dashboard/DashboardClient.tsx`、`DESIGN_DECISIONS.md`。
