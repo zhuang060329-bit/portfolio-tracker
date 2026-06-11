@@ -129,5 +129,16 @@
 - 驗證：tsc ✅ eslint ✅ next build ✅。
 - 動過檔案：`src/components/dashboard/DashboardClient.tsx`、`src/app/alerts/AlertsClient.tsx`、`DESIGN_DECISIONS.md`。
 
+### Block 6 — What-if 去卡片化 + 切換器收斂 + 手機修正（D8, D11, D13, D14）
+- **D8（What-if）**：未來推算控制｜結果改去盒裝 2 欄（垂直分隔線，控制仍 sticky）；回測統計卡改 inset 雙格；回測主區段去盒（頂線分區）。
+- **D11**：總覽趨勢「淨值/大盤對照」、What-if 分頁、設定 segmented 三者半徑統一用 `--r-control`、內鈕 `rounded-md`、active `bg-surface shadow-sm`，收斂成同一套 segmented 語彙。範圍 tabs / benchmark legend 功能不同，保留。
+- **D13**：總覽趨勢標題列手機改直向堆疊（segmented 落標題下、`whitespace-nowrap`），不再「淨 值 / 大盤對 照」直排換行。
+- **D14**：D13 後手機上 segmented 不再貼在右下角，FAB 不再壓住它；頁面既有 pb-28 給 FAB 留白。視為緩解。
+- 驗證：tsc ✅ eslint ✅ next build ✅ vitest 45 ✅。
+- 動過檔案：`src/components/dashboard/DashboardClient.tsx`、`src/app/whatif/WhatIfClient.tsx`、`src/app/settings/SettingsApp.tsx`、`DESIGN_DECISIONS.md`。
+
 ---
-**流程**：Block 1–4 已合進 `main`（正式站）。自此每塊完成即 push `design-pass-2` 並 ff-merge 到 `main` 部署，讓使用者在正式網址看得到。
+## 收尾狀態
+Block 1–6 全部完成並合進 `main`（正式站）。方向 A《帳本》：全站去卡片化（總覽/活動/設定/提醒/What-if）、數字時間系統一致、死白填實、切換器收斂、手機修正。
+診斷 D1–D14 全數處理；D14 為緩解。
+**流程**：每塊 push `design-pass-2` 並 ff-merge 到 `main` 部署。

@@ -342,7 +342,7 @@ function TrendSection({
 
   return (
     <section className={`${SECTION} pb-1`}>
-      <div className="mb-4 flex items-start justify-between gap-4">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
         <div>
           <h2 className="font-serif text-[19px] font-medium tracking-tight">
             {mode === "value" ? "淨資產趨勢" : "績效對照"}
@@ -367,13 +367,13 @@ function TrendSection({
           </p>
         </div>
         {hasPerf && (
-          <div className="inline-flex rounded-[10px] border border-[var(--c-border)] bg-[var(--c-surface-soft)] p-[3px]">
+          <div className="inline-flex self-start rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] p-[3px]">
             {(["value", "bench"] as const).map((m) => (
               <button
                 key={m}
                 type="button"
                 onClick={() => setMode(m)}
-                className={`rounded-[7px] px-3.5 py-1.5 text-[13px] font-medium transition-all ${
+                className={`whitespace-nowrap rounded-md px-3.5 py-1.5 text-[13px] font-medium transition-all ${
                   mode === m
                     ? "bg-[var(--c-surface)] text-[var(--c-text)] shadow-sm"
                     : "text-[var(--c-muted)]"

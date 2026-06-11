@@ -325,9 +325,9 @@ function ProjectionTab({ netWorth }: { netWorth: number }) {
   const isPreset = PRESETS.some((p) => p.r === ret);
 
   return (
-    <div className="grid grid-cols-1 items-start gap-[18px] min-[880px]:grid-cols-[350px_1fr]">
-      {/* 控制 */}
-      <section className="rounded-2xl border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] sm:px-6 min-[880px]:sticky min-[880px]:top-[78px]">
+    <div className="grid grid-cols-1 items-start gap-7 min-[880px]:grid-cols-[340px_1fr] min-[880px]:gap-0">
+      {/* 控制（去盒裝，桌機用右側垂直分隔線）*/}
+      <section className="min-[880px]:sticky min-[880px]:top-[78px] min-[880px]:border-r min-[880px]:border-[var(--c-border)] min-[880px]:pr-8">
         <h2 className="font-serif text-[19px] font-medium tracking-tight">
           情境設定
         </h2>
@@ -417,8 +417,8 @@ function ProjectionTab({ netWorth }: { netWorth: number }) {
         />
       </section>
 
-      {/* 結果 */}
-      <section className="rounded-2xl border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] sm:px-6">
+      {/* 結果（去盒裝；手機上與控制以頂線分隔）*/}
+      <section className="border-t border-[var(--c-border)] pt-7 min-[880px]:border-t-0 min-[880px]:pt-0 min-[880px]:pl-8">
         <div className="mb-4 border-b border-[var(--c-border)] pb-[18px]">
           <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--c-muted)]">
             {years} 年後預估淨值
@@ -526,8 +526,8 @@ function CounterfactualTab({ cf }: { cf: CounterfactualData }) {
 
   return (
     <div>
-      <div className="mb-[18px] grid grid-cols-1 gap-3.5 sm:grid-cols-2">
-        <div className="rounded-2xl border border-[var(--c-border)] bg-[var(--c-surface)] px-5 py-[18px] shadow-[var(--c-shadow)]">
+      <div className="mb-7 grid grid-cols-1 gap-px overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-border)] sm:grid-cols-2">
+        <div className="bg-[var(--c-surface)] px-5 py-[18px]">
           <span className="text-[11.5px] text-[var(--c-muted)]">累積投入</span>
           <span className="mt-1.5 block font-serif text-[26px] font-medium tnum">
             NT$ {fmtTwd(cf.invested)}
@@ -536,7 +536,7 @@ function CounterfactualTab({ cf }: { cf: CounterfactualData }) {
             從 {cf.firstDate} 起 · {cf.contributions} 筆投入
           </span>
         </div>
-        <div className="rounded-2xl border border-[var(--c-border)] bg-[var(--c-surface)] px-5 py-[18px] shadow-[var(--c-shadow)]">
+        <div className="bg-[var(--c-surface)] px-5 py-[18px]">
           <span className="text-[11.5px] text-[var(--c-muted)]">目前實際組合</span>
           <span
             className={`mt-1.5 block font-serif text-[26px] font-medium tnum ${
@@ -554,7 +554,7 @@ function CounterfactualTab({ cf }: { cf: CounterfactualData }) {
         </div>
       </div>
 
-      <section className="rounded-2xl border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] sm:px-6">
+      <section className="border-t border-[var(--c-border)] pt-7">
         <h2 className="font-serif text-[19px] font-medium tracking-tight">
           如果當初全買 ETF 並 Buy &amp; Hold
         </h2>
@@ -660,13 +660,13 @@ export function WhatIfClient({
 
   return (
     <div>
-      <div className="mb-5 inline-flex rounded-[11px] border border-[var(--c-border)] bg-[var(--c-surface-soft)] p-[3px]">
+      <div className="mb-6 inline-flex rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] p-[3px]">
         {(["proj", "cf"] as const).map((t) => (
           <button
             key={t}
             type="button"
             onClick={() => setTab(t)}
-            className={`whitespace-nowrap rounded-lg px-[18px] py-2 text-[13.5px] font-semibold transition-all ${
+            className={`whitespace-nowrap rounded-md px-[18px] py-2 text-[13.5px] font-semibold transition-all ${
               tab === t
                 ? "bg-[var(--c-surface)] text-[var(--c-text)] shadow-sm"
                 : "text-[var(--c-muted)]"

@@ -237,7 +237,7 @@ function Segmented<T extends string>({
   options: { v: T; label: string }[];
 }) {
   return (
-    <div className="inline-flex rounded-lg border border-[var(--c-border)] bg-[var(--c-surface-soft)] p-1">
+    <div className="inline-flex rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] p-1">
       {options.map((o) => (
         <button
           key={o.v}
