@@ -394,7 +394,7 @@ export default async function Home({
           }))}
       />
 
-      <main className="mx-auto max-w-[980px] px-7 py-9 pb-28">
+      <main className="mx-auto max-w-[1200px] px-7 py-9 pb-28">
         <DashboardClient data={dashboard} />
       </main>
     </div>

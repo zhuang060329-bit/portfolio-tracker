@@ -34,68 +34,70 @@ export default function NewStockPage() {
 
         <form
           action={action}
-          className="mt-6 flex flex-col gap-4 rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] p-6 shadow-sm"
+          className="mt-6 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-6 shadow-[var(--c-shadow)]"
         >
-          <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
-            帳戶名稱
-            <input
-              name="name"
-              required
-              placeholder="例：永豐複委託 QQQM"
-              className="mt-1 rounded border border-[var(--c-border)] px-3 py-2 text-base text-[var(--c-text)]"
-            />
-          </label>
+          <div className="flex flex-col gap-5">
+            <label className="flex flex-col gap-[7px] text-xs font-medium text-[var(--c-muted)]">
+              帳戶名稱
+              <input
+                name="name"
+                required
+                placeholder="例：永豐複委託 QQQM"
+                className="h-[42px] rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3.5 text-sm text-[var(--c-text)] outline-none placeholder:text-[var(--c-faint)] focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+              />
+            </label>
 
-          <fieldset className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
-            市場
-            <div className="mt-1 flex gap-2">
-              <label className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded border border-[var(--c-border)] bg-[var(--c-surface)] px-3 py-2 text-sm has-[:checked]:border-[var(--c-accent)] has-[:checked]:bg-[var(--c-accent)]/5">
-                <input type="radio" name="market" value="us" defaultChecked />
-                <span className="text-[var(--c-text)]">美股</span>
-              </label>
-              <label className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded border border-[var(--c-border)] bg-[var(--c-surface)] px-3 py-2 text-sm has-[:checked]:border-[var(--c-accent)] has-[:checked]:bg-[var(--c-accent)]/5">
-                <input type="radio" name="market" value="tw" />
-                <span className="text-[var(--c-text)]">台股</span>
-              </label>
-            </div>
-          </fieldset>
+            <fieldset className="flex flex-col gap-[7px] text-xs font-medium text-[var(--c-muted)]">
+              市場
+              <div className="mt-0.5 flex gap-2">
+                <label className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3 py-2.5 text-[13px] font-medium transition-all has-[:checked]:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] has-[:checked]:bg-[var(--c-accent-soft)] has-[:checked]:text-[var(--c-accent)]">
+                  <input type="radio" name="market" value="us" defaultChecked className="sr-only" />
+                  美股
+                </label>
+                <label className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3 py-2.5 text-[13px] font-medium transition-all has-[:checked]:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] has-[:checked]:bg-[var(--c-accent-soft)] has-[:checked]:text-[var(--c-accent)]">
+                  <input type="radio" name="market" value="tw" className="sr-only" />
+                  台股
+                </label>
+              </div>
+            </fieldset>
 
-          <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
-            Symbol（美股 ticker 或台股代號）
-            <input
-              name="symbol"
-              required
-              placeholder="QQQM 或 2330"
-              className="mt-1 rounded border border-[var(--c-border)] px-3 py-2 text-base text-[var(--c-text)]"
-            />
-          </label>
+            <label className="flex flex-col gap-[7px] text-xs font-medium text-[var(--c-muted)]">
+              Symbol（美股 ticker 或台股代號）
+              <input
+                name="symbol"
+                required
+                placeholder="QQQM 或 2330"
+                className="h-[42px] rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3.5 text-sm text-[var(--c-text)] outline-none placeholder:text-[var(--c-faint)] focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+              />
+            </label>
 
-          <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
-            持有股數
-            <input
-              name="quantity"
-              type="number"
-              step="any"
-              min="0"
-              required
-              placeholder="例：1.37164"
-              className="mt-1 rounded border border-[var(--c-border)] px-3 py-2 text-base text-[var(--c-text)]"
-            />
-          </label>
+            <label className="flex flex-col gap-[7px] text-xs font-medium text-[var(--c-muted)]">
+              持有股數
+              <input
+                name="quantity"
+                type="number"
+                step="any"
+                min="0"
+                required
+                placeholder="例：1.37164"
+                className="h-[42px] rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3.5 text-sm text-[var(--c-text)] outline-none placeholder:text-[var(--c-faint)] focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+              />
+            </label>
 
-          {state?.error && (
-            <p className="rounded bg-red-50 dark:bg-red-950/40 px-3 py-2 text-sm text-red-700 dark:text-red-300">
-              {state.error}
-            </p>
-          )}
+            {state?.error && (
+              <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-down)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-down)_10%,var(--c-surface))] px-3.5 py-2.5 text-sm text-[var(--c-down)]">
+                {state.error}
+              </p>
+            )}
 
-          <button
-            type="submit"
-            disabled={pending}
-            className="mt-2 self-start rounded-sm bg-[var(--c-accent)] px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-90 disabled:opacity-50"
-          >
-            {pending ? "驗證並建立中…" : "建立帳戶"}
-          </button>
+            <button
+              type="submit"
+              disabled={pending}
+              className="mt-1 self-start rounded-[var(--r-control)] bg-[var(--c-accent)] px-6 py-2.5 text-sm font-semibold text-[#1a1408] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45"
+            >
+              {pending ? "驗證並建立中…" : "建立帳戶"}
+            </button>
+          </div>
         </form>
       </main>
     </div>

@@ -150,7 +150,7 @@ export default async function WhatIfPage() {
   return (
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active="whatif" userEmail={user?.email} unreadCount={unreadCount} />
-      <main className="mx-auto max-w-[980px] px-7 py-9 pb-28">
+      <main className="mx-auto max-w-[1200px] px-7 py-9 pb-28">
         <div className="mb-4 text-sm">
           <Link href="/" className="text-[var(--c-muted)] hover:text-[var(--c-text)]">
             ← 回總覽

@@ -53,18 +53,18 @@ export default async function NewAccountIndex() {
             <Link
               key={it.href}
               href={it.href}
-              className="group flex items-center gap-3 rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] px-4 py-3 shadow-sm transition-colors hover:border-[var(--c-accent)]/40 hover:bg-[var(--c-surface-soft)]"
+              className="group flex items-center gap-4 rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] px-5 py-4 shadow-[var(--c-shadow)] transition-all hover:-translate-y-[1px] hover:border-[var(--c-line-strong)]"
             >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--c-accent)]/10 text-sm font-semibold text-[var(--c-accent)]">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--c-accent-soft)] text-base font-semibold text-[var(--c-accent)]">
                 {it.icon}
               </span>
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-semibold">{it.title}</div>
-                <div className="mt-0.5 line-clamp-2 text-xs text-[var(--c-muted)]">
+                <div className="text-[14.5px] font-semibold">{it.title}</div>
+                <div className="mt-0.5 line-clamp-2 text-[12px] text-[var(--c-muted)]">
                   {it.desc}
                 </div>
               </div>
-              <span className="text-[var(--c-faint)] group-hover:text-[var(--c-accent)]">
+              <span className="text-[var(--c-faint)] transition-colors group-hover:text-[var(--c-accent)]">
                 →
               </span>
             </Link>
