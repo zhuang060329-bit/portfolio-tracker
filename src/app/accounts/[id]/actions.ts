@@ -10,6 +10,7 @@ import { applyContribution, nextMonthlyAfter } from "@/lib/contributions";
 import { AddByAmountSchema } from "@/lib/schemas/action/add-by-amount";
 import { SellQuantitySchema } from "@/lib/schemas/action/sell-quantity";
 import { CreateRecurringPlanSchema } from "@/lib/schemas/action/create-recurring-plan";
+import { RecordIncomeSchema } from "@/lib/schemas/action/record-income";
 
 export type FormState = { error?: string } | undefined;
 
@@ -459,24 +460,18 @@ async function recordIncome(
   formData: FormData,
   type: "dividend" | "interest",
 ): Promise<FormState> {
-  const accountId = String(formData.get("accountId") ?? "");
-  const amount = Number(formData.get("amount"));
-  const occurredAtRaw = String(formData.get("occurredAt") ?? "").trim();
-  const userNote = String(formData.get("note") ?? "").trim() || null;
-
-  if (!accountId) return { error: "缺少帳戶 ID" };
-  if (!Number.isFinite(amount) || amount <= 0) {
-    return { error: "金額需為正數" };
+  const result = RecordIncomeSchema.safeParse({
+    accountId: String(formData.get("accountId") ?? ""),
+    amount: String(formData.get("amount") ?? ""),
+    occurredAt: String(formData.get("occurredAt") ?? "").trim() || null,
+    note: String(formData.get("note") ?? "").trim() || null,
+  });
+  if (!result.success) {
+    return { error: result.error.issues[0]?.message ?? "輸入資料無效" };
   }
 
-  let occurredAt: Date;
-  if (occurredAtRaw) {
-    const d = new Date(occurredAtRaw);
-    if (Number.isNaN(d.getTime())) return { error: "時間格式無效" };
-    occurredAt = d;
-  } else {
-    occurredAt = new Date();
-  }
+  const { accountId, amount, occurredAt: occurredAtStr, note: userNote } = result.data;
+  const occurredAt = occurredAtStr ? new Date(occurredAtStr) : new Date();
 
   const { supabase, user, account, error } = await loadAccount(accountId);
   if (error || !account || !user) return { error: error ?? "錯誤" };
