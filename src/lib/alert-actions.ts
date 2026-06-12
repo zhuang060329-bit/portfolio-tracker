@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { CreateAlertSchema } from "@/lib/schemas/action/create-alert";
 
 export type FormState = { error?: string; ok?: boolean } | undefined;
 
@@ -15,23 +16,19 @@ export async function createAlert(
   } = await supabase.auth.getUser();
   if (!user) return { error: "未登入" };
 
-  const type = String(fd.get("type") ?? "");
-  const threshold = Number(fd.get("threshold"));
-  const accountId = fd.get("accountId") ? String(fd.get("accountId")) : null;
-  const note = fd.get("note") ? String(fd.get("note")) : null;
+  const result = CreateAlertSchema.safeParse({
+    type: fd.get("type"),
+    threshold: fd.get("threshold"),
+    accountId: fd.get("accountId") || null,
+    note: fd.get("note") || null,
+  });
 
-  if (!["price_above", "price_below", "allocation_drift"].includes(type)) {
-    return { error: "未知警示類型" };
+  if (!result.success) {
+    const firstIssue = result.error.issues[0]?.message ?? "輸入資料無效";
+    return { error: firstIssue };
   }
-  if (!Number.isFinite(threshold) || threshold <= 0) {
-    return { error: "閾值必須是正數" };
-  }
-  if (
-    (type === "price_above" || type === "price_below") &&
-    !accountId
-  ) {
-    return { error: "價格警示須指定帳戶" };
-  }
+
+  const { type, threshold, accountId, note } = result.data;
 
   const { error } = await supabase.from("alerts").insert({
     user_id: user.id,
