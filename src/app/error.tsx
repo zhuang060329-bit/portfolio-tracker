@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import * as Sentry from "@sentry/nextjs";
 
 // 全域錯誤邊界。Next 16 要求 client component。
 export default function GlobalError({
@@ -12,8 +13,11 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // 真實部署若有設 Sentry DSN，這裡自動被捕捉（instrumentation onRequestError）
+    // client error boundary 需在此主動送出 Sentry event（onRequestError 只捕捉 server-side）
     console.error("App error boundary:", error);
+    if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
+      Sentry.captureException(error);
+    }
   }, [error]);
 
   return (
