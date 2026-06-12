@@ -442,6 +442,29 @@ function ChartEmpty({ children }: { children: React.ReactNode }) {
   );
 }
 
+/* ---------- 配置偏離（percentage points）----------
+ * drift = actual − target，單位 pp。這是「離目標多遠」的輔助判斷，
+ * 不帶賺賠語義（超配不一定好、低配不一定壞），所以分級只用中性 token：
+ *   |drift| < 1   → faint（基本對齊）
+ *   1 ≤ |drift| < 5 → muted（輕微提醒）
+ *   |drift| ≥ 5   → accent（較明顯提醒，金色只是「看這裡」非好壞）
+ * target <= 0 / 不存在 / 非有限值 → 回傳 null（不顯示）。
+ * 四捨五入到 1 位小數；接近 0 用 sign("")避免出現 "−0.0pp"。 */
+function driftInfo(actual: number, target: number) {
+  if (!(target > 0)) return null;
+  const raw = actual - target;
+  if (!Number.isFinite(raw)) return null;
+  const d = Math.round(raw * 10) / 10; // 1 位小數
+  const mag = Math.abs(d);
+  const tone =
+    mag < 1
+      ? "var(--c-faint)"
+      : mag < 5
+        ? "var(--c-muted)"
+        : "var(--c-accent)";
+  return { text: `${sign(d)}${mag.toFixed(1)}pp`, tone };
+}
+
 /* ---------- 配置卡（donut + 目標長條）---------- */
 function AllocationCard({
   allocation,
@@ -497,7 +520,7 @@ function AllocationCard({
           {allocTargets.map((a) => (
             <div
               key={a.cls}
-              className={`grid grid-cols-[auto_56px_1fr_44px] items-center gap-2.5 transition-opacity ${
+              className={`grid grid-cols-[auto_56px_1fr_58px] items-center gap-2.5 transition-opacity ${
                 hoverCls && hoverCls !== a.cls ? "opacity-40" : ""
               }`}
               onMouseEnter={() => setHoverCls(a.cls)}
@@ -525,8 +548,22 @@ function AllocationCard({
                   />
                 )}
               </span>
-              <span className="text-right text-[12.5px] font-medium tnum">
-                {a.actual.toFixed(1)}%
+              <span className="flex flex-col items-end leading-tight">
+                <span className="text-[12.5px] font-medium tnum">
+                  {a.actual.toFixed(1)}%
+                </span>
+                {(() => {
+                  const d = driftInfo(a.actual, a.target);
+                  return d ? (
+                    <span
+                      className="mt-0.5 text-[10px] font-medium tnum"
+                      style={{ color: d.tone }}
+                      title="相對目標配置的偏離（percentage points）"
+                    >
+                      {d.text}
+                    </span>
+                  ) : null;
+                })()}
               </span>
             </div>
           ))}
