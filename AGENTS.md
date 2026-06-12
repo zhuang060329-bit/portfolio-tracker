@@ -16,7 +16,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **GitHub**：`github.com/zhuang060329-bit/portfolio-tracker`（private）
 - **部署**：`https://portfolio-tracker-two-rho.vercel.app`
 - **使用者**：`zhuang060329@gmail.com`（亦為 admin email）
-- **當前狀態**：上線運作中，39 個單元測試通過，18 個 routes
+- **當前狀態**：上線運作中，Vitest 測試通過（數量以 `npm run test` 實際輸出為準），18 個 routes
 - **完整背景文件**：`docs/StackWorth-專案紀實.pdf`（15 頁，繁中）
 
 ## 二、技術棧
@@ -32,7 +32,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 | 部署 | Vercel Hobby + GitHub auto-deploy |
 | 排程 | Vercel Cron 每日 06:00 UTC（= 台北 14:00） |
 | 報價 | Twelve Data（美股 + USD/TWD）、FinMind（台股 + 0050 + 歷史匯率）、CoinGecko（加密） |
-| 測試 | Vitest（39 tests） |
+| 測試 | Vitest（測試數量以 `npm run test` 實際輸出為準） |
 | 監控 | Sentry SDK（DSN 未設則 no-op） |
 
 ## 三、目錄重點
@@ -87,7 +87,7 @@ docs/
 └── build_pdf.py                 ← 生成腳本（reportlab + 微軟正黑體）
 
 vercel.json                      ← Cron 設定 0 6 * * *
-vitest.config.ts                 ← 39 tests
+vitest.config.ts                 ← 測試設定（數量以 npm run test 為準）
 ```
 
 ## 四、環境變數
