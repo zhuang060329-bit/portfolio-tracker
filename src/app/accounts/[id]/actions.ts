@@ -9,6 +9,7 @@ import type { Market } from "@/lib/prices/types";
 import { applyContribution, nextMonthlyAfter } from "@/lib/contributions";
 import { AddByAmountSchema } from "@/lib/schemas/action/add-by-amount";
 import { SellQuantitySchema } from "@/lib/schemas/action/sell-quantity";
+import { CreateRecurringPlanSchema } from "@/lib/schemas/action/create-recurring-plan";
 
 export type FormState = { error?: string } | undefined;
 
@@ -592,23 +593,19 @@ export async function createRecurringPlan(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const accountId = String(formData.get("accountId") ?? "");
-  const amount = Number(formData.get("amount"));
-  const dayOfMonth = Number(formData.get("dayOfMonth"));
-  const startDateRaw = String(formData.get("startDate") ?? "").trim();
-  const note = String(formData.get("note") ?? "").trim() || null;
+  const result = CreateRecurringPlanSchema.safeParse({
+    accountId: String(formData.get("accountId") ?? ""),
+    amount: String(formData.get("amount") ?? ""),
+    dayOfMonth: String(formData.get("dayOfMonth") ?? ""),
+    startDate: String(formData.get("startDate") ?? "").trim() || null,
+    note: String(formData.get("note") ?? "").trim() || null,
+  });
+  if (!result.success) {
+    return { error: result.error.issues[0]?.message ?? "輸入資料無效" };
+  }
 
-  if (!accountId) return { error: "缺少帳戶 ID" };
-  if (!Number.isFinite(amount) || amount <= 0) {
-    return { error: "金額需為正數" };
-  }
-  if (!Number.isInteger(dayOfMonth) || dayOfMonth < 1 || dayOfMonth > 28) {
-    return { error: "日期需為 1-28（避開月底）" };
-  }
-  const startDate = startDateRaw || todayTaipei();
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate)) {
-    return { error: "起始日期格式錯誤" };
-  }
+  const { accountId, amount, dayOfMonth, startDate, note } = result.data;
+  const startDateFinal = startDate ?? todayTaipei();
 
   const supabase = await createClient();
   const {
@@ -627,14 +624,14 @@ export async function createRecurringPlan(
     return { error: "手動帳戶無法設定定期定額" };
   }
 
-  const nextRun = firstRunDate(startDate, dayOfMonth);
+  const nextRun = firstRunDate(startDateFinal, dayOfMonth);
 
   const { error: insErr } = await supabase.from("recurring_plans").insert({
     user_id: user.id,
     account_id: accountId,
     amount_twd: amount,
     day_of_month: dayOfMonth,
-    start_date: startDate,
+    start_date: startDateFinal,
     next_run_date: nextRun,
     active: true,
     note: note,
