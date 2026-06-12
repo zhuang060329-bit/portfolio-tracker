@@ -1,7 +1,7 @@
 import { AppHeader } from "@/components/AppHeader";
 
 // 首頁讀取 skeleton：對齊 Midnight Ledger 儀表板版面，避免載入跳動。
-const sk = "animate-pulse rounded bg-[var(--c-surface-soft)]";
+const sk = "sk rounded";
 const card =
   "rounded-2xl border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] sm:px-6";
 

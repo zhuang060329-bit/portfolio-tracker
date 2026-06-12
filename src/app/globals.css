@@ -28,6 +28,8 @@
   --c-btn-strong-text: #1a1408;
   /* 內側頂部高光 + 外側環境陰影 — 讓卡片從深色背景浮起 */
   --c-shadow: inset 0 1px 0 rgba(236,229,209,0.07), 0 2px 8px rgba(0,0,0,0.55), 0 10px 32px rgba(0,0,0,0.38);
+  /* 骨架 shimmer 掃光色 */
+  --c-shimmer: rgba(255, 255, 255, 0.06);
 }
 
 /* === Direction A 設計 token：半徑收斂（取代散落的 9 種圓角）===
@@ -57,6 +59,7 @@
   --c-btn-strong-text: #FBF9F3;
   /* 頂部白色反光 + 外側輕陰影 — 淺色版卡片浮起感 */
   --c-shadow: inset 0 1px 0 rgba(255,255,255,0.95), 0 1px 3px rgba(40,36,24,.12), 0 10px 28px rgba(40,36,24,.09);
+  --c-shimmer: rgba(0, 0, 0, 0.05);
 }
 
 /* === 字型角色 ===
@@ -198,4 +201,81 @@ input:disabled,
 textarea:disabled {
   background-color: var(--c-surface-soft);
   color: var(--c-faint);
+}
+
+/* === 頁面進場動畫 === */
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* === 骨架 shimmer（取代 animate-pulse）=== */
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+.sk {
+  position: relative;
+  overflow: hidden;
+  background: var(--c-surface-soft);
+}
+.sk::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--c-shimmer) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+/* === 工具提示淡入（圖表 hover tooltip）=== */
+@keyframes tooltip-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.tooltip-pop {
+  animation: tooltip-in 0.12s ease both;
+}
+
+/* === 基礎互動層（優先度低於 Tailwind utilities，active:scale-XX 等類別可覆蓋）=== */
+@layer base {
+  /* 頁面進場 */
+  main {
+    animation: page-in 0.3s cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+  /* 按鈕點擊回饋；Tailwind active:scale-* utility 優先度更高，不受此影響 */
+  button:not(:disabled):active,
+  [role="button"]:not(:disabled):active {
+    transform: scale(0.97);
+  }
+}
+
+/* === 完整 prefers-reduced-motion 覆蓋 === */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

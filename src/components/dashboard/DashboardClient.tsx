@@ -839,7 +839,7 @@ function Holdings({
                 <Link
                   key={h.id}
                   href={`/accounts/${h.id}`}
-                  className={`block border-b border-[var(--c-border)] py-3.5 ${
+                  className={`block border-b border-[var(--c-border)] py-3.5 transition-colors hover:bg-[var(--c-surface-soft)] active:bg-[var(--c-accent-soft)] ${
                     h.status === "archived" ? "opacity-60" : ""
                   }`}
                 >

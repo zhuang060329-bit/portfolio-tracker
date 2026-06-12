@@ -1,6 +1,6 @@
 import { AppHeader } from "@/components/AppHeader";
 
-const sk = "animate-pulse rounded bg-[var(--c-surface-soft)]";
+const sk = "sk rounded";
 
 export default function ActivityLoading() {
   return (

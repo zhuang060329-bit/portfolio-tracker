@@ -1,6 +1,6 @@
 import { AppHeader } from "@/components/AppHeader";
 
-const sk = "animate-pulse rounded bg-[var(--c-surface-soft)]";
+const sk = "sk rounded";
 const card =
   "rounded-2xl border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] sm:px-6";
 

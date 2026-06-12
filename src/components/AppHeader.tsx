@@ -130,9 +130,9 @@ function NavLink({
   return (
     <Link
       href={href}
-      className={`rounded-md px-3 py-1.5 text-[13.5px] font-medium transition-colors ${
+      className={`rounded-md px-3 py-1.5 text-[13.5px] font-medium transition ${
         active
-          ? "text-[var(--c-text)]"
+          ? "bg-[var(--c-accent-soft)] text-[var(--c-accent)] shadow-[inset_0_-2px_0_var(--c-accent)]"
           : "text-[var(--c-muted)] hover:bg-[var(--c-surface-soft)] hover:text-[var(--c-text)]"
       }`}
     >
