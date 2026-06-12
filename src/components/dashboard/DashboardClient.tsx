@@ -937,15 +937,9 @@ export function DashboardClient({ data }: { data: DashboardData }) {
   return (
     <div className="flex flex-col">
       <Hero s={s} series={data.series} />
-      <TrendSection
-        series={data.series}
-        perf={data.perf}
-        benchmarks={data.benchmarks}
-        hasPerf={data.hasPerf}
-        today={data.today}
-      />
 
-      {/* 指標四格：物理卡片 shadow + 更強邊框（Vestox 卡片重量感）*/}
+      {/* 指標四格：物理卡片 shadow + 更強邊框（Vestox 卡片重量感）。
+          首屏層級：緊接 Hero、置於趨勢圖之前，核心損益不被摺線擠到摺下。*/}
       <section className="mt-4">
         <div className="grid grid-cols-2 gap-px overflow-hidden rounded-[var(--r-card)] border border-[var(--c-line-strong)] bg-[var(--c-border)] shadow-[var(--c-shadow)] sm:grid-cols-4">
           <HeroStat
@@ -987,18 +981,26 @@ export function DashboardClient({ data }: { data: DashboardData }) {
         </div>
       </section>
 
+      <TrendSection
+        series={data.series}
+        perf={data.perf}
+        benchmarks={data.benchmarks}
+        hasPerf={data.hasPerf}
+        today={data.today}
+      />
+
       {/* 配置 + 指標：並列兩張卡片（Vestox 區塊物理感）*/}
       {metricsHasContent ? (
         <section className="mt-4 grid grid-cols-1 gap-4 min-[920px]:grid-cols-2">
-          <div className="overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] sm:p-6">
+          <div className="overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] transition-[transform,border-color] hover:-translate-y-[2px] hover:border-[var(--c-line-strong)] sm:p-6">
             {alloc}
           </div>
-          <div className="overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] sm:p-6">
+          <div className="overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] transition-[transform,border-color] hover:-translate-y-[2px] hover:border-[var(--c-line-strong)] sm:p-6">
             <MetricsCard s={s} />
           </div>
         </section>
       ) : (
-        <section className="mt-4 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] sm:p-6">
+        <section className="mt-4 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] transition-[transform,border-color] hover:-translate-y-[2px] hover:border-[var(--c-line-strong)] sm:p-6">
           {alloc}
           <p className="mt-5 border-t border-[var(--c-border)] pt-4 text-[12.5px] text-[var(--c-faint)]">
             績效指標待每日淨值快照滿 30 天後顯示（目前樣本不足）。

@@ -8,7 +8,7 @@ export default function WhatIfLoading() {
   return (
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active="whatif" />
-      <main className="mx-auto max-w-[980px] px-7 py-9 pb-28">
+      <main className="mx-auto max-w-[1200px] px-7 py-9 pb-28">
         <div className={`mb-4 h-4 w-20 ${sk}`} />
         <div className={`h-9 w-40 ${sk}`} />
         <div className={`mt-2 h-3 w-80 max-w-full ${sk}`} />

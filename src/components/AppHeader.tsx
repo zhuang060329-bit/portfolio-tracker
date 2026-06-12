@@ -42,7 +42,7 @@ export function AppHeader({
 
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--c-border)] bg-[color-mix(in_srgb,var(--c-page)_82%,transparent)] backdrop-blur-md backdrop-saturate-150">
-      <div className="mx-auto flex h-[62px] max-w-[980px] items-center gap-7 px-7">
+      <div className="mx-auto flex h-[62px] max-w-[1200px] items-center gap-7 px-7">
         {/* Brand */}
         <Link
           href="/"

@@ -9,7 +9,7 @@ export default function HomeLoading() {
   return (
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active="portfolio" />
-      <main className="mx-auto max-w-[980px] px-7 py-9 pb-28">
+      <main className="mx-auto max-w-[1200px] px-7 py-9 pb-28">
         <div className="flex flex-col gap-5">
           {/* Hero */}
           <section className="px-1 pt-4 sm:pt-7">

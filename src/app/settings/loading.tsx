@@ -4,7 +4,7 @@ export default function SettingsLoading() {
   return (
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active="settings" />
-      <main className="mx-auto max-w-[980px] px-4 pb-32 pt-8 sm:px-6 sm:pt-10">
+      <main className="mx-auto max-w-[1200px] px-4 pb-32 pt-8 sm:px-6 sm:pt-10">
         <div className="h-9 w-20 animate-pulse rounded bg-[var(--c-surface-soft)]" />
         <div className="mt-2 h-3 w-72 animate-pulse rounded bg-[var(--c-surface-soft)]" />
         <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-[180px_1fr] md:gap-7">
