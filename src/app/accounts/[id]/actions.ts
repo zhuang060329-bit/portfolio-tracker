@@ -7,6 +7,7 @@ import { getQuote } from "@/lib/prices/router";
 import { todayTaipei } from "@/lib/dates";
 import type { Market } from "@/lib/prices/types";
 import { applyContribution, nextMonthlyAfter } from "@/lib/contributions";
+import { AddByAmountSchema } from "@/lib/schemas/action/add-by-amount";
 
 export type FormState = { error?: string } | undefined;
 
@@ -244,35 +245,22 @@ export async function addByAmount(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const accountId = String(formData.get("accountId") ?? "");
-  const twd = Number(formData.get("twd"));
-  const priceOverrideRaw = String(formData.get("priceOverride") ?? "").trim();
-  const fxOverrideRaw = String(formData.get("fxOverride") ?? "").trim();
-  const occurredAtRaw = String(formData.get("occurredAt") ?? "").trim();
-  const userNote = String(formData.get("note") ?? "").trim() || null;
+  const result = AddByAmountSchema.safeParse({
+    accountId: String(formData.get("accountId") ?? ""),
+    twd: formData.get("twd"),
+    priceOverride: String(formData.get("priceOverride") ?? "").trim() || null,
+    fxOverride: String(formData.get("fxOverride") ?? "").trim() || null,
+    occurredAt: String(formData.get("occurredAt") ?? "").trim() || null,
+    note: String(formData.get("note") ?? "").trim() || null,
+  });
 
-  if (!accountId) return { error: "缺少帳戶 ID" };
-  if (!Number.isFinite(twd) || twd <= 0) {
-    return { error: "投入金額需為正數 TWD" };
-  }
-
-  const priceOverride = priceOverrideRaw ? Number(priceOverrideRaw) : null;
-  const fxOverride = fxOverrideRaw ? Number(fxOverrideRaw) : null;
-  if (priceOverride !== null && (!Number.isFinite(priceOverride) || priceOverride <= 0)) {
-    return { error: "成交價需為正數" };
-  }
-  if (fxOverride !== null && (!Number.isFinite(fxOverride) || fxOverride <= 0)) {
-    return { error: "匯率需為正數" };
+  if (!result.success) {
+    const firstIssue = result.error.issues[0]?.message ?? "輸入資料無效";
+    return { error: firstIssue };
   }
 
-  let occurredAt: Date;
-  if (occurredAtRaw) {
-    const d = new Date(occurredAtRaw);
-    if (Number.isNaN(d.getTime())) return { error: "時間格式無效" };
-    occurredAt = d;
-  } else {
-    occurredAt = new Date();
-  }
+  const { accountId, twd, priceOverride, fxOverride, occurredAt: occurredAtStr, note: userNote } = result.data;
+  const occurredAt = occurredAtStr ? new Date(occurredAtStr) : new Date();
 
   const { supabase, user, account, error } = await loadAccount(accountId);
   if (error || !account || !user) return { error: error ?? "錯誤" };
