@@ -2,11 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { SetAllocationTargetsSchema } from "@/lib/schemas/action/set-allocation-targets";
 
 export type FormState = { error?: string } | undefined;
 
 // 儲存使用者的資產配置目標到 profiles.allocation_targets (jsonb)
-// 表單欄位命名：target_<asset_class>，值為百分比 0-100
+// 表單欄位命名：target_<asset_class>，值為百分比 0-100；"" 或 "0" 表示清除該類別目標
 export async function setAllocationTargets(
   _prev: FormState,
   formData: FormData,
@@ -17,15 +18,21 @@ export async function setAllocationTargets(
   } = await supabase.auth.getUser();
   if (!user) return { error: "請先登入" };
 
-  const targets: Record<string, number> = {};
+  const rawEntries: Record<string, string> = {};
   for (const [key, value] of formData.entries()) {
-    if (typeof value !== "string") continue;
-    if (!key.startsWith("target_")) continue;
-    const cls = key.slice("target_".length);
-    const n = Number(value);
-    if (!Number.isFinite(n) || n < 0 || n > 100) continue;
-    if (n === 0) continue; // 0 視為「不設目標」，從 jsonb 移除
-    targets[cls] = n;
+    if (typeof value === "string" && key.startsWith("target_")) {
+      rawEntries[key.slice("target_".length)] = value;
+    }
+  }
+
+  const result = SetAllocationTargetsSchema.safeParse(rawEntries);
+  if (!result.success) {
+    return { error: result.error.issues[0]?.message ?? "輸入資料無效" };
+  }
+
+  const targets: Record<string, number> = {};
+  for (const [cls, val] of Object.entries(result.data)) {
+    if (val !== 0) targets[cls] = val; // 0 視為「不設目標」，從 jsonb 移除
   }
 
   const { error } = await supabase

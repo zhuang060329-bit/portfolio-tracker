@@ -84,7 +84,7 @@ export function AllocationTargets({ rows }: { rows: AllocRow[] }) {
             className={`mt-1 text-xs ${targetSum > 100.5 || targetSum < 99.5 ? "text-amber-700 dark:text-amber-300" : "text-[var(--c-muted)]"}`}
           >
             目標總和：{targetSum.toFixed(1)}%
-            {(targetSum > 100.5 || targetSum < 99.5) && " （不等於 100，會自動允許）"}
+            {(targetSum > 100.5 || targetSum < 99.5) && " （總和可低於 100%，但不可超過 100%）"}
           </p>
         )}
         <div className="mt-2 flex items-center gap-3">
