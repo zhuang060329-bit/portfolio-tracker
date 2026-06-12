@@ -453,7 +453,7 @@ function SummaryRail({
       : "—";
   return (
     <aside className="min-[920px]:sticky min-[920px]:top-[84px]">
-      <div className="border-t border-[var(--c-border)] pt-4">
+      <div className="overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)]">
         <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--c-muted)]">
           顯示中摘要
         </h3>

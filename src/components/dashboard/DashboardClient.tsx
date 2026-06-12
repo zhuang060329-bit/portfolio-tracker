@@ -117,11 +117,6 @@ function useCountUp(target: number, dur = 1100) {
   return val;
 }
 
-/* ---------- 區段標題（去卡片化後，分區靠頂部分隔線 + 標題）---------- */
-// Direction A：不再用 border+shadow 盒裝卡片，改成帳本式分區。
-// SECTION = 各區段共用的「頂部 hairline + 上內距」class。
-const SECTION = "mt-7 border-t border-[var(--c-border)] pt-7";
-
 function CardHead({ title, sub }: { title: string; sub?: React.ReactNode }) {
   return (
     <div className="mb-4 flex items-start justify-between gap-4">

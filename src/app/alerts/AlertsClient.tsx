@@ -497,9 +497,11 @@ export function AlertsClient({
 
   return (
     <div className="flex flex-col">
-      <CreatePanel accounts={accounts} />
+      <div className="overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] sm:p-6">
+        <CreatePanel accounts={accounts} />
+      </div>
 
-      <div className="mt-7 flex flex-col border-t border-[var(--c-border)] pt-5">
+      <div className="mt-5 flex flex-col pt-1">
         <ListHead on label="啟用中" count={active.length} />
         {active.length === 0 ? (
           <div className="rounded-[14px] border border-dashed border-[var(--c-border)] px-5 py-[22px] text-center text-[13.5px] text-[var(--c-muted)]">

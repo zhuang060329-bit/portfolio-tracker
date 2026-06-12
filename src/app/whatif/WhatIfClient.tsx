@@ -326,9 +326,10 @@ function ProjectionTab({ netWorth }: { netWorth: number }) {
   const isPreset = PRESETS.some((p) => p.r === ret);
 
   return (
-    <div className="grid grid-cols-1 items-start gap-7 min-[880px]:grid-cols-[340px_1fr] min-[880px]:gap-0">
+    <div className="rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] shadow-[var(--c-shadow)]">
+    <div className="grid grid-cols-1 items-start min-[880px]:grid-cols-[340px_1fr]">
       {/* 控制（去盒裝，桌機用右側垂直分隔線）*/}
-      <section className="min-[880px]:sticky min-[880px]:top-[78px] min-[880px]:border-r min-[880px]:border-[var(--c-border)] min-[880px]:pr-8">
+      <section className="p-6 sm:p-7 min-[880px]:sticky min-[880px]:top-[78px] min-[880px]:border-r min-[880px]:border-[var(--c-border)]">
         <h2 className="font-serif text-[19px] font-medium tracking-tight">
           情境設定
         </h2>
@@ -419,7 +420,7 @@ function ProjectionTab({ netWorth }: { netWorth: number }) {
       </section>
 
       {/* 結果（去盒裝；手機上與控制以頂線分隔）*/}
-      <section className="border-t border-[var(--c-border)] pt-7 min-[880px]:border-t-0 min-[880px]:pt-0 min-[880px]:pl-8">
+      <section className="border-t border-[var(--c-border)] p-6 sm:p-7 min-[880px]:border-t-0">
         <div className="mb-4 border-b border-[var(--c-border)] pb-[18px]">
           <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--c-muted)]">
             {years} 年後預估淨值
@@ -450,7 +451,7 @@ function ProjectionTab({ netWorth }: { netWorth: number }) {
           </span>
         </div>
 
-        <div className="mt-5 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-[var(--c-border)] bg-[var(--c-border)] sm:grid-cols-4">
+        <div className="mt-5 grid grid-cols-2 gap-px overflow-hidden rounded-[var(--r-card)] border border-[var(--c-line-strong)] bg-[var(--c-border)] shadow-[var(--c-shadow)] sm:grid-cols-4">
           <Rstat label="4% 法則年提領" value={`NT$ ${fmtCompact(annualWithdraw)}`} />
           <Rstat
             label="換算月被動收入"
@@ -495,6 +496,7 @@ function ProjectionTab({ netWorth }: { netWorth: number }) {
         </div>
       </section>
     </div>
+    </div>
   );
 }
 
@@ -527,7 +529,7 @@ function CounterfactualTab({ cf }: { cf: CounterfactualData }) {
 
   return (
     <div>
-      <div className="mb-7 grid grid-cols-1 gap-px overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-border)] sm:grid-cols-2">
+      <div className="mb-7 grid grid-cols-1 gap-px overflow-hidden rounded-[var(--r-card)] border border-[var(--c-line-strong)] bg-[var(--c-border)] shadow-[var(--c-shadow)] sm:grid-cols-2">
         <div className="bg-[var(--c-surface)] px-5 py-[18px]">
           <span className="text-[11.5px] text-[var(--c-muted)]">累積投入</span>
           <span className="mt-1.5 block font-serif text-[26px] font-medium tnum">

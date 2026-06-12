@@ -111,8 +111,8 @@ export function SettingsApp({
         </nav>
       </aside>
 
-      {/* 主體 6 個 section（去卡片化：帳本式分區，靠頂部分隔線）*/}
-      <div className="flex min-w-0 flex-col">
+      {/* 主體 6 個 section */}
+      <div className="flex min-w-0 flex-col overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] sm:p-7">
         <Section id="account" title="帳號" elRef={registerEl("account")}>
           <AccountInner user={user} />
         </Section>
