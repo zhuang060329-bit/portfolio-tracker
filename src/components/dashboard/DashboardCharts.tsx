@@ -124,7 +124,9 @@ export function TrendChart({
   }, []);
 
   const padT = 16;
-  const padB = 26;
+  const padB = 30;
+  const padL = 52;
+  const padR = 16;
   const H = height;
   const vals = data.map((d) => d.value);
   const min = Math.min(...vals);
@@ -132,7 +134,7 @@ export function TrendChart({
   const pad = (max - min) * 0.12 || 1;
   const lo = min - pad;
   const hi = max + pad;
-  const nx = (i: number) => (i / (data.length - 1)) * w;
+  const nx = (i: number) => padL + (i / (data.length - 1)) * (w - padL - padR);
   const ny = (v: number) => padT + (1 - (v - lo) / (hi - lo)) * (H - padT - padB);
 
   const line = data
@@ -151,7 +153,7 @@ export function TrendChart({
       if (!wrapRef.current) return;
       const rect = wrapRef.current.getBoundingClientRect();
       const x = e.clientX - rect.left;
-      let idx = Math.round((x / w) * (data.length - 1));
+      let idx = Math.round(((x - padL) / (w - padL - padR)) * (data.length - 1));
       idx = Math.max(0, Math.min(data.length - 1, idx));
       setHover(idx);
     },
@@ -184,24 +186,40 @@ export function TrendChart({
         {ticks.map((t, i) => (
           <g key={i}>
             <line
-              x1="0"
-              x2={w}
+              x1={padL}
+              x2={w - padR}
               y1={ny(t)}
               y2={ny(t)}
               stroke="var(--c-border)"
               strokeWidth="1"
             />
             <text
-              x="2"
+              x={padL - 6}
               y={ny(t) - 4}
               className="tnum"
               fontSize={10}
               fill="var(--c-faint)"
+              textAnchor="end"
             >
               {fmtCompact(t)}
             </text>
           </g>
         ))}
+        {data.length >= 3 &&
+          [0, Math.floor((data.length - 1) / 2), data.length - 1].map((di) => (
+            <text
+              key={di}
+              x={nx(di)}
+              y={H - 8}
+              fontSize={10}
+              fill="var(--c-faint)"
+              textAnchor={
+                di === 0 ? "start" : di === data.length - 1 ? "end" : "middle"
+              }
+            >
+              {data[di].date.slice(5).replace("-", "/")}
+            </text>
+          ))}
         <path
           d={area}
           fill="url(#trendFill)"
@@ -243,6 +261,18 @@ export function TrendChart({
               strokeWidth="2"
             />
           </g>
+        )}
+        {!hi_ && (
+          <circle
+            cx={nx(data.length - 1)}
+            cy={ny(data[data.length - 1].value)}
+            r="3.5"
+            fill="var(--c-accent)"
+            stroke="var(--c-surface)"
+            strokeWidth="2"
+            opacity={drawn ? 1 : 0}
+            style={{ transition: "opacity .6s ease 1s" }}
+          />
         )}
       </svg>
       {hi_ && (
@@ -291,7 +321,9 @@ export function BenchChart({
   }, []);
 
   const padT = 16;
-  const padB = 26;
+  const padB = 30;
+  const padL = 52;
+  const padR = 16;
   const H = height;
   const keys = ["portfolio", ...series.map((s) => s.key)].filter(
     (k) => active[k],
@@ -323,7 +355,7 @@ export function BenchChart({
   const pad = (max - min) * 0.1 || 1;
   const lo = min - pad;
   const hi = max + pad;
-  const nx = (i: number) => (i / (data.length - 1)) * w;
+  const nx = (i: number) => padL + (i / (data.length - 1)) * (w - padL - padR);
   const ny = (v: number) => padT + (1 - (v - lo) / (hi - lo)) * (H - padT - padB);
   const colorOf = (k: string) =>
     k === "portfolio"
@@ -344,10 +376,28 @@ export function BenchChart({
     return d.trim();
   };
 
+  const portFirstI = norm["portfolio"]
+    ? norm["portfolio"].findIndex((v) => v != null)
+    : -1;
+  const portLastI = (() => {
+    const arr = norm["portfolio"];
+    if (!arr) return -1;
+    for (let i = arr.length - 1; i >= 0; i--) {
+      if (arr[i] != null) return i;
+    }
+    return -1;
+  })();
+  const portArea =
+    portFirstI >= 0 && portLastI >= 0 && active["portfolio"]
+      ? `${pathOf("portfolio")} L${nx(portLastI).toFixed(1)},${H - padB} L${nx(portFirstI).toFixed(1)},${H - padB} Z`
+      : null;
+
   const onMove = (e: React.MouseEvent) => {
     if (!wrapRef.current) return;
     const rect = wrapRef.current.getBoundingClientRect();
-    const idx = Math.round(((e.clientX - rect.left) / w) * (data.length - 1));
+    const idx = Math.round(
+      ((e.clientX - rect.left - padL) / (w - padL - padR)) * (data.length - 1),
+    );
     setHover(Math.max(0, Math.min(data.length - 1, idx)));
   };
   const ticks = [0, 0.5, 1].map((t) => lo + t * (hi - lo));
@@ -368,24 +418,61 @@ export function BenchChart({
         {ticks.map((t, i) => (
           <g key={i}>
             <line
-              x1="0"
-              x2={w}
+              x1={padL}
+              x2={w - padR}
               y1={ny(t)}
               y2={ny(t)}
               stroke="var(--c-border)"
               strokeWidth="1"
             />
             <text
-              x="2"
+              x={padL - 6}
               y={ny(t) - 4}
               className="tnum"
               fontSize={10}
               fill="var(--c-faint)"
+              textAnchor="end"
             >
               {t.toFixed(0)}
             </text>
           </g>
         ))}
+        {data.length > 1 && (
+          <>
+            <text
+              x={nx(0)}
+              y={H - 8}
+              fontSize={10}
+              fill="var(--c-faint)"
+              textAnchor="start"
+            >
+              {data[0].date.slice(5).replace("-", "/")}
+            </text>
+            <text
+              x={nx(data.length - 1)}
+              y={H - 8}
+              fontSize={10}
+              fill="var(--c-faint)"
+              textAnchor="end"
+            >
+              {data[data.length - 1].date.slice(5).replace("-", "/")}
+            </text>
+          </>
+        )}
+        <defs>
+          <linearGradient id="portFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="var(--c-accent)" stopOpacity="0.18" />
+            <stop offset="1" stopColor="var(--c-accent)" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        {portArea && (
+          <path
+            d={portArea}
+            fill="url(#portFill)"
+            opacity={drawn ? 1 : 0}
+            style={{ transition: "opacity .7s ease" }}
+          />
+        )}
         {keys.map((k) => (
           <path
             key={k}

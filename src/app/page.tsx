@@ -314,7 +314,7 @@ export default async function Home({
   // benchmark 配色採設計稿（冷藍 / 紫 / 綠），與組合的金色拉開對比。
   const benchmarks: BenchSeries[] = [
     { key: "spy", label: "S&P 500", color: "#7FA8C9", dash: "6 4" },
-    { key: "qqq", label: "Nasdaq 100", color: "#C58BD6", dash: "4 4" },
+    { key: "qqq", label: "Nasdaq 100", color: "#9C93C5", dash: "3 5" },
     { key: "tw0050", label: "台股 0050", color: "#7FBFA3", dash: "2 4" },
   ];
   const hasPerf =
