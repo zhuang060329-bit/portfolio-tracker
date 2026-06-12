@@ -8,6 +8,7 @@ import { todayTaipei } from "@/lib/dates";
 import type { Market } from "@/lib/prices/types";
 import { applyContribution, nextMonthlyAfter } from "@/lib/contributions";
 import { AddByAmountSchema } from "@/lib/schemas/action/add-by-amount";
+import { SellQuantitySchema } from "@/lib/schemas/action/sell-quantity";
 
 export type FormState = { error?: string } | undefined;
 
@@ -340,27 +341,31 @@ export async function sellQuantity(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const accountId = String(formData.get("accountId") ?? "");
-  const sellQty = Number(formData.get("sellQty"));
-  const proceedsRaw = String(formData.get("proceedsTwd") ?? "").trim();
-  const priceOverrideRaw = String(formData.get("priceOverride") ?? "").trim();
-  const fxOverrideRaw = String(formData.get("fxOverride") ?? "").trim();
-  const occurredAtRaw = String(formData.get("occurredAt") ?? "").trim();
-  const userNote = String(formData.get("note") ?? "").trim() || null;
+  const result = SellQuantitySchema.safeParse({
+    accountId: String(formData.get("accountId") ?? ""),
+    sellQty: formData.get("sellQty"),
+    proceedsTwd: String(formData.get("proceedsTwd") ?? "").trim() || null,
+    priceOverride: String(formData.get("priceOverride") ?? "").trim() || null,
+    fxOverride: String(formData.get("fxOverride") ?? "").trim() || null,
+    occurredAt: String(formData.get("occurredAt") ?? "").trim() || null,
+    note: String(formData.get("note") ?? "").trim() || null,
+  });
 
-  if (!accountId) return { error: "缺少帳戶 ID" };
-  if (!Number.isFinite(sellQty) || sellQty <= 0) {
-    return { error: "賣出股數需為正數" };
+  if (!result.success) {
+    const firstIssue = result.error.issues[0]?.message ?? "輸入資料無效";
+    return { error: firstIssue };
   }
 
-  let occurredAt: Date;
-  if (occurredAtRaw) {
-    const d = new Date(occurredAtRaw);
-    if (Number.isNaN(d.getTime())) return { error: "時間格式無效" };
-    occurredAt = d;
-  } else {
-    occurredAt = new Date();
-  }
+  const {
+    accountId,
+    sellQty,
+    proceedsTwd,
+    priceOverride,
+    fxOverride,
+    occurredAt: occurredAtStr,
+    note: userNote,
+  } = result.data;
+  const occurredAt = occurredAtStr ? new Date(occurredAtStr) : new Date();
 
   const { supabase, user, account, error } = await loadAccount(accountId);
   if (error || !account || !user) return { error: error ?? "錯誤" };
@@ -383,15 +388,11 @@ export async function sellQuantity(
     return { error: `抓價失敗：${(e as Error).message}` };
   }
 
-  const priceOverride = priceOverrideRaw ? Number(priceOverrideRaw) : null;
-  const fxOverride = fxOverrideRaw ? Number(fxOverrideRaw) : null;
   const priceUsed = priceOverride ?? quote.unitPrice;
   const fxUsed = fxOverride ?? quote.fxToBase;
 
   // 收入：使用者填的金額優先；否則 = 股數 × 成交價 × fx
-  const proceeds = proceedsRaw
-    ? Number(proceedsRaw)
-    : sellQty * priceUsed * fxUsed;
+  const proceeds = proceedsTwd ?? sellQty * priceUsed * fxUsed;
   if (!Number.isFinite(proceeds) || proceeds < 0) {
     return { error: "收入需為非負數" };
   }
