@@ -4,7 +4,11 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getQuote } from "@/lib/prices/router";
 import { todayTaipei } from "@/lib/dates";
-import type { Market } from "@/lib/prices/types";
+import {
+  CreateStockAccountSchema,
+  CreateCryptoAccountSchema,
+  CreateManualAccountSchema,
+} from "@/lib/schemas/action/create-account";
 
 export type FormState = { error?: string } | undefined;
 
@@ -94,15 +98,16 @@ export async function createStockAccount(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const name = String(formData.get("name") ?? "").trim();
-  const market = String(formData.get("market") ?? "") as Market;
-  const symbol = String(formData.get("symbol") ?? "").trim();
-  const qty = Number(formData.get("quantity"));
-
-  if (!name) return { error: "請輸入帳戶名稱" };
-  if (market !== "us" && market !== "tw") return { error: "請選擇市場（美股 / 台股）" };
-  if (!symbol) return { error: "請輸入 symbol（美股 ticker 或台股代號）" };
-  if (!Number.isFinite(qty) || qty <= 0) return { error: "股數需為正數" };
+  const result = CreateStockAccountSchema.safeParse({
+    name: String(formData.get("name") ?? ""),
+    market: String(formData.get("market") ?? ""),
+    symbol: String(formData.get("symbol") ?? ""),
+    quantity: String(formData.get("quantity") ?? ""),
+  });
+  if (!result.success) {
+    return { error: result.error.issues[0]?.message ?? "輸入資料無效" };
+  }
+  const { name, market, symbol, quantity: qty } = result.data;
 
   // 即時抓一次價格驗證 symbol 正確。
   let quote;
@@ -132,13 +137,15 @@ export async function createCryptoAccount(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const name = String(formData.get("name") ?? "").trim();
-  const symbol = String(formData.get("symbol") ?? "").trim(); // CoinGecko id
-  const qty = Number(formData.get("quantity"));
-
-  if (!name) return { error: "請輸入帳戶名稱" };
-  if (!symbol) return { error: "請輸入 CoinGecko id（如 bitcoin）" };
-  if (!Number.isFinite(qty) || qty <= 0) return { error: "持有數量需為正數" };
+  const result = CreateCryptoAccountSchema.safeParse({
+    name: String(formData.get("name") ?? ""),
+    symbol: String(formData.get("symbol") ?? ""),
+    quantity: String(formData.get("quantity") ?? ""),
+  });
+  if (!result.success) {
+    return { error: result.error.issues[0]?.message ?? "輸入資料無效" };
+  }
+  const { name, symbol, quantity: qty } = result.data;
 
   let quote;
   try {
@@ -167,13 +174,14 @@ export async function createManualAccount(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const name = String(formData.get("name") ?? "").trim();
-  const balance = Number(formData.get("balance"));
-
-  if (!name) return { error: "請輸入帳戶名稱" };
-  if (!Number.isFinite(balance) || balance < 0) {
-    return { error: "餘額需為非負數" };
+  const result = CreateManualAccountSchema.safeParse({
+    name: String(formData.get("name") ?? ""),
+    balance: String(formData.get("balance") ?? ""),
+  });
+  if (!result.success) {
+    return { error: result.error.issues[0]?.message ?? "輸入資料無效" };
   }
+  const { name, balance } = result.data;
 
   return persistCreate({
     name,
