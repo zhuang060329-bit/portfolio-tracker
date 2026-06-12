@@ -593,9 +593,20 @@ function MetricsCard({ s }: { s: DashSummary }) {
           ))}
         </div>
       ) : (
-        <p className="text-[12.5px] text-[var(--c-faint)]">
-          每日淨值快照滿 30 天後，這裡會顯示 TWR、最大回撤、Sharpe。
-        </p>
+        <div>
+          <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-[var(--c-border)] bg-[var(--c-border)]">
+            {["TWR 累積", "TWR 年化", "最大回撤", "Sharpe"].map((label) => (
+              <div key={label} className="bg-[var(--c-surface)] px-4 py-3.5">
+                <div className="text-[11.5px] text-[var(--c-muted)]">{label}</div>
+                <div className="sk mt-1.5 h-[26px] w-[68px] rounded-md" />
+                <div className="sk mt-1.5 h-[10px] w-[56px] rounded" />
+              </div>
+            ))}
+          </div>
+          <p className="mt-2 text-[11.5px] text-[var(--c-faint)]">
+            快照滿 30 天後顯示
+          </p>
+        </div>
       )}
 
       {s.hasIncome && (
@@ -758,14 +769,14 @@ function Holdings({
                         h.status === "archived" ? "opacity-60" : ""
                       }`}
                     >
-                      <td className="px-[18px] py-3.5 text-left">
+                      <td className="max-w-[260px] px-[18px] py-3.5 text-left">
                         <span
                           className="mr-2.5 inline-block h-2 w-2 rounded-[3px] align-middle"
                           style={{ background: allocColor(h.cls) }}
                         />
                         <Link
                           href={`/accounts/${h.id}`}
-                          className="font-medium hover:text-[var(--c-accent)]"
+                          className="inline-block max-w-[180px] truncate align-middle font-medium hover:text-[var(--c-accent)]"
                         >
                           {h.name}
                         </Link>

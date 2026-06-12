@@ -7,6 +7,7 @@ import { NetWorthPanel } from "@/components/NetWorthPanel";
 import { AppHeader } from "@/components/AppHeader";
 import { computeXirr } from "@/lib/xirr";
 import { getUnreadCount } from "@/lib/notifications";
+import { fmtFull as fmtTwd, fmtNum, fmtDate } from "@/lib/format";
 
 const MARKET_LABEL: Record<string, string> = {
   us: "美股",
@@ -24,17 +25,6 @@ const TXN_LABEL: Record<string, string> = {
   dividend: "配息",
   interest: "利息",
 };
-
-const fmtTwd = (n: number) =>
-  n.toLocaleString("zh-TW", { maximumFractionDigits: 0 });
-
-const fmtNum = (n: number | null, max = 8) =>
-  n === null || !Number.isFinite(Number(n))
-    ? "—"
-    : Number(n).toLocaleString("en-US", { maximumFractionDigits: max });
-
-const fmtDate = (iso: string | null) =>
-  iso ? new Date(iso).toLocaleDateString("en-CA") : "—";
 
 const fmtTime = (iso: string) =>
   new Date(iso).toLocaleString("zh-TW", {
@@ -127,7 +117,7 @@ export default async function AccountDetail({
     ? Number(account.quantity) * curPrice * (curFx - avgCostFx)
     : 0;
   const tone = (n: number) =>
-    n > 0 ? "text-emerald-700 dark:text-emerald-400" : n < 0 ? "text-rose-700 dark:text-rose-400" : "text-[var(--c-muted)]";
+    n > 0 ? "text-[var(--c-up)]" : n < 0 ? "text-[var(--c-down)]" : "text-[var(--c-muted)]";
   const sign = (n: number) => (n > 0 ? "+" : n < 0 ? "−" : "");
   const pnlClass = tone(pnl);
   const pnlSign = sign(pnl);
@@ -160,7 +150,7 @@ export default async function AccountDetail({
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active="accounts" userEmail={user?.email} unreadCount={unreadCount} />
 
-      <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      <main className="mx-auto max-w-[1200px] px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         <div className="mb-4 text-sm">
           <Link
             href="/"
@@ -386,14 +376,14 @@ export default async function AccountDetail({
                         {fmtTwd(Number(t.value_after_base ?? 0))}
                       </td>
                       <td
-                        className={`px-4 py-2.5 text-right tabular-nums ${cf === null ? "text-[var(--c-faint)]" : cf > 0 ? "text-emerald-700 dark:text-emerald-400" : cf < 0 ? "text-rose-700 dark:text-rose-400" : "text-[var(--c-muted)]"}`}
+                        className={`px-4 py-2.5 text-right tabular-nums ${cf === null ? "text-[var(--c-faint)]" : cf > 0 ? "text-[var(--c-up)]" : cf < 0 ? "text-[var(--c-down)]" : "text-[var(--c-muted)]"}`}
                       >
                         {cf === null
                           ? "—"
                           : `${cf > 0 ? "+" : cf < 0 ? "−" : ""}${fmtTwd(Math.abs(cf))}`}
                       </td>
                       <td
-                        className={`px-4 py-2.5 text-right tabular-nums ${rp === null || rp === 0 ? "text-[var(--c-faint)]" : rp > 0 ? "text-rose-700 dark:text-rose-400" : "text-emerald-700 dark:text-emerald-400"}`}
+                        className={`px-4 py-2.5 text-right tabular-nums ${rp === null || rp === 0 ? "text-[var(--c-faint)]" : rp > 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]"}`}
                       >
                         {rp === null || rp === 0
                           ? "—"

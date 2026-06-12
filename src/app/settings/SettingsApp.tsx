@@ -418,7 +418,7 @@ function AllocInner({
       {ALLOC_DEFS.map((def) => (
         <div
           key={def.cls}
-          className="grid grid-cols-[auto_80px_1fr_auto] items-center gap-3"
+          className="grid grid-cols-[auto_1fr_auto] items-center gap-3 sm:grid-cols-[auto_80px_1fr_auto]"
         >
           <span
             className="h-2.5 w-2.5 rounded-[3px]"

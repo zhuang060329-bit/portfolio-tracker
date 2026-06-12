@@ -2,14 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { project, crossMonth, type ProjPoint } from "@/lib/whatif-project";
+import { fmtFull as fmtTwd, fmtCompact } from "@/lib/format";
 
-const fmtTwd = (n: number) => Math.round(n).toLocaleString("en-US");
-const fmtCompact = (n: number) => {
-  const a = Math.abs(n);
-  if (a >= 1e8) return (n / 1e8).toFixed(2) + " 億";
-  if (a >= 1e4) return Math.round(n / 1e4).toLocaleString("en-US") + " 萬";
-  return Math.round(n).toLocaleString("en-US");
-};
 const sign = (n: number) => (n > 0 ? "+" : n < 0 ? "−" : "");
 
 export type CfRow = {
@@ -329,7 +323,7 @@ function ProjectionTab({ netWorth }: { netWorth: number }) {
     <div className="rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] shadow-[var(--c-shadow)]">
     <div className="grid grid-cols-1 items-start min-[880px]:grid-cols-[340px_1fr]">
       {/* 控制（去盒裝，桌機用右側垂直分隔線）*/}
-      <section className="p-6 sm:p-7 min-[880px]:sticky min-[880px]:top-[78px] min-[880px]:border-r min-[880px]:border-[var(--c-border)]">
+      <section className="p-6 sm:p-7 min-[880px]:sticky min-[880px]:top-[var(--header-h)] min-[880px]:border-r min-[880px]:border-[var(--c-border)]">
         <h2 className="font-serif text-[19px] font-medium tracking-tight">
           情境設定
         </h2>

@@ -16,6 +16,16 @@ export function fmtCompact(n: number): string {
   return s + Math.round(a).toLocaleString("en-US");
 }
 
+// 最多 max 位小數；null 或非有限值回傳 "—"
+export const fmtNum = (n: number | null, max = 8): string =>
+  n === null || !Number.isFinite(Number(n))
+    ? "—"
+    : Number(n).toLocaleString("en-US", { maximumFractionDigits: max });
+
+// ISO 日期字串 → "YYYY-MM-DD"
+export const fmtDate = (iso: string | null): string =>
+  iso ? new Date(iso).toLocaleDateString("en-CA") : "—";
+
 // last_priced_at（ISO，UTC）→「2026-06-11 14:03」（Asia/Taipei）
 export function fmtUpdatedAt(iso: string): string {
   const d = new Date(iso);

@@ -434,6 +434,11 @@ function AlertCard({
       </div>
 
       <div className="col-start-2 flex items-center justify-end gap-2 sm:col-start-3">
+        {!a.active && (
+          <span className="rounded-full border border-[var(--c-border)] px-2 py-px text-[11px] text-[var(--c-faint)]">
+            已停用
+          </span>
+        )}
         <Toggle id={a.id} active={a.active} />
         <form action={deleteAlert}>
           <input type="hidden" name="id" value={a.id} />

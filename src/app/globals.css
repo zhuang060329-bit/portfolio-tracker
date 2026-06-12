@@ -39,6 +39,8 @@
   --r-card: 14px;
   --r-control: 9px;
   --r-pill: 999px;
+  /* 頁面頂部 header 高度（sticky 定位參照用） */
+  --header-h: 78px;
 }
 
 [data-theme="light"] {

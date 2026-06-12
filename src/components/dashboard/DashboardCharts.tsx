@@ -364,7 +364,7 @@ export function BenchChart({
   const dashOf = (k: string) =>
     k === "portfolio" ? undefined : series.find((s) => s.key === k)?.dash;
 
-  // 跨接缺值：只連有值的點。
+  // 跨接缺值：只連有值的點（portArea 面積計算用）。
   const pathOf = (k: string) => {
     let d = "";
     let started = false;
@@ -372,6 +372,37 @@ export function BenchChart({
       if (v == null) return;
       d += `${started ? "L" : "M"}${nx(i).toFixed(1)},${ny(v).toFixed(1)} `;
       started = true;
+    });
+    return d.trim();
+  };
+
+  // 實線段：只連相鄰都有值的點，null 點不跨接。
+  const solidPathOf = (k: string) => {
+    let d = "";
+    let lastI: number | null = null;
+    norm[k].forEach((v, i) => {
+      if (v == null) { lastI = null; return; }
+      d += `${lastI === null ? "M" : "L"}${nx(i).toFixed(1)},${ny(v).toFixed(1)} `;
+      lastI = i;
+    });
+    return d.trim();
+  };
+
+  // 橋接虛線：跨越 null 空缺，連接缺口兩端點，讓使用者看出資料有斷層。
+  const gapPathOf = (k: string) => {
+    let d = "";
+    let lastNonNull: { i: number; v: number } | null = null;
+    let inGap = false;
+    norm[k].forEach((v, i) => {
+      if (v != null) {
+        if (inGap && lastNonNull != null) {
+          d += `M${nx(lastNonNull.i).toFixed(1)},${ny(lastNonNull.v).toFixed(1)} L${nx(i).toFixed(1)},${ny(v).toFixed(1)} `;
+          inGap = false;
+        }
+        lastNonNull = { i, v };
+      } else {
+        if (lastNonNull != null) inGap = true;
+      }
     });
     return d.trim();
   };
@@ -448,6 +479,26 @@ export function BenchChart({
             >
               {data[0].date.slice(5).replace("-", "/")}
             </text>
+            {data.length > 60 && (() => {
+              const midI = Math.floor((data.length - 1) / 2);
+              const midDate = data[midI].date;
+              const sameYear =
+                data[0].date.slice(0, 4) === data[data.length - 1].date.slice(0, 4);
+              const label = sameYear
+                ? midDate.slice(5).replace("-", "/")
+                : midDate.slice(0, 7).replace("-", "/");
+              return (
+                <text
+                  x={nx(midI)}
+                  y={H - 8}
+                  fontSize={10}
+                  fill="var(--c-faint)"
+                  textAnchor="middle"
+                >
+                  {label}
+                </text>
+              );
+            })()}
             <text
               x={nx(data.length - 1)}
               y={H - 8}
@@ -476,7 +527,7 @@ export function BenchChart({
         {keys.map((k) => (
           <path
             key={k}
-            d={pathOf(k)}
+            d={solidPathOf(k)}
             fill="none"
             stroke={colorOf(k)}
             strokeWidth={k === "portfolio" ? 2.5 : 1.6}
@@ -487,6 +538,23 @@ export function BenchChart({
             style={{ transition: "opacity .7s ease" }}
           />
         ))}
+        {keys.map((k) => {
+          const gd = gapPathOf(k);
+          if (!gd) return null;
+          return (
+            <path
+              key={`gap-${k}`}
+              d={gd}
+              fill="none"
+              stroke={colorOf(k)}
+              strokeWidth={k === "portfolio" ? 1.5 : 1.2}
+              strokeDasharray="2 5"
+              strokeLinecap="round"
+              opacity={drawn ? 0.35 : 0}
+              style={{ transition: "opacity .7s ease" }}
+            />
+          );
+        })}
         {hover != null && (
           <line
             x1={nx(hover)}
