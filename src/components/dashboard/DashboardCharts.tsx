@@ -150,7 +150,7 @@ export function TrendChart({
 
   const onMove = useCallback(
     (e: React.MouseEvent) => {
-      if (!wrapRef.current) return;
+      if (!wrapRef.current || data.length < 2) return;
       const rect = wrapRef.current.getBoundingClientRect();
       const x = e.clientX - rect.left;
       let idx = Math.round(((x - padL) / (w - padL - padR)) * (data.length - 1));
@@ -161,7 +161,10 @@ export function TrendChart({
   );
 
   const ticks = [0, 0.25, 0.5, 0.75, 1].map((t) => lo + t * (hi - lo));
-  const hi_ = hover != null ? data[hover] : null;
+  const hi_ =
+    hover != null && Number.isFinite(hover) && hover < data.length
+      ? data[hover]
+      : null;
 
   return (
     <div
@@ -178,8 +181,8 @@ export function TrendChart({
       >
         <defs>
           <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="var(--c-accent)" stopOpacity="0.30" />
-            <stop offset="0.6" stopColor="var(--c-accent)" stopOpacity="0.10" />
+            <stop offset="0" stopColor="var(--c-accent)" stopOpacity="0.20" />
+            <stop offset="0.7" stopColor="var(--c-accent)" stopOpacity="0.05" />
             <stop offset="1" stopColor="var(--c-accent)" stopOpacity="0" />
           </linearGradient>
         </defs>
@@ -424,7 +427,7 @@ export function BenchChart({
       : null;
 
   const onMove = (e: React.MouseEvent) => {
-    if (!wrapRef.current) return;
+    if (!wrapRef.current || data.length < 2) return;
     const rect = wrapRef.current.getBoundingClientRect();
     const idx = Math.round(
       ((e.clientX - rect.left - padL) / (w - padL - padR)) * (data.length - 1),
@@ -512,7 +515,7 @@ export function BenchChart({
         )}
         <defs>
           <linearGradient id="portFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="var(--c-accent)" stopOpacity="0.18" />
+            <stop offset="0" stopColor="var(--c-accent)" stopOpacity="0.12" />
             <stop offset="1" stopColor="var(--c-accent)" stopOpacity="0" />
           </linearGradient>
         </defs>
@@ -555,7 +558,7 @@ export function BenchChart({
             />
           );
         })}
-        {hover != null && (
+        {hover != null && hover < data.length && (
           <line
             x1={nx(hover)}
             x2={nx(hover)}
@@ -567,7 +570,7 @@ export function BenchChart({
             opacity="0.4"
           />
         )}
-        {hover != null &&
+        {hover != null && hover < data.length &&
           keys.map((k) => {
             const v = norm[k][hover];
             if (v == null) return null;
@@ -584,7 +587,7 @@ export function BenchChart({
             );
           })}
       </svg>
-      {hover != null && (
+      {hover != null && hover < data.length && (
         <div
           className="tooltip-pop pointer-events-none absolute top-1.5 z-[5] -translate-x-1/2 whitespace-nowrap rounded-[10px] border border-[var(--c-line-strong)] bg-[var(--c-surface-soft)] px-[11px] py-2 shadow-[var(--c-shadow)]"
           style={{ left: Math.min(Math.max(nx(hover), 90), w - 90) }}

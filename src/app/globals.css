@@ -4,32 +4,32 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 /*
- * === Midnight Ledger palette ===
+ * === StackWorth 冷石墨 palette ===
  * 深色優先（:root = 深色 token），淺色由 [data-theme="light"] 覆蓋。
  * 變數名稱沿用既有 --c-* 慣例，舊頁面繼續編譯，只換值。
  * 新增 --c-up / --c-down（賺綠虧紅）、--c-accent-soft、--c-line-strong、--c-shadow。
  */
 :root {
-  --c-page: #110F0B;
-  --c-surface: #1C1A14;
-  --c-surface-soft: #232017;
-  --c-text: #ECE6D6;
-  --c-muted: #A39C87;
-  --c-faint: #6E6857;
-  --c-accent: #D7A33F;
-  --c-accent-soft: rgba(215, 163, 63, 0.14);
-  --c-border: rgba(236, 229, 209, 0.13);
-  --c-border-soft: rgba(236, 229, 209, 0.06);
-  --c-line-strong: rgba(236, 229, 209, 0.18);
-  --c-up: #6FB98C;
-  --c-down: #E08664;
+  --c-page: #0E1014;
+  --c-surface: #15181E;
+  --c-surface-soft: #1A1E26;
+  --c-text: #E8EAEF;
+  --c-muted: #969CA8;
+  --c-faint: #5B616D;
+  --c-accent: #4FA6A0;
+  --c-accent-soft: rgba(79, 166, 160, .14);
+  --c-border: rgba(232, 234, 239, .075);
+  --c-border-soft: rgba(232, 234, 239, .04);
+  --c-line-strong: rgba(232, 234, 239, .15);
+  --c-up: #6FB58D;
+  --c-down: #D98C6B;
   /* 強對比按鈕（永遠跟 surface 反色）*/
-  --c-btn-strong-bg: #ECE6D6;
-  --c-btn-strong-text: #1a1408;
+  --c-btn-strong-bg: #E8EAEF;
+  --c-btn-strong-text: #0E1014;
   /* 內側頂部高光 + 外側環境陰影 — 讓卡片從深色背景浮起 */
-  --c-shadow: inset 0 1px 0 rgba(236,229,209,0.07), 0 2px 8px rgba(0,0,0,0.55), 0 10px 32px rgba(0,0,0,0.38);
+  --c-shadow: inset 0 1px 0 rgba(232,234,239,0.07), 0 2px 8px rgba(0,0,0,0.55), 0 10px 32px rgba(0,0,0,0.38);
   /* 骨架 shimmer 掃光色 */
-  --c-shimmer: rgba(255, 255, 255, 0.06);
+  --c-shimmer: rgba(255, 255, 255, 0.05);
 }
 
 /* === Direction A 設計 token：半徑收斂（取代散落的 9 種圓角）===
@@ -50,8 +50,8 @@
   --c-text: #211E16;
   --c-muted: #6B6555;
   --c-faint: #A8A28E;
-  --c-accent: #B07A1E;
-  --c-accent-soft: rgba(176, 122, 30, 0.12);
+  --c-accent: #1F7872;
+  --c-accent-soft: rgba(31, 120, 114, 0.12);
   --c-border: rgba(40, 36, 24, 0.12);
   --c-border-soft: rgba(40, 36, 24, 0.06);
   --c-line-strong: rgba(40, 36, 24, 0.20);

@@ -143,6 +143,11 @@ function Hero({
   const total = useCountUp(s.total);
   const recent = series.slice(-30);
   const hasDay = s.dayChange != null && s.dayChangePct != null;
+  const up30 = recent.length >= 2 && recent[recent.length - 1].value >= recent[0].value;
+  const chg30Pct =
+    recent.length >= 2 && recent[0].value > 0
+      ? ((recent[recent.length - 1].value - recent[0].value) / recent[0].value) * 100
+      : 0;
 
   return (
     <section className="grid grid-cols-1 gap-x-5 gap-y-6 px-1 pt-4 sm:grid-cols-[1fr_auto] sm:pt-7">
@@ -189,18 +194,22 @@ function Hero({
         </div>
       </div>
 
-      {/* 副：近 30 日 sparkline */}
+      {/* 副：近 30 日 instrument panel */}
       {recent.length >= 2 && (
-        <div className="flex flex-row items-center gap-3 sm:col-start-2 sm:flex-col sm:items-end sm:justify-center">
-          <Sparkline
-            data={recent}
-            w={150}
-            h={46}
-            up={recent[recent.length - 1].value >= recent[0].value}
-          />
-          <span className="text-[11px] tracking-wide text-[var(--c-faint)]">
-            近 30 日
-          </span>
+        <div className="sm:col-start-2 sm:flex sm:items-center sm:justify-end">
+          <div className="inline-block rounded-[10px] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3 pb-2.5 pt-2.5">
+            <div className="mb-1.5 flex items-center justify-between gap-4">
+              <span className="text-[9.5px] font-semibold uppercase tracking-[0.14em] text-[var(--c-faint)]">
+                近 30 日
+              </span>
+              <span
+                className={`text-[11.5px] font-semibold tnum ${up30 ? "text-[var(--c-up)]" : "text-[var(--c-down)]"}`}
+              >
+                {sign(chg30Pct)}{Math.abs(chg30Pct).toFixed(1)}%
+              </span>
+            </div>
+            <Sparkline data={recent} w={150} h={40} up={up30} />
+          </div>
         </div>
       )}
 
@@ -223,7 +232,7 @@ function HeroStat({
 }) {
   return (
     <div className={`bg-[var(--c-surface)] px-4 ${primary ? "py-5" : "py-4"} sm:px-[18px]`}>
-      <div className="text-[11.5px] font-medium text-[var(--c-muted)]">
+      <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--c-muted)]">
         {label}
       </div>
       <div
