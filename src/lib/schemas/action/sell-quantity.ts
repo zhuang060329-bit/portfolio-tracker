@@ -24,6 +24,16 @@ export const SellQuantitySchema = z.object({
   occurredAt: z
     .string()
     .refine((s) => !isNaN(new Date(s).getTime()), { message: "時間格式無效" })
+    .refine(
+      (s) => {
+        if (isNaN(new Date(s).getTime())) return true;
+        const todayInTaipei = new Date().toLocaleDateString("en-CA", {
+          timeZone: "Asia/Taipei",
+        });
+        return s.slice(0, 10) <= todayInTaipei;
+      },
+      { message: "時間不得為未來日期" },
+    )
     .nullable(),
   note: z.string().max(200, "備註不得超過 200 字").nullable(),
 });
