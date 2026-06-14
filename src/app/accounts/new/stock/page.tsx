@@ -93,7 +93,7 @@ export default function NewStockPage() {
             <button
               type="submit"
               disabled={pending}
-              className="mt-1 self-start rounded-[var(--r-control)] bg-[var(--c-accent)] px-6 py-2.5 text-sm font-semibold text-[#1a1408] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45"
+              className="mt-1 self-start rounded-[var(--r-control)] bg-[var(--c-accent)] px-6 py-2.5 text-sm font-semibold text-[var(--c-btn-strong-text)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45"
             >
               {pending ? "驗證並建立中…" : "建立帳戶"}
             </button>

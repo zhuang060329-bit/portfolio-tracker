@@ -472,7 +472,7 @@ function AllocInner({
           <button
             type="submit"
             disabled={!ok || pending}
-            className="whitespace-nowrap rounded-lg bg-[var(--c-accent)] px-4 py-2 text-[13px] font-semibold text-[#1a1408] transition-[filter] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45"
+            className="whitespace-nowrap rounded-lg bg-[var(--c-accent)] px-4 py-2 text-[13px] font-semibold text-[var(--c-btn-strong-text)] transition-[filter] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45"
           >
             {pending ? "儲存中…" : "儲存目標"}
           </button>

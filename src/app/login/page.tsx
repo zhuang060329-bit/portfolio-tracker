@@ -108,7 +108,7 @@ export default function LoginPage() {
               type="button"
               onClick={signInGoogle}
               disabled={loading}
-              className="mt-6 w-full rounded-sm bg-[var(--c-accent)] px-6 py-3 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90 disabled:opacity-50"
+              className="mt-6 w-full rounded-sm bg-[var(--c-accent)] px-6 py-3 text-sm font-semibold text-[var(--c-btn-strong-text)] shadow-sm transition-opacity hover:opacity-90 disabled:opacity-50"
             >
               {loading ? "處理中…" : "使用 Google 登入"}
             </button>

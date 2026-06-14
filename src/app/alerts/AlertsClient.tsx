@@ -312,7 +312,7 @@ function CreatePanel({ accounts }: { accounts: AlertAccount[] }) {
         <button
           type="submit"
           disabled={pending || !threshold}
-          className="rounded-[10px] bg-[var(--c-accent)] px-[18px] py-2.5 text-sm font-semibold text-[#1a1408] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45"
+          className="rounded-[10px] bg-[var(--c-accent)] px-[18px] py-2.5 text-sm font-semibold text-[var(--c-btn-strong-text)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45"
         >
           {pending ? "建立中…" : "＋ 建立提醒"}
         </button>

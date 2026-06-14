@@ -36,7 +36,7 @@ const fmtTwd = (n: number) =>
   n.toLocaleString("zh-TW", { maximumFractionDigits: 0 });
 
 const pnlClass = (n: number) =>
-  n > 0 ? "text-emerald-700 dark:text-emerald-400" : n < 0 ? "text-rose-700 dark:text-rose-400" : "text-[var(--c-muted)]";
+  n > 0 ? "text-[var(--c-up)]" : n < 0 ? "text-[var(--c-down)]" : "text-[var(--c-muted)]";
 const pnlSign = (n: number) => (n > 0 ? "+" : n < 0 ? "−" : "");
 
 export function AccountActions({
@@ -132,7 +132,7 @@ export function AccountActions({
           <button
             type="submit"
             disabled={updatePending}
-            className="rounded-sm bg-[var(--c-accent)] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-90 disabled:opacity-50"
+            className="rounded-sm bg-[var(--c-accent)] px-4 py-2 text-sm font-semibold text-[var(--c-btn-strong-text)] shadow-sm hover:opacity-90 disabled:opacity-50"
           >
             {updatePending ? "抓最新價中…" : "更新價格"}
           </button>

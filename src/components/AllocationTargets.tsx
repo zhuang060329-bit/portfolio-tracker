@@ -31,7 +31,7 @@ export function AllocationTargets({ rows }: { rows: AllocRow[] }) {
   const targetSum = rows.reduce((s, r) => s + r.target, 0);
 
   return (
-    <div className="rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-sm">
+    <div className="rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-sm">
       <h2 className="font-serif text-lg font-semibold tracking-tight">配置目標</h2>
       <p className="mt-1 text-xs text-[var(--c-muted)]">
         配置目標 vs 實際；偏離 ±5% 以上會標紅。設 0 = 不設目標。
@@ -50,7 +50,7 @@ export function AllocationTargets({ rows }: { rows: AllocRow[] }) {
             !has
               ? "text-[var(--c-faint)]"
               : Math.abs(drift) > 5
-                ? "text-rose-700 dark:text-rose-400 font-medium"
+                ? "text-[var(--c-down)] font-medium"
                 : "text-[var(--c-muted)]";
           return (
             <div
@@ -69,7 +69,7 @@ export function AllocationTargets({ rows }: { rows: AllocRow[] }) {
                 max="100"
                 defaultValue={r.target || ""}
                 placeholder="0"
-                className="w-20 rounded border border-[var(--c-border)] px-2 py-1 text-right text-sm tabular-nums"
+                className="w-20 rounded border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1 text-right text-sm tabular-nums text-[var(--c-text)]"
               />
               <div className={`w-16 text-right tabular-nums ${tone}`}>
                 {has
@@ -81,7 +81,7 @@ export function AllocationTargets({ rows }: { rows: AllocRow[] }) {
         })}
         {targetSum > 0 && (
           <p
-            className={`mt-1 text-xs ${targetSum > 100.5 || targetSum < 99.5 ? "text-amber-700 dark:text-amber-300" : "text-[var(--c-muted)]"}`}
+            className={`mt-1 text-xs ${targetSum > 100.5 || targetSum < 99.5 ? "text-[var(--c-down)]" : "text-[var(--c-muted)]"}`}
           >
             目標總和：{targetSum.toFixed(1)}%
             {(targetSum > 100.5 || targetSum < 99.5) && " （總和可低於 100%，但不可超過 100%）"}
@@ -96,7 +96,7 @@ export function AllocationTargets({ rows }: { rows: AllocRow[] }) {
             {pending ? "儲存中…" : "儲存目標"}
           </button>
           {state?.error && (
-            <span className="text-xs text-red-700 dark:text-red-300">{state.error}</span>
+            <span className="text-xs text-[var(--c-down)]">{state.error}</span>
           )}
         </div>
       </form>
