@@ -42,18 +42,28 @@ It is a personal finance tool. It does not provide investment advice, is not aff
 
 ## Product Screenshots
 
-> Production screenshots will be added after the final Vercel smoke test.
+Production screenshots are intentionally omitted because this project contains personal portfolio data, including holdings, account names, transaction history, and net worth values.
+
+The repository keeps archived design references from the UI design pass below, but they should not be interpreted as production screenshots.
 
 ## Design References
 
-The repository includes archived design references from the UI design pass:
+The following images are archived references from the UI design pass, kept for design continuity. They are not production screenshots and are not required for the production app runtime.
 
 - Dashboard: `design-imports/claude-design/stackworth/project/screenshots/03-dash-03.png`
 - What-if: `design-imports/claude-design/stackworth/project/screenshots/01-whatif-01.png`
 - Alerts: `design-imports/claude-design/stackworth/project/screenshots/01-alerts-01.png`
 - Mobile: `design-imports/claude-design/stackworth/project/screenshots/01-mobile.png`
 
-These are kept as design references and are not required for the production app runtime.
+## Portfolio Notes
+
+This project is intended to demonstrate:
+
+- Building a personal finance dashboard with real data modeling constraints
+- Separating XIRR and TWR cashflow conventions
+- Handling active vs archived account semantics
+- Protecting server action inputs with Zod validation
+- Using CI, tests, and targeted production hardening before portfolio presentation
 
 ---
 
