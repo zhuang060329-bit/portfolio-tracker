@@ -43,6 +43,18 @@ describe("computeTwr", () => {
     ];
     expect(computeTwr(snapshots, [])).toBeNull();
   });
+
+  it("terminal value 作為 cashflow 傳入會讓 curEx = 0 → return null（不應這樣呼叫）", () => {
+    // 驗證：若誤把最後一筆 snapshot 的值當成 cashflow 傳入（正數=投入，TWR 慣例），
+    // curEx = snapshot - terminal_value = 0，r = 0 → return null。
+    // 正確用法：不傳 terminal value，TWR 自行從快照序列取最終值。
+    const snapshots = [
+      { date: "2025-01-01", value: 1000 },
+      { date: "2025-02-01", value: 1100 },
+    ];
+    expect(computeTwr(snapshots, [{ date: "2025-02-01", amount: 1100 }])).toBeNull();
+    expect(computeTwr(snapshots, [])?.total).toBeCloseTo(0.1, 5);
+  });
 });
 
 describe("computeMaxDrawdown", () => {

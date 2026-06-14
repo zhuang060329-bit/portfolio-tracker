@@ -255,10 +255,17 @@ export default async function Home({
     date: p.date,
     value: p.value,
   }));
-  const cashflowsForMetrics = cashflows.map((c) => ({
-    date: c.when.toISOString().slice(0, 10),
-    amount: c.amount,
-  }));
+  // TWR / Sharpe 使用 TWR 慣例（正數=投入組合，負數=取出），且不含 terminal value。
+  // terminal value 已體現在最後一筆 snapshot，不應再作為 cashflow 傳入。
+  // 從 cfRows 直接組建，而非從已加入 terminal value 的 cashflows 組建。
+  const cashflowsForMetrics = (cfRows ?? [])
+    .filter((c) => c.cashflow_twd !== null && Number(c.cashflow_twd) !== 0)
+    .map((c) => ({
+      date: new Date(c.created_at).toLocaleDateString("en-CA", {
+        timeZone: "Asia/Taipei",
+      }),
+      amount: -Number(c.cashflow_twd), // XIRR 慣例翻轉 → TWR 慣例：買入(負)→正，賣出(正)→負
+    }));
   const twrShowable = snapshotsForMetrics.length >= 30;
   const twrResult = twrShowable
     ? computeTwr(snapshotsForMetrics, cashflowsForMetrics)
