@@ -205,7 +205,7 @@ export async function adjustQuantity(
     newCostNative = oldCostNative * ratio;
   }
 
-  await supabase
+  const { error: u } = await supabase
     .from("accounts")
     .update({
       quantity: newQty,
@@ -216,6 +216,7 @@ export async function adjustQuantity(
       cost_basis_native: newCostNative,
     })
     .eq("id", accountId);
+  if (u) return { error: u.message };
 
   // 覆寫總量視為「以現價買/賣差額」近似現金流（要精準損益請走 sell 流程）
   const cashflow = -(newQty - oldQty) * quote.unitPrice * quote.fxToBase;
@@ -302,7 +303,7 @@ export async function adjustBalance(
 
   // manual 帳戶：成本 = 餘額（沒有市場價變動，PnL 永遠為 0）
   const oldBalance = Number(account.manual_value_base ?? 0);
-  await supabase
+  const { error: u } = await supabase
     .from("accounts")
     .update({
       manual_value_base: newBalance,
@@ -310,6 +311,7 @@ export async function adjustBalance(
       cost_basis_native: newBalance,
     })
     .eq("id", accountId);
+  if (u) return { error: u.message };
 
   await supabase.from("transactions").insert({
     user_id: user.id,
@@ -411,7 +413,7 @@ export async function sellQuantity(
   const newCostNative = oldCostNative * (1 - ratio);
   const newRealizedTotal = Number(account.realized_pnl_twd ?? 0) + realizedPnl;
 
-  await supabase
+  const { error: u } = await supabase
     .from("accounts")
     .update({
       quantity: newQty,
@@ -423,6 +425,7 @@ export async function sellQuantity(
       last_priced_at: quote.asOf,
     })
     .eq("id", accountId);
+  if (u) return { error: u.message };
 
   const noteParts = [`賣出 ${sellQty} 股，收入 ${Math.round(proceeds)} TWD`];
   if (userNote) noteParts.push(userNote);
@@ -478,10 +481,11 @@ async function recordIncome(
 
   const newRealizedTotal = Number(account.realized_pnl_twd ?? 0) + amount;
 
-  await supabase
+  const { error: u } = await supabase
     .from("accounts")
     .update({ realized_pnl_twd: newRealizedTotal })
     .eq("id", accountId);
+  if (u) return { error: u.message };
 
   // 計算目前估值（給 value_after_base 填）
   const isManual = account.price_market === "manual";
