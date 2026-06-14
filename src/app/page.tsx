@@ -88,6 +88,7 @@ export default async function Home({
   const allAccounts = (accounts ?? []) as AccountRow[];
   const activeAccounts = allAccounts.filter((a) => a.status !== "archived");
   const archivedCount = allAccounts.length - activeAccounts.length;
+  const activeAccountIds = activeAccounts.map((a) => a.id);
   const list = showArchived ? allAccounts : activeAccounts;
   const total = list.reduce((sum, a) => sum + valueOf(a), 0);
   const totalCost = list.reduce(
@@ -101,11 +102,17 @@ export default async function Home({
   const totalUnrealized = total - totalCost;
   const totalPnlPct = totalCost > 0 ? (totalUnrealized / totalCost) * 100 : 0;
 
-  // XIRR：跨所有帳戶的現金流 + 今天的當前淨值
-  const { data: cfRows } = await supabase
-    .from("transactions")
-    .select("created_at,cashflow_twd")
-    .not("cashflow_twd", "is", null);
+  // XIRR：只納入 active 帳戶的現金流 + 今天的 active 帳戶總值（terminal value）。
+  // cashflows 與 terminal value 使用同一個 active account set，
+  // 避免 archived 帳戶歷史負現金流進入計算但終值未計入而低估報酬率。
+  const activeTotal = activeAccounts.reduce((s, a) => s + valueOf(a), 0);
+  const { data: cfRows } = activeAccountIds.length > 0
+    ? await supabase
+        .from("transactions")
+        .select("created_at,cashflow_twd")
+        .not("cashflow_twd", "is", null)
+        .in("account_id", activeAccountIds)
+    : { data: null as { created_at: string; cashflow_twd: number }[] | null };
   const cashflows = ((cfRows ?? []) as {
     created_at: string;
     cashflow_twd: number;
@@ -113,7 +120,7 @@ export default async function Home({
     .map((r) => ({ amount: Number(r.cashflow_twd), when: new Date(r.created_at) }))
     .filter((c) => Number.isFinite(c.amount) && c.amount !== 0);
   const now = new Date();
-  if (total > 0) cashflows.push({ amount: total, when: now });
+  if (activeTotal > 0) cashflows.push({ amount: activeTotal, when: now });
   const xirr = computeXirr(cashflows);
   // 資料 < 30 天時，年化會把短期波動放大成失真值，直接隱藏比顯示誤導值好。
   const xirrSpanDays =
@@ -165,7 +172,6 @@ export default async function Home({
   for (const a of activeAccounts) {
     byClass.set(a.asset_class, (byClass.get(a.asset_class) ?? 0) + valueOf(a));
   }
-  const activeTotal = activeAccounts.reduce((s, a) => s + valueOf(a), 0);
   // donut 只吃正值切片（負值在圓餅無意義，沿用既有行為）
   const allocation: AllocDatum[] = [...byClass.entries()]
     .filter(([, value]) => value > 0)
