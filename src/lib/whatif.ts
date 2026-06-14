@@ -81,3 +81,27 @@ export function simulateBuyAndHold(
     skippedCashflows: skipped,
   };
 }
+
+/**
+ * 計算實際組合的歷史報酬率，正確納入賣出收益與配息。
+ *
+ * 現金流符號：負 = 買入（投入），正 = 賣出 / 配息 / 利息（收回）。
+ * returnPct = (currentValue + totalReceived − totalInvested) / totalInvested
+ * 若 totalInvested = 0（無任何買入記錄）回傳 0，避免除以零。
+ */
+export function calculateActualReturnPct({
+  currentValue,
+  cashflows,
+}: {
+  currentValue: number;
+  cashflows: CashflowIn[];
+}): number {
+  const totalInvested = cashflows
+    .filter((c) => c.amount < 0)
+    .reduce((sum, c) => sum + Math.abs(c.amount), 0);
+  if (totalInvested <= 0) return 0;
+  const totalReceived = cashflows
+    .filter((c) => c.amount > 0)
+    .reduce((sum, c) => sum + c.amount, 0);
+  return (currentValue + totalReceived - totalInvested) / totalInvested;
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { simulateBuyAndHold } from "./whatif";
+import { simulateBuyAndHold, calculateActualReturnPct } from "./whatif";
 
 describe("simulateBuyAndHold", () => {
   const prices = [
@@ -58,5 +58,28 @@ describe("simulateBuyAndHold", () => {
     const cashflows = [{ date: "2025-01-01", amount: -1000 }];
     const r = simulateBuyAndHold(cashflows, prices, 150);
     expect(r.finalValue).toBeCloseTo(10 * 150, 5);
+  });
+});
+
+describe("calculateActualReturnPct", () => {
+  it("無賣出：投入 100，現值 110，報酬 = 10%", () => {
+    const cashflows = [{ date: "2025-01-01", amount: -100 }];
+    const r = calculateActualReturnPct({ currentValue: 110, cashflows });
+    expect(r).toBeCloseTo(0.1, 5);
+  });
+
+  it("有賣出：投入 100，賣出收回 60，現值 55，報酬 = 15%", () => {
+    const cashflows = [
+      { date: "2025-01-01", amount: -100 },
+      { date: "2025-06-01", amount: 60 }, // 賣出收回
+    ];
+    const r = calculateActualReturnPct({ currentValue: 55, cashflows });
+    expect(r).toBeCloseTo(0.15, 5);
+  });
+
+  it("無投入（totalInvested = 0）：回傳 0，不除以零", () => {
+    const cashflows = [{ date: "2025-01-01", amount: 50 }]; // 只有正現金流
+    const r = calculateActualReturnPct({ currentValue: 100, cashflows });
+    expect(r).toBe(0);
   });
 });

@@ -5,7 +5,7 @@ import { getUnreadCount } from "@/lib/notifications";
 import { fetchUsDailyClose } from "@/lib/prices/twelvedata";
 import { fetchUsdTwdHistory } from "@/lib/prices/fx";
 import { fetchTwDailyClose } from "@/lib/prices/finmind";
-import { simulateBuyAndHold, type DailyClose } from "@/lib/whatif";
+import { simulateBuyAndHold, calculateActualReturnPct, type DailyClose } from "@/lib/whatif";
 import {
   WhatIfClient,
   type CfRow,
@@ -101,8 +101,10 @@ export default async function WhatIfPage() {
 
   let counterfactual: CounterfactualData | null = null;
   if (hasData) {
-    const actualReturnPct =
-      totalInvested > 0 ? (actualValue - totalInvested) / totalInvested : 0;
+    const actualReturnPct = calculateActualReturnPct({
+      currentValue: actualValue,
+      cashflows,
+    });
     const sims: CfRow[] = [
       {
         label: "S&P 500",
