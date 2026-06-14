@@ -96,6 +96,13 @@ export function AccountActions({
   const [priceOverride, setPriceOverride] = useState("");
   const [fxOverride, setFxOverride] = useState("");
   const [occurredAt, setOccurredAt] = useState("");
+  const today = new Date();
+  const todayDate = [
+    today.getFullYear(),
+    String(today.getMonth() + 1).padStart(2, "0"),
+    String(today.getDate()).padStart(2, "0"),
+  ].join("-");
+  const isBackdating = occurredAt !== "" && occurredAt.slice(0, 10) < todayDate;
   const [note, setNote] = useState("");
   const twdN = Number(twd);
   const priceN = priceOverride ? Number(priceOverride) : currentPrice;
@@ -179,6 +186,11 @@ export function AccountActions({
                   placeholder={currentPrice ? String(currentPrice) : ""}
                   className="mt-1 rounded border border-[var(--c-border)] px-2 py-1.5 text-sm text-[var(--c-text)]"
                 />
+                {isBackdating && !priceOverride && (
+                  <span className="mt-1 text-[10px] text-amber-600 dark:text-amber-400">
+                    回填歷史記錄建議填寫當時成交價，否則快照將使用今日價格。
+                  </span>
+                )}
               </label>
 
               <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
