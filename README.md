@@ -40,20 +40,13 @@ It is a personal finance tool. It does not provide investment advice, is not aff
 
 ---
 
-## Product Screenshots
+## Screenshots and Design References
 
-Production screenshots are intentionally omitted because this project contains personal portfolio data, including holdings, account names, transaction history, and net worth values.
+This repository intentionally does not include production screenshots because the live dashboard contains personal financial data, including holdings, account names, transaction history, and net worth values.
 
-The repository keeps archived design references from the UI design pass below, but they should not be interpreted as production screenshots.
+The visual direction was developed from local design references during the UI pass. Those reference images are intentionally excluded from version control because they are workflow artifacts rather than product assets.
 
-## Design References
-
-The following images are archived references from the UI design pass, kept for design continuity. They are not production screenshots and are not required for the production app runtime.
-
-- Dashboard: `design-imports/claude-design/stackworth/project/screenshots/03-dash-03.png`
-- What-if: `design-imports/claude-design/stackworth/project/screenshots/01-whatif-01.png`
-- Alerts: `design-imports/claude-design/stackworth/project/screenshots/01-alerts-01.png`
-- Mobile: `design-imports/claude-design/stackworth/project/screenshots/01-mobile.png`
+For review, use the deployed app or run the project locally with non-sensitive demo data.
 
 ## Portfolio Notes
 
@@ -182,7 +175,7 @@ cd portfolio-tracker
 npm install
 
 # copy and fill environment variables
-cp .env.example .env.local   # (or create .env.local manually — see Environment Variables below)
+cp .env.local.example .env.local
 
 npm run dev      # starts on http://localhost:3000
 ```
@@ -200,13 +193,13 @@ npm run lint         # ESLint
 
 ## Environment Variables
 
-No `.env.example` is committed. Create `.env.local` with:
+A `.env.local.example` file is committed as a blank template. Copy it to `.env.local` and fill in local values:
 
 | Variable | Purpose |
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon/public key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Service role key — used only in cron route and admin actions (bypasses RLS) |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable/public key |
+| `SUPABASE_SECRET_KEY` | Server-only secret key — used in cron route and admin actions (bypasses RLS) |
 | `TWELVE_DATA_API_KEY` | US stock quotes + USD/TWD FX rate |
 | `FINMIND_TOKEN` | Taiwan stock quotes + historical FX |
 | `CRON_SECRET` | Bearer token that protects `/api/cron/refresh` |
