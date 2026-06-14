@@ -84,7 +84,7 @@ export async function applyContribution(args: {
   const noteParts = [`加碼 ${twd} TWD`];
   if (args.noteSuffix) noteParts.push(args.noteSuffix);
 
-  await supabase.from("transactions").insert({
+  const { error: tErr } = await supabase.from("transactions").insert({
     user_id: userId,
     account_id: account.id,
     type: "adjust_quantity",
@@ -96,6 +96,7 @@ export async function applyContribution(args: {
     created_at: occurredAt.toISOString(),
     cashflow_twd: -twd, // 投入：負現金流
   });
+  if (tErr) return { ok: false, error: tErr.message };
 
   // 快照：occurredAt 那天用 priceUsed/fxUsed；不是今天就同時刷今天一筆。
   const occurredDate = occurredAt.toLocaleDateString("en-CA", {
