@@ -13,6 +13,8 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     "design-imports/**",
+    // Worktree build artifacts（.next/** 只 match 根目錄，worktree 路徑需明確列出）
+    ".claude/worktrees/**/.next/**",
   ]),
 ]);
 
