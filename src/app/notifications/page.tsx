@@ -25,13 +25,13 @@ const TYPE_LABEL: Record<string, string> = {
 
 const TYPE_TONE: Record<string, string> = {
   price_above:
-    "bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300",
+    "bg-[color-mix(in_srgb,var(--c-up)_15%,transparent)] border border-[color-mix(in_srgb,var(--c-up)_30%,transparent)] text-[var(--c-up)]",
   price_below:
-    "bg-rose-100 dark:bg-rose-900/50 text-rose-800 dark:text-rose-300",
+    "bg-[color-mix(in_srgb,var(--c-down)_15%,transparent)] border border-[color-mix(in_srgb,var(--c-down)_30%,transparent)] text-[var(--c-down)]",
   allocation_drift:
-    "bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300",
+    "bg-[color-mix(in_srgb,var(--c-accent)_12%,transparent)] border border-[color-mix(in_srgb,var(--c-accent)_25%,transparent)] text-[var(--c-accent)]",
   system:
-    "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300",
+    "bg-[var(--c-surface-soft)] border border-[var(--c-border)] text-[var(--c-muted)]",
 };
 
 const fmtTime = (iso: string) =>
@@ -85,7 +85,7 @@ export default async function NotificationsPage() {
             <form action={markAllNotificationsRead}>
               <button
                 type="submit"
-                className="rounded-sm border border-[var(--c-border)] bg-[var(--c-surface)] px-3 py-1.5 text-xs text-[var(--c-text)] hover:bg-[var(--c-surface-soft)]"
+                className="rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface)] px-3 py-1.5 text-xs text-[var(--c-text)] hover:bg-[var(--c-surface-soft)]"
               >
                 全部標為已讀
               </button>
@@ -94,7 +94,7 @@ export default async function NotificationsPage() {
         </header>
 
         {rows.length === 0 ? (
-          <div className="mt-6 rounded-md border border-dashed border-[var(--c-border)] bg-[var(--c-surface)] px-6 py-12 text-center">
+          <div className="mt-6 rounded-[var(--r-card)] border border-dashed border-[var(--c-border)] bg-[var(--c-surface)] px-6 py-12 text-center">
             <p className="text-sm text-[var(--c-muted)]">
               還沒有任何通知。先到{" "}
               <Link
@@ -111,7 +111,7 @@ export default async function NotificationsPage() {
             {rows.map((r) => (
               <li
                 key={r.id}
-                className={`rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] p-4 shadow-sm ${
+                className={`rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-4 ${
                   r.read_at ? "opacity-60" : ""
                 }`}
               >
@@ -119,7 +119,7 @@ export default async function NotificationsPage() {
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span
-                        className={`inline-flex rounded-sm px-2 py-0.5 text-[10px] ${
+                        className={`inline-flex rounded px-2 py-0.5 text-[10px] ${
                           TYPE_TONE[r.type] ?? TYPE_TONE.system
                         }`}
                       >
@@ -144,7 +144,7 @@ export default async function NotificationsPage() {
                       <input type="hidden" name="id" value={r.id} />
                       <button
                         type="submit"
-                        className="shrink-0 rounded-sm border border-[var(--c-border)] bg-[var(--c-surface)] px-2 py-1 text-[10px] text-[var(--c-muted)] hover:bg-[var(--c-surface-soft)]"
+                        className="shrink-0 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface)] px-2 py-1 text-[10px] text-[var(--c-muted)] hover:bg-[var(--c-surface-soft)]"
                       >
                         標為已讀
                       </button>

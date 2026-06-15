@@ -48,7 +48,7 @@ function DeleteButton({
       <button
         type="button"
         onClick={() => setConfirm(true)}
-        className="text-xs text-[var(--c-muted)] underline hover:text-red-700 dark:hover:text-red-400"
+        className="text-xs text-[var(--c-muted)] underline hover:text-[var(--c-down)]"
       >
         踢出
       </button>
@@ -64,19 +64,19 @@ function DeleteButton({
       <button
         type="submit"
         disabled={pending}
-        className="rounded-sm bg-red-700 dark:bg-red-600 px-2 py-1 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
+        className="rounded-[var(--r-control)] bg-[var(--c-down)] px-2 py-1 text-xs font-medium text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-50"
       >
         {pending ? "刪除中…" : "確定"}
       </button>
       <button
         type="button"
         onClick={() => setConfirm(false)}
-        className="rounded-sm border border-[var(--c-border)] bg-[var(--c-surface)] px-2 py-1 text-xs text-[var(--c-text)]"
+        className="rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface)] px-2 py-1 text-xs text-[var(--c-text)]"
       >
         取消
       </button>
       {state?.error && (
-        <span className="text-xs text-red-700 dark:text-red-300">
+        <span className="text-xs text-[var(--c-down)]">
           {state.error}
         </span>
       )}
@@ -92,7 +92,7 @@ export function UsersManager({
   currentUserId: string;
 }) {
   return (
-    <div className="rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] shadow-sm">
+    <div className="rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] shadow-[var(--c-shadow)]">
       <div className="flex items-center justify-between border-b border-[var(--c-border)] px-5 py-3">
         <h2 className="font-serif text-lg font-semibold tracking-tight">
           已註冊使用者
@@ -116,7 +116,7 @@ export function UsersManager({
                     {r.email}
                   </span>
                   {!r.confirmed && (
-                    <span className="rounded-sm bg-amber-100 dark:bg-amber-900/50 px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-amber-800 dark:text-amber-300">
+                    <span className="rounded bg-[color-mix(in_srgb,var(--c-down)_12%,transparent)] border border-[color-mix(in_srgb,var(--c-down)_25%,transparent)] px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-[var(--c-down)]">
                       未驗證
                     </span>
                   )}

@@ -54,7 +54,7 @@ export default async function AdminUsers() {
         </header>
 
         {error && (
-          <p className="mt-4 rounded bg-red-50 dark:bg-red-950/40 px-3 py-2 text-sm text-red-700 dark:text-red-300">
+          <p className="mt-4 rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-down)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-down)_10%,var(--c-surface))] px-3 py-2 text-sm text-[var(--c-down)]">
             讀取使用者列表失敗：{error.message}
           </p>
         )}
