@@ -245,7 +245,7 @@ function Segmented<T extends string>({
           onClick={() => onChange(o.v)}
           className={`whitespace-nowrap rounded-md px-3 py-1.5 text-[12.5px] font-semibold transition-colors ${
             value === o.v
-              ? "bg-[var(--c-surface)] text-[var(--c-text)] shadow-sm"
+              ? "bg-[var(--c-surface)] text-[var(--c-text)]"
               : "text-[var(--c-muted)] hover:text-[var(--c-text)]"
           }`}
         >

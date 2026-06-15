@@ -169,7 +169,7 @@ export function AccountActions({
                 value={twd}
                 onChange={(e) => setTwd(e.target.value)}
                 placeholder="例：50000"
-                className="mt-1 rounded border border-[var(--c-border)] px-2 py-1.5 text-sm text-[var(--c-text)]"
+                className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
               />
             </label>
 
@@ -184,7 +184,7 @@ export function AccountActions({
                   value={priceOverride}
                   onChange={(e) => setPriceOverride(e.target.value)}
                   placeholder={currentPrice ? String(currentPrice) : ""}
-                  className="mt-1 rounded border border-[var(--c-border)] px-2 py-1.5 text-sm text-[var(--c-text)]"
+                  className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
                 />
                 {isBackdating && !priceOverride && (
                   <span className="mt-1 text-[10px] text-[var(--c-accent)]">
@@ -204,7 +204,7 @@ export function AccountActions({
                   onChange={(e) => setFxOverride(e.target.value)}
                   placeholder={String(currentFx)}
                   disabled={currentFx === 1}
-                  className="mt-1 rounded border border-[var(--c-border)] px-2 py-1.5 text-sm text-[var(--c-text)] disabled:bg-[var(--c-surface-soft)] disabled:text-[var(--c-faint)]"
+                  className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)] disabled:bg-[var(--c-surface-soft)] disabled:text-[var(--c-faint)]"
                 />
               </label>
             </div>
@@ -216,7 +216,7 @@ export function AccountActions({
                 type="datetime-local"
                 value={occurredAt}
                 onChange={(e) => setOccurredAt(e.target.value)}
-                className="mt-1 rounded border border-[var(--c-border)] px-2 py-1.5 text-sm text-[var(--c-text)]"
+                className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
               />
             </label>
 
@@ -228,7 +228,7 @@ export function AccountActions({
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="例：5/30 永豐定額"
-                className="mt-1 rounded border border-[var(--c-border)] px-2 py-1.5 text-sm text-[var(--c-text)]"
+                className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
               />
             </label>
 
@@ -281,7 +281,7 @@ export function AccountActions({
                 value={sellQtyStr}
                 onChange={(e) => setSellQtyStr(e.target.value)}
                 placeholder="例：0.5"
-                className="mt-1 rounded border border-[var(--c-border)] px-2 py-1.5 text-sm text-[var(--c-text)]"
+                className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
               />
             </label>
 
@@ -295,7 +295,7 @@ export function AccountActions({
                 value={proceedsStr}
                 onChange={(e) => setProceedsStr(e.target.value)}
                 placeholder={defaultProceeds > 0 ? String(Math.round(defaultProceeds)) : ""}
-                className="mt-1 rounded border border-[var(--c-border)] px-2 py-1.5 text-sm text-[var(--c-text)]"
+                className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
               />
               <span className="mt-1 text-[10px] text-[var(--c-faint)]">
                 券商實際匯入帳戶金額（扣完手續費）。留空就用市場估算。
@@ -313,7 +313,7 @@ export function AccountActions({
                   value={sellPriceOv}
                   onChange={(e) => setSellPriceOv(e.target.value)}
                   placeholder={currentPrice ? String(currentPrice) : ""}
-                  className="mt-1 rounded border border-[var(--c-border)] px-2 py-1.5 text-sm text-[var(--c-text)]"
+                  className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
                 />
               </label>
               <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
@@ -327,7 +327,7 @@ export function AccountActions({
                   onChange={(e) => setSellFxOv(e.target.value)}
                   placeholder={String(currentFx)}
                   disabled={currentFx === 1}
-                  className="mt-1 rounded border border-[var(--c-border)] px-2 py-1.5 text-sm text-[var(--c-text)] disabled:bg-[var(--c-surface-soft)] disabled:text-[var(--c-faint)]"
+                  className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)] disabled:bg-[var(--c-surface-soft)] disabled:text-[var(--c-faint)]"
                 />
               </label>
             </div>
@@ -337,7 +337,7 @@ export function AccountActions({
               <input
                 name="occurredAt"
                 type="datetime-local"
-                className="mt-1 rounded border border-[var(--c-border)] px-2 py-1.5 text-sm text-[var(--c-text)]"
+                className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
               />
             </label>
 
@@ -347,7 +347,7 @@ export function AccountActions({
                 name="note"
                 type="text"
                 placeholder="例：6/15 部分獲利了結"
-                className="mt-1 rounded border border-[var(--c-border)] px-2 py-1.5 text-sm text-[var(--c-text)]"
+                className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
               />
             </label>
 
@@ -408,7 +408,7 @@ export function AccountActions({
                   min="0"
                   required
                   placeholder="例：1200"
-                  className="mt-1 rounded border border-[var(--c-border)] px-2 py-1.5 text-sm text-[var(--c-text)]"
+                  className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
                 />
               </label>
               <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
@@ -416,7 +416,7 @@ export function AccountActions({
                 <input
                   name="occurredAt"
                   type="datetime-local"
-                  className="mt-1 rounded border border-[var(--c-border)] px-2 py-1.5 text-sm text-[var(--c-text)]"
+                  className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
                 />
               </label>
             </div>
@@ -426,7 +426,7 @@ export function AccountActions({
                 name="note"
                 type="text"
                 placeholder="例：Q2 季配"
-                className="mt-1 rounded border border-[var(--c-border)] px-2 py-1.5 text-sm text-[var(--c-text)]"
+                className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
               />
             </label>
             {divState?.error && (
@@ -446,7 +446,7 @@ export function AccountActions({
       )}
 
       {/* === 利息（所有帳戶都可記錄）=== */}
-      <details className="rounded-md border border-[var(--c-border)] bg-[var(--c-surface)]">
+      <details className="rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)]">
         <summary className="cursor-pointer select-none px-4 py-3 text-sm font-medium">
           記錄利息
         </summary>
@@ -462,7 +462,7 @@ export function AccountActions({
                 min="0"
                 required
                 placeholder="例：50"
-                className="mt-1 rounded border border-[var(--c-border)] px-2 py-1.5 text-sm text-[var(--c-text)]"
+                className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
               />
             </label>
             <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
@@ -470,7 +470,7 @@ export function AccountActions({
               <input
                 name="occurredAt"
                 type="datetime-local"
-                className="mt-1 rounded border border-[var(--c-border)] px-2 py-1.5 text-sm text-[var(--c-text)]"
+                className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
               />
             </label>
           </div>
@@ -480,7 +480,7 @@ export function AccountActions({
               name="note"
               type="text"
               placeholder="例：玉山活儲 6 月利息"
-              className="mt-1 rounded border border-[var(--c-border)] px-2 py-1.5 text-sm text-[var(--c-text)]"
+              className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
             />
           </label>
           {intState?.error && (
@@ -491,7 +491,7 @@ export function AccountActions({
           <button
             type="submit"
             disabled={intPending}
-            className="self-start rounded-sm bg-[var(--c-btn-strong-bg)] px-4 py-1.5 text-sm font-medium text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-50"
+            className="self-start rounded-[var(--r-control)] bg-[var(--c-btn-strong-bg)] px-4 py-1.5 text-sm font-medium text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-50"
           >
             {intPending ? "送出中…" : "記錄利息"}
           </button>
@@ -515,7 +515,7 @@ export function AccountActions({
                 min="0"
                 required
                 defaultValue={currentQty}
-                className="mt-1 rounded border border-[var(--c-border)] px-2 py-1.5 text-sm text-[var(--c-text)]"
+                className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
               />
               <span className="mt-1 text-[10px] text-[var(--c-faint)]">
                 注意：這只是「校正持有數」，不算真實買賣交易。要精準損益請走「賣出」。
@@ -554,7 +554,7 @@ export function AccountActions({
                 min="0"
                 required
                 defaultValue={currentBalance}
-                className="mt-1 rounded border border-[var(--c-border)] px-2 py-1.5 text-sm text-[var(--c-text)]"
+                className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
               />
             </label>
             {balState?.error && (

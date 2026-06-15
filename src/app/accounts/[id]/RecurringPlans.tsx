@@ -60,7 +60,7 @@ function PlanRow({ plan }: { plan: Plan }) {
               </>
             )}
             {!plan.active && (
-              <span className="ml-2 rounded-sm bg-[var(--c-border)] px-2 py-0.5 text-[10px] uppercase tracking-wider text-[var(--c-muted)]">
+              <span className="ml-2 rounded-[var(--r-pill)] bg-[var(--c-border)] px-2 py-0.5 text-[10px] uppercase tracking-wider text-[var(--c-muted)]">
                 Paused
               </span>
             )}
@@ -136,7 +136,7 @@ function AddPlanForm({ accountId }: { accountId: string }) {
               min="0"
               required
               placeholder="例：10000"
-              className="mt-1 rounded border border-[var(--c-border)] px-2 py-1.5 text-sm text-[var(--c-text)]"
+              className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
             />
           </label>
           <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
@@ -148,7 +148,7 @@ function AddPlanForm({ accountId }: { accountId: string }) {
               max="28"
               required
               defaultValue="5"
-              className="mt-1 rounded border border-[var(--c-border)] px-2 py-1.5 text-sm text-[var(--c-text)]"
+              className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
             />
           </label>
         </div>
@@ -157,7 +157,7 @@ function AddPlanForm({ accountId }: { accountId: string }) {
           <input
             name="startDate"
             type="date"
-            className="mt-1 rounded border border-[var(--c-border)] px-2 py-1.5 text-sm text-[var(--c-text)]"
+            className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
           />
         </label>
         <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
@@ -166,7 +166,7 @@ function AddPlanForm({ accountId }: { accountId: string }) {
             name="note"
             type="text"
             placeholder="例：薪資自動撥入"
-            className="mt-1 rounded border border-[var(--c-border)] px-2 py-1.5 text-sm text-[var(--c-text)]"
+            className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
           />
         </label>
         {state?.error && (
