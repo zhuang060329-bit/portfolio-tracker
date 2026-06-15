@@ -16,7 +16,7 @@ export default function AccountDetailLoading() {
             <div className="h-4 w-24 animate-pulse rounded bg-[var(--c-border)]" />
           </div>
         </header>
-        <section className="mt-6 rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-sm">
+        <section className="mt-6 rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)]">
           <div className="h-4 w-20 animate-pulse rounded bg-[var(--c-border)]" />
           <div className="mt-4 h-[260px] animate-pulse rounded bg-[var(--c-border)]/40" />
         </section>

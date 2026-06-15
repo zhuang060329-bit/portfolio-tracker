@@ -139,19 +139,19 @@ export function AccountActions({
           <button
             type="submit"
             disabled={updatePending}
-            className="rounded-sm bg-[var(--c-accent)] px-4 py-2 text-sm font-semibold text-[var(--c-btn-strong-text)] shadow-sm hover:opacity-90 disabled:opacity-50"
+            className="rounded-[var(--r-control)] bg-[var(--c-accent)] px-4 py-2 text-sm font-semibold text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-50"
           >
             {updatePending ? "抓最新價中…" : "更新價格"}
           </button>
           {updateState?.error && (
-            <span className="text-xs text-red-700 dark:text-red-300">{updateState.error}</span>
+            <span className="text-xs text-[var(--c-down)]">{updateState.error}</span>
           )}
         </form>
       )}
 
       {/* === 加碼買入 === */}
       {!isManual && (
-        <details className="rounded-md border border-[var(--c-border)] bg-[var(--c-surface)]">
+        <details className="rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)]">
           <summary className="cursor-pointer select-none px-4 py-3 text-sm font-medium">
             加碼買入（依 TWD 金額自動換算股數）
           </summary>
@@ -187,7 +187,7 @@ export function AccountActions({
                   className="mt-1 rounded border border-[var(--c-border)] px-2 py-1.5 text-sm text-[var(--c-text)]"
                 />
                 {isBackdating && !priceOverride && (
-                  <span className="mt-1 text-[10px] text-amber-600 dark:text-amber-400">
+                  <span className="mt-1 text-[10px] text-[var(--c-accent)]">
                     回填歷史記錄建議填寫當時成交價，否則快照將使用今日價格。
                   </span>
                 )}
@@ -204,7 +204,7 @@ export function AccountActions({
                   onChange={(e) => setFxOverride(e.target.value)}
                   placeholder={String(currentFx)}
                   disabled={currentFx === 1}
-                  className="mt-1 rounded border border-[var(--c-border)] px-2 py-1.5 text-sm text-[var(--c-text)] disabled:bg-zinc-50 dark:disabled:bg-zinc-900 disabled:text-[var(--c-faint)]"
+                  className="mt-1 rounded border border-[var(--c-border)] px-2 py-1.5 text-sm text-[var(--c-text)] disabled:bg-[var(--c-surface-soft)] disabled:text-[var(--c-faint)]"
                 />
               </label>
             </div>
@@ -232,7 +232,7 @@ export function AccountActions({
               />
             </label>
 
-            <div className="rounded-sm border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3 py-2 text-xs text-[var(--c-muted)]">
+            <div className="rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3 py-2 text-xs text-[var(--c-muted)]">
               預估加入股數：
               <span className="ml-1 font-semibold tabular-nums text-[var(--c-text)]">
                 {fmtShares(previewShares)}
@@ -245,14 +245,14 @@ export function AccountActions({
             </div>
 
             {addState?.error && (
-              <p className="rounded bg-red-50 dark:bg-red-950/40 px-2 py-1 text-xs text-red-700 dark:text-red-300">
+              <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-down)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-down)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-down)]">
                 {addState.error}
               </p>
             )}
             <button
               type="submit"
               disabled={addPending}
-              className="self-start rounded-sm bg-[var(--c-btn-strong-bg)] px-4 py-1.5 text-sm font-medium text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-50"
+              className="self-start rounded-[var(--r-control)] bg-[var(--c-btn-strong-bg)] px-4 py-1.5 text-sm font-medium text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-50"
             >
               {addPending ? "送出中…" : "確認加碼"}
             </button>
@@ -262,7 +262,7 @@ export function AccountActions({
 
       {/* === 賣出（含已實現損益計算）=== */}
       {!isManual && (
-        <details className="rounded-md border border-[var(--c-border)] bg-[var(--c-surface)]">
+        <details className="rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)]">
           <summary className="cursor-pointer select-none px-4 py-3 text-sm font-medium">
             賣出（記錄已實現損益）
           </summary>
@@ -327,7 +327,7 @@ export function AccountActions({
                   onChange={(e) => setSellFxOv(e.target.value)}
                   placeholder={String(currentFx)}
                   disabled={currentFx === 1}
-                  className="mt-1 rounded border border-[var(--c-border)] px-2 py-1.5 text-sm text-[var(--c-text)] disabled:bg-zinc-50 dark:disabled:bg-zinc-900 disabled:text-[var(--c-faint)]"
+                  className="mt-1 rounded border border-[var(--c-border)] px-2 py-1.5 text-sm text-[var(--c-text)] disabled:bg-[var(--c-surface-soft)] disabled:text-[var(--c-faint)]"
                 />
               </label>
             </div>
@@ -351,7 +351,7 @@ export function AccountActions({
               />
             </label>
 
-            <div className="rounded-sm border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3 py-2 text-xs text-[var(--c-muted)]">
+            <div className="rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3 py-2 text-xs text-[var(--c-muted)]">
               <div>
                 預估收入：
                 <span className="ml-1 font-semibold tabular-nums text-[var(--c-text)]">
@@ -375,14 +375,14 @@ export function AccountActions({
             </div>
 
             {sellState?.error && (
-              <p className="rounded bg-red-50 dark:bg-red-950/40 px-2 py-1 text-xs text-red-700 dark:text-red-300">
+              <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-down)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-down)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-down)]">
                 {sellState.error}
               </p>
             )}
             <button
               type="submit"
               disabled={sellPending}
-              className="self-start rounded-sm bg-[var(--c-btn-strong-bg)] px-4 py-1.5 text-sm font-medium text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-50"
+              className="self-start rounded-[var(--r-control)] bg-[var(--c-btn-strong-bg)] px-4 py-1.5 text-sm font-medium text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-50"
             >
               {sellPending ? "送出中…" : "確認賣出"}
             </button>
@@ -392,7 +392,7 @@ export function AccountActions({
 
       {/* === 配息（非手動）=== */}
       {!isManual && (
-        <details className="rounded-md border border-[var(--c-border)] bg-[var(--c-surface)]">
+        <details className="rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)]">
           <summary className="cursor-pointer select-none px-4 py-3 text-sm font-medium">
             記錄配息
           </summary>
@@ -430,14 +430,14 @@ export function AccountActions({
               />
             </label>
             {divState?.error && (
-              <p className="rounded bg-red-50 dark:bg-red-950/40 px-2 py-1 text-xs text-red-700 dark:text-red-300">
+              <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-down)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-down)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-down)]">
                 {divState.error}
               </p>
             )}
             <button
               type="submit"
               disabled={divPending}
-              className="self-start rounded-sm bg-[var(--c-btn-strong-bg)] px-4 py-1.5 text-sm font-medium text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-50"
+              className="self-start rounded-[var(--r-control)] bg-[var(--c-btn-strong-bg)] px-4 py-1.5 text-sm font-medium text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-50"
             >
               {divPending ? "送出中…" : "記錄配息"}
             </button>
@@ -484,7 +484,7 @@ export function AccountActions({
             />
           </label>
           {intState?.error && (
-            <p className="rounded bg-red-50 dark:bg-red-950/40 px-2 py-1 text-xs text-red-700 dark:text-red-300">
+            <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-down)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-down)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-down)]">
               {intState.error}
             </p>
           )}
@@ -500,7 +500,7 @@ export function AccountActions({
 
       {/* === 增減股數（覆寫總量）=== */}
       {!isManual && (
-        <details className="rounded-md border border-[var(--c-border)] bg-[var(--c-surface)]">
+        <details className="rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)]">
           <summary className="cursor-pointer select-none px-4 py-3 text-sm font-medium">
             增減股數 / 數量（直接覆寫總持有）
           </summary>
@@ -522,14 +522,14 @@ export function AccountActions({
               </span>
             </label>
             {qtyState?.error && (
-              <p className="rounded bg-red-50 dark:bg-red-950/40 px-2 py-1 text-xs text-red-700 dark:text-red-300">
+              <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-down)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-down)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-down)]">
                 {qtyState.error}
               </p>
             )}
             <button
               type="submit"
               disabled={qtyPending}
-              className="self-start rounded-sm bg-[var(--c-btn-strong-bg)] px-4 py-1.5 text-sm font-medium text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-50"
+              className="self-start rounded-[var(--r-control)] bg-[var(--c-btn-strong-bg)] px-4 py-1.5 text-sm font-medium text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-50"
             >
               {qtyPending ? "套用中…" : "套用"}
             </button>
@@ -539,7 +539,7 @@ export function AccountActions({
 
       {/* === 修改餘額（manual）=== */}
       {isManual && (
-        <details className="rounded-md border border-[var(--c-border)] bg-[var(--c-surface)]">
+        <details className="rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)]">
           <summary className="cursor-pointer select-none px-4 py-3 text-sm font-medium">
             修改餘額
           </summary>
@@ -558,14 +558,14 @@ export function AccountActions({
               />
             </label>
             {balState?.error && (
-              <p className="rounded bg-red-50 dark:bg-red-950/40 px-2 py-1 text-xs text-red-700 dark:text-red-300">
+              <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-down)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-down)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-down)]">
                 {balState.error}
               </p>
             )}
             <button
               type="submit"
               disabled={balPending}
-              className="self-start rounded-sm bg-[var(--c-btn-strong-bg)] px-4 py-1.5 text-sm font-medium text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-50"
+              className="self-start rounded-[var(--r-control)] bg-[var(--c-btn-strong-bg)] px-4 py-1.5 text-sm font-medium text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-50"
             >
               {balPending ? "套用中…" : "套用"}
             </button>
@@ -588,7 +588,7 @@ export function AccountActions({
               : "歸檔此帳戶（不再抓價、不計入總值）"}
         </button>
         {archState?.error && (
-          <span className="text-xs text-red-700 dark:text-red-300">{archState.error}</span>
+          <span className="text-xs text-[var(--c-down)]">{archState.error}</span>
         )}
       </form>
 
@@ -609,20 +609,20 @@ export function AccountActions({
             <button
               type="submit"
               disabled={delPending}
-              className="rounded-sm bg-red-700 dark:bg-red-600 px-3 py-1 font-medium text-white hover:opacity-90 disabled:opacity-50"
+              className="rounded-[var(--r-control)] bg-[var(--c-down)] px-3 py-1 font-medium text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-50"
             >
               {delPending ? "刪除中…" : "確定刪除"}
             </button>
             <button
               type="button"
               onClick={() => setConfirmDelete(false)}
-              className="rounded-sm border border-[var(--c-border)] bg-[var(--c-surface)] px-3 py-1 text-[var(--c-text)]"
+              className="rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface)] px-3 py-1 text-[var(--c-text)]"
             >
               取消
             </button>
           </div>
         )}
-        {delState?.error && <span className="text-xs text-red-700 dark:text-red-300">{delState.error}</span>}
+        {delState?.error && <span className="text-xs text-[var(--c-down)]">{delState.error}</span>}
       </form>
     </div>
   );

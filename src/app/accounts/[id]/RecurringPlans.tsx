@@ -41,7 +41,7 @@ function PlanRow({ plan }: { plan: Plan }) {
 
   return (
     <div
-      className={`rounded-md border border-[var(--c-border)] p-4 ${
+      className={`rounded-[var(--r-card)] border border-[var(--c-border)] p-4 ${
         plan.active ? "bg-[var(--c-surface)]" : "bg-[var(--c-surface-soft)]"
       }`}
     >
@@ -75,7 +75,7 @@ function PlanRow({ plan }: { plan: Plan }) {
             <button
               type="submit"
               disabled={execPending || !plan.active}
-              className="rounded-sm bg-[var(--c-accent)] px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:opacity-90 disabled:opacity-40"
+              className="rounded-[var(--r-control)] bg-[var(--c-accent)] px-3 py-1.5 text-xs font-semibold text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-40"
             >
               {execPending ? "執行中…" : "立即執行"}
             </button>
@@ -86,7 +86,7 @@ function PlanRow({ plan }: { plan: Plan }) {
             <button
               type="submit"
               disabled={togglePending}
-              className="rounded-sm border border-[var(--c-border)] bg-[var(--c-surface)] px-3 py-1.5 text-xs text-[var(--c-text)] hover:bg-[var(--c-page)] disabled:opacity-50"
+              className="rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface)] px-3 py-1.5 text-xs text-[var(--c-text)] hover:bg-[var(--c-page)] disabled:opacity-50"
             >
               {plan.active ? "暫停" : "啟用"}
             </button>
@@ -96,7 +96,7 @@ function PlanRow({ plan }: { plan: Plan }) {
             <button
               type="submit"
               disabled={delPending}
-              className="text-xs text-[var(--c-muted)] underline hover:text-red-700 dark:hover:text-red-400 disabled:opacity-50"
+              className="text-xs text-[var(--c-muted)] underline hover:text-[var(--c-down)] disabled:opacity-50"
             >
               刪除
             </button>
@@ -104,7 +104,7 @@ function PlanRow({ plan }: { plan: Plan }) {
         </div>
       </div>
       {error && (
-        <p className="mt-2 rounded bg-red-50 dark:bg-red-950/40 px-2 py-1 text-xs text-red-700 dark:text-red-300">{error}</p>
+        <p className="mt-2 rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-down)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-down)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-down)]">{error}</p>
       )}
     </div>
   );
@@ -117,7 +117,7 @@ function AddPlanForm({ accountId }: { accountId: string }) {
   );
 
   return (
-    <details className="rounded-md border border-[var(--c-border)] bg-[var(--c-surface)]">
+    <details className="rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)]">
       <summary className="cursor-pointer select-none px-4 py-3 text-sm font-medium">
         新增定期定額計劃
       </summary>
@@ -170,14 +170,14 @@ function AddPlanForm({ accountId }: { accountId: string }) {
           />
         </label>
         {state?.error && (
-          <p className="rounded bg-red-50 dark:bg-red-950/40 px-2 py-1 text-xs text-red-700 dark:text-red-300">
+          <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-down)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-down)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-down)]">
             {state.error}
           </p>
         )}
         <button
           type="submit"
           disabled={pending}
-          className="self-start rounded-sm bg-[var(--c-btn-strong-bg)] px-4 py-1.5 text-sm font-medium text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-50"
+          className="self-start rounded-[var(--r-control)] bg-[var(--c-btn-strong-bg)] px-4 py-1.5 text-sm font-medium text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-50"
         >
           {pending ? "建立中…" : "建立計劃"}
         </button>
@@ -202,7 +202,7 @@ export function RecurringPlans({
           ))}
         </div>
       ) : (
-        <p className="rounded-md border border-dashed border-[var(--c-border)] bg-[var(--c-surface)] px-4 py-6 text-center text-xs text-[var(--c-muted)]">
+        <p className="rounded-[var(--r-card)] border border-dashed border-[var(--c-border)] bg-[var(--c-surface)] px-4 py-6 text-center text-xs text-[var(--c-muted)]">
           尚無定期定額計劃。展開下方表單建立第一個。
         </p>
       )}

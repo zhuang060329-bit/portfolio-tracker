@@ -163,7 +163,7 @@ export default async function AccountDetail({
         {/* === 帳戶 header === */}
         <header className="border-b border-[var(--c-border)] pb-6">
           {account.status === "archived" && (
-            <div className="mb-3 rounded-sm border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
+            <div className="mb-3 rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-accent)_10%,var(--c-surface))] px-3 py-2 text-xs text-[var(--c-accent)]">
               此帳戶已歸檔。cron 不會自動抓價，首頁總值不計入此帳戶。
             </div>
           )}
@@ -269,7 +269,7 @@ export default async function AccountDetail({
         {/* === 單一帳戶趨勢 === */}
         {hasTrend && (
           <section className="mt-6">
-            <div className="rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-sm">
+            <div className="rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)]">
               <h2 className="font-serif text-lg font-semibold tracking-tight">
                 帳戶趨勢
               </h2>
@@ -319,7 +319,7 @@ export default async function AccountDetail({
         {/* === 變動記錄 === */}
         <section className="mt-8">
           <h2 className="font-serif text-lg font-semibold tracking-tight">變動記錄</h2>
-          <div className="mt-3 overflow-hidden rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] shadow-sm">
+          <div className="mt-3 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] shadow-[var(--c-shadow)]">
             <table className="w-full text-sm">
               <thead className="border-b border-[var(--c-border)] bg-[var(--c-surface-soft)] text-xs tracking-wider text-[var(--c-muted)]">
                 <tr>

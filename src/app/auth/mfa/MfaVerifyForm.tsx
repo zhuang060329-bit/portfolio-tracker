@@ -62,7 +62,7 @@ export function MfaVerifyForm() {
   }
 
   return (
-    <div className="w-full max-w-sm rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] p-8 shadow-sm">
+    <div className="w-full max-w-sm rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-8 shadow-[var(--c-shadow)]">
       <div className="flex flex-col gap-2">
         <h1 className="font-serif text-2xl font-semibold tracking-tight text-[var(--c-text)]">
           驗證碼
@@ -87,17 +87,17 @@ export function MfaVerifyForm() {
             autoComplete="one-time-code"
             autoFocus
             maxLength={6}
-            className="w-full rounded border border-[var(--c-border)] px-3 py-2 text-center text-lg tabular-nums [font-variant-numeric:lining-nums_tabular-nums] tracking-widest text-[var(--c-text)]"
+            className="w-full rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3 py-2 text-center text-lg tabular-nums [font-variant-numeric:lining-nums_tabular-nums] tracking-widest text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
           />
           {error && (
-            <p className="rounded bg-red-50 dark:bg-red-950/40 px-2 py-1 text-xs text-red-700 dark:text-red-300">
+            <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-down)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-down)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-down)]">
               {error}
             </p>
           )}
           <button
             type="submit"
             disabled={busy || code.length < 6}
-            className="w-full rounded-sm bg-[var(--c-accent)] px-6 py-3 text-sm font-semibold text-white shadow-sm hover:opacity-90 disabled:opacity-50"
+            className="w-full rounded-[var(--r-control)] bg-[var(--c-accent)] px-6 py-3 text-sm font-semibold text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-50"
           >
             {busy ? "驗證中…" : "驗證"}
           </button>
