@@ -15,14 +15,14 @@ export type Cashflow = { date: string; amount: number };
 
 /**
  * TWR 算法：
- * - 對每個有現金流的日期 d，把該區間 [前一個觀察點, d] 拆成兩段：
- *   - 前段報酬 = (value_at_d_before_cashflow / value_at_prev) - 1
- *   - 其中 value_at_d_before_cashflow = value_at_d - cashflow_at_d
- *     （因為 snapshot 已經包含當天的現金流在內）
- * - 把所有子區間 (1 + r_i) 連乘 - 1 = TWR
+ * - 每個子期間 = (prevSnapshot, curSnapshot]
+ *   cfSum = 該區間內所有現金流之和（入金日不一定有 snapshot）
+ *   curEx = curSnapshot.value - cfSum   ← 還原「市場帶來的淨值」
+ *   r_i   = curEx / prevSnapshot.value
+ * - 所有子期間 (1 + r_i) 連乘 - 1 = TWR total
  * - 年化：(1 + TWR)^(365.25 / spanDays) - 1
  *
- * 回傳 null：snapshot 不足 2 筆，或計算過程出現除以 0 / 非有限值。
+ * 回傳 null：snapshot 不足 2 筆，或計算過程出現除以 0 / 非有限值 / r <= 0。
  */
 export function computeTwr(
   snapshots: Snapshot[],
@@ -30,20 +30,28 @@ export function computeTwr(
 ): { total: number; annualized: number } | null {
   if (snapshots.length < 2) return null;
 
-  // 把現金流按日期 group up
-  const cfByDate = new Map<string, number>();
-  for (const c of cashflows) {
-    cfByDate.set(c.date, (cfByDate.get(c.date) ?? 0) + c.amount);
+  const sorted = [...snapshots].sort((a, b) => a.date.localeCompare(b.date));
+  // 排序現金流以支援 O(N+M) 區間掃描（與 buildTwrSeries 相同邏輯）
+  const cfSorted = [...cashflows].sort((a, b) => a.date.localeCompare(b.date));
+  let cfPtr = 0;
+  while (cfPtr < cfSorted.length && cfSorted[cfPtr].date <= sorted[0].date) {
+    cfPtr++;
   }
 
-  const sorted = [...snapshots].sort((a, b) => a.date.localeCompare(b.date));
   let product = 1;
   for (let i = 1; i < sorted.length; i++) {
     const prev = sorted[i - 1].value;
     const cur = sorted[i].value;
-    const cf = cfByDate.get(sorted[i].date) ?? 0;
-    // 當天 snapshot 已含現金流；要算「市場帶來的變化」需先把現金流扣掉
-    const curEx = cur - cf;
+    const curDate = sorted[i].date;
+
+    // 累加 (prevDate, curDate] 區間內所有現金流
+    let cfSum = 0;
+    while (cfPtr < cfSorted.length && cfSorted[cfPtr].date <= curDate) {
+      cfSum += cfSorted[cfPtr].amount;
+      cfPtr++;
+    }
+
+    const curEx = cur - cfSum;
     if (!Number.isFinite(prev) || prev <= 0) return null;
     const r = curEx / prev;
     if (!Number.isFinite(r) || r <= 0) return null;
@@ -98,23 +106,30 @@ export function computeMaxDrawdown(snapshots: Snapshot[]): {
 
 /**
  * 日報酬序列（已剔除現金流影響，用 TWR 的子報酬邏輯）。
+ * 與 computeTwr / buildTwrSeries 相同：使用區間掃描累加 (prevDate, curDate] 內所有現金流。
  */
 export function dailyReturns(
   snapshots: Snapshot[],
   cashflows: Cashflow[],
 ): number[] {
-  const cfByDate = new Map<string, number>();
-  for (const c of cashflows) {
-    cfByDate.set(c.date, (cfByDate.get(c.date) ?? 0) + c.amount);
-  }
   const sorted = [...snapshots].sort((a, b) => a.date.localeCompare(b.date));
+  const cfSorted = [...cashflows].sort((a, b) => a.date.localeCompare(b.date));
+  let cfPtr = 0;
+  while (cfPtr < cfSorted.length && cfSorted[cfPtr].date <= sorted[0].date) {
+    cfPtr++;
+  }
   const rs: number[] = [];
   for (let i = 1; i < sorted.length; i++) {
     const prev = sorted[i - 1].value;
     const cur = sorted[i].value;
-    const cf = cfByDate.get(sorted[i].date) ?? 0;
+    const curDate = sorted[i].date;
+    let cfSum = 0;
+    while (cfPtr < cfSorted.length && cfSorted[cfPtr].date <= curDate) {
+      cfSum += cfSorted[cfPtr].amount;
+      cfPtr++;
+    }
     if (!Number.isFinite(prev) || prev <= 0) continue;
-    const r = (cur - cf) / prev - 1;
+    const r = (cur - cfSum) / prev - 1;
     if (Number.isFinite(r)) rs.push(r);
   }
   return rs;

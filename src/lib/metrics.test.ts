@@ -57,6 +57,74 @@ describe("computeTwr", () => {
     expect(computeTwr(snapshots, [{ date: "2025-02-01", amount: 1100 }])).toBeNull();
     expect(computeTwr(snapshots, [])?.total).toBeCloseTo(0.1, 5);
   });
+
+  it("價格下跌時回傳負報酬", () => {
+    const snapshots = [
+      { date: "2025-01-01", value: 100 },
+      { date: "2025-02-01", value: 80 },
+    ];
+    const r = computeTwr(snapshots, []);
+    expect(r).not.toBeNull();
+    expect(r!.total).toBeCloseTo(-0.2, 5);
+  });
+
+  it("snapshot 中間有入金但入金日無 snapshot，TWR = 0%（純現金流，市場零報酬）", () => {
+    // Day0: 20000; Day1 入金 15000（無 snapshot）; Day2 snapshot 35000
+    // curEx = 35000 - 15000 = 20000，r = 1.0 → TWR = 0
+    const snapshots = [
+      { date: "2026-01-01", value: 20000 },
+      { date: "2026-01-03", value: 35000 },
+    ];
+    const cashflows = [{ date: "2026-01-02", amount: 15000 }];
+    const r = computeTwr(snapshots, cashflows);
+    expect(r).not.toBeNull();
+    expect(r!.total).toBeCloseTo(0, 5);
+  });
+
+  it("snapshot 中間有入金且市場漲 10%，TWR = 10%", () => {
+    // Day0: 20000; Day1 入金 15000（無 snapshot）; Day2 snapshot 37000
+    // curEx = 37000 - 15000 = 22000，r = 22000/20000 = 1.1 → TWR = 0.1
+    const snapshots = [
+      { date: "2026-01-01", value: 20000 },
+      { date: "2026-01-03", value: 37000 },
+    ];
+    const cashflows = [{ date: "2026-01-02", amount: 15000 }];
+    const r = computeTwr(snapshots, cashflows);
+    expect(r).not.toBeNull();
+    expect(r!.total).toBeCloseTo(0.1, 5);
+  });
+
+  it("同一 interval 多筆 CF 累加後扣除", () => {
+    // Day0: 10000; Day1 CF=+3000, Day2 CF=+2000（均無 snapshot）; Day3: 20000
+    // curEx = 20000 - 5000 = 15000，r = 1.5 → TWR = 50%
+    const snapshots = [
+      { date: "2026-01-01", value: 10000 },
+      { date: "2026-01-04", value: 20000 },
+    ];
+    const cashflows = [
+      { date: "2026-01-02", amount: 3000 },
+      { date: "2026-01-03", amount: 2000 },
+    ];
+    const r = computeTwr(snapshots, cashflows);
+    expect(r).not.toBeNull();
+    expect(r!.total).toBeCloseTo(0.5, 5);
+  });
+
+  it("computeTwr 與 buildTwrSeries 對相同資料回傳一致結果", () => {
+    // 3 個 snapshot + 1 筆 between-snapshot CF；兩種函式應算出相同總報酬
+    const snapshots = [
+      { date: "2026-01-01", value: 10000 },
+      { date: "2026-01-03", value: 12000 },
+      { date: "2026-01-05", value: 13200 },
+    ];
+    const cashflows = [{ date: "2026-01-02", amount: 1000 }];
+    const twr = computeTwr(snapshots, cashflows);
+    const series = buildTwrSeries(snapshots, cashflows);
+    expect(twr).not.toBeNull();
+    // buildTwrSeries 最後一點的 index / 100 - 1 應等於 computeTwr total
+    const seriesTotal = series[series.length - 1].index / 100 - 1;
+    expect(twr!.total).toBeCloseTo(seriesTotal, 5);
+  });
 });
 
 describe("computeMaxDrawdown", () => {
