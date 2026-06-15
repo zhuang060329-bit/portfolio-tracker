@@ -324,7 +324,7 @@ function ProjectionTab({ netWorth }: { netWorth: number }) {
     <div className="grid grid-cols-1 items-start min-[880px]:grid-cols-[340px_1fr]">
       {/* 控制（去盒裝，桌機用右側垂直分隔線）*/}
       <section className="p-6 sm:p-7 min-[880px]:sticky min-[880px]:top-[var(--header-h)] min-[880px]:border-r min-[880px]:border-[var(--c-border)]">
-        <h2 className="font-serif text-[19px] font-medium tracking-tight">
+        <h2 className="text-[19px] font-medium tracking-tight">
           情境設定
         </h2>
         <p className="mt-1 text-[12.5px] text-[var(--c-muted)]">
@@ -552,7 +552,7 @@ function CounterfactualTab({ cf }: { cf: CounterfactualData }) {
       </div>
 
       <section className="border-t border-[var(--c-border)] pt-7">
-        <h2 className="font-serif text-[19px] font-medium tracking-tight">
+        <h2 className="text-[19px] font-medium tracking-tight">
           如果當初全買 ETF 並 Buy &amp; Hold
         </h2>
         <p className="mt-1 text-[12.5px] text-[var(--c-muted)]">
@@ -570,7 +570,7 @@ function CounterfactualTab({ cf }: { cf: CounterfactualData }) {
                     : "border-transparent"
                 }`}
               >
-                <div className="w-[18px] text-center font-serif text-[17px] text-[var(--c-faint)] tnum">
+                <div className="w-[18px] text-center text-[17px] text-[var(--c-faint)] tnum">
                   {i + 1}
                 </div>
                 <div className="min-w-0">

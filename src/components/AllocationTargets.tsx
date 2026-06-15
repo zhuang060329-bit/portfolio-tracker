@@ -32,7 +32,7 @@ export function AllocationTargets({ rows }: { rows: AllocRow[] }) {
 
   return (
     <div className="rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-sm">
-      <h2 className="font-serif text-lg font-semibold tracking-tight">配置目標</h2>
+      <h2 className="text-lg font-semibold tracking-tight">配置目標</h2>
       <p className="mt-1 text-xs text-[var(--c-muted)]">
         配置目標 vs 實際；偏離 ±5% 以上會標紅。設 0 = 不設目標。
       </p>

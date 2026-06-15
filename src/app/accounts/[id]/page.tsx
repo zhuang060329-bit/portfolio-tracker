@@ -270,7 +270,7 @@ export default async function AccountDetail({
         {hasTrend && (
           <section className="mt-6">
             <div className="rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)]">
-              <h2 className="font-serif text-lg font-semibold tracking-tight">
+              <h2 className="text-lg font-semibold tracking-tight">
                 帳戶趨勢
               </h2>
               <p className="mt-1 text-xs text-[var(--c-muted)]">
@@ -285,7 +285,7 @@ export default async function AccountDetail({
 
         {/* === Actions === */}
         <section className="mt-6">
-          <h2 className="font-serif text-lg font-semibold tracking-tight">操作</h2>
+          <h2 className="text-lg font-semibold tracking-tight">操作</h2>
           <div className="mt-3">
             <AccountActions
               accountId={account.id}
@@ -304,7 +304,7 @@ export default async function AccountDetail({
         {/* === Recurring plans（非手動才顯示） === */}
         {!isManual && (
           <section className="mt-8">
-            <h2 className="font-serif text-lg font-semibold tracking-tight">
+            <h2 className="text-lg font-semibold tracking-tight">
               定期定額
             </h2>
             <p className="mt-1 text-xs text-[var(--c-muted)]">
@@ -318,7 +318,7 @@ export default async function AccountDetail({
 
         {/* === 變動記錄 === */}
         <section className="mt-8">
-          <h2 className="font-serif text-lg font-semibold tracking-tight">變動記錄</h2>
+          <h2 className="text-lg font-semibold tracking-tight">變動記錄</h2>
           <div className="mt-3 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] shadow-[var(--c-shadow)]">
             <table className="w-full text-sm">
               <thead className="border-b border-[var(--c-border)] bg-[var(--c-surface-soft)] text-xs tracking-wider text-[var(--c-muted)]">

@@ -109,7 +109,7 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
             className="w-full max-w-md rounded-t-2xl border border-[var(--c-line-strong)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] sm:rounded-2xl sm:px-6"
           >
             <div className="flex items-center justify-between">
-              <h2 className="font-serif text-[19px] font-medium tracking-tight">
+              <h2 className="text-[19px] font-medium tracking-tight">
                 快速加碼
               </h2>
               <button

@@ -202,7 +202,7 @@ function CreatePanel({ accounts }: { accounts: AlertAccount[] }) {
 
   return (
     <form action={action} className="pt-1">
-      <h2 className="font-serif text-[19px] font-medium tracking-tight">
+      <h2 className="text-[19px] font-medium tracking-tight">
         新增提醒
       </h2>
 

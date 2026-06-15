@@ -126,7 +126,7 @@ function CardHead({ title, sub }: { title: string; sub?: React.ReactNode }) {
   return (
     <div className="mb-4 flex items-start justify-between gap-4">
       <div>
-        <h2 className="font-serif text-[19px] font-medium tracking-tight">
+        <h2 className="text-[19px] font-medium tracking-tight">
           {title}
         </h2>
         {sub && (
@@ -317,7 +317,7 @@ function TrendSection({
     <section className="mt-5 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] shadow-[var(--c-shadow)]">
       <div className="mb-3 flex flex-col gap-3 px-5 pt-5 sm:flex-row sm:items-start sm:justify-between sm:gap-4 sm:px-6">
         <div>
-          <h2 className="font-serif text-[19px] font-medium tracking-tight">
+          <h2 className="text-[19px] font-medium tracking-tight">
             {mode === "value" ? "淨資產趨勢" : "績效對照"}
           </h2>
           <p className="mt-0.5 text-[12.5px] text-[var(--c-muted)]">
@@ -763,7 +763,7 @@ function Holdings({
     <section className="px-5 pb-5 pt-5 sm:px-6">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
-          <h2 className="font-serif text-[19px] font-medium tracking-tight">
+          <h2 className="text-[19px] font-medium tracking-tight">
             持有資產
           </h2>
           {archivedCount > 0 && (
