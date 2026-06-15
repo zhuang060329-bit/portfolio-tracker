@@ -100,6 +100,11 @@ function useCountUp(target: number, dur = 1100) {
   const [val, setVal] = useState(0);
   const raf = useRef(0);
   useEffect(() => {
+    // prefers-reduced-motion 守衛：跳過 rAF，以 setTimeout 非同步設定終值（對齊 settle 模式）
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      const id = setTimeout(() => setVal(target), 0);
+      return () => clearTimeout(id);
+    }
     const t0 = performance.now();
     const ease = (t: number) => 1 - Math.pow(1 - t, 3);
     const tick = (now: number) => {
@@ -776,7 +781,7 @@ function Holdings({
         </div>
         <Link
           href="/accounts/new"
-          className="shrink-0 rounded-[var(--r-control)] bg-[var(--c-accent)] px-4 py-2.5 text-[13.5px] font-semibold text-[#1a1408] transition hover:brightness-110"
+          className="shrink-0 rounded-[var(--r-control)] bg-[var(--c-accent)] px-4 py-2.5 text-[13.5px] font-semibold text-[var(--c-btn-strong-text)] transition hover:brightness-110"
         >
           ＋ 新增帳戶
         </Link>

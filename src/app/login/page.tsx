@@ -88,7 +88,7 @@ export default function LoginPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-[var(--c-page)] p-6">
-      <div className="w-full max-w-sm rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] p-8 shadow-sm">
+      <div className="w-full max-w-sm rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-8 shadow-[var(--c-shadow)]">
         <div className="flex flex-col gap-2">
           <h1 className="font-serif text-2xl font-semibold tracking-tight text-[var(--c-text)]">
             StackWorth
@@ -108,7 +108,7 @@ export default function LoginPage() {
               type="button"
               onClick={signInGoogle}
               disabled={loading}
-              className="mt-6 w-full rounded-sm bg-[var(--c-accent)] px-6 py-3 text-sm font-semibold text-[var(--c-btn-strong-text)] shadow-sm transition-opacity hover:opacity-90 disabled:opacity-50"
+              className="mt-6 w-full rounded-[var(--r-control)] bg-[var(--c-accent)] px-6 py-3 text-sm font-semibold text-[var(--c-btn-strong-text)] transition hover:brightness-110 disabled:opacity-50"
             >
               {loading ? "處理中…" : "使用 Google 登入"}
             </button>
@@ -133,7 +133,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="rounded border border-[var(--c-border)] px-3 py-2 text-sm text-[var(--c-text)]"
+              className="h-[42px] rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3.5 text-sm text-[var(--c-text)] outline-none placeholder:text-[var(--c-faint)] focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
             />
           </label>
           {mode !== "reset" && (
@@ -147,12 +147,12 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={mode === "signUp" ? "至少 8 個字元" : ""}
-                className="rounded border border-[var(--c-border)] px-3 py-2 text-sm text-[var(--c-text)]"
+                className="h-[42px] rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3.5 text-sm text-[var(--c-text)] outline-none placeholder:text-[var(--c-faint)] focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
               />
             </label>
           )}
           {error && (
-            <p className="rounded bg-red-50 dark:bg-red-950/40 px-3 py-2 text-xs text-red-700 dark:text-red-300">
+            <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-down)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-down)_10%,var(--c-surface))] px-3.5 py-2.5 text-sm text-[var(--c-down)]">
               {error}
             </p>
           )}
@@ -160,10 +160,10 @@ export default function LoginPage() {
             <div
               role="status"
               aria-live="polite"
-              className="rounded-md border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-3 text-sm text-emerald-800 dark:text-emerald-300"
+              className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-up)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-up)_10%,var(--c-surface))] px-3.5 py-3 text-sm text-[var(--c-up)]"
             >
               <div className="flex items-start gap-2">
-                <span className="text-base leading-5">✓</span>
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="mt-[2px] shrink-0"><path d="M3 8l3.5 3.5 6.5-7"/></svg>
                 <p className="whitespace-pre-line leading-snug">{message}</p>
               </div>
             </div>
@@ -171,7 +171,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-sm bg-[var(--c-btn-strong-bg)] px-6 py-2.5 text-sm font-semibold text-[var(--c-btn-strong-text)] shadow-sm hover:opacity-90 disabled:opacity-50"
+            className="w-full rounded-[var(--r-control)] bg-[var(--c-btn-strong-bg)] px-6 py-2.5 text-sm font-semibold text-[var(--c-btn-strong-text)] transition hover:brightness-110 disabled:opacity-50"
           >
             {loading
               ? "處理中…"
