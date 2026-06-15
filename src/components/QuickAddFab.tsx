@@ -78,7 +78,7 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="快速加碼"
-        className="fixed bottom-5 right-5 z-40 grid h-14 w-14 place-items-center rounded-[18px] bg-[var(--c-accent)] text-[#1a1408] shadow-[0_6px_20px_rgba(0,0,0,0.35)] transition-transform hover:-translate-y-0.5 active:scale-95 sm:hidden"
+        className="fixed bottom-5 right-5 z-40 grid h-14 w-14 place-items-center rounded-[18px] bg-[var(--c-accent)] text-[var(--c-btn-strong-text)] shadow-[0_6px_20px_rgba(0,0,0,0.35)] transition-transform hover:-translate-y-0.5 active:scale-95 sm:hidden"
       >
         <svg
           viewBox="0 0 24 24"
@@ -222,7 +222,7 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
                 disabled={
                   pending || !accountId || !(twdNum > 0) || accountMissingPrice
                 }
-                className="mt-2 rounded-[10px] bg-[var(--c-accent)] px-5 py-3 text-sm font-semibold text-[#1a1408] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+                className="mt-2 rounded-[10px] bg-[var(--c-accent)] px-5 py-3 text-sm font-semibold text-[var(--c-btn-strong-text)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {pending ? "記錄中…" : "確認加碼"}
               </button>

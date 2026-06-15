@@ -208,7 +208,7 @@ export function MfaSetupCard() {
                   type="button"
                   onClick={verify}
                   disabled={busy || code.length !== 6}
-                  className="whitespace-nowrap rounded-lg bg-[var(--c-accent)] px-4 py-2.5 text-[13px] font-semibold text-[#1a1408] transition-[filter] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45"
+                  className="whitespace-nowrap rounded-lg bg-[var(--c-accent)] px-4 py-2.5 text-[13px] font-semibold text-[var(--c-btn-strong-text)] transition-[filter] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45"
                 >
                   {busy ? "驗證中…" : "驗證並啟用"}
                 </button>
