@@ -13,7 +13,7 @@ import type {
 } from "@/components/dashboard/DashboardCharts";
 import type { AllocTarget } from "@/components/dashboard/DashboardClient";
 import { computeXirr } from "@/lib/xirr";
-import { computeMaxDrawdown, computeSharpe, computeTwr } from "@/lib/metrics";
+import { buildTwrSeries, computeMaxDrawdown, computeSharpe, computeTwr, forwardFillBenchmarks } from "@/lib/metrics";
 import { fetchUsDailyClose } from "@/lib/prices/twelvedata";
 import { fetchUsdTwdHistory } from "@/lib/prices/fx";
 import { fetchTwDailyClose } from "@/lib/prices/finmind";
@@ -299,8 +299,13 @@ export default async function Home({
   }
 
   const perfMap = new Map<string, PerfPoint>();
+  const twrIndexSeries = buildTwrSeries(snapshotsForMetrics, cashflowsForMetrics);
+  const twrByDate = new Map(twrIndexSeries.map((p) => [p.date, p.index]));
   for (const p of lineData) {
-    perfMap.set(p.date, { date: p.date, portfolio: p.value });
+    const idx = twrByDate.get(p.date);
+    if (idx !== undefined) {
+      perfMap.set(p.date, { date: p.date, portfolio: idx });
+    }
   }
   for (const r of tw0050) {
     const ex = perfMap.get(r.date) ?? { date: r.date };
@@ -324,6 +329,7 @@ export default async function Home({
   const perfData = [...perfMap.values()].sort((a, b) =>
     a.date.localeCompare(b.date),
   );
+  forwardFillBenchmarks(perfData, ["spy", "qqq", "tw0050"]);
   // benchmark 配色採設計稿（冷藍 / 紫 / 綠），與組合的金色拉開對比。
   const benchmarks: BenchSeries[] = [
     { key: "spy", label: "S&P 500", color: "#7FA8C9", dash: "6 4" },

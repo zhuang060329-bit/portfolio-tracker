@@ -121,6 +121,83 @@ export function dailyReturns(
 }
 
 /**
+ * 逐日累積 TWR 指數序列，從 100 出發。
+ * 用於績效對照圖：排除現金流（入金/出金）影響，純反映市場報酬。
+ * 不同於 computeTwr（返回單一彙總值），此函式返回每日索引，直接餵給圖表。
+ *
+ * 每個快照區間 (prevDate, curDate] 的子期間報酬：
+ *   cfSum = 該區間內所有現金流之和（入金日不一定有 snapshot）
+ *   curEx = curSnapshot.value - cfSum   ← 還原「市場帶來的淨值」
+ *   r     = curEx / prevSnapshot.value
+ *
+ * 若 prev <= 0 或 r <= 0 或不是有限數，跳過該期（維持現有乘積）。
+ * 回傳陣列長度 = snapshots 長度；空輸入回傳 []。
+ */
+export function buildTwrSeries(
+  snapshots: Snapshot[],
+  cashflows: Cashflow[],
+): { date: string; index: number }[] {
+  if (snapshots.length < 1) return [];
+  const sorted = [...snapshots].sort((a, b) => a.date.localeCompare(b.date));
+  // 排序現金流以支援 O(N+M) 的區間掃描
+  const cfSorted = [...cashflows].sort((a, b) => a.date.localeCompare(b.date));
+
+  const result: { date: string; index: number }[] = [
+    { date: sorted[0].date, index: 100 },
+  ];
+  let product = 1;
+  // cfPtr：指向下一個待分配現金流；初始化時跳過第一個 snapshot 日（含）之前的現金流
+  let cfPtr = 0;
+  while (cfPtr < cfSorted.length && cfSorted[cfPtr].date <= sorted[0].date) {
+    cfPtr++;
+  }
+
+  for (let i = 1; i < sorted.length; i++) {
+    const prev = sorted[i - 1].value;
+    const cur = sorted[i].value;
+    const curDate = sorted[i].date;
+
+    // 累加 (prevDate, curDate] 內所有現金流
+    // 不變量：cfPtr 永遠指向 date > sorted[i-1].date 的第一筆 CF
+    let cfSum = 0;
+    while (cfPtr < cfSorted.length && cfSorted[cfPtr].date <= curDate) {
+      cfSum += cfSorted[cfPtr].amount;
+      cfPtr++;
+    }
+
+    const curEx = cur - cfSum;
+    if (Number.isFinite(prev) && prev > 0) {
+      const r = curEx / prev;
+      if (Number.isFinite(r) && r > 0) product *= r;
+    }
+    result.push({ date: curDate, index: product * 100 });
+  }
+  return result;
+}
+
+/**
+ * Benchmark forward-fill：benchmark 只在交易日有報價，週末/假日缺值。
+ * 對 `keys` 的每個欄位，在第一個有效值之後，將缺值日填入上一個有效值，
+ * 避免圖表折線斷裂。原地修改 series，第一個有效值之前不填補。
+ */
+export function forwardFillBenchmarks(
+  series: { [key: string]: number | string | undefined }[],
+  keys: string[],
+): void {
+  const carry = new Map<string, number>();
+  for (const pt of series) {
+    for (const k of keys) {
+      const v = pt[k];
+      if (typeof v === "number") {
+        carry.set(k, v);
+      } else if (carry.has(k)) {
+        pt[k] = carry.get(k);
+      }
+    }
+  }
+}
+
+/**
  * Sharpe ratio（年化）。
  * - 用每日 return 序列算平均與標準差
  * - 假設一年 252 個交易日
