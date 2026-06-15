@@ -24,8 +24,8 @@
 * Production / deployment: 上線於 Vercel（`https://portfolio-tracker-two-rho.vercel.app`），GitHub 自動部署；Vercel Cron 每日 `0 6 * * *`（台北 14:00）
 * README / portfolio status: 已是作品集狀態（StackWorth 標題、live demo、features、tech stack、財務邏輯說明、截圖隱私說明、Author）
 * CI status: 有 GitHub Actions `.github/workflows/ci.yml`，push / PR 到 main 觸發 `typecheck → test → build`（build 用 placeholder Supabase env）；另有 `.github/dependabot.yml`（npm，weekly）
-* Test status: Vitest；**測試數量文件互相衝突**——README 寫 49 tests / 6 files，AGENTS.md 與 `.claude/rules` 寫 39；本次未執行測試，無法判定即時數字
-* Known limitations: 無 server action 整合測試（README 自述）；env var 命名於 AGENTS.md 與 README/CI 不一致（見下方 Tech Stack 註）；docs 測試數字未對齊
+* Test status: Vitest，**49 tests / 6 files 全過**（2026-06-15 實跑 `npm run test` 確認）；文件數字已對齊（AGENTS.md、`.claude/rules` 由 39 修正為 49）
+* Known limitations: 無 server action 整合測試（README 自述）
 
 ## Tech Stack
 
@@ -38,7 +38,7 @@
 * Monitoring: Sentry（`@sentry/nextjs`，Next 16 instrumentation：`src/instrumentation.ts` + `src/instrumentation-client.ts` + `onRequestError` + `src/app/error.tsx`）。**完整接好**，但未設 DSN 時不 init（production-gated，等同 no-op）——非僅部分導入
 * Deployment: Vercel Hobby + GitHub auto-deploy；`vercel.json` 設 cron
 
-> env var 命名註記（僅變數名，無 secret）：AGENTS.md 用 `NEXT_PUBLIC_SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY`；README 與 CI 用 `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` / `SUPABASE_SECRET_KEY`。兩處不一致，接手前需以實際 `.env.local` / Vercel 面板為準（本次未讀取 secret）。
+> env var 命名（僅變數名，無 secret）：以程式碼 / CI / `.env.local.example` 為準，統一為 `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` / `SUPABASE_SECRET_KEY`。AGENTS.md 原本的舊命名（`ANON_KEY` / `SERVICE_ROLE_KEY`）已於 2026-06-15 修正對齊。
 
 ## Available Commands
 
@@ -72,7 +72,7 @@
 
 ## Next 3 Allowed Tasks
 
-1. 對齊文件數據落差：確認即時 test count，統一 README / AGENTS.md / `.claude/rules` 的測試數字與 Supabase env 命名。
+1. ~~對齊文件數據落差：確認即時 test count，統一 README / AGENTS.md / `.claude/rules` 的測試數字與 Supabase env 命名。~~（已完成 2026-06-15：測試 49/6 實跑確認；AGENTS.md 與 `.claude/rules` 由 39 改 49；env 命名統一為 `PUBLISHABLE_KEY` / `SECRET_KEY`）
 2. 補 server action 整合測試可行性盤點：先列出缺口與測試方案，不直接大改。
 3. 最終作品集 closeout 檢查：確認 README、CI、production、隱私說明、截圖策略是否一致。
 
