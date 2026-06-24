@@ -34,7 +34,7 @@ type AccountSlim = {
 };
 
 type ProfileSlim = {
-  user_id: string;
+  id: string;
   allocation_targets: Record<string, number> | null;
 };
 
@@ -89,10 +89,10 @@ export async function scanAlerts(supabase: SupabaseClient) {
   if (uniqDriftUsers.length > 0) {
     const { data: profiles } = await supabase
       .from("profiles")
-      .select("user_id,allocation_targets")
-      .in("user_id", uniqDriftUsers);
+      .select("id,allocation_targets")
+      .in("id", uniqDriftUsers);
     for (const p of (profiles ?? []) as ProfileSlim[]) {
-      profilesMap.set(p.user_id, p);
+      profilesMap.set(p.id, p);
     }
     const { data: userAccounts } = await supabase
       .from("accounts")
