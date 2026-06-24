@@ -7,6 +7,7 @@ import { getQuote } from "@/lib/prices/router";
 import { todayTaipei } from "@/lib/dates";
 import type { Market } from "@/lib/prices/types";
 import { applyContribution, nextMonthlyAfter } from "@/lib/contributions";
+import { applyAccountMutation } from "@/lib/account-mutations";
 import { AddByAmountSchema } from "@/lib/schemas/action/add-by-amount";
 import { SellQuantitySchema } from "@/lib/schemas/action/sell-quantity";
 import { CreateRecurringPlanSchema } from "@/lib/schemas/action/create-recurring-plan";
@@ -29,8 +30,6 @@ type AccountForAction = {
   realized_pnl_twd: number;
 };
 
-type SupabaseServer = Awaited<ReturnType<typeof createClient>>;
-
 // ====== 共用 helper ======
 
 async function loadAccount(accountId: string) {
@@ -50,31 +49,6 @@ async function loadAccount(accountId: string) {
     return { supabase, user, account: null, error: "找不到帳戶" };
   }
   return { supabase, user, account: data as AccountForAction, error: null };
-}
-
-async function upsertTodaySnapshot(
-  supabase: SupabaseServer,
-  args: {
-    userId: string;
-    accountId: string;
-    quantity: number;
-    unitPrice: number | null;
-    fxRate: number;
-    valueBase: number;
-  },
-) {
-  return supabase.from("account_snapshots").upsert(
-    {
-      user_id: args.userId,
-      account_id: args.accountId,
-      snapshot_date: todayTaipei(),
-      quantity: args.quantity,
-      unit_price: args.unitPrice,
-      fx_rate: args.fxRate,
-      value_base: args.valueBase,
-    },
-    { onConflict: "account_id,snapshot_date" },
-  );
 }
 
 function done(accountId: string): FormState {
@@ -124,35 +98,30 @@ export async function updatePrice(
   const qty = Number(account.quantity);
   const valueBase = qty * quote.unitPrice * quote.fxToBase;
 
-  const { error: u } = await supabase
-    .from("accounts")
-    .update({
-      last_unit_price: quote.unitPrice,
-      last_fx_rate: quote.fxToBase,
-      last_priced_at: quote.asOf,
-    })
-    .eq("id", accountId);
-  if (u) return { error: u.message };
-
-  await supabase.from("transactions").insert({
-    user_id: user.id,
-    account_id: accountId,
-    type: "price_update",
-    quantity_after: qty,
-    unit_price: quote.unitPrice,
-    fx_rate: quote.fxToBase,
-    value_after_base: valueBase,
-    cashflow_twd: 0, // 純價格更新，無現金流
-  });
-
-  await upsertTodaySnapshot(supabase, {
-    userId: user.id,
+  const mutationError = await applyAccountMutation(supabase, {
     accountId,
-    quantity: qty,
-    unitPrice: quote.unitPrice,
-    fxRate: quote.fxToBase,
-    valueBase,
+    patch: {
+      lastUnitPrice: quote.unitPrice,
+      lastFxRate: quote.fxToBase,
+      lastPricedAt: quote.asOf,
+    },
+    transaction: {
+      type: "price_update",
+      quantityAfter: qty,
+      unitPrice: quote.unitPrice,
+      fxRate: quote.fxToBase,
+      valueAfterBase: valueBase,
+      cashflowTwd: 0,
+    },
+    snapshots: [{
+      snapshotDate: todayTaipei(),
+      quantity: qty,
+      unitPrice: quote.unitPrice,
+      fxRate: quote.fxToBase,
+      valueBase,
+    }],
   });
+  if (mutationError) return { error: mutationError };
 
   return done(accountId);
 }
@@ -205,41 +174,36 @@ export async function adjustQuantity(
     newCostNative = oldCostNative * ratio;
   }
 
-  const { error: u } = await supabase
-    .from("accounts")
-    .update({
-      quantity: newQty,
-      last_unit_price: quote.unitPrice,
-      last_fx_rate: quote.fxToBase,
-      last_priced_at: quote.asOf,
-      cost_basis_twd: newCost,
-      cost_basis_native: newCostNative,
-    })
-    .eq("id", accountId);
-  if (u) return { error: u.message };
-
   // 覆寫總量視為「以現價買/賣差額」近似現金流（要精準損益請走 sell 流程）
   const cashflow = -(newQty - oldQty) * quote.unitPrice * quote.fxToBase;
 
-  await supabase.from("transactions").insert({
-    user_id: user.id,
-    account_id: accountId,
-    type: "adjust_quantity",
-    quantity_after: newQty,
-    unit_price: quote.unitPrice,
-    fx_rate: quote.fxToBase,
-    value_after_base: valueBase,
-    cashflow_twd: cashflow,
-  });
-
-  await upsertTodaySnapshot(supabase, {
-    userId: user.id,
+  const mutationError = await applyAccountMutation(supabase, {
     accountId,
-    quantity: newQty,
-    unitPrice: quote.unitPrice,
-    fxRate: quote.fxToBase,
-    valueBase,
+    patch: {
+      quantity: newQty,
+      lastUnitPrice: quote.unitPrice,
+      lastFxRate: quote.fxToBase,
+      lastPricedAt: quote.asOf,
+      costBasisTwd: newCost,
+      costBasisNative: newCostNative,
+    },
+    transaction: {
+      type: "adjust_quantity",
+      quantityAfter: newQty,
+      unitPrice: quote.unitPrice,
+      fxRate: quote.fxToBase,
+      valueAfterBase: valueBase,
+      cashflowTwd: cashflow,
+    },
+    snapshots: [{
+      snapshotDate: todayTaipei(),
+      quantity: newQty,
+      unitPrice: quote.unitPrice,
+      fxRate: quote.fxToBase,
+      valueBase,
+    }],
   });
+  if (mutationError) return { error: mutationError };
 
   return done(accountId);
 }
@@ -271,7 +235,6 @@ export async function addByAmount(
 
   const res = await applyContribution({
     supabase,
-    userId: user.id,
     account,
     twd,
     priceOverride,
@@ -303,35 +266,30 @@ export async function adjustBalance(
 
   // manual 帳戶：成本 = 餘額（沒有市場價變動，PnL 永遠為 0）
   const oldBalance = Number(account.manual_value_base ?? 0);
-  const { error: u } = await supabase
-    .from("accounts")
-    .update({
-      manual_value_base: newBalance,
-      cost_basis_twd: newBalance,
-      cost_basis_native: newBalance,
-    })
-    .eq("id", accountId);
-  if (u) return { error: u.message };
-
-  await supabase.from("transactions").insert({
-    user_id: user.id,
-    account_id: accountId,
-    type: "adjust_balance",
-    quantity_after: 0,
-    unit_price: null,
-    fx_rate: 1,
-    value_after_base: newBalance,
-    cashflow_twd: -(newBalance - oldBalance), // 存入 = 負，提領 = 正
-  });
-
-  await upsertTodaySnapshot(supabase, {
-    userId: user.id,
+  const mutationError = await applyAccountMutation(supabase, {
     accountId,
-    quantity: 0,
-    unitPrice: null,
-    fxRate: 1,
-    valueBase: newBalance,
+    patch: {
+      manualValueBase: newBalance,
+      costBasisTwd: newBalance,
+      costBasisNative: newBalance,
+    },
+    transaction: {
+      type: "adjust_balance",
+      quantityAfter: 0,
+      unitPrice: null,
+      fxRate: 1,
+      valueAfterBase: newBalance,
+      cashflowTwd: -(newBalance - oldBalance),
+    },
+    snapshots: [{
+      snapshotDate: todayTaipei(),
+      quantity: 0,
+      unitPrice: null,
+      fxRate: 1,
+      valueBase: newBalance,
+    }],
   });
+  if (mutationError) return { error: mutationError };
 
   return done(accountId);
 }
@@ -413,45 +371,41 @@ export async function sellQuantity(
   const newCostNative = oldCostNative * (1 - ratio);
   const newRealizedTotal = Number(account.realized_pnl_twd ?? 0) + realizedPnl;
 
-  const { error: u } = await supabase
-    .from("accounts")
-    .update({
-      quantity: newQty,
-      cost_basis_twd: newCost,
-      cost_basis_native: newCostNative,
-      realized_pnl_twd: newRealizedTotal,
-      last_unit_price: quote.unitPrice,
-      last_fx_rate: quote.fxToBase,
-      last_priced_at: quote.asOf,
-    })
-    .eq("id", accountId);
-  if (u) return { error: u.message };
-
   const noteParts = [`賣出 ${sellQty} 股，收入 ${Math.round(proceeds)} TWD`];
   if (userNote) noteParts.push(userNote);
 
-  await supabase.from("transactions").insert({
-    user_id: user.id,
-    account_id: accountId,
-    type: "sell",
-    quantity_after: newQty,
-    unit_price: priceUsed,
-    fx_rate: fxUsed,
-    value_after_base: newQty * quote.unitPrice * quote.fxToBase,
-    realized_pnl: realizedPnl,
-    cashflow_twd: proceeds, // 收回現金：正
-    note: noteParts.join(" · "),
-    created_at: occurredAt.toISOString(),
-  });
-
-  await upsertTodaySnapshot(supabase, {
-    userId: user.id,
+  const valueBase = newQty * quote.unitPrice * quote.fxToBase;
+  const mutationError = await applyAccountMutation(supabase, {
     accountId,
-    quantity: newQty,
-    unitPrice: quote.unitPrice,
-    fxRate: quote.fxToBase,
-    valueBase: newQty * quote.unitPrice * quote.fxToBase,
+    patch: {
+      quantity: newQty,
+      costBasisTwd: newCost,
+      costBasisNative: newCostNative,
+      realizedPnlTwd: newRealizedTotal,
+      lastUnitPrice: quote.unitPrice,
+      lastFxRate: quote.fxToBase,
+      lastPricedAt: quote.asOf,
+    },
+    transaction: {
+      type: "sell",
+      quantityAfter: newQty,
+      unitPrice: priceUsed,
+      fxRate: fxUsed,
+      valueAfterBase: valueBase,
+      realizedPnl,
+      cashflowTwd: proceeds,
+      note: noteParts.join(" · "),
+      createdAt: occurredAt.toISOString(),
+    },
+    snapshots: [{
+      snapshotDate: todayTaipei(),
+      quantity: newQty,
+      unitPrice: quote.unitPrice,
+      fxRate: quote.fxToBase,
+      valueBase,
+    }],
   });
+  if (mutationError) return { error: mutationError };
 
   return done(accountId);
 }
@@ -481,12 +435,6 @@ async function recordIncome(
 
   const newRealizedTotal = Number(account.realized_pnl_twd ?? 0) + amount;
 
-  const { error: u } = await supabase
-    .from("accounts")
-    .update({ realized_pnl_twd: newRealizedTotal })
-    .eq("id", accountId);
-  if (u) return { error: u.message };
-
   // 計算目前估值（給 value_after_base 填）
   const isManual = account.price_market === "manual";
   const curValue = isManual
@@ -499,19 +447,23 @@ async function recordIncome(
   const noteParts = [`${noteLabel} ${amount} TWD`];
   if (userNote) noteParts.push(userNote);
 
-  await supabase.from("transactions").insert({
-    user_id: user.id,
-    account_id: accountId,
-    type,
-    quantity_after: Number(account.quantity),
-    unit_price: null,
-    fx_rate: null,
-    value_after_base: curValue,
-    realized_pnl: amount,
-    cashflow_twd: amount, // 收到現金：正
-    note: noteParts.join(" · "),
-    created_at: occurredAt.toISOString(),
+  const mutationError = await applyAccountMutation(supabase, {
+    accountId,
+    patch: { realizedPnlTwd: newRealizedTotal },
+    transaction: {
+      type,
+      quantityAfter: Number(account.quantity),
+      unitPrice: null,
+      fxRate: null,
+      valueAfterBase: curValue,
+      realizedPnl: amount,
+      cashflowTwd: amount,
+      note: noteParts.join(" · "),
+      createdAt: occurredAt.toISOString(),
+    },
+    snapshots: [],
   });
+  if (mutationError) return { error: mutationError };
 
   return done(accountId);
 }
@@ -668,7 +620,6 @@ export async function executePlan(
 
   const res = await applyContribution({
     supabase,
-    userId: user.id,
     account,
     twd: Number(plan.amount_twd),
     priceOverride: null,

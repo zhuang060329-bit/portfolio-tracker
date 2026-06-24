@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getQuote } from "@/lib/prices/router";
 import { todayTaipei } from "@/lib/dates";
+import { createAccountWithInitialRecords } from "@/lib/account-mutations";
 import {
   CreateStockAccountSchema,
   CreateCryptoAccountSchema,
@@ -42,53 +43,41 @@ async function persistCreate(args: {
   const { supabase, user, error: userErr } = await requireUser();
   if (userErr || !user) return { error: userErr ?? "未登入" };
 
-  const { data: account, error: accErr } = await supabase
-    .from("accounts")
-    .insert({
-      user_id: user.id,
+  const costBasisNative =
+    args.manualValueBase ??
+    (args.unitPrice != null ? args.quantity * args.unitPrice : args.valueBase);
+  const mutationError = await createAccountWithInitialRecords(supabase, {
+    account: {
       name: args.name,
-      asset_class: args.assetClass,
-      price_market: args.priceMarket,
+      assetClass: args.assetClass,
+      priceMarket: args.priceMarket,
       symbol: args.symbol,
       quantity: args.quantity,
-      native_currency: args.nativeCurrency,
-      last_unit_price: args.unitPrice,
-      last_fx_rate: args.fxToBase,
-      manual_value_base: args.manualValueBase,
-      last_priced_at: args.lastPricedAt,
-      cost_basis_twd: args.valueBase, // 建立時：成本 = 當下市值
-      cost_basis_native:
-        args.manualValueBase ??
-        (args.unitPrice != null ? args.quantity * args.unitPrice : args.valueBase),
-    })
-    .select("id")
-    .single();
-  if (accErr || !account) {
-    return { error: `建立帳戶失敗：${accErr?.message ?? "未知錯誤"}` };
-  }
-
-  const { error: txErr } = await supabase.from("transactions").insert({
-    user_id: user.id,
-    account_id: account.id,
-    type: "create",
-    quantity_after: args.quantity,
-    unit_price: args.unitPrice,
-    fx_rate: args.fxToBase,
-    value_after_base: args.valueBase,
-    cashflow_twd: -args.valueBase, // 建立帳戶 = 一次性投入：負現金流
+      nativeCurrency: args.nativeCurrency,
+      unitPrice: args.unitPrice,
+      fxToBase: args.fxToBase,
+      manualValueBase: args.manualValueBase,
+      lastPricedAt: args.lastPricedAt,
+      costBasisTwd: args.valueBase,
+      costBasisNative,
+    },
+    transaction: {
+      type: "create",
+      quantityAfter: args.quantity,
+      unitPrice: args.unitPrice,
+      fxRate: args.fxToBase,
+      valueAfterBase: args.valueBase,
+      cashflowTwd: -args.valueBase,
+    },
+    snapshot: {
+      snapshotDate: todayTaipei(),
+      quantity: args.quantity,
+      unitPrice: args.unitPrice,
+      fxRate: args.fxToBase,
+      valueBase: args.valueBase,
+    },
   });
-  if (txErr) return { error: `寫入交易失敗：${txErr.message}` };
-
-  const { error: snapErr } = await supabase.from("account_snapshots").insert({
-    user_id: user.id,
-    account_id: account.id,
-    snapshot_date: todayTaipei(),
-    quantity: args.quantity,
-    unit_price: args.unitPrice,
-    fx_rate: args.fxToBase,
-    value_base: args.valueBase,
-  });
-  if (snapErr) return { error: `寫入快照失敗：${snapErr.message}` };
+  if (mutationError) return { error: `建立帳戶失敗：${mutationError}` };
 
   redirect("/");
 }

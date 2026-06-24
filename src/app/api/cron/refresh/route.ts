@@ -10,6 +10,7 @@ import {
   type ContributionAccount,
 } from "@/lib/contributions";
 import { scanAlerts } from "@/lib/alerts-scan";
+import { applyAccountMutation } from "@/lib/account-mutations";
 
 // Vercel Cron 每日呼叫此路由。
 // 1) 刷所有非手動帳戶的最新市價（更新 accounts.last_* + upsert 今日 snapshot）。
@@ -41,27 +42,30 @@ async function refreshAccountPrices(supabase: SupabaseClient) {
       const qty = Number(acc.quantity);
       const valueBase = qty * quote.unitPrice * quote.fxToBase;
 
-      await supabase
-        .from("accounts")
-        .update({
-          last_unit_price: quote.unitPrice,
-          last_fx_rate: quote.fxToBase,
-          last_priced_at: quote.asOf,
-        })
-        .eq("id", acc.id);
-
-      await supabase.from("account_snapshots").upsert(
-        {
-          user_id: acc.user_id,
-          account_id: acc.id,
-          snapshot_date: todayTaipei(),
-          quantity: qty,
-          unit_price: quote.unitPrice,
-          fx_rate: quote.fxToBase,
-          value_base: valueBase,
+      const mutationError = await applyAccountMutation(supabase, {
+        accountId: acc.id,
+        patch: {
+          lastUnitPrice: quote.unitPrice,
+          lastFxRate: quote.fxToBase,
+          lastPricedAt: quote.asOf,
         },
-        { onConflict: "account_id,snapshot_date" },
-      );
+        transaction: {
+          type: "price_update",
+          quantityAfter: qty,
+          unitPrice: quote.unitPrice,
+          fxRate: quote.fxToBase,
+          valueAfterBase: valueBase,
+          cashflowTwd: 0,
+        },
+        snapshots: [{
+          snapshotDate: todayTaipei(),
+          quantity: qty,
+          unitPrice: quote.unitPrice,
+          fxRate: quote.fxToBase,
+          valueBase,
+        }],
+      });
+      if (mutationError) throw new Error(mutationError);
 
       ok++;
     } catch (e) {
@@ -106,7 +110,6 @@ async function runDuePlans(supabase: SupabaseClient) {
 
       const res = await applyContribution({
         supabase,
-        userId: plan.user_id,
         account: account as ContributionAccount,
         twd: Number(plan.amount_twd),
         priceOverride: null,
