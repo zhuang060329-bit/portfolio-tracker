@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { escapeCsvCell } from "@/lib/csv";
 
 /**
  * 年度稅務報表（台灣海外所得，基本所得稅 / 最低稅負制）。
@@ -16,15 +17,6 @@ import { createClient } from "@/lib/supabase/server";
  */
 
 export const dynamic = "force-dynamic";
-
-function csvEscape(s: string | null | undefined): string {
-  if (s === null || s === undefined) return "";
-  const str = String(s);
-  if (/[",\n\r]/.test(str)) {
-    return `"${str.replace(/"/g, '""')}"`;
-  }
-  return str;
-}
 
 function cellNum(n: number | null | undefined, digits = 4): string {
   if (n === null || n === undefined) return "";
@@ -113,7 +105,7 @@ export async function GET(request: Request) {
     "已實現損益（TWD）",
     "備註",
   ]
-    .map(csvEscape)
+    .map(escapeCsvCell)
     .join(",");
 
   const lines: string[] = [header];
@@ -123,17 +115,17 @@ export async function GET(request: Request) {
     // dividend / interest 的 unit_price / fx_rate 是 null（由 importIncomeCsv 寫入），輸出為空字串
     lines.push(
       [
-        csvEscape(date),
-        csvEscape(TYPE_LABEL[r.type] ?? r.type),
-        csvEscape(acc?.name),
-        csvEscape(acc?.price_market),
-        csvEscape(acc?.symbol),
-        csvEscape(acc?.native_currency),
+        escapeCsvCell(date),
+        escapeCsvCell(TYPE_LABEL[r.type] ?? r.type),
+        escapeCsvCell(acc?.name),
+        escapeCsvCell(acc?.price_market),
+        escapeCsvCell(acc?.symbol),
+        escapeCsvCell(acc?.native_currency),
         cellNum(r.unit_price),
         cellNum(r.fx_rate, 6),
         cellNum(r.cashflow_twd, 0),
         cellNum(r.realized_pnl, 0),
-        csvEscape(r.note),
+        escapeCsvCell(r.note),
       ].join(","),
     );
   }
@@ -143,7 +135,7 @@ export async function GET(request: Request) {
   lines.push(
     [
       "",
-      csvEscape("年度小計"),
+      escapeCsvCell("年度小計"),
       "",
       "",
       "",

@@ -1,18 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
+import { escapeCsvCell } from "@/lib/csv";
 
 // CSV 匯出：所有自己帳戶的 transactions（RLS 已綁 user_id）。
 // 帶 UTF-8 BOM，Excel 開啟中文不亂碼。
 
 export const dynamic = "force-dynamic";
-
-function csvEscape(s: string | null | undefined): string {
-  if (s === null || s === undefined) return "";
-  const str = String(s);
-  if (/[",\n\r]/.test(str)) {
-    return `"${str.replace(/"/g, '""')}"`;
-  }
-  return str;
-}
 
 function cellNum(n: number | null | undefined): string {
   if (n === null || n === undefined) return "";
@@ -81,10 +73,10 @@ export async function GET() {
     lines.push(
       [
         r.created_at,
-        csvEscape(acc?.name),
-        csvEscape(acc?.price_market),
-        csvEscape(acc?.symbol),
-        csvEscape(acc?.native_currency),
+        escapeCsvCell(acc?.name),
+        escapeCsvCell(acc?.price_market),
+        escapeCsvCell(acc?.symbol),
+        escapeCsvCell(acc?.native_currency),
         r.type,
         cellNum(r.quantity_after),
         cellNum(r.unit_price),
@@ -92,7 +84,7 @@ export async function GET() {
         cellNum(r.value_after_base),
         cellNum(r.cashflow_twd),
         cellNum(r.realized_pnl),
-        csvEscape(r.note),
+        escapeCsvCell(r.note),
       ].join(","),
     );
   }
