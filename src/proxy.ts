@@ -8,8 +8,10 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // 排除靜態資源、圖檔與 cron route（cron 自己驗 CRON_SECRET）。其餘路徑都跑 proxy。
+  // 排除靜態資源、圖檔與 cron route（cron 自己驗 CRON_SECRET）。
+  // sw.js / offline.html / manifest 必須公開可達：SW 註冊與 PWA 安裝
+  // 都發生在瀏覽器背景 fetch，被 307 到 /login 會整個裝不起來。
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|api/cron|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|api/cron|sw\\.js|offline\\.html|manifest\\.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { SwRegister } from "@/components/SwRegister";
 import { Newsreader, Space_Grotesk, Noto_Sans_TC } from "next/font/google";
 import "./globals.css";
 
@@ -41,6 +42,7 @@ export const metadata: Metadata = {
   description: "個人投資組合追蹤工具",
   manifest: "/manifest.webmanifest",
   robots: { index: false, follow: false, nocache: true },
+  appleWebApp: { capable: true, title: "StackWorth", statusBarStyle: "default" },
 };
 
 // FOUC 預防：
@@ -78,7 +80,10 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
       </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <SwRegister />
+        {children}
+      </body>
     </html>
   );
 }
