@@ -56,9 +56,14 @@ export function computeXirr(flows: Cashflow[]): number | null {
     if (next <= -0.9999) next = -0.9999;
     if (Math.abs(next - rate) < 1e-7) {
       rate = next;
-      return Number.isFinite(rate) ? rate : null;
+      break;
     }
     rate = next;
   }
-  return Number.isFinite(rate) ? rate : null;
+  // 收斂檢核：不論從哪條路徑離開迴圈，rate 必須真的是根。
+  // 迭代步長收斂 ≠ NPV 歸零（震盪、平坦導數、跑滿 100 次都可能留下殘值），
+  // 顯示一個「看起來正常的殘值年化」比顯示「—」更糟 → 未通過一律回 null。
+  if (!Number.isFinite(rate)) return null;
+  const scale = cleaned.reduce((s2, f) => s2 + Math.abs(f.amount), 0);
+  return Math.abs(npv(cleaned, rate)) <= scale * 1e-6 ? rate : null;
 }

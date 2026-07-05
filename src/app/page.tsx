@@ -52,10 +52,17 @@ export default async function Home({
           .in("account_id", activeAccountIds)
       : { data: null as CashflowRow[] | null };
 
-  const { data: incomeRows } = await supabase
-    .from("transactions")
-    .select("created_at,type,cashflow_twd")
-    .in("type", ["dividend", "interest"]);
+  // 口徑：首頁一律「目前組合」= active 帳戶。收入與快照都鎖 active，
+  // 否則歸檔帳戶的歷史收入會混進 YTD / 配息率，歷史快照會留在趨勢曲線裡，
+  // 而 TWR 的現金流又只看 active → 歸檔瞬間被誤判成無提領的資產暴跌。
+  const { data: incomeRows } =
+    activeAccountIds.length > 0
+      ? await supabase
+          .from("transactions")
+          .select("created_at,type,cashflow_twd")
+          .in("type", ["dividend", "interest"])
+          .in("account_id", activeAccountIds)
+      : { data: null as IncomeRow[] | null };
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -64,10 +71,14 @@ export default async function Home({
   const targets =
     ((profile?.allocation_targets ?? {}) as Record<string, number>) || {};
 
-  const { data: snaps } = await supabase
-    .from("account_snapshots")
-    .select("account_id,snapshot_date,value_base")
-    .order("snapshot_date", { ascending: true });
+  const { data: snaps } =
+    activeAccountIds.length > 0
+      ? await supabase
+          .from("account_snapshots")
+          .select("account_id,snapshot_date,value_base")
+          .in("account_id", activeAccountIds)
+          .order("snapshot_date", { ascending: true })
+      : { data: null as SnapshotRow[] | null };
   const snapRows = (snaps ?? []) as SnapshotRow[];
 
   // 大盤對照：從第一筆 snapshot 日開始，平行抓 0050 + SPY/QQQ + USD/TWD 歷史匯率。
