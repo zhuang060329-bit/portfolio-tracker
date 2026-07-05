@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Newsreader, Space_Grotesk, Noto_Sans_TC } from "next/font/google";
 import "./globals.css";
 
@@ -27,6 +27,14 @@ const fontTc = Noto_Sans_TC({
   display: "swap",
   preload: false,
 });
+
+// 手機瀏覽器工具列顏色：跟隨系統深淺色，對齊 --c-page。
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#0E1014" },
+    { media: "(prefers-color-scheme: light)", color: "#EAE6D8" },
+  ],
+};
 
 export const metadata: Metadata = {
   title: "StackWorth",
