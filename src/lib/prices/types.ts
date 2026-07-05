@@ -1,4 +1,4 @@
-// 價格層的抽象介面（master prompt 第 3 節合約，必須照此實作）。
+// 價格層的抽象介面：三個市場 provider 共同實作的合約。
 // 所有價格請求一律在伺服器端執行，金鑰不可進到瀏覽器。
 // 三個 provider（coingecko / twelvedata / finmind）實作留到階段 3。
 

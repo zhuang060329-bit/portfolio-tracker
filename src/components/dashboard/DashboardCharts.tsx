@@ -13,7 +13,7 @@ import {
 } from "react";
 import { fmtFull, fmtCompact } from "@/lib/format";
 
-// 數字格式集中到 lib/format（Direction A 數字系統）。
+// 數字格式集中到 lib/format：同一情境同一規則，圖表軸與明細不各自為政。
 // 保留 fmtTwd 名稱供既有匯入端不變；fmtCompact 直接 re-export。
 export const fmtTwd = fmtFull;
 export { fmtCompact };

@@ -25,7 +25,7 @@ where cost_basis_native = 0;
 
 -- ===== 3) profiles 加 allocation_targets =====
 -- jsonb 結構：{ "stock": 60, "crypto": 30, "other_investment": 10 }
--- 任意 asset_class 都可放 (master prompt 第 4 節的 enum 值)，數字代表目標百分比。
+-- 任意 asset_class 都可放（enum 值見 schema.sql accounts 表），數字代表目標百分比。
 alter table profiles
   add column if not exists allocation_targets jsonb not null default '{}'::jsonb;
 

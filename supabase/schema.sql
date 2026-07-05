@@ -1,4 +1,4 @@
--- 投資組合追蹤器 — Supabase 資料模型（master prompt 第 4 節，逐字照抄，勿改欄位名稱或型別）
+-- 投資組合追蹤器 — Supabase 資料模型。欄位名稱與型別是全端合約，改動需同步 TypeScript 型別與計算層。
 -- 用法：Supabase Dashboard → SQL Editor → New query → 貼上整段 → Run。
 
 -- Enums

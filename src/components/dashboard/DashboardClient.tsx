@@ -562,7 +562,7 @@ function AllocationCard({
                   }}
                 />
                 {a.target > 0 && (
-                  // 目標 marker：加高、滿對比、加 1px page 色描邊讓它在實際長條上跳出來（D9）
+                  // 目標 marker：加高、滿對比、加 1px page 色描邊，落在實際長條上時才分得出來
                   <span
                     className="absolute -top-[3px] -bottom-[3px] w-[2px] rounded-full bg-[var(--c-text)] shadow-[0_0_0_1px_var(--c-page)]"
                     style={{ left: `calc(${Math.min(100, a.target)}% - 1px)` }}
@@ -1019,14 +1019,14 @@ export function DashboardClient({
       total={s.total}
     />
   );
-  // D3：指標 + 被動收入都沒料時，不留半欄空盒——配置改滿版 + 一行說明。
+  // 指標 + 被動收入都沒料時，不留半欄空盒——配置改滿版 + 一行說明。
   const metricsHasContent = s.twrShowable || s.hasIncome;
 
   return (
     <div className="flex flex-col">
       <Hero s={s} series={data.series} demo={demo} />
 
-      {/* 指標四格：物理卡片 shadow + 更強邊框（Vestox 卡片重量感）。
+      {/* 指標四格：物理卡片 shadow + 更強邊框，做出實體卡片的重量感。
           首屏層級：緊接 Hero、置於趨勢圖之前，核心損益不被摺線擠到摺下。*/}
       <section className="mt-4">
         <div className="grid grid-cols-2 gap-px overflow-hidden rounded-[var(--r-card)] border border-[var(--c-line-strong)] bg-[var(--c-border)] shadow-[var(--c-shadow)] sm:grid-cols-4">
@@ -1080,7 +1080,7 @@ export function DashboardClient({
         today={data.today}
       />
 
-      {/* 配置 + 指標：並列兩張卡片（Vestox 區塊物理感）*/}
+      {/* 配置 + 指標：並列兩張卡片，維持區塊的物理感 */}
       {metricsHasContent ? (
         <section className="mt-4 grid grid-cols-1 gap-4 min-[920px]:grid-cols-2">
           <div className="overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] transition-[transform,border-color] hover:-translate-y-[2px] hover:border-[var(--c-line-strong)] sm:p-6">

@@ -27,4 +27,4 @@
 開放註冊後，admin 從 app 內的 `/admin/allowlist` 看誰註冊了、踢出特定人。
 不需要再手動跑 SQL 加 email。
 
-admin 認定：env var `ADMIN_EMAILS`（逗號分隔），未設則 fallback 到 `zhuang060329@gmail.com`。
+admin 認定：env var `ADMIN_EMAILS`（逗號分隔）。未設則無任何 admin。
