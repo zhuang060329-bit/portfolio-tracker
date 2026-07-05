@@ -5,7 +5,7 @@
 改動後必須依序通過：
 
 1. `npx tsc --noEmit`（型別，0 error）
-2. `npx vitest run`（67 tests 全過）
+2. `npx vitest run`（71 tests 全過）
 3. `NEXT_TELEMETRY_DISABLED=1 npx next build`（build 無錯）
 
 三者缺一不可 push。

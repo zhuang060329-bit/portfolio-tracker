@@ -116,7 +116,7 @@ npx tsc --noEmit
 # Lint
 npx eslint src
 
-# 測試（67 個 / 6 檔）
+# 測試（71 個 / 7 檔）
 npx vitest run
 
 # 完整 build（自動跑 tsc）
