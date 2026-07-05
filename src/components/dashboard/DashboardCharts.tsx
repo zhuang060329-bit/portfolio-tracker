@@ -148,16 +148,46 @@ export function TrendChart({
     if (pathRef.current) setLen(pathRef.current.getTotalLength());
   }, [line]);
 
-  const onMove = useCallback(
-    (e: React.MouseEvent) => {
+  const setFromClientX = useCallback(
+    (clientX: number) => {
       if (!wrapRef.current || data.length < 2) return;
       const rect = wrapRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left;
+      const x = clientX - rect.left;
       let idx = Math.round(((x - padL) / (w - padL - padR)) * (data.length - 1));
       idx = Math.max(0, Math.min(data.length - 1, idx));
       setHover(idx);
     },
     [w, data.length],
+  );
+  const onMove = useCallback(
+    (e: React.MouseEvent) => setFromClientX(e.clientX),
+    [setFromClientX],
+  );
+  // 觸控 scrubbing：touch-action pan-y 讓水平滑動歸圖表、垂直保留給頁面捲動
+  const onTouch = useCallback(
+    (e: React.TouchEvent) => setFromClientX(e.touches[0].clientX),
+    [setFromClientX],
+  );
+  // 鍵盤逐日移動；Home/End 跳頭尾
+  const onKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (data.length < 2) return;
+      const cur = hover ?? data.length - 1;
+      let next: number | null = null;
+      if (e.key === "ArrowLeft") next = Math.max(0, cur - 1);
+      else if (e.key === "ArrowRight") next = Math.min(data.length - 1, cur + 1);
+      else if (e.key === "Home") next = 0;
+      else if (e.key === "End") next = data.length - 1;
+      else if (e.key === "Escape") {
+        setHover(null);
+        return;
+      }
+      if (next !== null) {
+        e.preventDefault();
+        setHover(next);
+      }
+    },
+    [hover, data.length],
   );
 
   const ticks = [0, 0.25, 0.5, 0.75, 1].map((t) => lo + t * (hi - lo));
@@ -169,9 +199,16 @@ export function TrendChart({
   return (
     <div
       ref={wrapRef}
-      className="relative w-full"
+      className="relative w-full rounded-[6px] outline-none focus-visible:ring-2 focus-visible:ring-[var(--c-accent)]"
+      style={{ touchAction: "pan-y" }}
+      tabIndex={0}
+      role="application"
+      aria-label="淨資產趨勢圖。左右方向鍵逐日檢視，Home/End 跳至頭尾。"
       onMouseMove={onMove}
       onMouseLeave={() => setHover(null)}
+      onTouchStart={onTouch}
+      onTouchMove={onTouch}
+      onKeyDown={onKeyDown}
     >
       <svg
         width={w}
@@ -426,22 +463,48 @@ export function BenchChart({
       ? `${pathOf("portfolio")} L${nx(portLastI).toFixed(1)},${H - padB} L${nx(portFirstI).toFixed(1)},${H - padB} Z`
       : null;
 
-  const onMove = (e: React.MouseEvent) => {
+  const setFromClientX = (clientX: number) => {
     if (!wrapRef.current || data.length < 2) return;
     const rect = wrapRef.current.getBoundingClientRect();
     const idx = Math.round(
-      ((e.clientX - rect.left - padL) / (w - padL - padR)) * (data.length - 1),
+      ((clientX - rect.left - padL) / (w - padL - padR)) * (data.length - 1),
     );
     setHover(Math.max(0, Math.min(data.length - 1, idx)));
+  };
+  const onMove = (e: React.MouseEvent) => setFromClientX(e.clientX);
+  const onTouch = (e: React.TouchEvent) => setFromClientX(e.touches[0].clientX);
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (data.length < 2) return;
+    const cur = hover ?? data.length - 1;
+    let next: number | null = null;
+    if (e.key === "ArrowLeft") next = Math.max(0, cur - 1);
+    else if (e.key === "ArrowRight") next = Math.min(data.length - 1, cur + 1);
+    else if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = data.length - 1;
+    else if (e.key === "Escape") {
+      setHover(null);
+      return;
+    }
+    if (next !== null) {
+      e.preventDefault();
+      setHover(next);
+    }
   };
   const ticks = [0, 0.5, 1].map((t) => lo + t * (hi - lo));
 
   return (
     <div
       ref={wrapRef}
-      className="relative w-full"
+      className="relative w-full rounded-[6px] outline-none focus-visible:ring-2 focus-visible:ring-[var(--c-accent)]"
+      style={{ touchAction: "pan-y" }}
+      tabIndex={0}
+      role="application"
+      aria-label="組合與大盤對照圖。左右方向鍵逐日檢視，Home/End 跳至頭尾。"
       onMouseMove={onMove}
       onMouseLeave={() => setHover(null)}
+      onTouchStart={onTouch}
+      onTouchMove={onTouch}
+      onKeyDown={onKeyDown}
     >
       <svg
         width={w}

@@ -542,11 +542,24 @@ function AllocationCard({
           {allocTargets.map((a) => (
             <div
               key={a.cls}
-              className={`grid grid-cols-[auto_56px_1fr_58px] items-center gap-2.5 transition-opacity ${
+              // 鍵盤 focus 與觸控點按等同 hover：donut 中心跟著顯示該類別數字
+              tabIndex={0}
+              role="button"
+              aria-label={`${a.label}：實際 ${a.actual.toFixed(1)}%、目標 ${a.target.toFixed(0)}%`}
+              className={`grid grid-cols-[auto_56px_1fr_58px] items-center gap-2.5 rounded-[6px] outline-none transition-opacity focus-visible:ring-2 focus-visible:ring-[var(--c-accent)] ${
                 hoverCls && hoverCls !== a.cls ? "opacity-40" : ""
               }`}
               onMouseEnter={() => setHoverCls(a.cls)}
               onMouseLeave={() => setHoverCls(null)}
+              onFocus={() => setHoverCls(a.cls)}
+              onBlur={() => setHoverCls(null)}
+              onClick={() => setHoverCls(hoverCls === a.cls ? null : a.cls)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setHoverCls(hoverCls === a.cls ? null : a.cls);
+                }
+              }}
             >
               <span
                 className="h-[9px] w-[9px] rounded-[3px]"
@@ -761,8 +774,8 @@ function Holdings({
       setDir(-1);
     }
   };
-  const caret = (k: SortKey) =>
-    sortKey === k ? (dir === -1 ? " ↓" : " ↑") : "";
+  const sortedOf = (k: SortKey): "ascending" | "descending" | undefined =>
+    sortKey === k ? (dir === -1 ? "descending" : "ascending") : undefined;
 
   const dayCell = (day: number | null) =>
     day == null || day === 0
@@ -810,14 +823,14 @@ function Holdings({
             <table className="w-full border-collapse text-[13.5px]">
               <thead>
                 <tr className="bg-[var(--c-surface-soft)] text-[11px] font-semibold uppercase tracking-[0.04em] text-[var(--c-muted)]">
-                  <Th onClick={() => setSort("name")} align="left">
-                    帳戶{caret("name")}
+                  <Th onClick={() => setSort("name")} align="left" sorted={sortedOf("name")}>
+                    帳戶
                   </Th>
                   <Th align="left">市場</Th>
                   <Th>佔比</Th>
-                  <Th onClick={() => setSort("value")}>市值{caret("value")}</Th>
-                  <Th onClick={() => setSort("day")}>今日{caret("day")}</Th>
-                  <Th onClick={() => setSort("pnl")}>未實現{caret("pnl")}</Th>
+                  <Th onClick={() => setSort("value")} sorted={sortedOf("value")}>市值</Th>
+                  <Th onClick={() => setSort("day")} sorted={sortedOf("day")}>今日</Th>
+                  <Th onClick={() => setSort("pnl")} sorted={sortedOf("pnl")}>未實現</Th>
                 </tr>
               </thead>
               <tbody>
@@ -984,19 +997,39 @@ function Th({
   children,
   align = "right",
   onClick,
+  sorted,
 }: {
   children: React.ReactNode;
   align?: "left" | "right";
   onClick?: () => void;
+  /** 此欄目前的排序方向；undefined = 可排但未選中，僅供 aria-sort 與箭頭 */
+  sorted?: "ascending" | "descending";
 }) {
+  const alignCls = align === "left" ? "text-left" : "text-right";
+  if (!onClick) {
+    return (
+      <th scope="col" className={`whitespace-nowrap px-[18px] py-3.5 ${alignCls}`}>
+        {children}
+      </th>
+    );
+  }
+  // 可排序欄：真按鈕（鍵盤可達）+ th 帶 aria-sort，箭頭對 AT 隱藏
   return (
     <th
-      onClick={onClick}
-      className={`whitespace-nowrap px-[18px] py-3.5 ${
-        align === "left" ? "text-left" : "text-right"
-      } ${onClick ? "cursor-pointer select-none hover:text-[var(--c-text)]" : ""}`}
+      scope="col"
+      aria-sort={sorted ?? "none"}
+      className={`whitespace-nowrap ${alignCls}`}
     >
-      {children}
+      <button
+        type="button"
+        onClick={onClick}
+        className={`w-full px-[18px] py-3.5 font-semibold uppercase tracking-[0.04em] ${alignCls} select-none hover:text-[var(--c-text)]`}
+      >
+        {children}
+        <span aria-hidden="true">
+          {sorted ? (sorted === "descending" ? " ↓" : " ↑") : ""}
+        </span>
+      </button>
     </th>
   );
 }

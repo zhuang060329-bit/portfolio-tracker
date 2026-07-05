@@ -45,14 +45,41 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
     prevPending.current = pending;
   }, [pending, state]);
 
-  // Esc 關閉
+  // Esc 關閉 + focus 管理：開啟時 focus 進 dialog 第一個控件、Tab 循環困在
+  // dialog 內（role=dialog 只是語意，不困住 focus 的話鍵盤使用者會 Tab 到
+  // 背景頁面）、關閉時把 focus 還給開啟前的元素。
+  const restoreRef = useRef<HTMLElement | null>(null);
   useEffect(() => {
     if (!open) return;
+    restoreRef.current = document.activeElement as HTMLElement | null;
+    const focusables = () =>
+      dialogRef.current?.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      ) ?? [];
+    focusables()[0]?.focus();
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") {
+        setOpen(false);
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const els = [...focusables()];
+      if (els.length === 0) return;
+      const first = els[0];
+      const last = els[els.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     }
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      restoreRef.current?.focus();
+    };
   }, [open]);
 
   const account = accounts.find((a) => a.id === accountId);
