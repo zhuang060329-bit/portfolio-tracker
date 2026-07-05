@@ -146,7 +146,7 @@ These are the specific problems that required careful handling:
 ```bash
 npm run lint           # ESLint
 npm run typecheck      # tsc --noEmit, 0 errors
-npm run test           # Vitest, currently 49 tests / 6 files
+npm run test           # Vitest, currently 67 tests / 6 files
 npm run build          # next build (also runs tsc internally)
 ```
 
@@ -213,7 +213,7 @@ Never commit `.env.local`. It is already in `.gitignore`.
 ## Current Status
 
 - Single-user personal app, running in production on Vercel
-- All four local gates pass (lint, typecheck, 49 tests, build)
+- All four local gates pass (lint, typecheck, 67 tests, build)
 - GitHub Actions CI passes on every push to main
 - Supabase RLS enforced on all tables
 - MFA TOTP enforced at AAL2
