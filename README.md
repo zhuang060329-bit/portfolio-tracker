@@ -1,237 +1,67 @@
 # StackWorth
 
-A personal portfolio tracking web app for long-term investors who hold US ETFs, Taiwan stocks, crypto, and manual assets across multiple accounts.
+A personal portfolio tracker for a long-term investor holding US ETFs, Taiwan stocks, crypto, and manual assets across multiple accounts — everything in one TWD-denominated dashboard.
 
-**Live demo:** https://portfolio-tracker-two-rho.vercel.app · **Public demo (no login):** https://portfolio-tracker-two-rho.vercel.app/demo
+**Live app:** https://portfolio-tracker-two-rho.vercel.app · **Public demo (no login):** https://portfolio-tracker-two-rho.vercel.app/demo · **Full reference:** [docs/REFERENCE.md](docs/REFERENCE.md)
 
----
-
-## Overview
-
-StackWorth solves a specific problem: when you hold assets across different markets and currencies, standard brokerage apps give you fragmented views. This app pulls everything into a single TWD-denominated dashboard with proper return metrics, allocation drift tracking, and contribution automation.
-
-It is a personal finance tool. It does not provide investment advice, is not affiliated with any financial institution, and is not a commercial product.
+Personal finance tool. Not investment advice, not affiliated with any institution, not a commercial product.
 
 ---
 
-## Why I Built This
+## The problem
 
-- Brokerage apps don't show cross-asset, cross-currency portfolio returns in a single view
-- Spreadsheets can't pull live prices or track contribution history cleanly
-- I wanted XIRR and TWR side-by-side, scoped correctly to active accounts, with proper cashflow sign conventions
+Holding assets across markets and currencies means brokerage apps only ever show fragments. Spreadsheets can't pull live prices or keep a clean contribution history. What I wanted did not exist in one place: XIRR and TWR side by side, computed with correct sign conventions, scoped to the portfolio I actually hold today, in my own base currency.
 
----
+## Constraints
 
-## Key Features
+- **The data is my real money.** Correctness beats features; a plausible-looking wrong number is worse than "—".
+- **Free-tier quote APIs** (Twelve Data, FinMind, CoinGecko) with hard rate and history limits — refresh paths need cooldowns, degraded states, and honest gaps instead of interpolated fiction.
+- **Daily driver on a phone.** Touch scrubbing on charts, PWA install, one-tap amount masking for public places.
+- **Solo project.** Every write path, metric, and edge case has to be cheap to verify — hence the four-gate discipline below.
 
-- **Portfolio dashboard** — net worth in TWD, XIRR (cash-flow weighted), TWR (time-weighted), Sharpe ratio, max drawdown, unrealized/realized P&L
-- **Multi-market accounts** — US stocks/ETFs (Twelve Data), Taiwan stocks (FinMind), crypto (CoinGecko), and manual accounts
-- **Allocation targets and drift** — set target % per account; dashboard shows actual vs target with drift warnings
-- **Net worth trend chart** — daily snapshots, 1M / 3M / 6M / 1Y / ALL range selector
-- **Performance chart** — annualized return vs SPY / QQQ benchmark (FX-adjusted to TWD)
-- **Recurring contribution plans** — scheduled DCA (daily/weekly/monthly), executed by Vercel Cron
-- **Income tracking** — dividends, interest; separated from capital contributions in cashflow records
-- **What-if simulator** — "what if I had put everything into VT / 0050 instead?" — replays your actual cashflow history against any ticker's historical price series
-- **Alerts** — price threshold and allocation drift alerts, scanned on each cron run
-- **Activity log** — full transaction history with CSV export and CSV bulk import
-- **Active vs archived accounts** — archived accounts are excluded from live XIRR / allocation / drift calculations
-- **MFA** — TOTP second factor enforced at AAL2 for all authenticated routes
-- **Dark mode** — CSS variable system with `[data-theme="dark"]` toggle
+## Design decisions
 
----
+**One computation pipeline, two callers.** All dashboard math lives in `buildDashboardData`, a pure function with no I/O. The production page feeds it Supabase rows; the public `/demo` route feeds it deterministically generated data. The demo is therefore not a mockup — XIRR, TWR, Sharpe, and drawdown on the demo page are computed by the exact code that runs on my real portfolio.
+
+**XIRR and TWR deliberately use opposite cashflow conventions.** XIRR follows the investor's wallet (investment = negative, terminal portfolio value appended as positive); TWR follows the portfolio (contribution = positive, terminal value excluded because it is already embedded in the last snapshot — including it would zero out the final sub-period). The sign flip happens once, at one documented point, with regression tests pinning the terminal-value misuse case.
+
+**A solver result must be a root, or it must be null.** The Newton-Raphson XIRR solver verifies `|NPV(rate)|` against a scale-relative tolerance on every exit path. Oscillation, flat derivatives, or hitting the iteration cap all return null rather than leaking a residual that looks like a real annualized return.
+
+**The dashboard means "the portfolio I hold today."** Totals, the trend curve, performance metrics, income stats, and allocation are all scoped to active accounts with one consistent boundary. Archiving an account cannot show up as a phantom crash in TWR.
+
+**Failure states are designed, not defaulted.** Benchmark APIs return empty on failure and the chart bridges gaps with a visible dashed segment; CoinGecko's 365-day history cap renders BTC as an honestly late-starting series; the service worker caches nothing but an offline page, because stale financial numbers are worse than a failed load; a data-health card in settings turns red when the price cron misses a run.
+
+## Guarding against my own mistakes
+
+- Every server action input passes a Zod schema before touching the database; Supabase RLS and TOTP MFA (AAL2) sit under that.
+- Four local gates before any commit — lint, typecheck, Vitest, build — mirrored in GitHub Actions.
+- Tests target invariants, not coverage numbers: the XIRR root guarantee, TWR cashflow isolation, demo-data determinism ("regenerating tomorrow must not rewrite yesterday"), server-action auth/cooldown boundaries.
+- All calendar-date conversions pin `Asia/Taipei` explicitly, because Vercel runs in UTC and a silent one-day shift in snapshot dates corrupts day-change and TWR.
 
 ## Demo
 
-**Try it without an account:** https://portfolio-tracker-two-rho.vercel.app/demo
+https://portfolio-tracker-two-rho.vercel.app/demo — no account needed.
 
-The `/demo` route renders the full dashboard from deterministically generated data (seeded pseudo-random walk, 18 months of DCA history, one realized loss, dividends and interest). Every metric — XIRR, TWR, Sharpe, max drawdown — is computed by the same `buildDashboardData` pipeline as the production page, not hard-coded. The production dashboard itself contains personal financial data, so screenshots are intentionally not committed; the demo exists so the product can still be reviewed end to end.
+Generated data: an 18-month DCA history with a seeded pseudo-random walk, a planted correction regime, one realized loss, dividends and interest. Deterministic per day, so reviewers see the same numbers on revisit. The production dashboard holds personal financial data, so screenshots are intentionally not committed; the demo exists so the product can still be reviewed end to end.
 
-The visual direction was developed from local design references during the UI pass. Those reference images are excluded from version control because they are workflow artifacts rather than product assets.
-
-## Portfolio Notes
-
-This project is intended to demonstrate:
-
-- Building a personal finance dashboard with real data modeling constraints
-- Separating XIRR and TWR cashflow conventions
-- Handling active vs archived account semantics
-- Protecting server action inputs with Zod validation
-- Using CI, tests, and targeted production hardening before portfolio presentation
-
----
-
-## Tech Stack
-
-| Layer | Choice |
-|---|---|
-| Framework | Next.js 16.2.6 (Turbopack, App Router) |
-| Language | TypeScript 5 |
-| UI | React 19, Tailwind CSS v4, Recharts |
-| Auth | Supabase Auth (email/password + Google OAuth + MFA TOTP AAL2) |
-| Database | Supabase Postgres + Row Level Security |
-| Validation | Zod v4 |
-| Testing | Vitest |
-| Error tracking | Sentry (client error boundary; no-op if DSN not set) |
-| Deployment | Vercel Hobby |
-| CI | GitHub Actions |
-| Scheduled jobs | Vercel Cron (daily 06:00 UTC = 14:00 Taipei) |
-| Quote sources | Twelve Data (US stocks, USD/TWD), FinMind (Taiwan stocks, historical FX), CoinGecko (crypto) |
-
----
-
-## Architecture
-
-```
-src/
-├── app/
-│   ├── page.tsx                    ← Dashboard server component (XIRR, TWR, Sharpe, holdings)
-│   ├── accounts/[id]/              ← Account detail + server actions
-│   ├── accounts/new/{stock,crypto,manual}/
-│   ├── activity/                   ← Transaction log + CSV import
-│   ├── alerts/                     ← Alert CRUD
-│   ├── whatif/                     ← What-if simulator
-│   ├── settings/                   ← Profile + tax CSV export
-│   └── api/
-│       ├── cron/refresh/           ← Daily price update + snapshot + alert scan
-│       └── export/{csv,tax-csv}/
-├── components/                     ← Dashboard, charts, allocation targets, FAB
-├── lib/
-│   ├── xirr.ts                     ← Newton-Raphson XIRR solver
-│   ├── metrics.ts                  ← TWR, MaxDrawdown, Sharpe
-│   ├── whatif.ts                   ← Buy-and-hold simulation
-│   ├── contributions.ts            ← Shared DCA helper (used by user actions + cron)
-│   ├── prices/                     ← Quote adapters per market
-│   └── schemas/action/             ← Zod schemas for all server action inputs
-└── proxy.ts                        ← Auth proxy (replaces Next.js Middleware in v16)
-```
-
----
-
-## Financial Logic & Data Integrity
-
-These are the specific problems that required careful handling:
-
-**XIRR cashflow sign convention**
-- Investments use negative cashflow (money leaving the investor); terminal portfolio value appended as a positive cashflow at calculation time
-- `computeXirr` in `src/lib/xirr.ts` uses Newton-Raphson with 100-iteration cap and convergence guard
-
-**TWR / Sharpe cashflow convention — opposite sign from XIRR**
-- TWR treats contributions as positive (money added to portfolio) and builds from raw `cashflow_twd` DB rows, negating the XIRR-signed values before passing to `computeTwr`
-- Terminal value is deliberately excluded from TWR cashflows; it is already embedded in the last snapshot value. Including it would drive `curEx → 0` and return null
-
-**XIRR scoped to active accounts**
-- Portfolio XIRR is computed only over the active account set, using active account snapshots as terminal value. Archived accounts are excluded from both cashflow history and terminal value
-
-**Backdated transaction price warning**
-- Server actions for buy/sell/income detect when `occurredAt` differs from today and surface a warning to fill in the actual execution price rather than the current live quote
-
-**Future `occurredAt` rejection**
-- All three write-path schemas (`add-by-amount`, `sell-quantity`, `record-income`) validate `occurredAt` against today's date in Asia/Taipei timezone using `s.slice(0, 10) <= todayInTaipei`, avoiding UTC vs local offset issues from `datetime-local` inputs
-
-**DB write error propagation**
-- `accounts.update()` errors in all four account server actions (`adjustQuantity`, `adjustBalance`, `sellQuantity`, `recordIncome`) are captured and returned before any transaction/snapshot writes proceed, preventing partially committed state
-- `transactions.insert()` error in `applyContribution` is captured before snapshot upserts, so snapshot writes are skipped on insert failure
-
-**Zod runtime validation**
-- All server action inputs are validated with Zod schemas before touching the database
-
-**Asia/Taipei timezone**
-- All date-to-string conversions for snapshot dates and cashflow dates use `toLocaleDateString("en-CA", { timeZone: "Asia/Taipei" })` to match the user's local calendar date, not UTC
-
----
-
-## Validation, Testing & CI
-
-**Local verification (all four gates must pass before commit):**
-```bash
-npm run lint           # ESLint
-npm run typecheck      # tsc --noEmit, 0 errors
-npm run test           # Vitest
-npm run build          # next build (also runs tsc internally)
-```
-
-**Test coverage:**
-- `src/lib/xirr.test.ts` — XIRR Newton-Raphson convergence
-- `src/lib/metrics.test.ts` — TWR cashflow isolation, max drawdown, Sharpe; includes regression test for terminal-value-as-cashflow misuse
-- `src/lib/whatif.test.ts` / `whatif-project.test.ts` — buy-and-hold simulation
-- `src/lib/csv-import-helpers.test.ts` — CSV field sniffing and alias matching
-- `src/lib/pnl.test.ts` — realized P&L calculation
-
-No coverage percentage is claimed; no server action integration tests exist yet.
-
-**CI (GitHub Actions on push/PR to main):**
-```yaml
-typecheck → test → build
-```
-Build uses placeholder Supabase env vars to pass the Next.js static generation step.
-
----
-
-## Local Development
+## Running locally
 
 ```bash
 git clone https://github.com/zhuang060329-bit/portfolio-tracker
 cd portfolio-tracker
 npm install
-
-# copy and fill environment variables
-cp .env.local.example .env.local
-
-npm run dev      # starts on http://localhost:3000
+cp .env.local.example .env.local   # fill in — see docs/REFERENCE.md for the variable table
+npm run dev
 ```
 
-Other scripts:
-```bash
-npm run typecheck    # TypeScript check only
-npm run test         # run Vitest once
-npm run test:watch   # Vitest watch mode
-npm run build        # production build
-npm run lint         # ESLint
-```
+Gates: `npm run lint` / `typecheck` / `test` / `build`.
 
----
+## Status and next steps
 
-## Environment Variables
+Running in production (Vercel + Supabase, single user). CI green on every push to main. Recently shipped: public demo route, amount masking, manual refresh with cooldown, PWA install, BTC benchmark, data-health card, server-action tests.
 
-A `.env.local.example` file is committed as a blank template. Copy it to `.env.local` and fill in local values:
-
-| Variable | Purpose |
-|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable/public key |
-| `SUPABASE_SECRET_KEY` | Server-only secret key — used in cron route and admin actions (bypasses RLS) |
-| `TWELVE_DATA_API_KEY` | US stock quotes + USD/TWD FX rate |
-| `FINMIND_TOKEN` | Taiwan stock quotes + historical FX |
-| `CRON_SECRET` | Bearer token that protects `/api/cron/refresh` |
-| `SENTRY_DSN` | (Optional) Sentry DSN for server/edge — SDK is a no-op if not set |
-| `NEXT_PUBLIC_SENTRY_DSN` | (Optional) Sentry DSN for the browser — client-side capture is off without it (Next.js only exposes `NEXT_PUBLIC_*` to the client) |
-| `ADMIN_EMAILS` | Comma-separated admin emails — no admin exists if unset |
-
-Never commit `.env.local`. It is already in `.gitignore`.
-
----
-
-## Current Status
-
-- Single-user personal app, running in production on Vercel
-- All four local gates pass (lint, typecheck, tests, build)
-- GitHub Actions CI passes on every push to main
-- Supabase RLS enforced on all tables
-- MFA TOTP enforced at AAL2
-
----
-
-## Future Improvements
-
-- Additional historical price sources for more accurate backdated cost basis
-- Account-level performance chart (per-account TWR over time)
-- Bulk CSV import for more brokerage formats (currently only generic format supported)
-- More chart annotations (contribution markers on trend chart)
-- Integration tests for server actions against a test database
-- Optional demo seed mode for portfolio showcasing without real data
-
----
+Next: wrapping account-mutation write paths in a Postgres RPC so "update account + insert ledger row" is atomic, then integration tests against the real write path; per-account TWR charts; broader CSV import formats.
 
 ## Author
 
-Built by [@zhuang060329-bit](https://github.com/zhuang060329-bit) as a personal finance tool for tracking a multi-asset, multi-currency investment portfolio.
+Built by [@zhuang060329-bit](https://github.com/zhuang060329-bit) as a daily-use tool for a multi-asset, multi-currency portfolio.
