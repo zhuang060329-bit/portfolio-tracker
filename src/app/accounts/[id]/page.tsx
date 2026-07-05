@@ -7,7 +7,7 @@ import { NetWorthPanel } from "@/components/NetWorthPanel";
 import { AppHeader } from "@/components/AppHeader";
 import { computeXirr } from "@/lib/xirr";
 import { getUnreadCount } from "@/lib/notifications";
-import { fmtFull as fmtTwd, fmtNum, fmtDate } from "@/lib/format";
+import { fmtFull as fmtTwd, fmtNum, fmtUpdatedAt } from "@/lib/format";
 
 const MARKET_LABEL: Record<string, string> = {
   us: "美股",
@@ -249,7 +249,7 @@ export default async function AccountDetail({
           )}
           <p className="mt-2 text-sm text-[var(--c-muted)]">
             報價更新於{" "}
-            <span className="text-[var(--c-text)]">{fmtDate(account.last_priced_at)}</span>
+            <span className="text-[var(--c-text)]">{account.last_priced_at ? fmtUpdatedAt(account.last_priced_at) : "—"}</span>
             {!isManual && (
               <>
                 <span className="mx-2 text-[var(--c-faint)]">·</span>
