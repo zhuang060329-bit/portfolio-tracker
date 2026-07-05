@@ -12,6 +12,7 @@ import {
 import { fetchUsDailyClose } from "@/lib/prices/twelvedata";
 import { fetchUsdTwdHistory } from "@/lib/prices/fx";
 import { fetchTwDailyClose } from "@/lib/prices/finmind";
+import { fetchBtcDailyCloseTwd } from "@/lib/prices/coingecko";
 import { getUnreadCount } from "@/lib/notifications";
 
 // 本頁只負責 I/O（Supabase 查詢 + 外部行情 API），
@@ -86,14 +87,15 @@ export default async function Home({
   const dates = new Set(snapRows.map((s) => s.snapshot_date));
   const hasLine = dates.size >= 2;
   const startDate = hasLine ? [...dates].sort()[0] : "";
-  const [tw0050, spyUsd, qqqUsd, fxHistory] = hasLine
+  const [tw0050, spyUsd, qqqUsd, btcTwd, fxHistory] = hasLine
     ? await Promise.all([
         fetchTwDailyClose("0050", startDate),
         fetchUsDailyClose("SPY", startDate),
         fetchUsDailyClose("QQQ", startDate),
+        fetchBtcDailyCloseTwd(startDate),
         fetchUsdTwdHistory(startDate),
       ])
-    : [[], [], [], []];
+    : [[], [], [], [], []];
 
   const dashboard = buildDashboardData({
     accounts: allAccounts,
@@ -102,7 +104,7 @@ export default async function Home({
     incomeRows: (incomeRows ?? []) as IncomeRow[],
     allocationTargets: targets,
     snapRows,
-    bench: { tw0050, spy: spyUsd, qqq: qqqUsd },
+    bench: { tw0050, spy: spyUsd, qqq: qqqUsd, btc: btcTwd },
     fxHistory,
   });
 

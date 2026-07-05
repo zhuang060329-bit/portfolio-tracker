@@ -311,11 +311,18 @@ export function buildDemoInputs(today: string): DashboardInputs {
 
   /* Benchmark：只出交易日 close，SPY/QQQ 為 USD（builder 會乘匯率），
      0050 對照直接沿用持倉 0050 的價格序列（現實中就是同一檔）。 */
-  const bench = { tw0050: [] as { date: string; close: number }[], spy: [] as { date: string; close: number }[], qqq: [] as { date: string; close: number }[] };
+  const bench = {
+    tw0050: [] as { date: string; close: number }[],
+    spy: [] as { date: string; close: number }[],
+    qqq: [] as { date: string; close: number }[],
+    btc: [] as { date: string; close: number }[],
+  };
   const fxHistory: { date: string; rate: number }[] = [];
   const spySeries = buildPriceSeries("SPY", today);
   const qqqSeries = buildPriceSeries("QQQ", today);
   for (const d of eachDay(EPOCH, today)) {
+    // BTC 全年無休，其他只出交易日
+    bench.btc.push({ date: d, close: price.BTC.get(d)! * price.fx.get(d)! });
     if (isWeekend(d)) continue;
     bench.tw0050.push({ date: d, close: price["0050"].get(d)! });
     bench.spy.push({ date: d, close: spySeries.get(d)! });

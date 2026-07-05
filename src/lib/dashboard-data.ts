@@ -61,7 +61,12 @@ export type DashboardInputs = {
   incomeRows: IncomeRow[];
   allocationTargets: Record<string, number>;
   snapRows: SnapshotRow[];
-  bench: { tw0050: DailyClose[]; spy: DailyClose[]; qqq: DailyClose[] };
+  bench: {
+    tw0050: DailyClose[];
+    spy: DailyClose[];
+    qqq: DailyClose[];
+    btc: DailyClose[];
+  };
   fxHistory: FxRate[];
   /** demo 用：固定時間讓輸出可重現。省略 = 現在。 */
   now?: Date;
@@ -309,19 +314,29 @@ export function buildDashboardData(input: DashboardInputs): DashboardData {
     ex.qqq = Number(r.close) * fx;
     perfMap.set(r.date, ex);
   }
+  // BTC 由 CoinGecko 以 TWD 直取，不經匯率換算
+  for (const r of bench.btc) {
+    const ex = perfMap.get(r.date) ?? { date: r.date };
+    ex.btc = Number(r.close);
+    perfMap.set(r.date, ex);
+  }
   const perfData = [...perfMap.values()].sort((a, b) =>
     a.date.localeCompare(b.date),
   );
-  forwardFillBenchmarks(perfData, ["spy", "qqq", "tw0050"]);
+  forwardFillBenchmarks(perfData, ["spy", "qqq", "tw0050", "btc"]);
   // benchmark 配色採設計稿（冷藍 / 紫 / 綠），與組合的金色拉開對比。
   const benchmarks: BenchSeries[] = [
     { key: "spy", label: "S&P 500", color: "#7FA8C9", dash: "6 4" },
     { key: "qqq", label: "Nasdaq 100", color: "#9C93C5", dash: "3 5" },
     { key: "tw0050", label: "台股 0050", color: "#7FBFA3", dash: "2 4" },
+    { key: "btc", label: "BTC", color: "#D9A15F", dash: "5 3" },
   ];
   const hasPerf =
     perfData.length >= 2 &&
-    (bench.tw0050.length > 0 || bench.spy.length > 0 || bench.qqq.length > 0);
+    (bench.tw0050.length > 0 ||
+      bench.spy.length > 0 ||
+      bench.qqq.length > 0 ||
+      bench.btc.length > 0);
 
   // holdings：交給 client 排序 / 算佔比
   const holdings: Holding[] = list.map((a) => ({
