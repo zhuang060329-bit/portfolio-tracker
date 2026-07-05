@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ThemeToggle } from "./ThemeToggle";
+import { PrivacyToggle } from "./PrivacyToggle";
 import { MobileNavToggle } from "./MobileNavToggle";
 
 type Active =
@@ -85,6 +86,7 @@ export function AppHeader({
             </Link>
           )}
 
+          <PrivacyToggle />
           <ThemeToggle />
 
           {userEmail && (

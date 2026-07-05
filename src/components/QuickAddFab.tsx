@@ -200,7 +200,7 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
                   {twdNum > 0 && (
                     <div className="mt-1 flex justify-between text-[10px]">
                       <span>= TWD</span>
-                      <span className="tnum">{fmtTwd(twdNum)}</span>
+                      <span className="amt tnum">{fmtTwd(twdNum)}</span>
                     </div>
                   )}
                 </div>

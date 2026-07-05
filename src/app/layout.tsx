@@ -57,9 +57,11 @@ const themeInit = `(function(){try{
     : pref;
   document.documentElement.dataset.theme = resolved;
   document.documentElement.dataset.themePref = pref;
+  document.documentElement.dataset.privacy = localStorage.getItem('privacy') === 'on' ? 'on' : 'off';
 }catch(e){
   document.documentElement.dataset.theme = 'dark';
   document.documentElement.dataset.themePref = 'system';
+  document.documentElement.dataset.privacy = 'off';
 }})();`;
 
 export default function RootLayout({

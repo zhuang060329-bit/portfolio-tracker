@@ -49,7 +49,8 @@ function PlanRow({ plan }: { plan: Plan }) {
         <div className="min-w-0">
           <div className="text-sm font-medium [font-variant-numeric:lining-nums_tabular-nums]">
             每月 {plan.day_of_month} 日{" "}
-            <span className="text-[var(--c-muted)]">·</span> NT$ {fmtTwd(Number(plan.amount_twd))}
+            <span className="text-[var(--c-muted)]">·</span>{" "}
+            <span className="amt">NT$ {fmtTwd(Number(plan.amount_twd))}</span>
           </div>
           <div className="mt-1 text-xs text-[var(--c-muted)]">
             下次 <span className="text-[var(--c-text)]">{plan.next_run_date}</span>

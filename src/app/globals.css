@@ -79,6 +79,24 @@ body {
   transition: background 0.4s ease, color 0.4s ease;
 }
 
+/* === 金額遮蔽（header 眼睛切換，見 PrivacyToggle）===
+ * .amt：標在絕對金額 / 持有數量的元素上；blur 用 em 隨字級縮放，
+ * hero 大字與表格小字遮蔽強度一致。百分比與單價不標。
+ * recharts 圖（帳戶詳情頁）走容器 class .amt-chart，只遮 Y 軸刻度與 tooltip。 */
+.amt {
+  transition: filter 0.25s ease;
+}
+[data-privacy="on"] .amt {
+  filter: blur(0.32em);
+  user-select: none;
+}
+[data-privacy="on"] .amt-chart .yAxis .recharts-cartesian-axis-tick-value {
+  filter: blur(5px);
+}
+[data-privacy="on"] .amt-chart .recharts-tooltip-wrapper {
+  filter: blur(5px);
+}
+
 /* tabular nums 工具類（jsx 設計裡的 .tnum 等價） */
 .tnum {
   font-variant-numeric: tabular-nums lining-nums;

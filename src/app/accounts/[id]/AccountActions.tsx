@@ -354,20 +354,20 @@ export function AccountActions({
             <div className="rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3 py-2 text-xs text-[var(--c-muted)]">
               <div>
                 預估收入：
-                <span className="ml-1 font-semibold tabular-nums text-[var(--c-text)]">
+                <span className="amt ml-1 font-semibold tabular-nums text-[var(--c-text)]">
                   NT$ {fmtTwd(proceedsPreview)}
                 </span>
               </div>
               <div className="mt-1">
                 被賣部位的成本：
-                <span className="ml-1 tabular-nums text-[var(--c-text)]">
+                <span className="amt ml-1 tabular-nums text-[var(--c-text)]">
                   NT$ {fmtTwd(allocatedCost)}
                 </span>
               </div>
               <div className="mt-1">
                 預估已實現損益：
                 <span
-                  className={`ml-1 font-semibold tabular-nums ${pnlClass(realizedPnlPreview)}`}
+                  className={`amt ml-1 font-semibold tabular-nums ${pnlClass(realizedPnlPreview)}`}
                 >
                   {pnlSign(realizedPnlPreview)}NT$ {fmtTwd(Math.abs(realizedPnlPreview))}
                 </span>

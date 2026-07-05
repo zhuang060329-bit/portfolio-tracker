@@ -199,7 +199,7 @@ export function TrendChart({
             <text
               x={padL - 6}
               y={ny(t) - 4}
-              className="tnum"
+              className="amt tnum"
               fontSize={10}
               fill="var(--c-faint)"
               textAnchor="end"
@@ -283,7 +283,7 @@ export function TrendChart({
           className="tooltip-pop pointer-events-none absolute top-1.5 z-[5] -translate-x-1/2 whitespace-nowrap rounded-[10px] border border-[var(--c-line-strong)] bg-[var(--c-surface-soft)] px-[11px] py-2 shadow-[var(--c-shadow)]"
           style={{ left: Math.min(Math.max(nx(hover!), 70), w - 70) }}
         >
-          <div className="font-serif text-base font-semibold">
+          <div className="amt font-serif text-base font-semibold">
             NT$ {fmtTwd(hi_.value)}
           </div>
           <div className="mt-px text-[11px] text-[var(--c-muted)]">

@@ -261,14 +261,14 @@ function ProjectionChart({
           <div className="mt-1 flex items-center gap-[7px] text-xs">
             <span className="h-[7px] w-[7px] rounded-full bg-[var(--c-accent)]" />
             <span className="text-[var(--c-muted)]">淨值</span>
-            <span className="ml-auto font-semibold tnum">
+            <span className="amt ml-auto font-semibold tnum">
               NT$ {fmtCompact(hp.value)}
             </span>
           </div>
           <div className="mt-[3px] flex items-center gap-[7px] text-xs">
             <span className="h-[7px] w-[7px] rounded-full bg-[var(--c-muted)]" />
             <span className="text-[var(--c-muted)]">累積投入</span>
-            <span className="ml-auto font-semibold text-[var(--c-muted)] tnum">
+            <span className="amt ml-auto font-semibold text-[var(--c-muted)] tnum">
               NT$ {fmtCompact(hp.contributed)}
             </span>
           </div>
@@ -328,7 +328,7 @@ function ProjectionTab({ netWorth }: { netWorth: number }) {
           情境設定
         </h2>
         <p className="mt-1 text-[12.5px] text-[var(--c-muted)]">
-          從目前淨值 NT$ {fmtCompact(netWorth)} 開始推算
+          從目前淨值 <span className="amt">NT$ {fmtCompact(netWorth)}</span> 開始推算
         </p>
 
         <div className="my-4 flex flex-wrap items-center gap-1.5">
@@ -419,17 +419,17 @@ function ProjectionTab({ netWorth }: { netWorth: number }) {
           <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--c-muted)]">
             {years} 年後預估淨值
           </span>
-          <span className="mt-2 block font-serif text-[clamp(32px,5vw,46px)] font-medium leading-none tracking-[-0.02em] tnum">
+          <span className="amt mt-2 block font-serif text-[clamp(32px,5vw,46px)] font-medium leading-none tracking-[-0.02em] tnum">
             NT$ {fmtTwd(final)}
           </span>
           <span className="mt-3 block text-[13px] text-[var(--c-muted)]">
             投資獲利{" "}
             <b
-              className={`font-semibold ${gain >= 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]"}`}
+              className={`amt font-semibold ${gain >= 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]"}`}
             >
               {sign(gain)}NT$ {fmtCompact(Math.abs(gain))}
             </b>{" "}
-            · 累積投入 NT$ {fmtCompact(contributed)}
+            · 累積投入 <span className="amt">NT$ {fmtCompact(contributed)}</span>
           </span>
         </div>
 
@@ -446,13 +446,14 @@ function ProjectionTab({ netWorth }: { netWorth: number }) {
         </div>
 
         <div className="mt-5 grid grid-cols-2 gap-px overflow-hidden rounded-[var(--r-card)] border border-[var(--c-line-strong)] bg-[var(--c-border)] shadow-[var(--c-shadow)] sm:grid-cols-4">
-          <Rstat label="4% 法則年提領" value={`NT$ ${fmtCompact(annualWithdraw)}`} />
+          <Rstat label="4% 法則年提領" value={`NT$ ${fmtCompact(annualWithdraw)}`} mask />
           <Rstat
             label="換算月被動收入"
             value={`NT$ ${fmtTwd(annualWithdraw / 12)}`}
             up
+            mask
           />
-          <Rstat label="總投入本金" value={`NT$ ${fmtCompact(contributed)}`} />
+          <Rstat label="總投入本金" value={`NT$ ${fmtCompact(contributed)}`} mask />
           <Rstat
             label="獲利倍數"
             value={`${contributed > 0 ? (final / contributed).toFixed(2) : "—"}×`}
@@ -475,7 +476,7 @@ function ProjectionTab({ netWorth }: { netWorth: number }) {
               <span className="whitespace-nowrap text-[13.5px] font-semibold">
                 {m.label}
               </span>
-              <span className="text-[12.5px] text-[var(--c-muted)] tnum">
+              <span className="amt text-[12.5px] text-[var(--c-muted)] tnum">
                 NT$ {fmtCompact(m.target)}
               </span>
               <span
@@ -498,16 +499,18 @@ function Rstat({
   label,
   value,
   up,
+  mask,
 }: {
   label: string;
   value: string;
   up?: boolean;
+  mask?: boolean; // 金額才遮；倍數 / 年數不遮
 }) {
   return (
     <div className="bg-[var(--c-surface)] px-4 py-3.5">
       <span className="block text-[11.5px] text-[var(--c-muted)]">{label}</span>
       <span
-        className={`mt-1.5 block whitespace-nowrap font-serif text-xl font-medium tnum ${up ? "text-[var(--c-up)]" : ""}`}
+        className={`mt-1.5 block whitespace-nowrap font-serif text-xl font-medium tnum ${up ? "text-[var(--c-up)]" : ""} ${mask ? "amt" : ""}`}
       >
         {value}
       </span>
@@ -526,7 +529,7 @@ function CounterfactualTab({ cf }: { cf: CounterfactualData }) {
       <div className="mb-7 grid grid-cols-1 gap-px overflow-hidden rounded-[var(--r-card)] border border-[var(--c-line-strong)] bg-[var(--c-border)] shadow-[var(--c-shadow)] sm:grid-cols-2">
         <div className="bg-[var(--c-surface)] px-5 py-[18px]">
           <span className="text-[11.5px] text-[var(--c-muted)]">累積投入</span>
-          <span className="mt-1.5 block font-serif text-[26px] font-medium tnum">
+          <span className="amt mt-1.5 block font-serif text-[26px] font-medium tnum">
             NT$ {fmtTwd(cf.invested)}
           </span>
           <span className="mt-1 block text-[11.5px] text-[var(--c-faint)]">
@@ -536,7 +539,7 @@ function CounterfactualTab({ cf }: { cf: CounterfactualData }) {
         <div className="bg-[var(--c-surface)] px-5 py-[18px]">
           <span className="text-[11.5px] text-[var(--c-muted)]">目前實際組合</span>
           <span
-            className={`mt-1.5 block font-serif text-[26px] font-medium tnum ${
+            className={`amt mt-1.5 block font-serif text-[26px] font-medium tnum ${
               (actual?.returnPct ?? 0) >= 0
                 ? "text-[var(--c-up)]"
                 : "text-[var(--c-down)]"
@@ -592,7 +595,7 @@ function CounterfactualTab({ cf }: { cf: CounterfactualData }) {
                         實際
                       </span>
                     )}
-                    <span className="ml-auto whitespace-nowrap text-[15px] font-semibold tnum">
+                    <span className="amt ml-auto whitespace-nowrap text-[15px] font-semibold tnum">
                       NT$ {fmtTwd(r.finalValue)}
                     </span>
                   </div>
@@ -622,7 +625,7 @@ function CounterfactualTab({ cf }: { cf: CounterfactualData }) {
                           diff > 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]"
                         }
                       >
-                        vs 實際 {sign(diff)}NT$ {fmtCompact(Math.abs(diff))}
+                        vs 實際 <span className="amt">{sign(diff)}NT$ {fmtCompact(Math.abs(diff))}</span>
                       </span>
                     )}
                     {r.skipped > 0 && (

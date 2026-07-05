@@ -177,7 +177,7 @@ export default async function AccountDetail({
           </h1>
           <p className="mt-4 flex items-baseline gap-2 font-serif">
             <span className="text-2xl font-medium text-[var(--c-muted)]">NT$</span>
-            <span className="text-4xl font-semibold tracking-tight tabular-nums [font-variant-numeric:lining-nums_tabular-nums]">
+            <span className="amt text-4xl font-semibold tracking-tight tabular-nums [font-variant-numeric:lining-nums_tabular-nums]">
               {fmtTwd(valueBase)}
             </span>
           </p>
@@ -185,11 +185,11 @@ export default async function AccountDetail({
             <div className="mt-3 flex flex-wrap items-baseline gap-x-6 gap-y-1 text-sm tabular-nums [font-variant-numeric:lining-nums_tabular-nums]">
               <span>
                 <span className="text-[var(--c-muted)]">成本</span>
-                <span className="ml-2 text-[var(--c-text)]">NT$ {fmtTwd(cost)}</span>
+                <span className="amt ml-2 text-[var(--c-text)]">NT$ {fmtTwd(cost)}</span>
               </span>
               <span>
                 <span className="text-[var(--c-muted)]">未實現</span>
-                <span className={`ml-2 font-medium ${pnlClass}`}>
+                <span className={`amt ml-2 font-medium ${pnlClass}`}>
                   {pnlSign}NT$ {fmtTwd(Math.abs(pnl))}
                 </span>
                 <span className={`ml-1 ${pnlClass}`}>
@@ -201,13 +201,13 @@ export default async function AccountDetail({
                 <>
                   <span>
                     <span className="text-[var(--c-muted)]">已實現</span>
-                    <span className={`ml-2 font-medium ${tone(realized)}`}>
+                    <span className={`amt ml-2 font-medium ${tone(realized)}`}>
                       {sign(realized)}NT$ {fmtTwd(Math.abs(realized))}
                     </span>
                   </span>
                   <span>
                     <span className="text-[var(--c-muted)]">總報酬</span>
-                    <span className={`ml-2 font-medium ${tone(totalReturn)}`}>
+                    <span className={`amt ml-2 font-medium ${tone(totalReturn)}`}>
                       {sign(totalReturn)}NT$ {fmtTwd(Math.abs(totalReturn))}
                     </span>
                   </span>
@@ -232,13 +232,13 @@ export default async function AccountDetail({
           {hasFxComponent && (
             <p className="mt-2 text-xs tabular-nums [font-variant-numeric:lining-nums_tabular-nums] text-[var(--c-muted)]">
               <span>未實現拆解：</span>
-              <span className={`ml-2 ${tone(marketPnl)}`}>
+              <span className={`amt ml-2 ${tone(marketPnl)}`}>
                 {sign(marketPnl)}
                 {fmtTwd(Math.abs(marketPnl))}
               </span>
               <span className="ml-1">標的</span>
               <span className="mx-2 text-[var(--c-faint)]">+</span>
-              <span className={tone(fxPnl)}>
+              <span className={`amt ${tone(fxPnl)}`}>
                 {sign(fxPnl)}
                 {fmtTwd(Math.abs(fxPnl))}
               </span>
@@ -255,7 +255,7 @@ export default async function AccountDetail({
             {!isManual && (
               <>
                 <span className="mx-2 text-[var(--c-faint)]">·</span>
-                {fmtNum(Number(account.quantity), 8)} ×{" "}
+                <span className="amt">{fmtNum(Number(account.quantity), 8)}</span> ×{" "}
                 {account.native_currency} {fmtNum(account.last_unit_price, 4)}
                 {Number(account.last_fx_rate) !== 1 && (
                   <>
@@ -279,7 +279,9 @@ export default async function AccountDetail({
                 此帳戶每日估值（基於 account_snapshots）
               </p>
               <div className="mt-3">
-                <NetWorthPanel data={lineData} />
+                <div className="amt-chart">
+                  <NetWorthPanel data={lineData} />
+                </div>
               </div>
             </div>
           </section>
@@ -365,7 +367,7 @@ export default async function AccountDetail({
                       <td className="px-4 py-2.5">
                         {TXN_LABEL[t.type] ?? t.type}
                       </td>
-                      <td className="px-4 py-2.5 text-right tabular-nums">
+                      <td className="amt px-4 py-2.5 text-right tabular-nums">
                         {fmtNum(t.quantity_after, 8)}
                       </td>
                       <td className="px-4 py-2.5 text-right tabular-nums">
@@ -374,18 +376,18 @@ export default async function AccountDetail({
                       <td className="px-4 py-2.5 text-right tabular-nums text-[var(--c-muted)]">
                         {fmtNum(t.fx_rate, 4)}
                       </td>
-                      <td className="px-4 py-2.5 text-right font-semibold tabular-nums">
+                      <td className="amt px-4 py-2.5 text-right font-semibold tabular-nums">
                         {fmtTwd(Number(t.value_after_base ?? 0))}
                       </td>
                       <td
-                        className={`px-4 py-2.5 text-right tabular-nums ${cf === null ? "text-[var(--c-faint)]" : cf > 0 ? "text-[var(--c-up)]" : cf < 0 ? "text-[var(--c-down)]" : "text-[var(--c-muted)]"}`}
+                        className={`amt px-4 py-2.5 text-right tabular-nums ${cf === null ? "text-[var(--c-faint)]" : cf > 0 ? "text-[var(--c-up)]" : cf < 0 ? "text-[var(--c-down)]" : "text-[var(--c-muted)]"}`}
                       >
                         {cf === null
                           ? "—"
                           : `${cf > 0 ? "+" : cf < 0 ? "−" : ""}${fmtTwd(Math.abs(cf))}`}
                       </td>
                       <td
-                        className={`px-4 py-2.5 text-right tabular-nums ${rp === null || rp === 0 ? "text-[var(--c-faint)]" : rp > 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]"}`}
+                        className={`amt px-4 py-2.5 text-right tabular-nums ${rp === null || rp === 0 ? "text-[var(--c-faint)]" : rp > 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]"}`}
                       >
                         {rp === null || rp === 0
                           ? "—"

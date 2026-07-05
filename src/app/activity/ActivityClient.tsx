@@ -144,7 +144,7 @@ function LedgerRow({
           <div className="flex w-full items-baseline justify-between gap-3.5 sm:w-auto sm:justify-end">
             {showAmt && (
               <span
-                className={`text-[14.5px] font-semibold tnum ${
+                className={`amt text-[14.5px] font-semibold tnum ${
                   r.amount! > 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]"
                 }`}
               >
@@ -161,12 +161,12 @@ function LedgerRow({
             <Kv label="單價" value={fmtNum(r.price, 4)} />
           )}
           {r.qty != null && r.qty > 0 && r.market !== "manual" && (
-            <Kv label="持有後" value={fmtNum(r.qty, 6)} />
+            <Kv label="持有後" value={fmtNum(r.qty, 6)} mask />
           )}
           {r.fx != null && r.fx !== 1 && (
             <Kv label="匯率" value={fmtNum(r.fx, 2)} />
           )}
-          <Kv label="市值" value={`NT$ ${fmtTwd(r.value)}`} strong />
+          <Kv label="市值" value={`NT$ ${fmtTwd(r.value)}`} strong mask />
         </div>
 
         {r.note && (
@@ -183,16 +183,18 @@ function Kv({
   label,
   value,
   strong,
+  mask,
 }: {
   label: string;
   value: string;
   strong?: boolean;
+  mask?: boolean; // 絕對金額 / 持有數量才遮；單價、匯率為公開行情
 }) {
   return (
     <span className="contents">
       <i className="not-italic text-[12px] text-[var(--c-faint)]">{label}</i>
       <b
-        className={`tnum text-[12.5px] ${
+        className={`tnum text-[12.5px] ${mask ? "amt " : ""}${
           strong
             ? "font-semibold text-[var(--c-text)]"
             : "font-medium text-[var(--c-muted)]"

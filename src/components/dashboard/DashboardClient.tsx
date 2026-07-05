@@ -166,7 +166,7 @@ function Hero({
           <span className="text-[14px] font-medium text-[var(--c-muted)]">
             NT$
           </span>
-          <span className="text-[clamp(44px,7vw,72px)] font-medium leading-[0.95] tracking-[-0.025em] tnum">
+          <span className="amt text-[clamp(44px,7vw,72px)] font-medium leading-[0.95] tracking-[-0.025em] tnum">
             {Math.round(total).toLocaleString("en-US")}
           </span>
         </h1>
@@ -182,8 +182,10 @@ function Hero({
               <span className="text-[9px]">
                 {s.dayChange! >= 0 ? "▲" : "▼"}
               </span>
-              {sign(s.dayChange!)}NT${" "}
-              {Math.abs(Math.round(s.dayChange!)).toLocaleString("en-US")}
+              <span className="amt">
+                {sign(s.dayChange!)}NT${" "}
+                {Math.abs(Math.round(s.dayChange!)).toLocaleString("en-US")}
+              </span>
               <span className="pl-0.5 text-[12.5px] opacity-80">
                 {sign(s.dayChangePct!)}
                 {Math.abs(s.dayChangePct!).toFixed(2)}%
@@ -230,12 +232,14 @@ function HeroStat({
   tone,
   sub,
   primary,
+  mask,
 }: {
   label: string;
   value: string;
   tone?: Tone;
   sub?: string;
   primary?: boolean;
+  mask?: boolean; // 絕對金額才標 amt；百分比類不遮
 }) {
   return (
     <div className={`bg-[var(--c-surface)] px-4 ${primary ? "py-5" : "py-4"} sm:px-[18px]`}>
@@ -245,7 +249,7 @@ function HeroStat({
       <div
         className={`mt-1.5 font-serif ${primary ? "text-[27px]" : "text-[21px]"} font-medium tracking-tight tnum ${
           tone ? TONE_TEXT[tone] : ""
-        }`}
+        } ${mask ? "amt" : ""}`}
       >
         {value}
       </div>
@@ -328,7 +332,7 @@ function TrendSection({
                 <>
                   此區間{" "}
                   <span className={TONE_TEXT[toneCls(chg)]}>
-                    {sign(chg)}NT$ {Math.abs(Math.round(chg)).toLocaleString("en-US")}{" "}
+                    <span className="amt">{sign(chg)}NT$ {Math.abs(Math.round(chg)).toLocaleString("en-US")}</span>{" "}
                     ({sign(chgPct)}
                     {Math.abs(chgPct).toFixed(1)}%)
                   </span>
@@ -514,14 +518,14 @@ function AllocationCard({
                 <div className="mt-0.5 font-serif text-[26px] font-medium tnum">
                   {sel.pct.toFixed(1)}%
                 </div>
-                <div className="mt-0.5 text-[11.5px] text-[var(--c-faint)] tnum">
+                <div className="mt-0.5 text-[11.5px] text-[var(--c-faint)] tnum amt">
                   NT$ {fmtCompact(sel.value)}
                 </div>
               </>
             ) : (
               <>
                 <div className="text-[11px] text-[var(--c-muted)]">總資產</div>
-                <div className="mt-0.5 font-serif text-[26px] font-medium tnum">
+                <div className="mt-0.5 font-serif text-[26px] font-medium tnum amt">
                   {fmtCompact(total)}
                 </div>
                 <div className="mt-0.5 text-[11.5px] text-[var(--c-faint)]">
@@ -676,7 +680,7 @@ function MetricsCard({ s }: { s: DashSummary }) {
             <IncomeStat label="月均" value={`NT$ ${fmtCompact(s.monthlyAvg)}`} />
           </div>
           <p className="mt-3 text-[10.5px] text-[var(--c-faint)]">
-            累計 配息 NT$ {fmtTwd(s.dividendAll)} · 利息 NT$ {fmtTwd(s.interestAll)}
+            累計 配息 <span className="amt">NT$ {fmtTwd(s.dividendAll)}</span> · 利息 <span className="amt">NT$ {fmtTwd(s.interestAll)}</span>
           </p>
         </div>
       )}
@@ -697,7 +701,7 @@ function IncomeStat({
     <div className="flex flex-col gap-0.5">
       <span className="text-[11.5px] text-[var(--c-muted)]">{label}</span>
       <span
-        className={`text-[17px] font-semibold tnum ${up ? "text-[var(--c-up)]" : ""}`}
+        className={`amt text-[17px] font-semibold tnum ${up ? "text-[var(--c-up)]" : ""}`}
       >
         {value}
       </span>
@@ -858,7 +862,7 @@ function Holdings({
                           </span>
                         </span>
                       </td>
-                      <td className="px-[18px] py-3.5 text-right font-semibold tnum">
+                      <td className="amt px-[18px] py-3.5 text-right font-semibold tnum">
                         {fmtTwd(h.value)}
                       </td>
                       <td
@@ -873,7 +877,7 @@ function Holdings({
                       >
                         {h.cost > 0 ? (
                           <>
-                            <div className="font-semibold">
+                            <div className="amt font-semibold">
                               {sign(pnl)}
                               {fmtTwd(Math.abs(pnl))}
                             </div>
@@ -928,7 +932,7 @@ function Holdings({
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-semibold tnum">{fmtTwd(h.value)}</div>
+                      <div className="amt font-semibold tnum">{fmtTwd(h.value)}</div>
                       {h.cost > 0 && (
                         <div className={`text-[11px] tnum ${TONE_TEXT[toneCls(pnl)]}`}>
                           {sign(pnl)}
@@ -997,11 +1001,13 @@ export function DashboardClient({ data }: { data: DashboardData }) {
         <div className="grid grid-cols-2 gap-px overflow-hidden rounded-[var(--r-card)] border border-[var(--c-line-strong)] bg-[var(--c-border)] shadow-[var(--c-shadow)] sm:grid-cols-4">
           <HeroStat
             label="總成本"
+            mask
             value={`NT$ ${fmtTwd(s.totalCost)}`}
             sub="cost basis"
           />
           <HeroStat
             label="未實現損益"
+            mask
             value={`${sign(s.unrealized)}${fmtTwd(Math.abs(s.unrealized))}`}
             tone={toneCls(s.unrealized)}
             sub={`${sign(s.unrealizedPct)}${Math.abs(s.unrealizedPct).toFixed(1)}%`}
@@ -1014,6 +1020,7 @@ export function DashboardClient({ data }: { data: DashboardData }) {
                 ? "—"
                 : `${sign(s.totalRealized)}${fmtTwd(Math.abs(s.totalRealized))}`
             }
+            mask
             tone={toneCls(s.totalRealized)}
             sub="realized"
           />
