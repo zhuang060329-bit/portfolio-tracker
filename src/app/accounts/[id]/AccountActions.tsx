@@ -605,13 +605,17 @@ export function AccountActions({
           </button>
         ) : (
           <div className="flex flex-wrap items-center gap-2 text-xs">
-            <span className="text-[var(--c-muted)]">確定刪除？此操作不可復原。</span>
+            <span className="text-[var(--c-down)]">
+              將永久刪除此帳戶與其全部交易紀錄、每日快照，無法復原；
+              歷史績效曲線也會同步失去這段資料。若只是不想在總覽看到，
+              上方「封存」會保留所有紀錄。
+            </span>
             <button
               type="submit"
               disabled={delPending}
               className="rounded-[var(--r-control)] bg-[var(--c-down)] px-3 py-1 font-medium text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-50"
             >
-              {delPending ? "刪除中…" : "確定刪除"}
+              {delPending ? "刪除中…" : "我了解，永久刪除"}
             </button>
             <button
               type="button"
