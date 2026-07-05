@@ -26,7 +26,12 @@ export default function GlobalError({
         出了點問題
       </p>
       <p className="max-w-md text-sm text-[var(--c-muted)]">
-        {error.message || "未知錯誤"}
+        {/* production 不外洩內部錯誤細節（訊息可能含 SQL / API 資訊），
+            開發環境才直出 message 方便除錯；digest 是不透明代碼，
+            保留給使用者回報時對 Sentry 事件用。 */}
+        {process.env.NODE_ENV === "development"
+          ? error.message || "未知錯誤"
+          : "暫時無法載入，請稍後再試。"}
       </p>
       {error.digest && (
         <p className="text-[10px] font-mono text-[var(--c-faint)]">

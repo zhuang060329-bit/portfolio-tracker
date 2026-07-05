@@ -20,6 +20,8 @@ import {
 } from "@/lib/profile-actions";
 import { MfaSetupCard } from "./MfaSetupCard";
 import { DeleteAccountSection } from "./DeleteAccountSection";
+import { fmtUpdatedAt } from "@/lib/format";
+import type { PriceHealth } from "@/lib/price-health";
 
 /* ============================================================
  * Settings 主應用：6 個 section + sticky scroll-spy 側欄
@@ -50,12 +52,14 @@ export type SettingsAppProps = {
   user: { email: string | null; createdAt: string | null };
   isAdmin: boolean;
   initialTargets: Record<string, number>;
+  priceHealth: PriceHealth;
 };
 
 export function SettingsApp({
   user,
   isAdmin,
   initialTargets,
+  priceHealth,
 }: SettingsAppProps) {
   // 用 ref 收集每個 section 的 DOM element 給 scroll-spy 用。
   // registerEl 包成穩定 callback 才不會被 react-hooks/refs 視作 render-time access。
@@ -154,12 +158,57 @@ export function SettingsApp({
           desc="下載報表或備份資料。"
           elRef={registerEl("data")}
         >
+          <PriceHealthInner health={priceHealth} />
           <DataInner />
         </Section>
         <p className="mt-9 border-t border-[var(--c-border)] pt-6 text-center text-xs text-[var(--c-faint)]">
           StackWorth · 以 TWD 為基準幣別
         </p>
       </div>
+    </div>
+  );
+}
+
+/* ---------- 報價健康 ---------- */
+
+function PriceHealthInner({ health }: { health: PriceHealth }) {
+  const ok = health.staleAccounts.length === 0 && health.lastPricedAt !== null;
+  const none = health.tracked === 0;
+  return (
+    <div
+      className={`mb-5 rounded-[10px] border px-4 py-3.5 text-[13px] ${
+        none || ok
+          ? "border-[var(--c-border)] bg-[var(--c-surface-soft)]"
+          : "border-[color-mix(in_srgb,var(--c-down)_45%,transparent)] bg-[color-mix(in_srgb,var(--c-down)_8%,transparent)]"
+      }`}
+    >
+      <div className="flex items-center gap-2 font-medium">
+        <span
+          aria-hidden="true"
+          className={`inline-block h-2 w-2 rounded-full ${
+            none
+              ? "bg-[var(--c-faint)]"
+              : ok
+                ? "bg-[var(--c-up)]"
+                : "bg-[var(--c-down)]"
+          }`}
+        />
+        報價更新狀態
+      </div>
+      <p className="mt-1 text-[var(--c-muted)]">
+        {none
+          ? "目前沒有追蹤市價的帳戶。"
+          : `追蹤 ${health.tracked} 個帳戶 · 最後成功更新 ${
+              health.lastPricedAt ? fmtUpdatedAt(health.lastPricedAt) : "—"
+            }`}
+      </p>
+      {!none && health.staleAccounts.length > 0 && (
+        <p className="mt-1 text-[var(--c-down)]">
+          {health.staleAccounts.join("、")} 超過 36
+          小時未更新——排程可能漏跑，快照斷檔會讓日漲跌與 TWR 失真。
+          可回總覽按手動刷新補一筆。
+        </p>
+      )}
     </div>
   );
 }

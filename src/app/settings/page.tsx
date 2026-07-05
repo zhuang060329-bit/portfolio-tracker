@@ -3,6 +3,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { isAdmin } from "@/lib/admin";
 import { getUnreadCount } from "@/lib/notifications";
 import { SettingsApp } from "./SettingsApp";
+import { buildPriceHealth } from "@/lib/price-health";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -18,6 +19,17 @@ export default async function SettingsPage() {
     .maybeSingle();
   const initialTargets =
     ((profile?.allocation_targets ?? {}) as Record<string, number>) || {};
+
+  // 報價健康計算在 lib/price-health（server component render 內不可叫 Date.now）。
+  const { data: priced } = await supabase
+    .from("accounts")
+    .select("name,last_priced_at")
+    .neq("price_market", "manual")
+    .not("symbol", "is", null)
+    .eq("status", "active");
+  const priceHealth = buildPriceHealth(
+    (priced ?? []) as { name: string; last_priced_at: string | null }[],
+  );
 
   return (
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
@@ -42,6 +54,7 @@ export default async function SettingsPage() {
           }}
           isAdmin={admin}
           initialTargets={initialTargets}
+          priceHealth={priceHealth}
         />
       </main>
     </div>

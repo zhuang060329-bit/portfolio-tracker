@@ -203,8 +203,9 @@ A `.env.local.example` file is committed as a blank template. Copy it to `.env.l
 | `TWELVE_DATA_API_KEY` | US stock quotes + USD/TWD FX rate |
 | `FINMIND_TOKEN` | Taiwan stock quotes + historical FX |
 | `CRON_SECRET` | Bearer token that protects `/api/cron/refresh` |
-| `ADMIN_EMAILS` | Comma-separated admin email addresses |
-| `SENTRY_DSN` | (Optional) Sentry DSN — SDK is a no-op if not set |
+| `SENTRY_DSN` | (Optional) Sentry DSN for server/edge — SDK is a no-op if not set |
+| `NEXT_PUBLIC_SENTRY_DSN` | (Optional) Sentry DSN for the browser — client-side capture is off without it (Next.js only exposes `NEXT_PUBLIC_*` to the client) |
+| `ADMIN_EMAILS` | Comma-separated admin emails — no admin exists if unset |
 
 Never commit `.env.local`. It is already in `.gitignore`.
 
