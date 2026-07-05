@@ -20,6 +20,7 @@ import {
   type SeriesPoint,
 } from "./DashboardCharts";
 import { fmtUpdatedAt } from "@/lib/format";
+import { RefreshPricesButton } from "@/components/RefreshPricesButton";
 
 /* ---------- 對外資料型別（page.tsx 餵入）---------- */
 export type DashSummary = {
@@ -192,9 +193,10 @@ function Hero({
           {hasDay && (
             <span className="text-xs text-[var(--c-faint)]">較前一日快照</span>
           )}
-          <span className="text-[12.5px] text-[var(--c-muted)]">
+          <span className="inline-flex items-center gap-1 text-[12.5px] text-[var(--c-muted)]">
             報價更新於 {s.lastUpdate ? fmtUpdatedAt(s.lastUpdate) : "—"} ·{" "}
             {s.accounts} 個帳戶
+            <RefreshPricesButton />
           </span>
         </div>
       </div>
