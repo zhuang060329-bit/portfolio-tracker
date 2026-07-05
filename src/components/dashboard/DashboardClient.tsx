@@ -142,9 +142,11 @@ function CardHead({ title, sub }: { title: string; sub?: React.ReactNode }) {
 function Hero({
   s,
   series,
+  demo,
 }: {
   s: DashSummary;
   series: SeriesPoint[];
+  demo?: boolean;
 }) {
   const total = useCountUp(s.total);
   const recent = series.slice(-30);
@@ -198,7 +200,7 @@ function Hero({
           <span className="inline-flex items-center gap-1 text-[12.5px] text-[var(--c-muted)]">
             報價更新於 {s.lastUpdate ? fmtUpdatedAt(s.lastUpdate) : "—"} ·{" "}
             {s.accounts} 個帳戶
-            <RefreshPricesButton />
+            {!demo && <RefreshPricesButton />}
           </span>
         </div>
       </div>
@@ -718,12 +720,14 @@ function Holdings({
   marketLabel,
   archivedCount,
   showArchived,
+  demo,
 }: {
   holdings: Holding[];
   total: number;
   marketLabel: Record<string, string>;
   archivedCount: number;
   showArchived: boolean;
+  demo?: boolean;
 }) {
   const [sortKey, setSortKey] = useState<SortKey>("value");
   const [dir, setDir] = useState(-1);
@@ -785,12 +789,14 @@ function Holdings({
             </p>
           )}
         </div>
-        <Link
-          href="/accounts/new"
-          className="shrink-0 rounded-[var(--r-control)] bg-[var(--c-accent)] px-4 py-2.5 text-[13.5px] font-semibold text-[var(--c-btn-strong-text)] transition hover:brightness-110"
-        >
-          ＋ 新增帳戶
-        </Link>
+        {!demo && (
+          <Link
+            href="/accounts/new"
+            className="shrink-0 rounded-[var(--r-control)] bg-[var(--c-accent)] px-4 py-2.5 text-[13.5px] font-semibold text-[var(--c-btn-strong-text)] transition hover:brightness-110"
+          >
+            ＋ 新增帳戶
+          </Link>
+        )}
       </div>
 
       {rows.length === 0 ? (
@@ -831,12 +837,18 @@ function Holdings({
                           className="mr-2.5 inline-block h-2 w-2 rounded-[3px] align-middle"
                           style={{ background: allocColor(h.cls) }}
                         />
-                        <Link
-                          href={`/accounts/${h.id}`}
-                          className="inline-block max-w-[180px] truncate align-middle font-medium hover:text-[var(--c-accent)]"
-                        >
-                          {h.name}
-                        </Link>
+                        {demo ? (
+                          <span className="inline-block max-w-[180px] truncate align-middle font-medium">
+                            {h.name}
+                          </span>
+                        ) : (
+                          <Link
+                            href={`/accounts/${h.id}`}
+                            className="inline-block max-w-[180px] truncate align-middle font-medium hover:text-[var(--c-accent)]"
+                          >
+                            {h.name}
+                          </Link>
+                        )}
                         {h.symbol && (
                           <span className="ml-[7px] text-[11px] font-medium text-[var(--c-muted)]">
                             {h.symbol}
@@ -903,14 +915,11 @@ function Holdings({
               const pnl = h.value - h.cost;
               const pct = h.cost > 0 ? (pnl / h.cost) * 100 : 0;
               const share = total > 0 ? (h.value / total) * 100 : 0;
-              return (
-                <Link
-                  key={h.id}
-                  href={`/accounts/${h.id}`}
-                  className={`block border-b border-[var(--c-border)] py-3.5 transition-colors hover:bg-[var(--c-surface-soft)] active:bg-[var(--c-accent-soft)] ${
-                    h.status === "archived" ? "opacity-60" : ""
-                  }`}
-                >
+              const rowCls = `block border-b border-[var(--c-border)] py-3.5 ${
+                h.status === "archived" ? "opacity-60" : ""
+              }`;
+              const inner = (
+                <>
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-2.5">
                       <span
@@ -947,6 +956,20 @@ function Holdings({
                       style={{ width: `${share}%`, background: allocColor(h.cls) }}
                     />
                   </div>
+                </>
+              );
+              // demo：列不可點（詳情頁需登入），也不給 hover/active 回饋暗示可點
+              return demo ? (
+                <div key={h.id} className={rowCls}>
+                  {inner}
+                </div>
+              ) : (
+                <Link
+                  key={h.id}
+                  href={`/accounts/${h.id}`}
+                  className={`${rowCls} transition-colors hover:bg-[var(--c-surface-soft)] active:bg-[var(--c-accent-soft)]`}
+                >
+                  {inner}
                 </Link>
               );
             })}
@@ -979,7 +1002,15 @@ function Th({
 }
 
 /* ---------- 組合 ---------- */
-export function DashboardClient({ data }: { data: DashboardData }) {
+// demo：/demo 路由用。關掉會撞 auth 的互動 —
+// 刷新鈕（server action）、新增帳戶、帳戶連結（詳情頁需登入）。
+export function DashboardClient({
+  data,
+  demo = false,
+}: {
+  data: DashboardData;
+  demo?: boolean;
+}) {
   const s = data.summary;
   const alloc = (
     <AllocationCard
@@ -993,7 +1024,7 @@ export function DashboardClient({ data }: { data: DashboardData }) {
 
   return (
     <div className="flex flex-col">
-      <Hero s={s} series={data.series} />
+      <Hero s={s} series={data.series} demo={demo} />
 
       {/* 指標四格：物理卡片 shadow + 更強邊框（Vestox 卡片重量感）。
           首屏層級：緊接 Hero、置於趨勢圖之前，核心損益不被摺線擠到摺下。*/}
@@ -1070,6 +1101,7 @@ export function DashboardClient({ data }: { data: DashboardData }) {
 
       <div className="mt-4 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] shadow-[var(--c-shadow)]">
         <Holdings
+          demo={demo}
           holdings={data.holdings}
           total={s.total}
           marketLabel={data.marketLabel}

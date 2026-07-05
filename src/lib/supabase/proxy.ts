@@ -34,11 +34,12 @@ export async function updateSession(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
 
-  // 未登入，且不在 /login 或 /auth/*（OAuth callback）→ 導向登入頁。
+  // 未登入，且不在 /login、/auth/*（OAuth callback）或 /demo（公開展示頁）→ 導向登入頁。
   if (
     !user &&
     !path.startsWith("/login") &&
-    !path.startsWith("/auth")
+    !path.startsWith("/auth") &&
+    !path.startsWith("/demo")
   ) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";

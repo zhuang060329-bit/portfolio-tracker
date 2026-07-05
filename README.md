@@ -2,7 +2,7 @@
 
 A personal portfolio tracking web app for long-term investors who hold US ETFs, Taiwan stocks, crypto, and manual assets across multiple accounts.
 
-**Live demo:** https://portfolio-tracker-two-rho.vercel.app
+**Live demo:** https://portfolio-tracker-two-rho.vercel.app · **Public demo (no login):** https://portfolio-tracker-two-rho.vercel.app/demo
 
 ---
 
@@ -40,13 +40,13 @@ It is a personal finance tool. It does not provide investment advice, is not aff
 
 ---
 
-## Screenshots and Design References
+## Demo
 
-This repository intentionally does not include production screenshots because the live dashboard contains personal financial data, including holdings, account names, transaction history, and net worth values.
+**Try it without an account:** https://portfolio-tracker-two-rho.vercel.app/demo
 
-The visual direction was developed from local design references during the UI pass. Those reference images are intentionally excluded from version control because they are workflow artifacts rather than product assets.
+The `/demo` route renders the full dashboard from deterministically generated data (seeded pseudo-random walk, 18 months of DCA history, one realized loss, dividends and interest). Every metric — XIRR, TWR, Sharpe, max drawdown — is computed by the same `buildDashboardData` pipeline as the production page, not hard-coded. The production dashboard itself contains personal financial data, so screenshots are intentionally not committed; the demo exists so the product can still be reviewed end to end.
 
-For review, use the deployed app or run the project locally with non-sensitive demo data.
+The visual direction was developed from local design references during the UI pass. Those reference images are excluded from version control because they are workflow artifacts rather than product assets.
 
 ## Portfolio Notes
 
