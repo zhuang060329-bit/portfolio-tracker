@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServiceClient } from "@/lib/supabase/service";
@@ -139,9 +140,13 @@ async function runDuePlans(supabase: SupabaseClient) {
 }
 
 export async function GET(request: Request) {
-  const auth = request.headers.get("authorization");
+  const auth = request.headers.get("authorization") ?? "";
   const expected = `Bearer ${process.env.CRON_SECRET ?? ""}`;
-  if (!process.env.CRON_SECRET || auth !== expected) {
+  // timingSafeEqual：等長比較，避免 !== 逐字元短路可被計時側信道利用
+  const a = Buffer.from(auth);
+  const b = Buffer.from(expected);
+  const match = a.length === b.length && timingSafeEqual(a, b);
+  if (!process.env.CRON_SECRET || !match) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
