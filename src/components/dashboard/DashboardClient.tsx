@@ -75,6 +75,7 @@ export type DashboardData = {
   perf: PerfPoint[];
   benchmarks: BenchSeries[];
   hasPerf: boolean;
+  benchNotice?: string | null;
   allocation: AllocDatum[];
   allocTargets: AllocTarget[];
   holdings: Holding[];
@@ -273,12 +274,14 @@ function TrendSection({
   perf,
   benchmarks,
   hasPerf,
+  benchNotice,
   today,
 }: {
   series: SeriesPoint[];
   perf: PerfPoint[];
   benchmarks: BenchSeries[];
   hasPerf: boolean;
+  benchNotice?: string | null;
   today: string;
 }) {
   const [range, setRange] = useState("6M");
@@ -381,6 +384,12 @@ function TrendSection({
         />
       ) : (
         <ChartEmpty>此區間沒有可對照的資料。</ChartEmpty>
+      )}
+
+      {mode === "bench" && benchNotice && (
+        <p className="mt-2 text-[11.5px] text-[var(--c-faint)]" role="status">
+          {benchNotice}
+        </p>
       )}
 
       <div className="mt-3 flex flex-wrap items-center justify-between gap-4 px-5 pb-4 sm:px-6">
@@ -1107,6 +1116,7 @@ export function DashboardClient({
         perf={data.perf}
         benchmarks={data.benchmarks}
         hasPerf={data.hasPerf}
+        benchNotice={data.benchNotice}
         today={data.today}
       />
 

@@ -71,6 +71,8 @@ export type DashboardInputs = {
   /** demo 用：固定時間讓輸出可重現。省略 = 現在。 */
   now?: Date;
   today?: string;
+  /** 大盤來源缺席說明（page 端偵測，例：金鑰未設 / 上游暫無資料） */
+  benchNotice?: string | null;
 };
 
 export const ASSET_CLASS_LABEL: Record<string, string> = {
@@ -391,5 +393,6 @@ export function buildDashboardData(input: DashboardInputs): DashboardData {
     today: input.today ?? todayTaipei(),
     archivedCount,
     showArchived,
+    benchNotice: input.benchNotice ?? null,
   };
 }
