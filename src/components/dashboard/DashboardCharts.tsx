@@ -401,18 +401,6 @@ export function BenchChart({
   const dashOf = (k: string) =>
     k === "portfolio" ? undefined : series.find((s) => s.key === k)?.dash;
 
-  // 跨接缺值：只連有值的點（portArea 面積計算用）。
-  const pathOf = (k: string) => {
-    let d = "";
-    let started = false;
-    norm[k].forEach((v, i) => {
-      if (v == null) return;
-      d += `${started ? "L" : "M"}${nx(i).toFixed(1)},${ny(v).toFixed(1)} `;
-      started = true;
-    });
-    return d.trim();
-  };
-
   // 實線段：只連相鄰都有值的點，null 點不跨接。
   const solidPathOf = (k: string) => {
     let d = "";
@@ -443,22 +431,6 @@ export function BenchChart({
     });
     return d.trim();
   };
-
-  const portFirstI = norm["portfolio"]
-    ? norm["portfolio"].findIndex((v) => v != null)
-    : -1;
-  const portLastI = (() => {
-    const arr = norm["portfolio"];
-    if (!arr) return -1;
-    for (let i = arr.length - 1; i >= 0; i--) {
-      if (arr[i] != null) return i;
-    }
-    return -1;
-  })();
-  const portArea =
-    portFirstI >= 0 && portLastI >= 0 && active["portfolio"]
-      ? `${pathOf("portfolio")} L${nx(portLastI).toFixed(1)},${H - padB} L${nx(portFirstI).toFixed(1)},${H - padB} Z`
-      : null;
 
   const setFromClientX = (clientX: number) => {
     if (!wrapRef.current || data.length < 2) return;
@@ -572,20 +544,6 @@ export function BenchChart({
               {data[data.length - 1].date.slice(5).replace("-", "/")}
             </text>
           </>
-        )}
-        <defs>
-          <linearGradient id="portFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="var(--c-accent)" stopOpacity="0.12" />
-            <stop offset="1" stopColor="var(--c-accent)" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        {portArea && (
-          <path
-            d={portArea}
-            fill="url(#portFill)"
-            opacity={drawn ? 1 : 0}
-            style={{ transition: "opacity .7s ease" }}
-          />
         )}
         {keys.map((k) => (
           <path
