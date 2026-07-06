@@ -14,8 +14,8 @@ Holding assets across markets and currencies means brokerage apps only ever show
 
 ## Constraints
 
-- **The data is my real money.** Correctness beats features; a plausible-looking wrong number is worse than "—".
-- **Free-tier quote APIs** (Twelve Data, FinMind, CoinGecko) with hard rate and history limits — refresh paths need cooldowns, degraded states, and honest gaps instead of interpolated fiction.
+- **The data is my real money.** When a metric can't be computed reliably, the UI shows "—" instead of a best guess.
+- **Free-tier quote APIs** (Twelve Data, FinMind, CoinGecko) with hard rate and history limits — refresh paths use cooldowns, and missing data renders as a visible gap rather than an interpolated value.
 - **Daily driver on a phone.** Touch scrubbing on charts, PWA install, one-tap amount masking for public places.
 - **Solo project.** Every write path, metric, and edge case has to be cheap to verify — hence the four-gate discipline below.
 
@@ -23,20 +23,20 @@ Holding assets across markets and currencies means brokerage apps only ever show
 
 **One computation pipeline, two callers.** All dashboard math lives in `buildDashboardData`, a pure function with no I/O. The production page feeds it Supabase rows; the public `/demo` route feeds it deterministically generated data. The demo is therefore not a mockup — XIRR, TWR, Sharpe, and drawdown on the demo page are computed by the exact code that runs on my real portfolio.
 
-**XIRR and TWR deliberately use opposite cashflow conventions.** XIRR follows the investor's wallet (investment = negative, terminal portfolio value appended as positive); TWR follows the portfolio (contribution = positive, terminal value excluded because it is already embedded in the last snapshot — including it would zero out the final sub-period). The sign flip happens once, at one documented point, with regression tests pinning the terminal-value misuse case.
+**XIRR and TWR use opposite cashflow conventions, on purpose.** XIRR follows the investor's wallet (investment = negative, terminal portfolio value appended as positive); TWR follows the portfolio (contribution = positive, terminal value excluded because it is already embedded in the last snapshot — including it would zero out the final sub-period). The sign flip happens once, at one documented point, with regression tests pinning the terminal-value misuse case.
 
-**A solver result must be a root, or it must be null.** The Newton-Raphson XIRR solver verifies `|NPV(rate)|` against a scale-relative tolerance on every exit path. Oscillation, flat derivatives, or hitting the iteration cap all return null rather than leaking a residual that looks like a real annualized return.
+**The XIRR solver validates its residual before returning a rate.** Every exit path of the Newton-Raphson loop checks `|NPV(rate)|` against a scale-relative tolerance; oscillation, flat derivatives, and hitting the iteration cap all return null instead of a residual value.
 
-**The dashboard means "the portfolio I hold today."** Totals, the trend curve, performance metrics, income stats, and allocation are all scoped to active accounts with one consistent boundary. Archiving an account cannot show up as a phantom crash in TWR.
+**Dashboard scope is the active portfolio.** Totals, the trend curve, performance metrics, income stats, and allocation share one boundary (active accounts), so archiving an account cannot appear as a value drop in TWR.
 
-**Failure states are designed, not defaulted.** Benchmark APIs return empty on failure and the chart bridges gaps with a visible dashed segment; CoinGecko's 365-day history cap renders BTC as an honestly late-starting series; the service worker caches nothing but an offline page, because stale financial numbers are worse than a failed load; a data-health card in settings turns red when the price cron misses a run.
+**Failure states are explicit.** Benchmark fetchers return empty on failure and the chart bridges gaps with a dashed segment; CoinGecko's 365-day history cap renders BTC as a late-starting series; the service worker caches only an offline page, since showing stale financial numbers is worse than failing to load; a data-health card in settings turns red when the price cron misses a run.
 
-## Guarding against my own mistakes
+## Verification
 
 - Every server action input passes a Zod schema before touching the database; Supabase RLS and TOTP MFA (AAL2) sit under that.
 - Four local gates before any commit — lint, typecheck, Vitest, build — mirrored in GitHub Actions.
-- Tests target invariants, not coverage numbers: the XIRR root guarantee, TWR cashflow isolation, demo-data determinism ("regenerating tomorrow must not rewrite yesterday"), server-action auth/cooldown boundaries.
-- All calendar-date conversions pin `Asia/Taipei` explicitly, because Vercel runs in UTC and a silent one-day shift in snapshot dates corrupts day-change and TWR.
+- Tests target invariants: XIRR residual validation, TWR cashflow isolation, demo-data determinism (regenerating tomorrow does not rewrite yesterday), server-action auth and cooldown boundaries, and the atomic-write RPC against a real Postgres.
+- Calendar-date conversions pin `Asia/Taipei` explicitly; Vercel runs in UTC, and a one-day shift in snapshot dates corrupts day-change and TWR.
 
 ## Demo
 

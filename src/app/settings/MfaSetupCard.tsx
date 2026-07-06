@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 /**
- * MFA 設定卡片（Midnight Ledger 風格）。
+ * MFA 設定卡片（StackWorth 風格）。
  * 邏輯沿用既有 MfaSetup（supabase.auth.mfa）；只重寫樣式：
  * - 列「雙因素驗證 (MFA)」一列含 toggle / 已啟用徽章
  * - 開啟 enrollment 後展開 QR + 6 碼驗證 panel

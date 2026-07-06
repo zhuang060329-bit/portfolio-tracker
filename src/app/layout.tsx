@@ -3,10 +3,8 @@ import { SwRegister } from "@/components/SwRegister";
 import { Newsreader, Space_Grotesk, Noto_Sans_TC } from "next/font/google";
 import "./globals.css";
 
-// Midnight Ledger 字型配置：
-// - Newsreader：大數字 / 標題（serif，財經刊物感）
-// - Space Grotesk：介面與數字（sans，含 tabular nums feature）
-// - Noto Sans TC：中文 fallback（preload=false 避免增加首載 weight）
+// 字型：Newsreader（serif 標題/大數字）、Space Grotesk（介面，tabular nums）、
+// Noto Sans TC（中文 fallback，preload=false 控首載）
 const fontSerif = Newsreader({
   variable: "--font-serif",
   subsets: ["latin"],

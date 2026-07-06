@@ -1,8 +1,6 @@
 "use client";
 
-// Midnight Ledger 儀表板互動層。
-// page.tsx（server）負責所有 Supabase 抓取與計算，把算好的資料當 props 丟進來；
-// 本檔只處理視覺與互動（count-up、hover、排序、區間切換）。
+// 儀表板互動層：資料由 server 端算好傳入，此處不做金融計算。
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -1059,8 +1057,7 @@ export function DashboardClient({
     <div className="flex flex-col">
       <Hero s={s} series={data.series} demo={demo} />
 
-      {/* 指標四格：物理卡片 shadow + 更強邊框，做出實體卡片的重量感。
-          首屏層級：緊接 Hero、置於趨勢圖之前，核心損益不被摺線擠到摺下。*/}
+      {/* 指標四格：置於趨勢圖之前，核心損益不被摺線擠到摺下 */}
       <section className="mt-4">
         <div className="grid grid-cols-2 gap-px overflow-hidden rounded-[var(--r-card)] border border-[var(--c-line-strong)] bg-[var(--c-border)] shadow-[var(--c-shadow)] sm:grid-cols-4">
           <HeroStat
@@ -1113,7 +1110,7 @@ export function DashboardClient({
         today={data.today}
       />
 
-      {/* 配置 + 指標：並列兩張卡片，維持區塊的物理感 */}
+      
       {metricsHasContent ? (
         <section className="mt-4 grid grid-cols-1 gap-4 min-[920px]:grid-cols-2">
           <div className="overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] transition-[transform,border-color] hover:-translate-y-[2px] hover:border-[var(--c-line-strong)] sm:p-6">

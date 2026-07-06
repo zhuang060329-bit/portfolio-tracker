@@ -20,10 +20,8 @@ const fmtShares = (n: number) =>
   n.toLocaleString("en-US", { maximumFractionDigits: 6 });
 
 /**
- * 浮動快速記帳按鈕（Midnight Ledger 樣式）。
- * 從首頁傳入 active 非手動帳戶清單，選帳戶 + 輸入 TWD 金額即可記錄加碼。
- * - 預覽即時算 TWD ÷ (現價 × 匯率) = 預計購入股數
- * - 提交成功後關閉並 revalidate（addByAmount 內已有）
+ * 快速記帳 FAB。股數預覽 = TWD ÷ (現價 × 匯率)，僅為估算，
+ * 實際成交價以 addByAmount 內重抓的報價為準。
  */
 export function QuickAddFab({ accounts }: { accounts: Account[] }) {
   const [open, setOpen] = useState(false);

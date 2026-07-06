@@ -13,14 +13,7 @@ type Active =
   | null;
 
 /**
- * Midnight Ledger Header。
- * - sticky + 半透明 backdrop-blur
- * - logo：金鑽 ◆ + Newsreader 字體 wordmark
- * - 桌機：5 個 nav（總覽 / 活動 / 提醒 / What-if / 設定）
- * - 手機：漢堡開合（用 MobileNavToggle client component）
- * - 右側：鈴鐺（紅點）/ 主題切換 / 頭像
- *
- * unreadCount 由每個 server page fetch 傳入（保持本元件為純樣式）。
+ * 全站 header。unreadCount 由各 server page 傳入，本元件不做 fetch。
  */
 export function AppHeader({
   active,

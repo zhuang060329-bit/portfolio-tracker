@@ -1,8 +1,6 @@
 "use client";
 
-// Midnight Ledger 儀表板圖表：全部手刻 SVG（移植設計稿 charts.jsx）。
-// 與 recharts 版（PortfolioCharts.tsx，account 詳情頁仍用）並存，互不影響。
-// 色票一律走 --c-* 變數，深淺色自動翻轉。
+// 儀表板圖表（手刻 SVG）。帳戶詳情頁另用 recharts 版（PortfolioCharts.tsx）。
 
 import {
   useCallback,
@@ -13,12 +11,11 @@ import {
 } from "react";
 import { fmtFull, fmtCompact } from "@/lib/format";
 
-// 數字格式集中到 lib/format：同一情境同一規則，圖表軸與明細不各自為政。
-// 保留 fmtTwd 名稱供既有匯入端不變；fmtCompact 直接 re-export。
+// 金額格式統一走 lib/format；fmtTwd 別名保留給既有匯入端。
 export const fmtTwd = fmtFull;
 export { fmtCompact };
 
-// 資產類別配色：設計稿只給 5 類，這裡補滿 9 類 + fallback。
+// 資產類別配色（9 類 + fallback）
 export const ALLOC_COLORS: Record<string, string> = {
   stock: "var(--c-accent)",
   fund: "#7FA8C9",

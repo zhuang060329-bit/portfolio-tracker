@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useActionState } from "react";
 import { importIncomeCsv, type ImportResult } from "./actions";
 
-// Midnight Ledger 風格的可收合匯入面板，沿用真實的 importIncomeCsv server action。
+// StackWorth 風格的可收合匯入面板，沿用真實的 importIncomeCsv server action。
 export function ImportCsv() {
   const [open, setOpen] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);

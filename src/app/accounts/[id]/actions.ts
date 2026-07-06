@@ -4,7 +4,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getQuote } from "@/lib/prices/router";
-import { applyAccountMutation } from "@/lib/account-mutation";
+import {
+  applyAccountMutation,
+  type MutationSnapshot,
+} from "@/lib/account-mutation";
 import { todayTaipei } from "@/lib/dates";
 import type { Market } from "@/lib/prices/types";
 import { applyContribution, nextMonthlyAfter } from "@/lib/contributions";
@@ -382,6 +385,31 @@ export async function sellQuantity(
   const noteParts = [`賣出 ${sellQty} 股，收入 ${Math.round(proceeds)} TWD`];
   if (userNote) noteParts.push(userNote);
 
+  // 快照口徑與買入回填（applyContribution）一致：occurred 當天以成交價
+  // 寫一筆；若非今天，再以現價補今天一筆。否則回填過去的賣出會讓
+  // 該日之後的趨勢與 TWR 沿用「還沒賣」的舊持有量。
+  const occurredDate = occurredAt.toLocaleDateString("en-CA", {
+    timeZone: "Asia/Taipei",
+  });
+  const sellSnapshots: MutationSnapshot[] = [
+    {
+      snapshot_date: occurredDate,
+      quantity: newQty,
+      unit_price: priceUsed,
+      fx_rate: fxUsed,
+      value_base: newQty * priceUsed * fxUsed,
+    },
+  ];
+  if (occurredDate !== todayTaipei()) {
+    sellSnapshots.push({
+      snapshot_date: todayTaipei(),
+      quantity: newQty,
+      unit_price: quote.unitPrice,
+      fx_rate: quote.fxToBase,
+      value_base: newQty * quote.unitPrice * quote.fxToBase,
+    });
+  }
+
   const { error: m } = await applyAccountMutation(supabase, {
     accountId,
     patch: {
@@ -404,15 +432,7 @@ export async function sellQuantity(
       note: noteParts.join(" · "),
       created_at: occurredAt.toISOString(),
     },
-    snapshots: [
-      {
-        snapshot_date: todayTaipei(),
-        quantity: newQty,
-        unit_price: quote.unitPrice,
-        fx_rate: quote.fxToBase,
-        value_base: newQty * quote.unitPrice * quote.fxToBase,
-      },
-    ],
+    snapshots: sellSnapshots,
   });
   if (m) return { error: m };
 
