@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getQuote } from "@/lib/prices/router";
+import { applyAccountMutation } from "@/lib/account-mutation";
 import { todayTaipei } from "@/lib/dates";
 import type { Market } from "@/lib/prices/types";
 
@@ -35,27 +36,25 @@ export async function refreshAccountPrices(
       const qty = Number(acc.quantity);
       const valueBase = qty * quote.unitPrice * quote.fxToBase;
 
-      await supabase
-        .from("accounts")
-        .update({
+      // 原子寫入 + error 檢查（先前這兩筆寫入的失敗會被靜默吞掉）
+      const { error: m } = await applyAccountMutation(supabase, {
+        accountId: acc.id,
+        patch: {
           last_unit_price: quote.unitPrice,
           last_fx_rate: quote.fxToBase,
           last_priced_at: quote.asOf,
-        })
-        .eq("id", acc.id);
-
-      await supabase.from("account_snapshots").upsert(
-        {
-          user_id: acc.user_id,
-          account_id: acc.id,
-          snapshot_date: todayTaipei(),
-          quantity: qty,
-          unit_price: quote.unitPrice,
-          fx_rate: quote.fxToBase,
-          value_base: valueBase,
         },
-        { onConflict: "account_id,snapshot_date" },
-      );
+        snapshots: [
+          {
+            snapshot_date: todayTaipei(),
+            quantity: qty,
+            unit_price: quote.unitPrice,
+            fx_rate: quote.fxToBase,
+            value_base: valueBase,
+          },
+        ],
+      });
+      if (m) throw new Error(m);
 
       ok++;
     } catch (e) {

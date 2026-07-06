@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getQuote } from "@/lib/prices/router";
+import { applyAccountMutation, type MutationSnapshot } from "@/lib/account-mutation";
 import { todayTaipei } from "@/lib/dates";
 import type { Market } from "@/lib/prices/types";
 
@@ -34,7 +35,8 @@ export async function applyContribution(args: {
   occurredAt: Date;
   noteSuffix: string | null;
 }): Promise<ContributionResult> {
-  const { supabase, userId, account, twd, priceOverride, fxOverride, occurredAt } = args;
+  // args.userId 仍在介面上（RPC 之後 user_id 由函式端以帳戶擁有者補），呼叫端不需改
+  const { supabase, account, twd, priceOverride, fxOverride, occurredAt } = args;
 
   if (account.price_market === "manual" || !account.symbol) {
     return { ok: false, error: "此操作僅限非手動帳戶" };
@@ -68,67 +70,55 @@ export async function applyContribution(args: {
   const newCostNative =
     Number(account.cost_basis_native ?? 0) + nativeAdded;
 
-  const { error: u } = await supabase
-    .from("accounts")
-    .update({
-      quantity: newQty,
-      last_unit_price: quote.unitPrice,
-      last_fx_rate: quote.fxToBase,
-      last_priced_at: quote.asOf,
-      cost_basis_twd: newCost,
-      cost_basis_native: newCostNative,
-    })
-    .eq("id", account.id);
-  if (u) return { ok: false, error: u.message };
-
   const noteParts = [`加碼 ${twd} TWD`];
   if (args.noteSuffix) noteParts.push(args.noteSuffix);
-
-  const { error: tErr } = await supabase.from("transactions").insert({
-    user_id: userId,
-    account_id: account.id,
-    type: "adjust_quantity",
-    quantity_after: newQty,
-    unit_price: priceUsed,
-    fx_rate: fxUsed,
-    value_after_base: newQty * priceUsed * fxUsed,
-    note: noteParts.join(" · "),
-    created_at: occurredAt.toISOString(),
-    cashflow_twd: -twd, // 投入：負現金流
-  });
-  if (tErr) return { ok: false, error: tErr.message };
 
   // 快照：occurredAt 那天用 priceUsed/fxUsed；不是今天就同時刷今天一筆。
   const occurredDate = occurredAt.toLocaleDateString("en-CA", {
     timeZone: "Asia/Taipei",
   });
-  const isToday = occurredDate === todayTaipei();
-  await supabase.from("account_snapshots").upsert(
+  const snapshots: MutationSnapshot[] = [
     {
-      user_id: userId,
-      account_id: account.id,
       snapshot_date: occurredDate,
       quantity: newQty,
       unit_price: priceUsed,
       fx_rate: fxUsed,
       value_base: newQty * priceUsed * fxUsed,
     },
-    { onConflict: "account_id,snapshot_date" },
-  );
-  if (!isToday) {
-    await supabase.from("account_snapshots").upsert(
-      {
-        user_id: userId,
-        account_id: account.id,
-        snapshot_date: todayTaipei(),
-        quantity: newQty,
-        unit_price: quote.unitPrice,
-        fx_rate: quote.fxToBase,
-        value_base: newQty * quote.unitPrice * quote.fxToBase,
-      },
-      { onConflict: "account_id,snapshot_date" },
-    );
+  ];
+  if (occurredDate !== todayTaipei()) {
+    snapshots.push({
+      snapshot_date: todayTaipei(),
+      quantity: newQty,
+      unit_price: quote.unitPrice,
+      fx_rate: quote.fxToBase,
+      value_base: newQty * quote.unitPrice * quote.fxToBase,
+    });
   }
+
+  const { error: m } = await applyAccountMutation(supabase, {
+    accountId: account.id,
+    patch: {
+      quantity: newQty,
+      last_unit_price: quote.unitPrice,
+      last_fx_rate: quote.fxToBase,
+      last_priced_at: quote.asOf,
+      cost_basis_twd: newCost,
+      cost_basis_native: newCostNative,
+    },
+    transaction: {
+      type: "adjust_quantity",
+      quantity_after: newQty,
+      unit_price: priceUsed,
+      fx_rate: fxUsed,
+      value_after_base: newQty * priceUsed * fxUsed,
+      note: noteParts.join(" · "),
+      created_at: occurredAt.toISOString(),
+      cashflow_twd: -twd, // 投入：負現金流
+    },
+    snapshots,
+  });
+  if (m) return { ok: false, error: m };
 
   return { ok: true, sharesAdded, newQty };
 }

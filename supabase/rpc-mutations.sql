@@ -15,6 +15,8 @@
 --     （屬排程簿記，非帳務資料），雙重執行防護是獨立議題。
 --
 -- 套用方式：Supabase Dashboard → SQL Editor → 貼上全文 → Run。
+-- 版本 2：transactions insert 補 realized_pnl（sell / dividend / interest 需要）。
+--         create or replace 可直接重跑覆蓋。
 -- 回滾：drop function public.apply_account_mutation(uuid, jsonb, jsonb, jsonb);
 
 create or replace function public.apply_account_mutation(
@@ -54,7 +56,7 @@ begin
   if p_transaction is not null then
     insert into transactions (
       user_id, account_id, type, quantity_after, unit_price,
-      fx_rate, value_after_base, note, created_at, cashflow_twd
+      fx_rate, value_after_base, note, created_at, cashflow_twd, realized_pnl
     ) values (
       v_user_id,
       p_account_id,
@@ -65,7 +67,8 @@ begin
       (p_transaction->>'value_after_base')::numeric,
       p_transaction->>'note',
       coalesce((p_transaction->>'created_at')::timestamptz, now()),
-      (p_transaction->>'cashflow_twd')::numeric
+      (p_transaction->>'cashflow_twd')::numeric,
+      (p_transaction->>'realized_pnl')::numeric
     );
   end if;
 
