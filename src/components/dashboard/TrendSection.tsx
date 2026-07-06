@@ -175,6 +175,7 @@ export function TrendSection({
                 key={b.key}
                 on={active[b.key]}
                 color={b.color}
+                dash={b.dash}
                 label={b.label}
                 onClick={() => setActive((a) => ({ ...a, [b.key]: !a[b.key] }))}
               />
@@ -191,11 +192,14 @@ function LegendBtn({
   color,
   label,
   onClick,
+  dash,
 }: {
   on: boolean;
   color: string;
   label: string;
   onClick: () => void;
+  /** 線型樣本用；不傳 = 實線（組合主線） */
+  dash?: string;
 }) {
   return (
     <button
@@ -205,10 +209,18 @@ function LegendBtn({
         on ? "" : "opacity-40 hover:opacity-60"
       }`}
     >
-      <span
-        className="h-[9px] w-[9px] rounded-full"
-        style={{ background: color }}
-      />
+      <svg width="22" height="10" aria-hidden="true" className="shrink-0">
+        <line
+          x1="1"
+          y1="5"
+          x2="21"
+          y2="5"
+          stroke={color}
+          strokeWidth={dash ? 2 : 3}
+          strokeDasharray={dash}
+          strokeLinecap="round"
+        />
+      </svg>
       {label}
     </button>
   );

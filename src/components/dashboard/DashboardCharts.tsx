@@ -487,7 +487,7 @@ export function BenchChart({
       setHover(next);
     }
   };
-  const ticks = [0, 0.5, 1].map((t) => lo + t * (hi - lo));
+  const ticks = [0, 0.25, 0.5, 0.75, 1].map((t) => lo + t * (hi - lo));
 
   return (
     <div
@@ -593,11 +593,11 @@ export function BenchChart({
             d={solidPathOf(k)}
             fill="none"
             stroke={colorOf(k)}
-            strokeWidth={k === "portfolio" ? 2.5 : 1.6}
+            strokeWidth={k === "portfolio" ? 2.75 : 1.6}
             strokeDasharray={dashOf(k)}
             strokeLinecap="round"
             strokeLinejoin="round"
-            opacity={drawn ? (k === "portfolio" ? 1 : 0.85) : 0}
+            opacity={drawn ? (k === "portfolio" ? 1 : 0.72) : 0}
             style={{ transition: "opacity .7s ease" }}
           />
         ))}

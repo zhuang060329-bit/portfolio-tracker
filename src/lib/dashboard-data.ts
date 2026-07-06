@@ -326,12 +326,14 @@ export function buildDashboardData(input: DashboardInputs): DashboardData {
     a.date.localeCompare(b.date),
   );
   forwardFillBenchmarks(perfData, ["spy", "qqq", "tw0050", "btc"]);
-  // benchmark 配色採設計稿（冷藍 / 紫 / 綠），與組合的金色拉開對比。
+  // benchmark 配色與線型：色相與組合主線（青綠實線）保持距離——
+  // 0050 用玫瑰而非綠（綠與 teal 在小螢幕不可分）；
+  // 四條 dash 節奏刻意拉開（長虛 / 點 / 超長虛 / 虛點），圖例同步畫線型樣本。
   const benchmarks: BenchSeries[] = [
-    { key: "spy", label: "S&P 500", color: "#7FA8C9", dash: "6 4" },
-    { key: "qqq", label: "Nasdaq 100", color: "#9C93C5", dash: "3 5" },
-    { key: "tw0050", label: "台股 0050", color: "#7FBFA3", dash: "2 4" },
-    { key: "btc", label: "BTC", color: "#D9A15F", dash: "5 3" },
+    { key: "spy", label: "S&P 500", color: "#7FA8C9", dash: "7 4" },
+    { key: "qqq", label: "Nasdaq 100", color: "#9C93C5", dash: "2 4.5" },
+    { key: "tw0050", label: "台股 0050", color: "#C4849C", dash: "12 5" },
+    { key: "btc", label: "BTC", color: "#D9A15F", dash: "8 3 2 3" },
   ];
   const hasPerf =
     perfData.length >= 2 &&
