@@ -51,7 +51,13 @@ export function TrendSection({
       return full.filter((p) => p.date >= `${y}-01-01`);
     }
     const d = RANGES.find((r) => r.k === range)?.d ?? null;
-    return d == null ? full : full.slice(-d);
+    if (d == null) return full;
+    // 日曆天過濾而非 slice(-d)：快照若有斷檔，最後 N 筆會偷偷涵蓋
+    // 超過 N 天的區間，1M / 3M 的語義就歪了
+    const cutoff = new Date(`${today}T00:00:00+08:00`);
+    cutoff.setDate(cutoff.getDate() - d);
+    const cutoffStr = cutoff.toISOString().slice(0, 10);
+    return full.filter((p) => p.date >= cutoffStr);
   }
 
   const sliced = useMemo(

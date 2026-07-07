@@ -7,7 +7,11 @@ export async function fetchWithRetry(
   let lastErr: unknown;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      const res = await fetch(url, init);
+      // 每次嘗試 10s 上限：上游卡死時不拖垮 server render / cron，逾時視同網路錯誤走重試
+      const res = await fetch(url, {
+        ...init,
+        signal: init?.signal ?? AbortSignal.timeout(10_000),
+      });
       if ((res.status === 429 || res.status >= 500) && attempt < retries) {
         await sleep(backoffMs(attempt));
         continue;

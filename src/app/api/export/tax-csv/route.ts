@@ -19,7 +19,10 @@ export const dynamic = "force-dynamic";
 
 function csvEscape(s: string | null | undefined): string {
   if (s === null || s === undefined) return "";
-  const str = String(s);
+  let str = String(s);
+  // 公式注入防護：以 = + - @ 或 tab 開頭的字串在 Excel / Sheets 會被當公式執行，
+  // 前置單引號使其一律以文字呈現（值來自使用者自己的帳戶名 / 備註，防禦性處理）
+  if (/^[=+\-@\t]/.test(str)) str = `'${str}`;
   if (/[",\n\r]/.test(str)) {
     return `"${str.replace(/"/g, '""')}"`;
   }

@@ -58,7 +58,7 @@ Gates: `npm run lint` / `typecheck` / `test` / `build`.
 
 ## Status and next steps
 
-Running in production (Vercel + Supabase, single user). CI green on every push to main. Recently shipped: public demo route, amount masking, manual refresh with cooldown, PWA install, BTC benchmark, data-health card, and atomic write paths — every account mutation now goes through a single Postgres RPC (`apply_account_mutation`, transaction-per-call), with integration tests running against a real Postgres in CI.
+Running in production (Vercel + Supabase, single user). CI runs lint / typecheck / tests (unit + Postgres integration) / build on every push to main. Recently shipped: public demo route, amount masking, manual refresh with cooldown, PWA install, BTC benchmark, data-health card, and atomic write paths — every account mutation now goes through a single Postgres RPC (`apply_account_mutation`, transaction-per-call), with integration tests running against a real Postgres in CI.
 
 Next: per-account TWR charts; broader CSV import formats; idempotency guard on recurring-plan execution.
 

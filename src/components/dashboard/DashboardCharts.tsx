@@ -681,8 +681,17 @@ export function Donut({
     const [x3, y3] = p(a0, inner);
     return `M${x0},${y0} A${rad},${rad} 0 ${large} 1 ${x1},${y1} L${x2},${y2} A${inner},${inner} 0 ${large} 0 ${x3},${y3} Z`;
   };
+  const ariaLabel = `資產配置：${data
+    .map((d) => `${d.label} ${d.pct.toFixed(1)}%`)
+    .join("、")}`;
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+    <svg
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
+      role="img"
+      aria-label={ariaLabel}
+    >
       {segs.map((s) => {
         const dim = hoverCls && hoverCls !== s.cls;
         return (
