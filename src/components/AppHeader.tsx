@@ -26,6 +26,7 @@ export function AppHeader({
 }) {
   const navItems: { href: string; label: string; key: Active }[] = [
     { href: "/", label: "總覽", key: "portfolio" },
+    { href: "/accounts", label: "帳戶", key: "accounts" },
     { href: "/activity", label: "活動", key: "activity" },
     { href: "/alerts", label: "提醒", key: "alerts" },
     { href: "/whatif", label: "What-if", key: "whatif" },

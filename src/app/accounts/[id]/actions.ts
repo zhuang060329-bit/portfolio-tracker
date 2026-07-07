@@ -16,7 +16,7 @@ import { SellQuantitySchema } from "@/lib/schemas/action/sell-quantity";
 import { CreateRecurringPlanSchema } from "@/lib/schemas/action/create-recurring-plan";
 import { RecordIncomeSchema } from "@/lib/schemas/action/record-income";
 
-export type FormState = { error?: string } | undefined;
+export type FormState = { error?: string; ok?: string } | undefined;
 
 type AccountForAction = {
   id: string;
@@ -55,10 +55,11 @@ async function loadAccount(accountId: string) {
   return { supabase, user, account: data as AccountForAction, error: null };
 }
 
-function done(accountId: string): FormState {
+function done(accountId: string, ok = "已完成"): FormState {
   revalidatePath(`/accounts/${accountId}`);
   revalidatePath("/");
-  return undefined;
+  // 成功也要回訊息：資料寫入與否不能靠使用者自己盯數字變化來確認
+  return { ok };
 }
 
 // ====== 月頻首次扣款日（僅 createRecurringPlan 用，留在本檔） ======
@@ -129,7 +130,7 @@ export async function updatePrice(
   });
   if (m) return { error: m };
 
-  return done(accountId);
+  return done(accountId, "已更新報價");
 }
 
 // 增減股數 / 數量（覆寫總量）
@@ -213,7 +214,7 @@ export async function adjustQuantity(
   });
   if (m) return { error: m };
 
-  return done(accountId);
+  return done(accountId, "已覆寫持有數量");
 }
 
 // 加碼買入：依 TWD 換算股數
@@ -253,7 +254,7 @@ export async function addByAmount(
   });
   if (!res.ok) return { error: res.error };
 
-  return done(accountId);
+  return done(accountId, `已加碼，購入 ${res.sharesAdded.toFixed(4)} 股`);
 }
 
 // 修改餘額（manual）
@@ -302,7 +303,7 @@ export async function adjustBalance(
   });
   if (m) return { error: m };
 
-  return done(accountId);
+  return done(accountId, "已更新餘額");
 }
 
 // ====== 賣出 ======
@@ -436,7 +437,7 @@ export async function sellQuantity(
   });
   if (m) return { error: m };
 
-  return done(accountId);
+  return done(accountId, "已記錄賣出");
 }
 
 // ====== 配息 / 利息 ======
@@ -493,7 +494,7 @@ async function recordIncome(
   });
   if (m) return { error: m };
 
-  return done(accountId);
+  return done(accountId, `已記錄${noteLabel}`);
 }
 
 export async function recordDividend(

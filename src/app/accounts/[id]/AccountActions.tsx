@@ -146,6 +146,9 @@ export function AccountActions({
           {updateState?.error && (
             <span className="text-xs text-[var(--c-down)]">{updateState.error}</span>
           )}
+          {updateState?.ok && (
+            <span className="text-xs text-[var(--c-up)]" role="status">✓ {updateState.ok}</span>
+          )}
         </form>
       )}
 
@@ -247,6 +250,11 @@ export function AccountActions({
             {addState?.error && (
               <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-down)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-down)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-down)]">
                 {addState.error}
+              </p>
+            )}
+            {addState?.ok && (
+              <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-up)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-up)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-up)]" role="status">
+                ✓ {addState.ok}
               </p>
             )}
             <button
@@ -379,6 +387,11 @@ export function AccountActions({
                 {sellState.error}
               </p>
             )}
+            {sellState?.ok && (
+              <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-up)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-up)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-up)]" role="status">
+                ✓ {sellState.ok}
+              </p>
+            )}
             <button
               type="submit"
               disabled={sellPending}
@@ -432,6 +445,11 @@ export function AccountActions({
             {divState?.error && (
               <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-down)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-down)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-down)]">
                 {divState.error}
+              </p>
+            )}
+            {divState?.ok && (
+              <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-up)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-up)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-up)]" role="status">
+                ✓ {divState.ok}
               </p>
             )}
             <button
@@ -488,6 +506,11 @@ export function AccountActions({
               {intState.error}
             </p>
           )}
+          {intState?.ok && (
+            <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-up)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-up)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-up)]" role="status">
+              ✓ {intState.ok}
+            </p>
+          )}
           <button
             type="submit"
             disabled={intPending}
@@ -526,6 +549,11 @@ export function AccountActions({
                 {qtyState.error}
               </p>
             )}
+            {qtyState?.ok && (
+              <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-up)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-up)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-up)]" role="status">
+                ✓ {qtyState.ok}
+              </p>
+            )}
             <button
               type="submit"
               disabled={qtyPending}
@@ -560,6 +588,11 @@ export function AccountActions({
             {balState?.error && (
               <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-down)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-down)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-down)]">
                 {balState.error}
+              </p>
+            )}
+            {balState?.ok && (
+              <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-up)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-up)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-up)]" role="status">
+                ✓ {balState.ok}
               </p>
             )}
             <button
