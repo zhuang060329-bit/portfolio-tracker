@@ -82,8 +82,10 @@ export function TrendSection({
   return (
     <section className="mt-5 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] shadow-[var(--c-shadow)]">
       <div className="mb-3 flex flex-col gap-3 px-5 pt-5 sm:flex-row sm:items-start sm:justify-between sm:gap-4 sm:px-6">
-        <div>
-          <h2 className="text-[19px] font-medium tracking-tight">
+        <div className="flex items-start gap-2.5">
+          <span aria-hidden="true" className="mt-[3px] h-[15px] w-[3px] shrink-0 rounded-full bg-[var(--c-accent)]" />
+          <div>
+          <h2 className="text-[18px] font-semibold tracking-tight">
             {mode === "value" ? "淨資產趨勢" : "績效對照"}
           </h2>
           <p className="mt-0.5 text-[12.5px] text-[var(--c-muted)]">
@@ -102,6 +104,7 @@ export function TrendSection({
               "與大盤對照 · 區間起點 = 100 · SPY/QQQ 已換算 TWD"
             )}
           </p>
+          </div>
         </div>
         {hasPerf && (
           <div className="inline-flex self-start rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] p-[3px]">

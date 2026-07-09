@@ -33,11 +33,11 @@ export function Hero({
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--c-muted)]">
           總淨資產 · NET WORTH
         </p>
-        <h1 className="mt-3 flex items-baseline gap-2 font-serif">
-          <span className="text-[14px] font-medium text-[var(--c-muted)]">
+        <h1 className="mt-3 flex items-baseline gap-2.5 font-serif">
+          <span className="text-[clamp(15px,1.8vw,19px)] font-medium tracking-wide text-[var(--c-faint)]">
             NT$
           </span>
-          <span className="amt text-[clamp(44px,7vw,72px)] font-medium leading-[0.95] tracking-[-0.025em] tnum">
+          <span className="amt text-[clamp(44px,7vw,72px)] font-medium leading-[0.9] tracking-[-0.03em] tnum">
             {Math.round(total).toLocaleString("en-US")}
           </span>
         </h1>

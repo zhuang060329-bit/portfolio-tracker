@@ -14,13 +14,18 @@ export const TONE_TEXT: Record<Tone, string> = {
 export function CardHead({ title, sub }: { title: string; sub?: React.ReactNode }) {
   return (
     <div className="mb-4 flex items-start justify-between gap-4">
-      <div>
-        <h2 className="text-[19px] font-medium tracking-tight">
-          {title}
-        </h2>
-        {sub && (
-          <p className="mt-0.5 text-[12.5px] text-[var(--c-muted)]">{sub}</p>
-        )}
+      <div className="flex items-start gap-2.5">
+        {/* accent 短豎線：給每張卡片標題一個一致的視覺錨點 */}
+        <span
+          aria-hidden="true"
+          className="mt-[3px] h-[15px] w-[3px] shrink-0 rounded-full bg-[var(--c-accent)]"
+        />
+        <div>
+          <h2 className="text-[18px] font-semibold tracking-tight">{title}</h2>
+          {sub && (
+            <p className="mt-0.5 text-[12px] text-[var(--c-muted)]">{sub}</p>
+          )}
+        </div>
       </div>
     </div>
   );

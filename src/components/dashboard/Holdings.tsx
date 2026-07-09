@@ -67,22 +67,23 @@ export function Holdings({
   return (
     <section className="px-5 pb-5 pt-5 sm:px-6">
       <div className="mb-4 flex items-center justify-between gap-3">
-        <div>
-          <h2 className="text-[19px] font-medium tracking-tight">
-            持有資產
-          </h2>
-          {archivedCount > 0 && (
-            <p className="mt-1 text-sm text-[var(--c-muted)]">
-              <Link
-                href={showArchived ? "/" : "/?archived=1"}
-                className="underline hover:text-[var(--c-text)]"
-              >
-                {showArchived
-                  ? `隱藏 ${archivedCount} 個已歸檔`
-                  : `顯示 ${archivedCount} 個已歸檔`}
-              </Link>
-            </p>
-          )}
+        <div className="flex items-start gap-2.5">
+          <span aria-hidden="true" className="mt-[3px] h-[15px] w-[3px] shrink-0 rounded-full bg-[var(--c-accent)]" />
+          <div>
+            <h2 className="text-[18px] font-semibold tracking-tight">持有資產</h2>
+            {archivedCount > 0 && (
+              <p className="mt-1 text-sm text-[var(--c-muted)]">
+                <Link
+                  href={showArchived ? "/" : "/?archived=1"}
+                  className="underline hover:text-[var(--c-text)]"
+                >
+                  {showArchived
+                    ? `隱藏 ${archivedCount} 個已歸檔`
+                    : `顯示 ${archivedCount} 個已歸檔`}
+                </Link>
+              </p>
+            )}
+          </div>
         </div>
         {!demo && (
           <Link
