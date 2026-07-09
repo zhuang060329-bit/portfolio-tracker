@@ -26,6 +26,7 @@ export type DashSummary = {
   ddTrough: string | null;
   sharpe: number | null;
   twrShowable: boolean;
+  twrAnnShowable: boolean;
   hasIncome: boolean;
   incomeYtd: number;
   income12m: number;

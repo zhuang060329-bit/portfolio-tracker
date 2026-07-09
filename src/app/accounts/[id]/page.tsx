@@ -276,7 +276,7 @@ export default async function AccountDetail({
                 帳戶趨勢
               </h2>
               <p className="mt-1 text-xs text-[var(--c-muted)]">
-                此帳戶每日估值（基於 account_snapshots）
+                此帳戶每日估值
               </p>
               <div className="mt-3">
                 <div className="amt-chart">
@@ -323,11 +323,11 @@ export default async function AccountDetail({
         {/* === 變動記錄 === */}
         <section className="mt-8">
           <h2 className="text-lg font-semibold tracking-tight">變動記錄</h2>
-          <div className="mt-3 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] shadow-[var(--c-shadow)]">
-            <table className="w-full text-sm">
+          <div className="mt-3 overflow-x-auto rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] shadow-[var(--c-shadow)]">
+            <table className="w-full min-w-[680px] text-sm">
               <thead className="border-b border-[var(--c-border)] bg-[var(--c-surface-soft)] text-xs tracking-wider text-[var(--c-muted)]">
                 <tr>
-                  <th className="px-4 py-3 text-left font-semibold">類型</th>
+                  <th className="whitespace-nowrap px-4 py-3 text-left font-semibold">類型</th>
                   <th className="px-4 py-3 text-right font-semibold">持有後</th>
                   <th className="px-4 py-3 text-right font-semibold">單價</th>
                   <th className="px-4 py-3 text-right font-semibold">匯率</th>
@@ -364,7 +364,7 @@ export default async function AccountDetail({
                     t.realized_pnl === null ? null : Number(t.realized_pnl);
                   return (
                     <tr key={t.id} className="hover:bg-[var(--c-surface-soft)]">
-                      <td className="px-4 py-2.5">
+                      <td className="whitespace-nowrap px-4 py-2.5">
                         {TXN_LABEL[t.type] ?? t.type}
                       </td>
                       <td className="amt px-4 py-2.5 text-right tabular-nums">
@@ -393,7 +393,7 @@ export default async function AccountDetail({
                           ? "—"
                           : `${rp > 0 ? "+" : "−"}${fmtTwd(Math.abs(rp))}`}
                       </td>
-                      <td className="px-4 py-2.5 text-[var(--c-muted)]">
+                      <td className="whitespace-nowrap px-4 py-2.5 text-[var(--c-muted)]">
                         {fmtTime(t.created_at)}
                       </td>
                     </tr>

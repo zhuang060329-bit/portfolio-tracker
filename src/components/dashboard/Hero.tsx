@@ -20,11 +20,11 @@ export function Hero({
   const total = useCountUp(s.total);
   const recent = series.slice(-30);
   const hasDay = s.dayChange != null && s.dayChangePct != null;
-  const up30 = recent.length >= 2 && recent[recent.length - 1].value >= recent[0].value;
-  const chg30Pct =
-    recent.length >= 2 && recent[0].value > 0
-      ? ((recent[recent.length - 1].value - recent[0].value) / recent[0].value) * 100
-      : 0;
+  // 近 30 日只呈現「淨值變化金額」：淨值頭尾差含入金 / 提領，換算成 %
+  // 會把加碼當成報酬（真實資料上會出現 +150% 這種假象），故不顯示百分比。
+  const chg30 =
+    recent.length >= 2 ? recent[recent.length - 1].value - recent[0].value : 0;
+  const up30 = chg30 >= 0;
 
   return (
     <section className="grid grid-cols-1 gap-x-5 gap-y-6 px-1 pt-4 sm:grid-cols-[1fr_auto] sm:pt-7">
@@ -80,12 +80,12 @@ export function Hero({
           <div className="inline-block rounded-[10px] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3 pb-2.5 pt-2.5">
             <div className="mb-1.5 flex items-center justify-between gap-4">
               <span className="text-[9.5px] font-semibold uppercase tracking-[0.14em] text-[var(--c-faint)]">
-                近 30 日
+                近 30 日淨值
               </span>
               <span
-                className={`text-[11.5px] font-semibold tnum ${up30 ? "text-[var(--c-up)]" : "text-[var(--c-down)]"}`}
+                className={`amt text-[11.5px] font-semibold tnum ${up30 ? "text-[var(--c-up)]" : "text-[var(--c-down)]"}`}
               >
-                {sign(chg30Pct)}{Math.abs(chg30Pct).toFixed(1)}%
+                {sign(chg30)}NT$ {Math.abs(Math.round(chg30)).toLocaleString("en-US")}
               </span>
             </div>
             <Sparkline data={recent} w={150} h={40} up={up30} />

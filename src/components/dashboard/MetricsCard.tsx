@@ -15,12 +15,19 @@ export function MetricsCard({ s }: { s: DashSummary }) {
             tone: toneCls(s.twrCum),
             hint: "策略本身報酬",
           },
-          {
-            label: "TWR 年化",
-            value: `${sign(s.twrAnn ?? 0)}${(Math.abs(s.twrAnn ?? 0) * 100).toFixed(1)}%`,
-            tone: toneCls(s.twrAnn ?? 0),
-            hint: "可與大盤比較",
-          },
+          s.twrAnnShowable && s.twrAnn != null
+            ? {
+                label: "TWR 年化",
+                value: `${sign(s.twrAnn)}${(Math.abs(s.twrAnn) * 100).toFixed(1)}%`,
+                tone: toneCls(s.twrAnn),
+                hint: "可與大盤比較",
+              }
+            : {
+                label: "TWR 年化",
+                value: "—",
+                tone: "flat" as Tone,
+                hint: "資料未滿 90 天",
+              },
           {
             label: "最大回撤",
             value: `−${(Math.abs(s.maxDrawdown ?? 0) * 100).toFixed(1)}%`,

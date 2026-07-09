@@ -617,7 +617,7 @@ function CounterfactualTab({ cf }: { cf: CounterfactualData }) {
                       }
                     >
                       報酬 {sign(r.returnPct)}
-                      {(r.returnPct * 100).toFixed(1)}%
+                      {Math.abs(r.returnPct * 100).toFixed(1)}%
                     </span>
                     {!r.actual && (
                       <span

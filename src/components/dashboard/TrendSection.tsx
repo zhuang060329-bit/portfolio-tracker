@@ -77,7 +77,7 @@ export function TrendSection({
   const chg = enoughValue
     ? sliced[sliced.length - 1].value - sliced[0].value
     : 0;
-  const chgPct = enoughValue && sliced[0].value ? (chg / sliced[0].value) * 100 : 0;
+  // 只顯示淨值變化金額，不換算 %：區間內若有入金 / 提領，頭尾相除會失真
 
   return (
     <section className="mt-5 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] shadow-[var(--c-shadow)]">
@@ -90,11 +90,9 @@ export function TrendSection({
             {mode === "value" ? (
               enoughValue ? (
                 <>
-                  此區間{" "}
+                  此區間淨值變化{" "}
                   <span className={TONE_TEXT[toneCls(chg)]}>
-                    <span className="amt">{sign(chg)}NT$ {Math.abs(Math.round(chg)).toLocaleString("en-US")}</span>{" "}
-                    ({sign(chgPct)}
-                    {Math.abs(chgPct).toFixed(1)}%)
+                    <span className="amt">{sign(chg)}NT$ {Math.abs(Math.round(chg)).toLocaleString("en-US")}</span>
                   </span>
                 </>
               ) : (

@@ -8,11 +8,21 @@
 
 export const fmtFull = (n: number) => Math.round(n).toLocaleString("en-US");
 
+function trimZero(str: string): string {
+  return str.replace(/\.?0+$/, "");
+}
+
 export function fmtCompact(n: number): string {
   const a = Math.abs(n);
   const s = n < 0 ? "−" : "";
-  if (a >= 1e8) return s + (a / 1e8).toFixed(2) + "億";
-  if (a >= 1e4) return s + (a / 1e4).toFixed(1) + "萬";
+  if (a >= 1e8) return s + trimZero((a / 1e8).toFixed(2)) + "億";
+  if (a >= 1e4) {
+    const w = a / 1e4;
+    // 千萬級（≥1000 萬）不帶小數：「3,000萬」而非「3000.0萬」；
+    // 百萬以下保留 1 位避免相鄰刻度塌成同字
+    const str = w >= 1000 ? Math.round(w).toLocaleString("en-US") : w.toFixed(1);
+    return s + str + "萬";
+  }
   return s + Math.round(a).toLocaleString("en-US");
 }
 

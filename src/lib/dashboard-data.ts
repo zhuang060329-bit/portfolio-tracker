@@ -148,7 +148,9 @@ export function buildDashboardData(input: DashboardInputs): DashboardData {
       ? (now.getTime() - Math.min(...cashflows.map((c) => c.when.getTime()))) /
         86_400_000
       : 0;
-  const xirrShowable = xirr !== null && xirrSpanDays >= 30;
+  // 年化需要足夠樣本，否則短期波動被外推成失真的年化值。
+  // XIRR 本質就是年化報酬率，未滿 90 天一律不顯示。
+  const xirrShowable = xirr !== null && xirrSpanDays >= 90;
 
   // 被動收入：dividend + interest 的 cashflow_twd 加總（cashflow > 0 表示收到）。
   const incomeAll = incomeRows.filter((r) => Number(r.cashflow_twd ?? 0) > 0);
@@ -265,6 +267,8 @@ export function buildDashboardData(input: DashboardInputs): DashboardData {
       amount: -Number(c.cashflow_twd), // XIRR 慣例翻轉 → TWR 慣例：買入(負)→正，賣出(正)→負
     }));
   const twrShowable = snapshotsForMetrics.length >= 30;
+  // 年化另設 90 天門檻：累積報酬短樣本仍誠實，年化則會外推失真
+  const twrAnnShowable = snapshotsForMetrics.length >= 90;
   const twrResult = twrShowable
     ? computeTwr(snapshotsForMetrics, cashflowsForMetrics)
     : null;
@@ -370,12 +374,13 @@ export function buildDashboardData(input: DashboardInputs): DashboardData {
       accounts: list.length,
       lastUpdate: latestUpdate ?? null,
       twrCum: twrResult?.total ?? null,
-      twrAnn: twrResult?.annualized ?? null,
+      twrAnn: twrAnnShowable ? (twrResult?.annualized ?? null) : null,
       maxDrawdown: drawdown?.pct ?? null,
       ddPeak: drawdown?.peakDate ?? null,
       ddTrough: drawdown?.troughDate ?? null,
       sharpe,
       twrShowable,
+      twrAnnShowable,
       hasIncome,
       incomeYtd,
       income12m: incomeRolling12m,
