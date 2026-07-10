@@ -8,45 +8,8 @@ import {
   type PerfPoint,
   type SeriesPoint,
 } from "./DashboardCharts";
+import { RANGES, sliceByRange, sliceToCommonStart } from "./chart-data";
 import { sign, TONE_TEXT, toneCls } from "./shared";
-
-export const RANGES: { k: string; d: number | null }[] = [
-  { k: "1M", d: 30 },
-  { k: "3M", d: 90 },
-  { k: "6M", d: 182 },
-  { k: "YTD", d: null },
-  { k: "1Y", d: 365 },
-  { k: "ALL", d: 9999 },
-];
-
-function calendarCutoff(today: string, days: number): string {
-  const [year, month, day] = today.split("-").map(Number);
-  const value = new Date(Date.UTC(year, month - 1, day));
-  value.setUTCDate(value.getUTCDate() - days);
-  return value.toISOString().slice(0, 10);
-}
-
-function sliceByRange<T extends { date: string }>(
-  full: T[],
-  range: string,
-  today: string,
-): T[] {
-  if (full.length === 0 || range === "ALL") return full;
-  if (range === "YTD") {
-    return full.filter((point) => point.date >= `${today.slice(0, 4)}-01-01`);
-  }
-  const days = RANGES.find((item) => item.k === range)?.d ?? null;
-  if (days === null) return full;
-  const cutoff = calendarCutoff(today, days);
-  return full.filter((point) => point.date >= cutoff);
-}
-
-function sliceToCommonStart(data: PerfPoint[], keys: string[]): PerfPoint[] {
-  const first = data.findIndex((point) =>
-    keys.every((key) => typeof point[key] === "number"),
-  );
-  return first >= 0 ? data.slice(first) : [];
-}
 
 export function TrendSection({
   series,
@@ -67,7 +30,9 @@ export function TrendSection({
   const [mode, setMode] = useState<"value" | "bench">("value");
   const [active, setActive] = useState<Record<string, boolean>>(() => ({
     portfolio: true,
-    ...Object.fromEntries(benchmarks.map((benchmark, index) => [benchmark.key, index !== 1])),
+    ...Object.fromEntries(
+      benchmarks.map((benchmark, index) => [benchmark.key, index !== 1]),
+    ),
   }));
 
   const sliced = useMemo(
@@ -166,7 +131,10 @@ export function TrendSection({
       )}
 
       {mode === "bench" && benchNotice && (
-        <p className="mt-2 px-5 text-[11.5px] text-[var(--c-faint)] sm:px-6" role="status">
+        <p
+          className="mt-2 px-5 text-[11.5px] text-[var(--c-faint)] sm:px-6"
+          role="status"
+        >
           {benchNotice}
         </p>
       )}
@@ -175,22 +143,22 @@ export function TrendSection({
         <div className="inline-flex gap-0.5">
           {RANGES.map((item) => (
             <button
-              key={item.k}
+              key={item.key}
               type="button"
-              onClick={() => setRange(item.k)}
+              onClick={() => setRange(item.key)}
               className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-all duration-150 ${
-                range === item.k
+                range === item.key
                   ? "bg-[var(--c-accent-soft)] text-[var(--c-accent)] shadow-[inset_0_-2px_0_var(--c-accent)]"
                   : "text-[var(--c-muted)] hover:text-[var(--c-text)]"
               }`}
             >
-              {item.k}
+              {item.key}
             </button>
           ))}
         </div>
         {mode === "bench" && (
           <div className="flex flex-wrap gap-1.5">
-            <LegendBtn
+            <LegendButton
               on={active.portfolio}
               color="var(--c-accent)"
               label="我的組合"
@@ -202,7 +170,7 @@ export function TrendSection({
               }
             />
             {benchmarks.map((benchmark) => (
-              <LegendBtn
+              <LegendButton
                 key={benchmark.key}
                 on={active[benchmark.key]}
                 color={benchmark.color}
@@ -223,7 +191,7 @@ export function TrendSection({
   );
 }
 
-function LegendBtn({
+function LegendButton({
   on,
   color,
   label,
