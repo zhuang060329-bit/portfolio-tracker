@@ -3,21 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { todayTaipei } from "@/lib/dates";
+import { firstMonthlyRunDate } from "@/lib/recurring-plan-schedule";
 import { CreateRecurringPlanSchema } from "@/lib/schemas/action/create-recurring-plan";
 import type { FormState } from "./action-shared";
-
-// 月頻計畫的首次執行日：起始日已過本月扣款日時，順延到下個月。
-function firstRunDate(startDate: string, dayOfMonth: number): string {
-  const [year, month, day] = startDate.split("-").map(Number);
-  const targetDay = String(dayOfMonth).padStart(2, "0");
-  if (day <= dayOfMonth) {
-    return `${year}-${String(month).padStart(2, "0")}-${targetDay}`;
-  }
-
-  const nextMonth = month === 12 ? 1 : month + 1;
-  const nextYear = month === 12 ? year + 1 : year;
-  return `${nextYear}-${String(nextMonth).padStart(2, "0")}-${targetDay}`;
-}
 
 export async function createRecurringPlan(
   _previous: FormState,
@@ -59,7 +47,7 @@ export async function createRecurringPlan(
     amount_twd: amount,
     day_of_month: dayOfMonth,
     start_date: startDateFinal,
-    next_run_date: firstRunDate(startDateFinal, dayOfMonth),
+    next_run_date: firstMonthlyRunDate(startDateFinal, dayOfMonth),
     active: true,
     note,
   });
