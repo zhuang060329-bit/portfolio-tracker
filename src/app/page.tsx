@@ -15,9 +15,6 @@ import { fetchTwDailyClose } from "@/lib/prices/finmind";
 import { fetchBtcDailyCloseTwd } from "@/lib/prices/coingecko";
 import { getUnreadCount } from "@/lib/notifications";
 
-// 本頁只負責 I/O（Supabase 查詢 + 外部行情 API），
-// rows → DashboardData 的組裝在 buildDashboardData（純函數，與 /demo 共用）。
-// 未登入會被 proxy 導向 /login。
 export default async function Home({
   searchParams,
 }: {
@@ -45,48 +42,46 @@ export default async function Home({
   ]);
 
   const allAccounts = (accounts ?? []) as AccountRow[];
-  const activeAccounts = allAccounts.filter((a) => a.status !== "archived");
-  const activeAccountIds = activeAccounts.map((a) => a.id);
+  const activeAccounts = allAccounts.filter((account) => account.status !== "archived");
+  const activeAccountIds = activeAccounts.map((account) => account.id);
 
-  // 總覽指標一律使用目前 active portfolio。封存切換只控制持倉列表，
-  // 避免 Hero、配置、收入與績效落在不同帳戶邊界。
+  // 總覽金融指標只使用 active portfolio；封存切換只影響持倉帳本。
   const hasActive = activeAccountIds.length > 0;
-  const [cfRes, incomeRes, profileRes, snapsRes] = await Promise.all([
-    hasActive
-      ? supabase
-          .from("transactions")
-          .select("created_at,cashflow_twd")
-          .not("cashflow_twd", "is", null)
-          .in("account_id", activeAccountIds)
-      : Promise.resolve({ data: null as CashflowRow[] | null }),
-    hasActive
-      ? supabase
-          .from("transactions")
-          .select("created_at,type,cashflow_twd")
-          .in("type", ["dividend", "interest"])
-          .in("account_id", activeAccountIds)
-      : Promise.resolve({ data: null as IncomeRow[] | null }),
-    supabase.from("profiles").select("allocation_targets").single(),
-    hasActive
-      ? supabase
-          .from("account_snapshots")
-          .select("account_id,snapshot_date,value_base")
-          .in("account_id", activeAccountIds)
-          .order("snapshot_date", { ascending: true })
-      : Promise.resolve({ data: null as SnapshotRow[] | null }),
-  ]);
-  const cfRows = cfRes.data;
-  const incomeRows = incomeRes.data;
-  const snaps = snapsRes.data;
+  const [cashflowResult, incomeResult, profileResult, snapshotResult] =
+    await Promise.all([
+      hasActive
+        ? supabase
+            .from("transactions")
+            .select("created_at,cashflow_twd")
+            .not("cashflow_twd", "is", null)
+            .in("account_id", activeAccountIds)
+        : Promise.resolve({ data: null as CashflowRow[] | null }),
+      hasActive
+        ? supabase
+            .from("transactions")
+            .select("created_at,type,cashflow_twd")
+            .in("type", ["dividend", "interest"])
+            .in("account_id", activeAccountIds)
+        : Promise.resolve({ data: null as IncomeRow[] | null }),
+      supabase.from("profiles").select("allocation_targets").single(),
+      hasActive
+        ? supabase
+            .from("account_snapshots")
+            .select("account_id,snapshot_date,value_base")
+            .in("account_id", activeAccountIds)
+            .order("snapshot_date", { ascending: true })
+        : Promise.resolve({ data: null as SnapshotRow[] | null }),
+    ]);
+
+  const cashflowRows = cashflowResult.data;
+  const incomeRows = incomeResult.data;
+  const snapshotRows = (snapshotResult.data ?? []) as SnapshotRow[];
   const targets =
-    ((profileRes.data?.allocation_targets ?? {}) as Record<string, number>) ||
+    ((profileResult.data?.allocation_targets ?? {}) as Record<string, number>) ||
     {};
 
-  const snapRows = (snaps ?? []) as SnapshotRow[];
-
-  // 大盤對照：從第一筆 snapshot 日開始，平行抓 0050 + SPY/QQQ + USD/TWD 歷史匯率。
-  // 至少兩個不同日期才抓（與趨勢圖 hasLine 門檻一致）。
-  const dates = new Set(snapRows.map((s) => s.snapshot_date));
+  // Benchmark 從第一筆 active portfolio 快照日起算。
+  const dates = new Set(snapshotRows.map((snapshot) => snapshot.snapshot_date));
   const hasLine = dates.size >= 2;
   const startDate = hasLine ? [...dates].sort()[0] : "";
   const [tw0050, spyUsd, qqqUsd, btcTwd, fxHistory] = hasLine
@@ -99,8 +94,6 @@ export default async function Home({
       ])
     : [[], [], [], [], []];
 
-  // 大盤來源缺席偵測：靜默空陣列會讓使用者分不清是沒資料還是抓不到。
-  // 只在「該抓而抓不到」時提示；金鑰未設是最常見成因，單獨點名。
   let benchNotice: string | null = null;
   if (hasLine) {
     const missing: string[] = [];
@@ -121,10 +114,10 @@ export default async function Home({
   const dashboard = buildDashboardData({
     accounts: allAccounts,
     includeArchivedHoldings: showArchived,
-    cfRows: (cfRows ?? []) as CashflowRow[],
+    cfRows: (cashflowRows ?? []) as CashflowRow[],
     incomeRows: (incomeRows ?? []) as IncomeRow[],
     allocationTargets: targets,
-    snapRows,
+    snapRows: snapshotRows,
     bench: { tw0050, spy: spyUsd, qqq: qqqUsd, btc: btcTwd },
     fxHistory,
     benchNotice,
@@ -132,23 +125,26 @@ export default async function Home({
 
   return (
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
-      <AppHeader active="portfolio" userEmail={user?.email} unreadCount={unreadCount} />
-      {/* FAB 只列非手動 active 帳戶（手動帳戶不適用 addByAmount） */}
+      <AppHeader
+        active="portfolio"
+        userEmail={user?.email}
+        unreadCount={unreadCount}
+      />
       <QuickAddFab
         accounts={activeAccounts
-          .filter((a) => a.price_market !== "manual")
-          .map((a) => ({
-            id: a.id,
-            name: a.name,
-            symbol: a.symbol,
-            price_market: a.price_market,
-            native_currency: a.native_currency,
-            last_unit_price: a.last_unit_price,
-            last_fx_rate: a.last_fx_rate,
+          .filter((account) => account.price_market !== "manual")
+          .map((account) => ({
+            id: account.id,
+            name: account.name,
+            symbol: account.symbol,
+            price_market: account.price_market,
+            native_currency: account.native_currency,
+            last_unit_price: account.last_unit_price,
+            last_fx_rate: account.last_fx_rate,
           }))}
       />
 
-      <main className="mx-auto max-w-[1200px] px-7 py-9 pb-28">
+      <main className="mx-auto max-w-[1200px] px-4 pb-28 pt-5 sm:px-6 sm:pt-7 lg:px-7 lg:pt-8">
         <DashboardClient data={dashboard} />
       </main>
     </div>
