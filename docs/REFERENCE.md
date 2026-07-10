@@ -11,7 +11,7 @@ Supporting detail for [StackWorth](../README.md): full feature inventory, stack,
 - **Allocation targets and drift** — set target % per account; dashboard shows actual vs target with drift warnings
 - **Net worth trend chart** — daily snapshots, 1M / 3M / 6M / YTD / 1Y / ALL range selector
 - **Performance chart** — indexed return vs SPY / QQQ (FX-adjusted to TWD), Taiwan 0050, and BTC; enabled lines share one comparison start date
-- **Recurring contribution plans** — scheduled monthly DCA, executed by Vercel Cron
+- **Recurring contribution plans** — scheduled monthly DCA, executed by Vercel Cron through a ledger-backed, idempotent Postgres RPC
 - **Income tracking** — dividends, interest; separated from capital contributions in cashflow records
 - **What-if simulator** — "what if I had put everything into VT / 0050 instead?" — replays your actual cashflow history against any ticker's historical price series
 - **Alerts** — price threshold and allocation drift alerts, scanned on each cron run
@@ -54,7 +54,7 @@ src/
 │   ├── whatif/                     ← What-if simulator
 │   ├── settings/                   ← Profile + tax CSV export
 │   └── api/
-│       ├── cron/refresh/           ← Daily price update + snapshot + alert scan
+│       ├── cron/refresh/           ← Price refresh, recurring execution, alert scan
 │       └── export/{csv,tax-csv}/
 ├── components/                     ← Dashboard, charts, allocation targets, FAB
 ├── lib/
@@ -62,10 +62,11 @@ src/
 │   ├── xirr.ts                     ← Newton-Raphson XIRR solver
 │   ├── metrics.ts                  ← TWR, cashflow-adjusted drawdown, interval-aware Sharpe
 │   ├── whatif.ts                   ← Buy-and-hold simulation
-│   ├── contributions.ts            ← Shared DCA helper (used by user actions + cron)
+│   ├── contributions.ts            ← Quote acquisition + account/recurring mutation callers
 │   ├── prices/                     ← Quote adapters per market
 │   └── schemas/action/             ← Zod schemas for server action inputs
-└── proxy.ts                        ← Auth proxy (replaces Next.js Middleware in v16)
+├── proxy.ts                        ← Auth proxy (replaces Next.js Middleware in v16)
+└── ../supabase/rpc-mutations.sql   ← Atomic account writes and recurring execution ledger
 ```
 
 ---
@@ -109,8 +110,15 @@ src/
 - Account patch, transaction insert, and snapshot upserts run inside `apply_account_mutation`
 - The Postgres function uses `security invoker` with RLS; a failure in any operation rolls back the entire mutation
 
+**Recurring-plan execution ledger**
+- Cron and manual callers only provide the plan id, the expected scheduled date, execution time, and current quote
+- `execute_recurring_plan_mutation` locks the recurring plan and account before deriving the new quantity and cost from database values
+- Account update, transaction insert, snapshot upsert, ledger insert, and plan-date advancement commit in one transaction
+- `recurring_plan_runs` enforces one successful execution per `(plan_id, scheduled_date)`; stale callers return `executed = false` without a second write
+- Integration tests cover same-plan concurrency, different-plan updates to one account, and full rollback when transaction insertion fails
+
 **Asia/Taipei calendar boundary**
-- Snapshot dates, cashflow dates, ranges, YTD, and rolling-period calculations use explicit calendar-date handling rather than UTC string truncation
+- Snapshot dates, cashflow dates, ranges, YTD, rolling periods, recurring execution dates, and next-run dates use explicit calendar-date handling rather than UTC string truncation
 
 ---
 

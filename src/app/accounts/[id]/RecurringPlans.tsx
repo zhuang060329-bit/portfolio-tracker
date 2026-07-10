@@ -4,10 +4,10 @@ import { useActionState } from "react";
 import {
   createRecurringPlan,
   deletePlan,
-  executePlan,
   togglePlan,
   type FormState,
 } from "./actions";
+import { executePlan } from "./recurring-execution-action";
 
 export type Plan = {
   id: string;
@@ -20,29 +20,33 @@ export type Plan = {
   note: string | null;
 };
 
-const fmtTwd = (n: number) =>
-  n.toLocaleString("zh-TW", { maximumFractionDigits: 0 });
+const fmtTwd = (value: number) =>
+  value.toLocaleString("zh-TW", { maximumFractionDigits: 0 });
 
 function PlanRow({ plan }: { plan: Plan }) {
   const [execState, execAction, execPending] = useActionState<FormState, FormData>(
     executePlan,
     undefined,
   );
-  const [toggleState, toggleAction, togglePending] = useActionState<FormState, FormData>(
-    togglePlan,
-    undefined,
-  );
-  const [delState, delAction, delPending] = useActionState<FormState, FormData>(
-    deletePlan,
-    undefined,
-  );
+  const [toggleState, toggleAction, togglePending] = useActionState<
+    FormState,
+    FormData
+  >(togglePlan, undefined);
+  const [deleteState, deleteAction, deletePending] = useActionState<
+    FormState,
+    FormData
+  >(deletePlan, undefined);
 
-  const error = execState?.error || toggleState?.error || delState?.error;
+  const error =
+    execState?.error || toggleState?.error || deleteState?.error;
+  const success = execState?.ok || toggleState?.ok || deleteState?.ok;
 
   return (
     <div
       className={`rounded-[var(--r-card)] border border-[var(--c-border)] p-4 ${
-        plan.active ? "bg-[var(--c-surface)]" : "bg-[var(--c-surface-soft)]"
+        plan.active
+          ? "bg-[var(--c-surface)]"
+          : "bg-[var(--c-surface-soft)]"
       }`}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -53,7 +57,8 @@ function PlanRow({ plan }: { plan: Plan }) {
             <span className="amt">NT$ {fmtTwd(Number(plan.amount_twd))}</span>
           </div>
           <div className="mt-1 text-xs text-[var(--c-muted)]">
-            下次 <span className="text-[var(--c-text)]">{plan.next_run_date}</span>
+            下次{" "}
+            <span className="text-[var(--c-text)]">{plan.next_run_date}</span>
             {plan.last_run_date && (
               <>
                 <span className="mx-1 text-[var(--c-faint)]">·</span>
@@ -67,7 +72,9 @@ function PlanRow({ plan }: { plan: Plan }) {
             )}
           </div>
           {plan.note && (
-            <div className="mt-1 text-xs text-[var(--c-muted)]">備註：{plan.note}</div>
+            <div className="mt-1 text-xs text-[var(--c-muted)]">
+              備註：{plan.note}
+            </div>
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -83,7 +90,11 @@ function PlanRow({ plan }: { plan: Plan }) {
           </form>
           <form action={toggleAction}>
             <input type="hidden" name="planId" value={plan.id} />
-            <input type="hidden" name="newActive" value={plan.active ? "false" : "true"} />
+            <input
+              type="hidden"
+              name="newActive"
+              value={plan.active ? "false" : "true"}
+            />
             <button
               type="submit"
               disabled={togglePending}
@@ -92,11 +103,11 @@ function PlanRow({ plan }: { plan: Plan }) {
               {plan.active ? "暫停" : "啟用"}
             </button>
           </form>
-          <form action={delAction}>
+          <form action={deleteAction}>
             <input type="hidden" name="planId" value={plan.id} />
             <button
               type="submit"
-              disabled={delPending}
+              disabled={deletePending}
               className="text-xs text-[var(--c-muted)] underline hover:text-[var(--c-down)] disabled:opacity-50"
             >
               刪除
@@ -105,7 +116,14 @@ function PlanRow({ plan }: { plan: Plan }) {
         </div>
       </div>
       {error && (
-        <p className="mt-2 rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-down)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-down)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-down)]">{error}</p>
+        <p className="mt-2 rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-down)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-down)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-down)]">
+          {error}
+        </p>
+      )}
+      {success && !error && (
+        <p className="mt-2 rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-up)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-up)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-up)]">
+          {success}
+        </p>
       )}
     </div>
   );
@@ -198,8 +216,8 @@ export function RecurringPlans({
     <div className="flex flex-col gap-3">
       {plans.length > 0 ? (
         <div className="flex flex-col gap-2">
-          {plans.map((p) => (
-            <PlanRow key={p.id} plan={p} />
+          {plans.map((plan) => (
+            <PlanRow key={plan.id} plan={plan} />
           ))}
         </div>
       ) : (
