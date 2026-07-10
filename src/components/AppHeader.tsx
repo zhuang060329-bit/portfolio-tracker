@@ -12,9 +12,6 @@ type Active =
   | "settings"
   | null;
 
-/**
- * 全站 header。unreadCount 由各 server page 傳入，本元件不做 fetch。
- */
 export function AppHeader({
   active,
   userEmail,
@@ -29,51 +26,48 @@ export function AppHeader({
     { href: "/accounts", label: "帳戶", key: "accounts" },
     { href: "/activity", label: "活動", key: "activity" },
     { href: "/alerts", label: "提醒", key: "alerts" },
-    { href: "/whatif", label: "What-if", key: "whatif" },
+    { href: "/whatif", label: "推演", key: "whatif" },
     { href: "/settings", label: "設定", key: "settings" },
   ];
 
   const initials = getInitials(userEmail);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--c-border)] bg-[color-mix(in_srgb,var(--c-page)_82%,transparent)] backdrop-blur-md backdrop-saturate-150">
-      <div className="mx-auto flex h-[62px] max-w-[1200px] items-center gap-7 px-7">
-        {/* Brand */}
+    <header className="sticky top-0 z-40 border-b border-[var(--c-border)] bg-[color-mix(in_srgb,var(--c-page)_90%,transparent)] backdrop-blur-xl">
+      <div className="mx-auto flex h-[var(--header-h)] max-w-[1200px] items-center gap-4 px-4 sm:px-6 lg:px-7">
         <Link
           href="/"
-          className="flex shrink-0 items-center gap-2.5 text-[var(--c-text)]"
+          className="flex shrink-0 items-center gap-2 text-[var(--c-text)]"
           aria-label="StackWorth 首頁"
         >
           <DiamondMark className="text-[var(--c-accent)]" />
-          <span className="font-serif text-[21px] font-medium tracking-tight">
+          <span className="text-[17px] font-semibold tracking-[-0.025em] sm:text-[18px]">
             StackWorth
           </span>
         </Link>
 
-        {/* Desktop nav */}
-        <nav className="ml-2 hidden items-center gap-1 md:flex">
-          {navItems.map((it) => (
+        <nav className="ml-2 hidden h-full items-center gap-1 md:flex" aria-label="主要導覽">
+          {navItems.map((item) => (
             <NavLink
-              key={it.href}
-              href={it.href}
-              active={active === it.key}
-              label={it.label}
+              key={item.href}
+              href={item.href}
+              active={active === item.key}
+              label={item.label}
             />
           ))}
         </nav>
 
-        {/* Right cluster */}
-        <div className="ml-auto flex h-full items-center gap-2.5">
+        <div className="ml-auto flex h-full items-center gap-1 sm:gap-1.5">
           {userEmail && (
             <Link
               href="/notifications"
-              aria-label={`通知${unreadCount > 0 ? `（${unreadCount} 則未讀）` : ""}`}
-              title={`通知${unreadCount > 0 ? `（${unreadCount} 則未讀）` : ""}`}
-              className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg border border-transparent text-[var(--c-muted)] hover:border-[var(--c-border)] hover:bg-[var(--c-surface-soft)] hover:text-[var(--c-text)]"
+              aria-label={`通知${unreadCount > 0 ? `，${unreadCount} 則未讀` : ""}`}
+              title="通知"
+              className="relative inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-control)] text-[var(--c-muted)] hover:bg-[var(--c-surface-soft)] hover:text-[var(--c-text)]"
             >
               <BellIcon />
               {unreadCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-[15px] min-w-[15px] items-center justify-center rounded-full bg-[var(--c-accent)] px-1 text-[9px] font-bold text-[var(--c-btn-strong-text)] tabular-nums">
+                <span className="absolute right-1 top-1 flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-[var(--c-accent)] px-1 text-[8px] font-bold text-[var(--c-btn-strong-text)] tnum">
                   {unreadCount > 99 ? "99+" : unreadCount}
                 </span>
               )}
@@ -81,29 +75,33 @@ export function AppHeader({
           )}
 
           <PrivacyToggle />
-          <ThemeToggle />
+          <div className="hidden md:block">
+            <ThemeToggle />
+          </div>
 
           {userEmail && (
             <Link
               href="/settings"
-              title={userEmail ?? "帳號"}
+              title={userEmail}
               aria-label="帳號設定"
-              className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-full border border-[var(--c-line-strong)] bg-[var(--c-accent-soft)] text-[12px] font-bold text-[var(--c-accent)]"
+              className="hidden h-8 w-8 items-center justify-center rounded-full border border-[var(--c-border)] bg-[var(--c-surface)] text-[11px] font-semibold text-[var(--c-muted)] sm:inline-flex"
             >
               {initials}
             </Link>
           )}
 
-          {/* 手機漢堡 */}
           <div className="md:hidden">
-            <MobileNavToggle items={navItems} active={active} />
+            <MobileNavToggle
+              items={navItems}
+              active={active}
+              signedIn={Boolean(userEmail)}
+            />
           </div>
 
-          {/* 未登入時直接顯示登出表單會 hydrate 錯誤；保險作法：留按鈕但接到登入頁 */}
           {!userEmail && (
             <Link
               href="/login"
-              className="rounded-lg border border-[var(--c-line-strong)] bg-[var(--c-surface)] px-3 py-1.5 text-xs font-medium text-[var(--c-text)] hover:bg-[var(--c-surface-soft)]"
+              className="rounded-[var(--r-control)] border border-[var(--c-line-strong)] bg-[var(--c-surface)] px-3 py-2 text-xs font-medium text-[var(--c-text)] hover:bg-[var(--c-surface-soft)]"
             >
               登入
             </Link>
@@ -126,10 +124,11 @@ function NavLink({
   return (
     <Link
       href={href}
-      className={`rounded-md px-3 py-1.5 text-[13.5px] font-medium transition ${
+      aria-current={active ? "page" : undefined}
+      className={`relative flex h-full items-center px-2.5 text-[13px] font-medium ${
         active
-          ? "bg-[var(--c-accent-soft)] text-[var(--c-accent)] shadow-[inset_0_-2px_0_var(--c-accent)]"
-          : "text-[var(--c-muted)] hover:bg-[var(--c-surface-soft)] hover:text-[var(--c-text)]"
+          ? "text-[var(--c-text)] after:absolute after:inset-x-2.5 after:bottom-0 after:h-[2px] after:bg-[var(--c-accent)]"
+          : "text-[var(--c-muted)] hover:text-[var(--c-text)]"
       }`}
     >
       {label}
@@ -140,8 +139,8 @@ function NavLink({
 function DiamondMark({ className = "" }: { className?: string }) {
   return (
     <svg
-      width="15"
-      height="15"
+      width="12"
+      height="12"
       viewBox="0 0 16 16"
       fill="currentColor"
       className={className}
@@ -175,7 +174,6 @@ function getInitials(email?: string | null): string {
   if (!email) return "··";
   const at = email.indexOf("@");
   const name = at > 0 ? email.slice(0, at) : email;
-  // 取前兩個字母，若名稱中含「.」或「_」「-」則拼第一段與第二段首字
   const parts = name.split(/[._-]+/).filter(Boolean);
   if (parts.length >= 2) {
     return (parts[0][0] + parts[1][0]).toUpperCase();
