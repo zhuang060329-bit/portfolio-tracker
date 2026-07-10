@@ -34,6 +34,7 @@ export function MobileNavToggle({
   useEffect(() => {
     if (!open) return;
 
+    const trigger = buttonRef.current;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const focusables = () =>
@@ -68,7 +69,7 @@ export function MobileNavToggle({
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", onKey);
-      buttonRef.current?.focus();
+      trigger?.focus();
     };
   }, [open]);
 

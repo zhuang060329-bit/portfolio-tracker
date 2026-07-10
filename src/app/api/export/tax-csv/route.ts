@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { escapeCsvCell } from "@/lib/csv";
 
 /**
  * 年度稅務報表（台灣海外所得，基本所得稅 / 最低稅負制）。
@@ -7,7 +8,7 @@ import { createClient } from "@/lib/supabase/server";
  * 一年內的賣出 / 配息 / 利息篩出來，按申報常用欄位整理成 CSV。
  *
  * 注意：
- * - 已實現損益 (TWD) 為應稅金額參考；實際申報還要扣 670 萬基本所得額門檻
+ * - 已實現損益 (TWD) 為應稅金額參考；實際申報仍須依當年度基本所得額門檻，
  *   並對照各家券商扣繳憑單。本表是「自記補強」用途，不能取代官方憑單。
  * - 用 BOM + Big5 兼容（UTF-8 with BOM）讓 Excel 直接開不亂碼。
  *
@@ -16,18 +17,6 @@ import { createClient } from "@/lib/supabase/server";
  */
 
 export const dynamic = "force-dynamic";
-
-function csvEscape(s: string | null | undefined): string {
-  if (s === null || s === undefined) return "";
-  let str = String(s);
-  // 公式注入防護：以 = + - @ 或 tab 開頭的字串在 Excel / Sheets 會被當公式執行，
-  // 前置單引號使其一律以文字呈現（值來自使用者自己的帳戶名 / 備註，防禦性處理）
-  if (/^[=+\-@\t]/.test(str)) str = `'${str}`;
-  if (/[",\n\r]/.test(str)) {
-    return `"${str.replace(/"/g, '""')}"`;
-  }
-  return str;
-}
 
 function cellNum(n: number | null | undefined, digits = 4): string {
   if (n === null || n === undefined) return "";
@@ -116,7 +105,7 @@ export async function GET(request: Request) {
     "已實現損益（TWD）",
     "備註",
   ]
-    .map(csvEscape)
+    .map(escapeCsvCell)
     .join(",");
 
   const lines: string[] = [header];
@@ -126,17 +115,17 @@ export async function GET(request: Request) {
     // dividend / interest 的 unit_price / fx_rate 是 null（由 importIncomeCsv 寫入），輸出為空字串
     lines.push(
       [
-        csvEscape(date),
-        csvEscape(TYPE_LABEL[r.type] ?? r.type),
-        csvEscape(acc?.name),
-        csvEscape(acc?.price_market),
-        csvEscape(acc?.symbol),
-        csvEscape(acc?.native_currency),
+        escapeCsvCell(date),
+        escapeCsvCell(TYPE_LABEL[r.type] ?? r.type),
+        escapeCsvCell(acc?.name),
+        escapeCsvCell(acc?.price_market),
+        escapeCsvCell(acc?.symbol),
+        escapeCsvCell(acc?.native_currency),
         cellNum(r.unit_price),
         cellNum(r.fx_rate, 6),
         cellNum(r.cashflow_twd, 0),
         cellNum(r.realized_pnl, 0),
-        csvEscape(r.note),
+        escapeCsvCell(r.note),
       ].join(","),
     );
   }
@@ -146,7 +135,7 @@ export async function GET(request: Request) {
   lines.push(
     [
       "",
-      csvEscape("年度小計"),
+      escapeCsvCell("年度小計"),
       "",
       "",
       "",
