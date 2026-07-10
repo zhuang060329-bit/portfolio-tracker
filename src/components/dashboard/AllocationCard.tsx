@@ -1,34 +1,30 @@
 "use client";
 
 import { useState } from "react";
-import { allocColor, Donut, fmtCompact, type AllocDatum } from "./DashboardCharts";
+import {
+  allocColor,
+  Donut,
+  fmtCompact,
+  type AllocDatum,
+} from "./DashboardCharts";
 import type { AllocTarget } from "./types";
 import { CardHead, sign } from "./shared";
 
-/* ---------- 配置偏離（percentage points）----------
- * drift = actual − target，單位 pp。這是「離目標多遠」的輔助判斷，
- * 不帶賺賠語義（超配不一定好、低配不一定壞），所以分級只用中性 token：
- *   |drift| < 1   → faint（基本對齊）
- *   1 ≤ |drift| < 5 → muted（輕微提醒）
- *   |drift| ≥ 5   → accent（較明顯提醒，金色只是「看這裡」非好壞）
- * target <= 0 / 不存在 / 非有限值 → 回傳 null（不顯示）。
- * 四捨五入到 1 位小數；接近 0 用 sign("")避免出現 "−0.0pp"。 */
 function driftInfo(actual: number, target: number) {
   if (!(target > 0)) return null;
   const raw = actual - target;
   if (!Number.isFinite(raw)) return null;
-  const d = Math.round(raw * 10) / 10; // 1 位小數
-  const mag = Math.abs(d);
+  const drift = Math.round(raw * 10) / 10;
+  const magnitude = Math.abs(drift);
   const tone =
-    mag < 1
+    magnitude < 1
       ? "var(--c-faint)"
-      : mag < 5
+      : magnitude < 5
         ? "var(--c-muted)"
         : "var(--c-accent)";
-  return { text: `${sign(d)}${mag.toFixed(1)}pp`, tone };
+  return { text: `${sign(drift)}${magnitude.toFixed(1)}pp`, tone };
 }
 
-/* ---------- 配置卡（donut + 目標長條）---------- */
 export function AllocationCard({
   allocation,
   allocTargets,
@@ -38,40 +34,42 @@ export function AllocationCard({
   allocTargets: AllocTarget[];
   total: number;
 }) {
-  const [hoverCls, setHoverCls] = useState<string | null>(null);
-  const sel = hoverCls ? allocation.find((a) => a.cls === hoverCls) : null;
+  const [selectedClass, setSelectedClass] = useState<string | null>(null);
+  const selected = selectedClass
+    ? allocation.find((item) => item.cls === selectedClass)
+    : null;
 
   return (
     <div>
-      <CardHead title="資產配置" sub="實際 vs 目標" />
-      <div className="grid grid-cols-1 items-center gap-5 sm:grid-cols-[auto_1fr] sm:gap-7">
-        <div className="relative mx-auto h-[188px] w-[188px]">
+      <CardHead title="資產配置" sub="目前配置與目標比例" />
+      <div className="grid grid-cols-1 items-center gap-6 sm:grid-cols-[176px_1fr] sm:gap-7">
+        <div className="relative mx-auto h-[176px] w-[176px]">
           <Donut
             data={allocation}
-            size={188}
-            onHover={setHoverCls}
-            hoverCls={hoverCls}
+            size={176}
+            onHover={setSelectedClass}
+            hoverCls={selectedClass}
           />
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-            {sel ? (
+            {selected ? (
               <>
                 <div className="text-[11px] text-[var(--c-muted)]">
-                  {sel.label}
+                  {selected.label}
                 </div>
-                <div className="mt-0.5 font-serif text-[26px] font-medium tnum">
-                  {sel.pct.toFixed(1)}%
+                <div className="mt-1 text-[24px] font-semibold tracking-[-0.03em] tnum">
+                  {selected.pct.toFixed(1)}%
                 </div>
-                <div className="mt-0.5 text-[11.5px] text-[var(--c-faint)] tnum amt">
-                  NT$ {fmtCompact(sel.value)}
+                <div className="amt mt-1 text-[11px] text-[var(--c-faint)] tnum">
+                  NT$ {fmtCompact(selected.value)}
                 </div>
               </>
             ) : (
               <>
                 <div className="text-[11px] text-[var(--c-muted)]">總資產</div>
-                <div className="mt-0.5 font-serif text-[26px] font-medium tnum amt">
+                <div className="amt mt-1 text-[24px] font-semibold tracking-[-0.03em] tnum">
                   {fmtCompact(total)}
                 </div>
-                <div className="mt-0.5 text-[11.5px] text-[var(--c-faint)]">
+                <div className="mt-1 text-[11px] text-[var(--c-faint)]">
                   {allocation.length} 類
                 </div>
               </>
@@ -79,72 +77,69 @@ export function AllocationCard({
           </div>
         </div>
 
-        <div className="flex w-full flex-col gap-[11px]">
-          {allocTargets.map((a) => (
-            <div
-              key={a.cls}
-              // 鍵盤 focus 與觸控點按等同 hover：donut 中心跟著顯示該類別數字
-              tabIndex={0}
-              role="button"
-              aria-label={`${a.label}：實際 ${a.actual.toFixed(1)}%、目標 ${a.target.toFixed(0)}%`}
-              className={`grid grid-cols-[auto_56px_1fr_58px] items-center gap-2.5 rounded-[6px] outline-none transition-opacity focus-visible:ring-2 focus-visible:ring-[var(--c-accent)] ${
-                hoverCls && hoverCls !== a.cls ? "opacity-40" : ""
-              }`}
-              onMouseEnter={() => setHoverCls(a.cls)}
-              onMouseLeave={() => setHoverCls(null)}
-              onFocus={() => setHoverCls(a.cls)}
-              onBlur={() => setHoverCls(null)}
-              onClick={() => setHoverCls(hoverCls === a.cls ? null : a.cls)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  setHoverCls(hoverCls === a.cls ? null : a.cls);
+        <div className="flex w-full flex-col gap-1.5">
+          {allocTargets.map((item) => {
+            const drift = driftInfo(item.actual, item.target);
+            return (
+              <button
+                key={item.cls}
+                type="button"
+                aria-pressed={selectedClass === item.cls}
+                aria-label={`${item.label}：實際 ${item.actual.toFixed(1)}%、目標 ${item.target.toFixed(0)}%`}
+                className={`grid min-h-11 w-full grid-cols-[auto_54px_1fr_56px] items-center gap-2.5 rounded-[var(--r-control)] px-1.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-[var(--c-accent)] ${
+                  selectedClass && selectedClass !== item.cls ? "opacity-40" : ""
+                }`}
+                onMouseEnter={() => setSelectedClass(item.cls)}
+                onMouseLeave={() => setSelectedClass(null)}
+                onFocus={() => setSelectedClass(item.cls)}
+                onBlur={() => setSelectedClass(null)}
+                onClick={() =>
+                  setSelectedClass((current) =>
+                    current === item.cls ? null : item.cls,
+                  )
                 }
-              }}
-            >
-              <span
-                className="h-[9px] w-[9px] rounded-[3px]"
-                style={{ background: allocColor(a.cls) }}
-              />
-              <span className="truncate text-[13px]">{a.label}</span>
-              <span className="relative h-[7px] rounded bg-[var(--c-surface-soft)]">
+              >
                 <span
-                  className="absolute inset-y-0 left-0 rounded transition-[width] duration-700 ease-out"
-                  style={{
-                    width: `${Math.min(100, a.actual)}%`,
-                    background: allocColor(a.cls),
-                  }}
+                  className="h-2 w-2 rounded-[2px]"
+                  style={{ background: allocColor(item.cls) }}
                 />
-                {a.target > 0 && (
-                  // 目標 marker：加高、滿對比、加 1px page 色描邊，落在實際長條上時才分得出來
+                <span className="truncate text-[12px]">{item.label}</span>
+                <span className="relative h-[5px] bg-[var(--c-border)]">
                   <span
-                    className="absolute -top-[3px] -bottom-[3px] w-[2px] rounded-full bg-[var(--c-text)] shadow-[0_0_0_1px_var(--c-page)]"
-                    style={{ left: `calc(${Math.min(100, a.target)}% - 1px)` }}
-                    title={`目標 ${a.target}%`}
+                    className="absolute inset-y-0 left-0 transition-[width] duration-700 ease-out"
+                    style={{
+                      width: `${Math.min(100, item.actual)}%`,
+                      background: allocColor(item.cls),
+                    }}
                   />
-                )}
-              </span>
-              <span className="flex flex-col items-end leading-tight">
-                <span className="text-[12.5px] font-medium tnum">
-                  {a.actual.toFixed(1)}%
-                </span>
-                {(() => {
-                  const d = driftInfo(a.actual, a.target);
-                  return d ? (
+                  {item.target > 0 && (
                     <span
-                      className="mt-0.5 text-[10px] font-medium tnum"
-                      style={{ color: d.tone }}
-                      title="相對目標配置的偏離（percentage points）"
+                      className="absolute -bottom-[3px] -top-[3px] w-px bg-[var(--c-text)] shadow-[0_0_0_1px_var(--c-page)]"
+                      style={{
+                        left: `calc(${Math.min(100, item.target)}% - 1px)`,
+                      }}
+                      title={`目標 ${item.target}%`}
+                    />
+                  )}
+                </span>
+                <span className="flex flex-col items-end leading-tight">
+                  <span className="text-[12px] font-medium tnum">
+                    {item.actual.toFixed(1)}%
+                  </span>
+                  {drift && (
+                    <span
+                      className="mt-0.5 text-[9px] font-medium tnum"
+                      style={{ color: drift.tone }}
                     >
-                      {d.text}
+                      {drift.text}
                     </span>
-                  ) : null;
-                })()}
-              </span>
-            </div>
-          ))}
-          <p className="text-[11px] text-[var(--c-faint)]">
-            <span className="text-[var(--c-text)]">▏</span> = 目標配置
+                  )}
+                </span>
+              </button>
+            );
+          })}
+          <p className="mt-1 text-[10px] text-[var(--c-faint)]">
+            細線標示目標配置
           </p>
         </div>
       </div>
