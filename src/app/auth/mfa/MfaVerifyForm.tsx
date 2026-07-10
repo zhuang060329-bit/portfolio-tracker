@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { safeInternalPath } from "@/lib/safe-redirect";
 
 export function MfaVerifyForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const next = params.get("next") || "/";
+  const next = safeInternalPath(params.get("next"));
 
   const [factorId, setFactorId] = useState<string | null>(null);
   const [factorName, setFactorName] = useState<string | null>(null);
