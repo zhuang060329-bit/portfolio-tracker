@@ -18,11 +18,6 @@ import {
 } from "@/lib/metrics";
 import { todayTaipei } from "@/lib/dates";
 
-// 總覽資料組裝：rows in → DashboardData out，純函數、無 I/O。
-// 從 page.tsx 原樣抽出（計算行為不變），供兩個呼叫端共用：
-// - src/app/page.tsx：Supabase 查詢 + 外部行情 API
-// - src/app/demo/page.tsx：demo-data 生成器（同一條計算管線，不是寫死的展示數字）
-
 export type AccountRow = {
   id: string;
   name: string;
@@ -56,7 +51,7 @@ export type FxRate = { date: string; rate: number };
 
 export type DashboardInputs = {
   accounts: AccountRow[];
-  showArchived: boolean;
+  includeArchivedHoldings: boolean;
   cfRows: CashflowRow[];
   incomeRows: IncomeRow[];
   allocationTargets: Record<string, number>;
@@ -68,10 +63,8 @@ export type DashboardInputs = {
     btc: DailyClose[];
   };
   fxHistory: FxRate[];
-  /** demo 用：固定時間讓輸出可重現。省略 = 現在。 */
   now?: Date;
   today?: string;
-  /** 大盤來源缺席說明（page 端偵測，例：金鑰未設 / 上游暫無資料） */
   benchNotice?: string | null;
 };
 
@@ -94,6 +87,21 @@ export const MARKET_LABEL: Record<string, string> = {
   manual: "手動",
 };
 
+const MS_PER_DAY = 86_400_000;
+
+function shiftCalendarDate(date: string, days: number): string {
+  const [year, month, day] = date.split("-").map(Number);
+  const value = new Date(Date.UTC(year, month - 1, day));
+  value.setUTCDate(value.getUTCDate() + days);
+  return value.toISOString().slice(0, 10);
+}
+
+function taipeiDate(value: string): string {
+  return new Date(value).toLocaleDateString("en-CA", {
+    timeZone: "Asia/Taipei",
+  });
+}
+
 export function valueOf(a: AccountRow): number {
   if (a.price_market === "manual") return Number(a.manual_value_base ?? 0);
   const unit = Number(a.last_unit_price ?? 0);
@@ -104,7 +112,7 @@ export function valueOf(a: AccountRow): number {
 export function buildDashboardData(input: DashboardInputs): DashboardData {
   const {
     accounts,
-    showArchived,
+    includeArchivedHoldings,
     cfRows,
     incomeRows,
     allocationTargets: targets,
@@ -113,88 +121,80 @@ export function buildDashboardData(input: DashboardInputs): DashboardData {
     fxHistory,
   } = input;
 
-  const allAccounts = accounts;
-  const activeAccounts = allAccounts.filter((a) => a.status !== "archived");
-  const archivedCount = allAccounts.length - activeAccounts.length;
-  const list = showArchived ? allAccounts : activeAccounts;
-  const total = list.reduce((sum, a) => sum + valueOf(a), 0);
-  const totalCost = list.reduce(
+  const today = input.today ?? todayTaipei();
+  const now = input.now ?? new Date();
+  const activeAccounts = accounts.filter((a) => a.status !== "archived");
+  const activeAccountIds = new Set(activeAccounts.map((a) => a.id));
+  const archivedCount = accounts.length - activeAccounts.length;
+  const holdingAccounts = includeArchivedHoldings ? accounts : activeAccounts;
+
+  // Hero、配置、收入與績效共用 active portfolio；封存切換只影響持倉列表。
+  const total = activeAccounts.reduce((sum, a) => sum + valueOf(a), 0);
+  const totalCost = activeAccounts.reduce(
     (sum, a) => sum + Number(a.cost_basis_twd ?? 0),
     0,
   );
-  const totalRealized = list.reduce(
+  const totalRealized = activeAccounts.reduce(
     (sum, a) => sum + Number(a.realized_pnl_twd ?? 0),
     0,
   );
   const totalUnrealized = total - totalCost;
   const totalPnlPct = totalCost > 0 ? (totalUnrealized / totalCost) * 100 : 0;
 
-  // XIRR：只納入 active 帳戶的現金流 + 今天的 active 帳戶總值（terminal value）。
-  // cashflows 與 terminal value 使用同一個 active account set，
-  // 避免 archived 帳戶歷史負現金流進入計算但終值未計入而低估報酬率。
-  const activeTotal = activeAccounts.reduce((s, a) => s + valueOf(a), 0);
+  // XIRR 的現金流與終值必須使用同一組 active 帳戶。
   const cashflows = cfRows
     .map((r) => ({
       amount: Number(r.cashflow_twd),
       when: new Date(r.created_at),
     }))
     .filter((c) => Number.isFinite(c.amount) && c.amount !== 0);
-  const now = input.now ?? new Date();
-  if (activeTotal > 0) cashflows.push({ amount: activeTotal, when: now });
+  if (total > 0) cashflows.push({ amount: total, when: now });
   const xirr = computeXirr(cashflows);
-  // 資料 < 30 天時，年化會把短期波動放大成失真值，直接隱藏比顯示誤導值好。
   const xirrSpanDays =
     cashflows.length > 1
       ? (now.getTime() - Math.min(...cashflows.map((c) => c.when.getTime()))) /
-        86_400_000
+        MS_PER_DAY
       : 0;
-  // 年化需要足夠樣本，否則短期波動被外推成失真的年化值。
-  // XIRR 本質就是年化報酬率，未滿 90 天一律不顯示。
   const xirrShowable = xirr !== null && xirrSpanDays >= 90;
 
-  // 被動收入：dividend + interest 的 cashflow_twd 加總（cashflow > 0 表示收到）。
   const incomeAll = incomeRows.filter((r) => Number(r.cashflow_twd ?? 0) > 0);
-
-  const nowMs = now.getTime();
-  const ytdStartMs = new Date(
-    `${now.getFullYear()}-01-01T00:00:00+08:00`,
-  ).getTime();
-  const rolling12mStartMs = nowMs - 365 * 86_400_000;
-
+  const ytdStart = `${today.slice(0, 4)}-01-01`;
+  const rolling12mStart = shiftCalendarDate(today, -365);
   let incomeYtd = 0;
   let incomeRolling12m = 0;
   let dividendAll = 0;
   let interestAll = 0;
   for (const r of incomeAll) {
-    const t = new Date(r.created_at).getTime();
-    const amt = Number(r.cashflow_twd ?? 0);
-    if (t >= ytdStartMs) incomeYtd += amt;
-    if (t >= rolling12mStartMs) incomeRolling12m += amt;
-    if (r.type === "dividend") dividendAll += amt;
-    else if (r.type === "interest") interestAll += amt;
+    const date = taipeiDate(r.created_at);
+    const amount = Number(r.cashflow_twd ?? 0);
+    if (date >= ytdStart) incomeYtd += amount;
+    if (date >= rolling12mStart) incomeRolling12m += amount;
+    if (r.type === "dividend") dividendAll += amount;
+    else if (r.type === "interest") interestAll += amount;
   }
   const monthlyAvg12m = incomeRolling12m / 12;
   const yieldOnCost = totalCost > 0 ? (incomeRolling12m / totalCost) * 100 : 0;
   const hasIncome = incomeAll.length > 0;
-  const latestUpdate = list
+  const latestUpdate = activeAccounts
     .map((a) => a.last_priced_at)
-    .filter((x): x is string => !!x)
+    .filter((x): x is string => Boolean(x))
     .sort()
     .pop();
 
-  // 配置：依 asset_class 分組（用 active 帳戶）
   const byClass = new Map<string, number>();
-  for (const a of activeAccounts) {
-    byClass.set(a.asset_class, (byClass.get(a.asset_class) ?? 0) + valueOf(a));
+  for (const account of activeAccounts) {
+    byClass.set(
+      account.asset_class,
+      (byClass.get(account.asset_class) ?? 0) + valueOf(account),
+    );
   }
-  // donut 只吃正值切片（負值在圓餅無意義，沿用既有行為）
   const allocation: AllocDatum[] = [...byClass.entries()]
     .filter(([, value]) => value > 0)
     .map(([cls, value]) => ({
       cls,
       label: ASSET_CLASS_LABEL[cls] ?? cls,
       value,
-      pct: activeTotal > 0 ? (value / activeTotal) * 100 : 0,
+      pct: total > 0 ? (value / total) * 100 : 0,
     }))
     .sort((a, b) => b.value - a.value);
 
@@ -205,134 +205,130 @@ export function buildDashboardData(input: DashboardInputs): DashboardData {
     .map((cls) => ({
       cls,
       label: ASSET_CLASS_LABEL[cls] ?? cls,
-      actual:
-        activeTotal > 0 ? ((byClass.get(cls) ?? 0) / activeTotal) * 100 : 0,
+      actual: total > 0 ? ((byClass.get(cls) ?? 0) / total) * 100 : 0,
       target: Number(targets[cls] ?? 0),
     }))
     .sort((a, b) => b.actual + b.target - a.actual - a.target);
 
-  // 折線 + 今日變化：account_snapshots
-  // - byDate 加總成淨資產日序列（趨勢圖）
-  // - byAccount 取每帳戶最近兩筆快照，算「今日」漲跌（收盤對收盤）
   const byDate = new Map<string, number>();
   const byAccount = new Map<string, { date: string; value: number }[]>();
-  for (const s of snapRows) {
-    const v = Number(s.value_base);
-    byDate.set(s.snapshot_date, (byDate.get(s.snapshot_date) ?? 0) + v);
-    const arr = byAccount.get(s.account_id) ?? [];
-    arr.push({ date: s.snapshot_date, value: v });
-    byAccount.set(s.account_id, arr);
+  for (const snapshot of snapRows) {
+    if (!activeAccountIds.has(snapshot.account_id)) continue;
+    const value = Number(snapshot.value_base);
+    byDate.set(
+      snapshot.snapshot_date,
+      (byDate.get(snapshot.snapshot_date) ?? 0) + value,
+    );
+    const rows = byAccount.get(snapshot.account_id) ?? [];
+    rows.push({ date: snapshot.snapshot_date, value });
+    byAccount.set(snapshot.account_id, rows);
   }
   const lineData = [...byDate.entries()]
     .map(([date, value]) => ({ date, value }))
     .sort((a, b) => a.date.localeCompare(b.date));
   const hasLine = lineData.length >= 2;
 
-  // 每帳戶今日漲跌（小數）：最近兩筆快照差。不足兩筆 → null。
   const accountDay = new Map<string, number | null>();
-  for (const [id, arr] of byAccount) {
-    if (arr.length < 2) {
+  for (const [id, rows] of byAccount) {
+    rows.sort((a, b) => a.date.localeCompare(b.date));
+    if (rows.length < 2) {
       accountDay.set(id, null);
       continue;
     }
-    const prev = arr[arr.length - 2].value;
-    const last = arr[arr.length - 1].value;
-    accountDay.set(id, prev > 0 ? (last - prev) / prev : null);
+    const previous = rows[rows.length - 2].value;
+    const latest = rows[rows.length - 1].value;
+    accountDay.set(id, previous > 0 ? (latest - previous) / previous : null);
   }
 
-  // 組合今日變化（TWD + %）：淨資產日序列最後兩筆差。
   let dayChange: number | null = null;
   let dayChangePct: number | null = null;
   if (hasLine) {
-    const prev = lineData[lineData.length - 2].value;
-    const last = lineData[lineData.length - 1].value;
-    dayChange = last - prev;
-    dayChangePct = prev > 0 ? ((last - prev) / prev) * 100 : null;
+    const previous = lineData[lineData.length - 2].value;
+    const latest = lineData[lineData.length - 1].value;
+    dayChange = latest - previous;
+    dayChangePct = previous > 0 ? ((latest - previous) / previous) * 100 : null;
   }
 
-  // 進階指標：用每日淨值快照 + cashflows
-  const snapshotsForMetrics = lineData.map((p) => ({
-    date: p.date,
-    value: p.value,
+  const snapshotsForMetrics = lineData.map((point) => ({
+    date: point.date,
+    value: point.value,
   }));
-  // TWR / Sharpe 使用 TWR 慣例（正數=投入組合，負數=取出），且不含 terminal value。
-  // terminal value 已體現在最後一筆 snapshot，不應再作為 cashflow 傳入。
-  // 從 cfRows 直接組建，而非從已加入 terminal value 的 cashflows 組建。
+  // TWR 使用正數投入、負數取出；XIRR 儲存口徑需在此翻轉一次。
   const cashflowsForMetrics = cfRows
-    .filter((c) => c.cashflow_twd !== null && Number(c.cashflow_twd) !== 0)
-    .map((c) => ({
-      date: new Date(c.created_at).toLocaleDateString("en-CA", {
-        timeZone: "Asia/Taipei",
-      }),
-      amount: -Number(c.cashflow_twd), // XIRR 慣例翻轉 → TWR 慣例：買入(負)→正，賣出(正)→負
+    .filter((row) => Number(row.cashflow_twd) !== 0)
+    .map((row) => ({
+      date: taipeiDate(row.created_at),
+      amount: -Number(row.cashflow_twd),
     }));
   const twrShowable = snapshotsForMetrics.length >= 30;
-  // 年化另設 90 天門檻：累積報酬短樣本仍誠實，年化則會外推失真
   const twrAnnShowable = snapshotsForMetrics.length >= 90;
   const twrResult = twrShowable
     ? computeTwr(snapshotsForMetrics, cashflowsForMetrics)
     : null;
-  const drawdown = twrShowable ? computeMaxDrawdown(snapshotsForMetrics) : null;
-  const sharpe = twrShowable
-    ? computeSharpe(snapshotsForMetrics, cashflowsForMetrics, 0.015)
-    : null;
-
-  // 大盤對照：SPY/QQQ 的 USD close × 當日匯率換成 TWD 後再比較（同幣別 base）。
-  // 匯率 forward-fill：取日期 d 的匯率時，若 d 無值用 <= d 的最近一筆。
-  const fxSorted = [...fxHistory].sort((a, b) => a.date.localeCompare(b.date));
-  function fxAt(date: string): number | null {
-    let last: number | null = null;
-    for (const r of fxSorted) {
-      if (r.date <= date) last = r.rate;
-      else break;
-    }
-    return last;
-  }
-
-  const perfMap = new Map<string, PerfPoint>();
   const twrIndexSeries = buildTwrSeries(
     snapshotsForMetrics,
     cashflowsForMetrics,
   );
-  const twrByDate = new Map(twrIndexSeries.map((p) => [p.date, p.index]));
-  for (const p of lineData) {
-    const idx = twrByDate.get(p.date);
-    if (idx !== undefined) {
-      perfMap.set(p.date, { date: p.date, portfolio: idx });
+  // 回撤必須從已排除入金與提領的 TWR 指數計算。
+  const drawdown = twrShowable
+    ? computeMaxDrawdown(
+        twrIndexSeries.map((point) => ({
+          date: point.date,
+          value: point.index,
+        })),
+      )
+    : null;
+  const sharpe = twrShowable
+    ? computeSharpe(snapshotsForMetrics, cashflowsForMetrics, 0.015)
+    : null;
+
+  const fxSorted = [...fxHistory].sort((a, b) => a.date.localeCompare(b.date));
+  function fxAt(date: string): number | null {
+    let latest: number | null = null;
+    for (const row of fxSorted) {
+      if (row.date <= date) latest = row.rate;
+      else break;
+    }
+    return latest;
+  }
+
+  const perfMap = new Map<string, PerfPoint>();
+  const twrByDate = new Map(twrIndexSeries.map((point) => [point.date, point.index]));
+  for (const point of lineData) {
+    const index = twrByDate.get(point.date);
+    if (index !== undefined) {
+      perfMap.set(point.date, { date: point.date, portfolio: index });
     }
   }
-  for (const r of bench.tw0050) {
-    const ex = perfMap.get(r.date) ?? { date: r.date };
-    ex.tw0050 = Number(r.close);
-    perfMap.set(r.date, ex);
+  for (const row of bench.tw0050) {
+    const existing = perfMap.get(row.date) ?? { date: row.date };
+    existing.tw0050 = Number(row.close);
+    perfMap.set(row.date, existing);
   }
-  for (const r of bench.spy) {
-    const fx = fxAt(r.date);
+  for (const row of bench.spy) {
+    const fx = fxAt(row.date);
     if (fx === null) continue;
-    const ex = perfMap.get(r.date) ?? { date: r.date };
-    ex.spy = Number(r.close) * fx;
-    perfMap.set(r.date, ex);
+    const existing = perfMap.get(row.date) ?? { date: row.date };
+    existing.spy = Number(row.close) * fx;
+    perfMap.set(row.date, existing);
   }
-  for (const r of bench.qqq) {
-    const fx = fxAt(r.date);
+  for (const row of bench.qqq) {
+    const fx = fxAt(row.date);
     if (fx === null) continue;
-    const ex = perfMap.get(r.date) ?? { date: r.date };
-    ex.qqq = Number(r.close) * fx;
-    perfMap.set(r.date, ex);
+    const existing = perfMap.get(row.date) ?? { date: row.date };
+    existing.qqq = Number(row.close) * fx;
+    perfMap.set(row.date, existing);
   }
-  // BTC 由 CoinGecko 以 TWD 直取，不經匯率換算
-  for (const r of bench.btc) {
-    const ex = perfMap.get(r.date) ?? { date: r.date };
-    ex.btc = Number(r.close);
-    perfMap.set(r.date, ex);
+  for (const row of bench.btc) {
+    const existing = perfMap.get(row.date) ?? { date: row.date };
+    existing.btc = Number(row.close);
+    perfMap.set(row.date, existing);
   }
   const perfData = [...perfMap.values()].sort((a, b) =>
     a.date.localeCompare(b.date),
   );
   forwardFillBenchmarks(perfData, ["spy", "qqq", "tw0050", "btc"]);
-  // benchmark 配色與線型：色相與組合主線（青綠實線）保持距離——
-  // 0050 用玫瑰而非綠（綠與 teal 在小螢幕不可分）；
-  // 四條 dash 節奏刻意拉開（長虛 / 點 / 超長虛 / 虛點），圖例同步畫線型樣本。
+
   const benchmarks: BenchSeries[] = [
     { key: "spy", label: "S&P 500", color: "#7FA8C9", dash: "7 4" },
     { key: "qqq", label: "Nasdaq 100", color: "#9C93C5", dash: "2 4.5" },
@@ -346,18 +342,17 @@ export function buildDashboardData(input: DashboardInputs): DashboardData {
       bench.qqq.length > 0 ||
       bench.btc.length > 0);
 
-  // holdings：交給 client 排序 / 算佔比
-  const holdings: Holding[] = list.map((a) => ({
-    id: a.id,
-    name: a.name,
-    symbol: a.symbol,
-    market: a.price_market,
-    cls: a.asset_class,
-    value: valueOf(a),
-    cost: Number(a.cost_basis_twd ?? 0),
-    realized: Number(a.realized_pnl_twd ?? 0),
-    day: accountDay.get(a.id) ?? null,
-    status: a.status,
+  const holdings: Holding[] = holdingAccounts.map((account) => ({
+    id: account.id,
+    name: account.name,
+    symbol: account.symbol,
+    market: account.price_market,
+    cls: account.asset_class,
+    value: valueOf(account),
+    cost: Number(account.cost_basis_twd ?? 0),
+    realized: Number(account.realized_pnl_twd ?? 0),
+    day: accountDay.get(account.id) ?? null,
+    status: account.status,
   }));
 
   return {
@@ -371,7 +366,7 @@ export function buildDashboardData(input: DashboardInputs): DashboardData {
       xirrShowable,
       dayChange,
       dayChangePct,
-      accounts: list.length,
+      accounts: activeAccounts.length,
       lastUpdate: latestUpdate ?? null,
       twrCum: twrResult?.total ?? null,
       twrAnn: twrAnnShowable ? (twrResult?.annualized ?? null) : null,
@@ -397,9 +392,9 @@ export function buildDashboardData(input: DashboardInputs): DashboardData {
     allocTargets,
     holdings,
     marketLabel: MARKET_LABEL,
-    today: input.today ?? todayTaipei(),
+    today,
     archivedCount,
-    showArchived,
+    showArchived: includeArchivedHoldings,
     benchNotice: input.benchNotice ?? null,
   };
 }
