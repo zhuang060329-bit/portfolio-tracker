@@ -7,7 +7,6 @@ import type { DashSummary } from "./types";
 import { sign, TONE_TEXT, type Tone } from "./shared";
 import { useCountUp } from "./useCountUp";
 
-/* ---------- Hero ---------- */
 export function Hero({
   s,
   series,
@@ -20,15 +19,12 @@ export function Hero({
   const total = useCountUp(s.total);
   const recent = series.slice(-30);
   const hasDay = s.dayChange != null && s.dayChangePct != null;
-  // 近 30 日只呈現「淨值變化金額」：淨值頭尾差含入金 / 提領，換算成 %
-  // 會把加碼當成報酬（真實資料上會出現 +150% 這種假象），故不顯示百分比。
-  const chg30 =
+  const change30 =
     recent.length >= 2 ? recent[recent.length - 1].value - recent[0].value : 0;
-  const up30 = chg30 >= 0;
+  const up30 = change30 >= 0;
 
   return (
     <section className="grid grid-cols-1 gap-x-5 gap-y-6 px-1 pt-4 sm:grid-cols-[1fr_auto] sm:pt-7">
-      {/* 主：總淨資產 */}
       <div className="sm:col-start-1">
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--c-muted)]">
           總淨資產 · NET WORTH
@@ -74,7 +70,6 @@ export function Hero({
         </div>
       </div>
 
-      {/* 副：近 30 日 instrument panel */}
       {recent.length >= 2 && (
         <div className="sm:col-start-2 sm:flex sm:items-center sm:justify-end">
           <div className="inline-block rounded-[10px] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3 pb-2.5 pt-2.5">
@@ -85,14 +80,14 @@ export function Hero({
               <span
                 className={`amt text-[11.5px] font-semibold tnum ${up30 ? "text-[var(--c-up)]" : "text-[var(--c-down)]"}`}
               >
-                {sign(chg30)}NT$ {Math.abs(Math.round(chg30)).toLocaleString("en-US")}
+                {sign(change30)}NT${" "}
+                {Math.abs(Math.round(change30)).toLocaleString("en-US")}
               </span>
             </div>
             <Sparkline data={recent} w={150} h={40} up={up30} />
           </div>
         </div>
       )}
-
     </section>
   );
 }
@@ -110,7 +105,7 @@ export function HeroStat({
   tone?: Tone;
   sub?: string;
   primary?: boolean;
-  mask?: boolean; // 絕對金額才標 amt；百分比類不遮
+  mask?: boolean;
 }) {
   return (
     <div className={`bg-[var(--c-surface)] px-4 ${primary ? "py-5" : "py-4"} sm:px-[18px]`}>
