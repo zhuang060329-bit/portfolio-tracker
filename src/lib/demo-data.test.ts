@@ -3,6 +3,7 @@ import { buildDemoInputs } from "./demo-data";
 import { buildDashboardData, valueOf } from "./dashboard-data";
 
 const TODAY = "2026-07-05";
+const NOW = new Date(`${TODAY}T20:00:00+08:00`);
 
 describe("buildDemoInputs", () => {
   it("同一天兩次生成完全相同", () => {
@@ -34,7 +35,7 @@ describe("buildDemoInputs", () => {
   it("經 buildDashboardData 後指標齊全且數值合理", () => {
     const data = buildDashboardData({
       ...buildDemoInputs(TODAY),
-      now: new Date(`${TODAY}T20:00:00+08:00`),
+      now: NOW,
     });
     const summary = data.summary;
     expect(summary.total).toBeGreaterThan(500_000);
@@ -65,11 +66,13 @@ describe("buildDemoInputs", () => {
       ...input,
       accounts,
       includeArchivedHoldings: false,
+      now: NOW,
     });
     const shown = buildDashboardData({
       ...input,
       accounts,
       includeArchivedHoldings: true,
+      now: NOW,
     });
 
     expect(shown.summary).toEqual(hidden.summary);
