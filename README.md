@@ -62,9 +62,9 @@ Gates: `npm run lint` / `npm run typecheck` / `npm run test:unit` / `TEST_DATABA
 
 ## Status and next steps
 
-Running in production (Vercel + Supabase, single user). CI runs lint / typecheck / unit tests / Postgres integration / build on every push to main. Recently shipped: public demo route, amount masking, manual refresh with cooldown, PWA install, BTC benchmark, data-health card, active-portfolio metric boundaries, atomic account writes, and ledger-backed recurring-plan execution.
+Running in production (Vercel + Supabase, single user). CI runs lint / typecheck / unit tests / Postgres integration / build on every push to main. Recently shipped: active-portfolio metric boundaries, cashflow-aware risk metrics, ledger-backed recurring-plan execution, modular server actions and chart data logic, and the desktop/mobile financial-workstation interface.
 
-Next: per-account TWR charts; broader CSV import formats; modular server actions and chart internals.
+Possible future work: per-account TWR charts; broader CSV import formats; optimistic concurrency for simultaneous manual writes to the same account.
 
 ## Author
 
