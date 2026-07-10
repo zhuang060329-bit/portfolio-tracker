@@ -1,71 +1,53 @@
 import type { DashboardInputs, AccountRow } from "@/lib/dashboard-data";
 
-// /demo 頁的資料生成器：輸出 DashboardInputs，走與真實頁相同的 buildDashboardData。
-// 展示的是同一條計算管線（XIRR / TWR / Sharpe / 回撤 / 配置），不是寫死的漂亮數字。
-//
-// 確定性：所有隨機值來自 hash(symbol + date) 的偽隨機，
-// 同一天永遠長一樣；隔天回訪只是序列往後多長一天，歷史不變。
-// 價格路徑從固定 EPOCH 起算的幾何隨機漫步；平日才有報酬（BTC 全年無休），
-// benchmark 只產生交易日 close，讓 forwardFillBenchmarks 走真實的補值路徑。
-
 const EPOCH = "2025-01-01";
 
-/* ---------- 確定性偽隨機 ---------- */
-
-function hashStr(s: string): number {
-  // FNV-1a 32-bit
-  let h = 0x811c9dc5;
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 0x01000193);
+function hashStr(value: string): number {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < value.length; i++) {
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
   }
-  return h >>> 0;
+  return hash >>> 0;
 }
 
 function mulberry32(seed: number): () => number {
-  let a = seed >>> 0;
+  let value = seed >>> 0;
   return () => {
-    a |= 0;
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    value |= 0;
+    value = (value + 0x6d2b79f5) | 0;
+    let result = Math.imul(value ^ (value >>> 15), 1 | value);
+    result =
+      (result + Math.imul(result ^ (result >>> 7), 61 | result)) ^ result;
+    return ((result ^ (result >>> 14)) >>> 0) / 4294967296;
   };
 }
 
-/** 標準常態（Box-Muller），由 key 決定、可重現 */
 function gauss(key: string): number {
-  const rng = mulberry32(hashStr(key));
-  const u1 = Math.max(rng(), 1e-12);
-  const u2 = rng();
+  const random = mulberry32(hashStr(key));
+  const u1 = Math.max(random(), 1e-12);
+  const u2 = random();
   return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
 }
 
-/* ---------- 日期工具 ---------- */
-
 function* eachDay(from: string, to: string): Generator<string> {
-  const d = new Date(`${from}T00:00:00Z`);
+  const date = new Date(`${from}T00:00:00Z`);
   const end = new Date(`${to}T00:00:00Z`);
-  while (d <= end) {
-    yield d.toISOString().slice(0, 10);
-    d.setUTCDate(d.getUTCDate() + 1);
+  while (date <= end) {
+    yield date.toISOString().slice(0, 10);
+    date.setUTCDate(date.getUTCDate() + 1);
   }
 }
 
 function isWeekend(date: string): boolean {
-  const dow = new Date(`${date}T00:00:00Z`).getUTCDay();
-  return dow === 0 || dow === 6;
+  const day = new Date(`${date}T00:00:00Z`).getUTCDay();
+  return day === 0 || day === 6;
 }
-
-/* ---------- 價格路徑 ---------- */
 
 type PathSpec = {
   base: number;
-  /** 每日漂移（幾何） */
   mu: number;
-  /** 每日波動 */
   sigma: number;
-  /** 週末是否有報酬（BTC true，股票 / 匯率 false） */
   trades247: boolean;
 };
 
@@ -74,39 +56,35 @@ const PATHS: Record<string, PathSpec> = {
   "0050": { base: 195, mu: 0.00026, sigma: 0.01, trades247: false },
   BTC: { base: 96000, mu: 0.00055, sigma: 0.032, trades247: true },
   USDTWD: { base: 32.1, mu: 0, sigma: 0.0015, trades247: false },
-  SPY: { base: 610, mu: 0.00030, sigma: 0.0088, trades247: false },
-  QQQ: { base: 540, mu: 0.00040, sigma: 0.012, trades247: false },
+  SPY: { base: 610, mu: 0.0003, sigma: 0.0088, trades247: false },
+  QQQ: { base: 540, mu: 0.0004, sigma: 0.012, trades247: false },
 };
 
-// 2026 年初插一段回檔行情：風險資產齊跌，讓最大回撤與 benchmark 對照有戲可看。
-// 沒有這段的話隨機漫步太順，demo 一眼假。
 const BEAR = { from: "2026-02-02", to: "2026-03-13", mu: -0.0025 };
 
-/** symbol 在 date 的價格：EPOCH 起逐日累積對數報酬（只依賴 symbol+date，永遠可重現） */
 function buildPriceSeries(
   symbol: string,
   endDate: string,
 ): Map<string, number> {
   const spec = PATHS[symbol];
-  const out = new Map<string, number>();
-  let logP = Math.log(spec.base);
-  for (const d of eachDay(EPOCH, endDate)) {
-    if (spec.trades247 || !isWeekend(d)) {
-      const inBear =
-        symbol !== "USDTWD" && d >= BEAR.from && d <= BEAR.to;
-      const mu = inBear ? BEAR.mu : spec.mu;
-      logP += mu + spec.sigma * gauss(`${symbol}:${d}`);
-    }
-    out.set(d, Math.exp(logP));
-  }
-  return out;
-}
+  const output = new Map<string, number>();
+  let logPrice = Math.log(spec.base);
 
-/* ---------- Demo 組合 ---------- */
+  for (const date of eachDay(EPOCH, endDate)) {
+    if (spec.trades247 || !isWeekend(date)) {
+      const inBear =
+        symbol !== "USDTWD" && date >= BEAR.from && date <= BEAR.to;
+      const drift = inBear ? BEAR.mu : spec.mu;
+      logPrice += drift + spec.sigma * gauss(`${symbol}:${date}`);
+    }
+    output.set(date, Math.exp(logPrice));
+  }
+  return output;
+}
 
 type Ledger = {
   qty: number;
-  cost: number; // 剩餘成本（移動平均法）
+  cost: number;
   realized: number;
 };
 
@@ -121,111 +99,143 @@ export function buildDemoInputs(today: string): DashboardInputs {
   const cfRows: DashboardInputs["cfRows"] = [];
   const incomeRows: DashboardInputs["incomeRows"] = [];
   const snapRows: DashboardInputs["snapRows"] = [];
-
   const ledgers: Record<string, Ledger> = {
     voo: { qty: 0, cost: 0, realized: 0 },
     tw0050: { qty: 0, cost: 0, realized: 0 },
     btc: { qty: 0, cost: 0, realized: 0 },
   };
 
-  // TWD 單價（美元資產含當日匯率）
-  const unitTwd = (acc: string, d: string): number => {
-    if (acc === "voo") return price.VOO.get(d)! * price.fx.get(d)!;
-    if (acc === "btc") return price.BTC.get(d)! * price.fx.get(d)!;
-    return price["0050"].get(d)!;
+  const unitTwd = (account: string, date: string): number => {
+    if (account === "voo") return price.VOO.get(date)! * price.fx.get(date)!;
+    if (account === "btc") return price.BTC.get(date)! * price.fx.get(date)!;
+    return price["0050"].get(date)!;
   };
 
-  const buy = (acc: string, d: string, amountTwd: number) => {
-    const p = unitTwd(acc, d);
-    ledgers[acc].qty += amountTwd / p;
-    ledgers[acc].cost += amountTwd;
-    cfRows.push({ created_at: `${d}T09:30:00+08:00`, cashflow_twd: -amountTwd });
+  const buy = (account: string, date: string, amountTwd: number) => {
+    const unitPrice = unitTwd(account, date);
+    ledgers[account].qty += amountTwd / unitPrice;
+    ledgers[account].cost += amountTwd;
+    cfRows.push({
+      created_at: `${date}T09:30:00+08:00`,
+      cashflow_twd: -amountTwd,
+    });
   };
 
-  const sell = (acc: string, d: string, amountTwd: number) => {
-    const l = ledgers[acc];
-    const p = unitTwd(acc, d);
-    const qtySold = amountTwd / p;
-    const avgCost = l.cost / l.qty;
-    l.realized += amountTwd - avgCost * qtySold;
-    l.cost -= avgCost * qtySold;
-    l.qty -= qtySold;
-    cfRows.push({ created_at: `${d}T10:00:00+08:00`, cashflow_twd: amountTwd });
+  const sell = (account: string, date: string, amountTwd: number) => {
+    const ledger = ledgers[account];
+    const unitPrice = unitTwd(account, date);
+    const quantity = amountTwd / unitPrice;
+    const averageCost = ledger.cost / ledger.qty;
+    ledger.realized += amountTwd - averageCost * quantity;
+    ledger.cost -= averageCost * quantity;
+    ledger.qty -= quantity;
+    cfRows.push({
+      created_at: `${date}T10:00:00+08:00`,
+      cashflow_twd: amountTwd,
+    });
   };
 
-  /* 手動帳戶：現金（兩次調整）、黃金存摺（緩漲） */
-  const cashAt = (d: string): number =>
-    d >= "2026-03-01" ? 265_000 : d >= "2025-08-01" ? 230_000 : 190_000;
-  const goldAt = (d: string): number => {
-    // 緩慢上行 + 小波動
+  const cashAt = (date: string): number =>
+    date >= "2026-03-01" ? 265_000 : date >= "2025-08-01" ? 230_000 : 190_000;
+  const goldAt = (date: string): number => {
     const days =
-      (Date.parse(`${d}T00:00:00Z`) - Date.parse(`${EPOCH}T00:00:00Z`)) /
+      (Date.parse(`${date}T00:00:00Z`) - Date.parse(`${EPOCH}T00:00:00Z`)) /
         86_400_000 +
       1;
-    return Math.round(58_000 * (1 + 0.00035 * days) + 900 * gauss(`GOLD:${d}`));
+    return Math.round(
+      58_000 * (1 + 0.00035 * days) + 900 * gauss(`GOLD:${date}`),
+    );
   };
 
-  const income = (d: string, type: "dividend" | "interest", amt: number) => {
-    const row = { created_at: `${d}T12:00:00+08:00`, cashflow_twd: amt };
+  const income = (
+    date: string,
+    type: "dividend" | "interest",
+    amount: number,
+  ) => {
+    const row = {
+      created_at: `${date}T12:00:00+08:00`,
+      cashflow_twd: amount,
+    };
     cfRows.push(row);
     incomeRows.push({ ...row, type });
   };
 
-  /* 逐日走一遍：交易（期初單筆 + 每月 5 日定投 + 一次部分賣出示範已實現損益）
-     與每日快照同一個迴圈完成，qty 隨交易累積。 */
-  for (const d of eachDay(EPOCH, today)) {
-    const [, m, day] = d.split("-");
-    if (d === "2025-01-06") {
-      buy("voo", d, 150_000);
-      buy("tw0050", d, 100_000);
-      buy("btc", d, 60_000);
+  for (const date of eachDay(EPOCH, today)) {
+    const [, month, day] = date.split("-");
+    if (date === "2025-01-06") {
+      buy("voo", date, 150_000);
+      buy("tw0050", date, 100_000);
+      buy("btc", date, 60_000);
     }
-    // 手動帳戶的存入也要進現金流，否則 XIRR 的 terminal value
-    // 含現金與黃金、投入卻沒有 → 報酬率灌水。
-    // 期初兩筆日期 = 首筆快照日（EPOCH）：computeTwr 會略過 ≤ 首筆快照的
-    // 現金流（視為期初資本），XIRR 則照算 → 兩套指標同時自洽。
-    if (d === EPOCH) {
+
+    // 手動資產的投入需進 XIRR；首日現金流視為 TWR 期初資本。
+    if (date === EPOCH) {
       cfRows.push(
-        { created_at: `${d}T09:00:00+08:00`, cashflow_twd: -190_000 },
-        { created_at: `${d}T09:00:00+08:00`, cashflow_twd: -58_000 },
+        { created_at: `${date}T09:00:00+08:00`, cashflow_twd: -190_000 },
+        { created_at: `${date}T09:00:00+08:00`, cashflow_twd: -58_000 },
       );
     }
-    if (d === "2025-08-01" || d === "2026-03-01") {
+    if (date === "2025-08-01" || date === "2026-03-01") {
       cfRows.push({
-        created_at: `${d}T09:00:00+08:00`,
-        cashflow_twd: d === "2025-08-01" ? -40_000 : -35_000,
+        created_at: `${date}T09:00:00+08:00`,
+        cashflow_twd: date === "2025-08-01" ? -40_000 : -35_000,
       });
     }
-    if (day === "05" && d > "2025-01-06") {
-      buy("voo", d, 12_000);
-      buy("tw0050", d, 8_000);
-      buy("btc", d, 5_000);
+    if (day === "05" && date > "2025-01-06") {
+      buy("voo", date, 12_000);
+      buy("tw0050", date, 8_000);
+      buy("btc", date, 5_000);
     }
-    if (d === "2025-10-16") sell("tw0050", d, 30_000);
-    // 配息：0050 半年配、VOO 季配（金額掛在持倉市值上，隨部位成長）
-    if (day === "20" && (m === "01" || m === "07") && d > "2025-01-20") {
-      income(d, "dividend", Math.round(ledgers.tw0050.qty * unitTwd("tw0050", d) * 0.015));
+    if (date === "2025-10-16") sell("tw0050", date, 30_000);
+    if (day === "20" && (month === "01" || month === "07") && date > "2025-01-20") {
+      income(
+        date,
+        "dividend",
+        Math.round(ledgers.tw0050.qty * unitTwd("tw0050", date) * 0.015),
+      );
     }
-    if (day === "25" && ["03", "06", "09", "12"].includes(m)) {
-      income(d, "dividend", Math.round(ledgers.voo.qty * unitTwd("voo", d) * 0.003));
+    if (day === "25" && ["03", "06", "09", "12"].includes(month)) {
+      income(
+        date,
+        "dividend",
+        Math.round(ledgers.voo.qty * unitTwd("voo", date) * 0.003),
+      );
     }
-    // 活存季息
-    if (day === "28" && ["03", "06", "09", "12"].includes(m)) {
-      income(d, "interest", 780);
+    if (day === "28" && ["03", "06", "09", "12"].includes(month)) {
+      income(date, "interest", 780);
     }
 
     snapRows.push(
-      { account_id: "demo-voo", snapshot_date: d, value_base: ledgers.voo.qty * unitTwd("voo", d) },
-      { account_id: "demo-0050", snapshot_date: d, value_base: ledgers.tw0050.qty * unitTwd("tw0050", d) },
-      { account_id: "demo-btc", snapshot_date: d, value_base: ledgers.btc.qty * unitTwd("btc", d) },
-      { account_id: "demo-cash", snapshot_date: d, value_base: cashAt(d) },
-      { account_id: "demo-gold", snapshot_date: d, value_base: goldAt(d) },
+      {
+        account_id: "demo-voo",
+        snapshot_date: date,
+        value_base: ledgers.voo.qty * unitTwd("voo", date),
+      },
+      {
+        account_id: "demo-0050",
+        snapshot_date: date,
+        value_base: ledgers.tw0050.qty * unitTwd("tw0050", date),
+      },
+      {
+        account_id: "demo-btc",
+        snapshot_date: date,
+        value_base: ledgers.btc.qty * unitTwd("btc", date),
+      },
+      {
+        account_id: "demo-cash",
+        snapshot_date: date,
+        value_base: cashAt(date),
+      },
+      {
+        account_id: "demo-gold",
+        snapshot_date: date,
+        value_base: goldAt(date),
+      },
     );
   }
 
   const fxToday = price.fx.get(today)!;
   const pricedAt = `${today}T14:05:00+08:00`;
-
   const accounts: AccountRow[] = [
     {
       id: "demo-voo",
@@ -309,8 +319,6 @@ export function buildDemoInputs(today: string): DashboardInputs {
     },
   ];
 
-  /* Benchmark：只出交易日 close，SPY/QQQ 為 USD（builder 會乘匯率），
-     0050 對照直接沿用持倉 0050 的價格序列（現實中就是同一檔）。 */
   const bench = {
     tw0050: [] as { date: string; close: number }[],
     spy: [] as { date: string; close: number }[],
@@ -320,19 +328,21 @@ export function buildDemoInputs(today: string): DashboardInputs {
   const fxHistory: { date: string; rate: number }[] = [];
   const spySeries = buildPriceSeries("SPY", today);
   const qqqSeries = buildPriceSeries("QQQ", today);
-  for (const d of eachDay(EPOCH, today)) {
-    // BTC 全年無休，其他只出交易日
-    bench.btc.push({ date: d, close: price.BTC.get(d)! * price.fx.get(d)! });
-    if (isWeekend(d)) continue;
-    bench.tw0050.push({ date: d, close: price["0050"].get(d)! });
-    bench.spy.push({ date: d, close: spySeries.get(d)! });
-    bench.qqq.push({ date: d, close: qqqSeries.get(d)! });
-    fxHistory.push({ date: d, rate: price.fx.get(d)! });
+  for (const date of eachDay(EPOCH, today)) {
+    bench.btc.push({
+      date,
+      close: price.BTC.get(date)! * price.fx.get(date)!,
+    });
+    if (isWeekend(date)) continue;
+    bench.tw0050.push({ date, close: price["0050"].get(date)! });
+    bench.spy.push({ date, close: spySeries.get(date)! });
+    bench.qqq.push({ date, close: qqqSeries.get(date)! });
+    fxHistory.push({ date, rate: price.fx.get(date)! });
   }
 
   return {
     accounts,
-    showArchived: false,
+    includeArchivedHoldings: false,
     cfRows,
     incomeRows,
     allocationTargets: {
