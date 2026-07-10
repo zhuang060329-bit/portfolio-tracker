@@ -42,13 +42,13 @@ export function DashboardClient({
     <div className="flex flex-col">
       <Hero s={summary} series={data.series} demo={demo} />
 
-      <section className="mt-4">
-        <div className="grid grid-cols-2 gap-px overflow-hidden rounded-[var(--r-card)] border border-[var(--c-line-strong)] bg-[var(--c-border)] shadow-[var(--c-shadow)] sm:grid-cols-4">
+      <section className="mt-5 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-border)]">
+        <div className="grid grid-cols-2 gap-px sm:grid-cols-4">
           <HeroStat
-            label="總成本"
+            label="投入成本"
             mask
             value={`NT$ ${fmtTwd(summary.totalCost)}`}
-            sub="cost basis"
+            sub="目前持有部位"
           />
           <HeroStat
             label="未實現損益"
@@ -59,7 +59,7 @@ export function DashboardClient({
             primary
           />
           <HeroStat
-            label="已實現"
+            label="累計已實現"
             value={
               summary.totalRealized === 0
                 ? "—"
@@ -67,14 +67,14 @@ export function DashboardClient({
             }
             mask
             tone={toneCls(summary.totalRealized)}
-            sub="realized"
+            sub="賣出與現金收益"
           />
           {summary.xirrShowable && summary.xirr != null ? (
             <HeroStat
               label="年化 XIRR"
               value={`${sign(summary.xirr)}${(Math.abs(summary.xirr) * 100).toFixed(1)}%`}
               tone={toneCls(summary.xirr)}
-              sub="money-weighted"
+              sub="資金加權報酬"
             />
           ) : (
             <HeroStat
@@ -84,6 +84,17 @@ export function DashboardClient({
             />
           )}
         </div>
+      </section>
+
+      <section className="mt-5 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)]">
+        <Holdings
+          demo={demo}
+          holdings={data.holdings}
+          total={summary.total}
+          marketLabel={data.marketLabel}
+          archivedCount={data.archivedCount}
+          showArchived={data.showArchived}
+        />
       </section>
 
       <TrendSection
@@ -96,43 +107,32 @@ export function DashboardClient({
       />
 
       {metricsHasContent ? (
-        <section className="mt-4 grid grid-cols-1 gap-4 min-[920px]:grid-cols-2">
-          <div className="overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] transition-colors hover:border-[var(--c-line-strong)] sm:p-6">
+        <section className="mt-5 grid grid-cols-1 gap-3 min-[920px]:grid-cols-2">
+          <div className="overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 sm:p-6">
             {allocation}
           </div>
-          <div className="overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] transition-colors hover:border-[var(--c-line-strong)] sm:p-6">
+          <div className="overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 sm:p-6">
             <MetricsCard s={summary} />
           </div>
         </section>
       ) : (
-        <section className="mt-4 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] transition-colors hover:border-[var(--c-line-strong)] sm:p-6">
+        <section className="mt-5 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 sm:p-6">
           {allocation}
-          <p className="mt-5 border-t border-[var(--c-border)] pt-4 text-[12.5px] text-[var(--c-faint)]">
+          <p className="mt-5 border-t border-[var(--c-border)] pt-4 text-[12px] text-[var(--c-faint)]">
             TWR、回撤與 Sharpe 會在每日淨值快照滿 30 天後顯示。
           </p>
         </section>
       )}
-
-      <div className="mt-4 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] shadow-[var(--c-shadow)]">
-        <Holdings
-          demo={demo}
-          holdings={data.holdings}
-          total={summary.total}
-          marketLabel={data.marketLabel}
-          archivedCount={data.archivedCount}
-          showArchived={data.showArchived}
-        />
-      </div>
     </div>
   );
 }
 
 function FirstRun() {
   return (
-    <section className="mx-auto mt-14 max-w-[520px] rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] px-7 py-12 text-center shadow-[var(--c-shadow)]">
+    <section className="mx-auto mt-14 max-w-[520px] rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] px-6 py-11 text-center sm:px-8">
       <svg
-        width="30"
-        height="30"
+        width="26"
+        height="26"
         viewBox="0 0 16 16"
         fill="currentColor"
         aria-hidden="true"
@@ -140,23 +140,23 @@ function FirstRun() {
       >
         <path d="M8 1 L15 8 L8 15 L1 8 Z" />
       </svg>
-      <h2 className="mt-4 font-serif text-[22px] font-medium tracking-tight">
+      <h2 className="mt-4 text-[20px] font-semibold tracking-[-0.02em]">
         從第一個資產開始
       </h2>
       <p className="mt-2 text-[13px] leading-relaxed text-[var(--c-muted)]">
         建立帳戶後，這裡會開始累積淨值趨勢、損益、配置與大盤對照。
-        已有歷史紀錄的話，也可以直接從 CSV 匯入。
+        已有歷史紀錄時，也可以直接從 CSV 匯入。
       </p>
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
         <Link
           href="/accounts/new"
-          className="rounded-[var(--r-control)] bg-[var(--c-accent)] px-5 py-2.5 text-[13.5px] font-semibold text-[var(--c-btn-strong-text)] transition hover:brightness-110"
+          className="rounded-[var(--r-control)] bg-[var(--c-accent)] px-5 py-2.5 text-[13px] font-semibold text-[var(--c-btn-strong-text)] hover:brightness-110"
         >
           建立第一個帳戶
         </Link>
         <Link
           href="/activity"
-          className="rounded-[var(--r-control)] border border-[var(--c-border)] px-5 py-2.5 text-[13.5px] font-medium text-[var(--c-muted)] transition-colors hover:border-[var(--c-line-strong)] hover:text-[var(--c-text)]"
+          className="rounded-[var(--r-control)] border border-[var(--c-border)] px-5 py-2.5 text-[13px] font-medium text-[var(--c-muted)] hover:border-[var(--c-line-strong)] hover:text-[var(--c-text)]"
         >
           匯入 CSV
         </Link>

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import { ThemeToggle } from "./ThemeToggle";
 
 type Item = {
   href: string;
@@ -16,37 +17,71 @@ type Item = {
     | null;
 };
 
-/**
- * 手機漢堡按鈕 + 下拉 nav。
- * 抽成 client component，AppHeader 可保持 server 渲染。
- * Esc / 點 backdrop / 點 nav 連結都會關閉。
- */
 export function MobileNavToggle({
   items,
   active,
+  signedIn,
 }: {
   items: Item[];
   active: Item["key"];
+  signedIn: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLElement>(null);
+  const panelId = `mobile-nav-${useId().replace(/:/g, "")}`;
 
   useEffect(() => {
     if (!open) return;
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const focusables = () =>
+      Array.from(
+        panelRef.current?.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ) ?? [],
+      );
+    focusables()[0]?.focus();
+
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setOpen(false);
+        return;
+      }
+      if (event.key !== "Tab") return;
+
+      const itemsInPanel = focusables();
+      if (itemsInPanel.length === 0) return;
+      const first = itemsInPanel[0];
+      const last = itemsInPanel[itemsInPanel.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     }
+
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKey);
+      buttonRef.current?.focus();
+    };
   }, [open]);
 
   return (
     <>
       <button
+        ref={buttonRef}
         type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-label="開啟導覽"
+        onClick={() => setOpen((value) => !value)}
+        aria-label={open ? "關閉導覽" : "開啟導覽"}
         aria-expanded={open}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[var(--c-muted)] hover:bg-[var(--c-surface-soft)] hover:text-[var(--c-text)]"
+        aria-controls={panelId}
+        className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-control)] text-[var(--c-muted)] hover:bg-[var(--c-surface-soft)] hover:text-[var(--c-text)]"
       >
         <svg
           width="19"
@@ -61,49 +96,58 @@ export function MobileNavToggle({
           {open ? (
             <path d="M6 6l12 12M6 18L18 6" />
           ) : (
-            <>
-              <path d="M3 6h18M3 12h18M3 18h18" />
-            </>
+            <path d="M3 7h18M3 12h18M3 17h18" />
           )}
         </svg>
       </button>
 
       {open && (
         <>
-          {/* backdrop */}
           <button
             type="button"
             aria-label="關閉導覽"
             onClick={() => setOpen(false)}
-            className="fixed inset-0 top-[62px] z-30 bg-black/40 md:hidden"
+            className="fixed inset-0 top-[var(--header-h)] z-30 bg-black/45 backdrop-blur-[2px] md:hidden"
           />
-          {/* sheet */}
           <nav
-            className="fixed left-0 right-0 top-[62px] z-40 flex flex-col gap-0.5 border-b border-[var(--c-border)] bg-[var(--c-page)] px-5 py-3 md:hidden"
+            ref={panelRef}
+            id={panelId}
+            className="safe-bottom fixed left-0 right-0 top-[var(--header-h)] z-40 flex max-h-[calc(100dvh-var(--header-h))] flex-col overflow-y-auto border-b border-[var(--c-border)] bg-[var(--c-page)] px-4 pb-4 pt-3 shadow-[var(--c-shadow)] md:hidden"
             aria-label="主要導覽"
           >
-            {items.map((it) => (
-              <Link
-                key={it.href}
-                href={it.href}
-                onClick={() => setOpen(false)}
-                className={`rounded-md px-3 py-2.5 text-[15px] font-medium ${
-                  active === it.key
-                    ? "bg-[var(--c-surface-soft)] text-[var(--c-text)]"
-                    : "text-[var(--c-muted)] hover:bg-[var(--c-surface-soft)] hover:text-[var(--c-text)]"
-                }`}
-              >
-                {it.label}
-              </Link>
-            ))}
-            <form action="/auth/signout" method="post" className="mt-2">
-              <button
-                type="submit"
-                className="w-full rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] px-3 py-2 text-sm font-medium text-[var(--c-text)]"
-              >
-                登出
-              </button>
-            </form>
+            <div className="grid grid-cols-2 gap-1.5">
+              {items.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={active === item.key ? "page" : undefined}
+                  onClick={() => setOpen(false)}
+                  className={`flex min-h-12 items-center rounded-[var(--r-control)] px-3.5 text-[14px] font-medium ${
+                    active === item.key
+                      ? "bg-[var(--c-accent-soft)] text-[var(--c-accent)]"
+                      : "border border-[var(--c-border)] bg-[var(--c-surface)] text-[var(--c-muted)] hover:text-[var(--c-text)]"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+
+            <div className="mt-4 flex items-center justify-between border-t border-[var(--c-border)] pt-3">
+              <span className="text-[12px] text-[var(--c-muted)]">顯示模式</span>
+              <ThemeToggle />
+            </div>
+
+            {signedIn && (
+              <form action="/auth/signout" method="post" className="mt-3">
+                <button
+                  type="submit"
+                  className="min-h-11 w-full rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface)] px-3 text-sm font-medium text-[var(--c-text)]"
+                >
+                  登出
+                </button>
+              </form>
+            )}
           </nav>
         </>
       )}

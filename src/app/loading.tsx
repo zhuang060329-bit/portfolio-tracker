@@ -1,67 +1,73 @@
 import { AppHeader } from "@/components/AppHeader";
 
-// 首頁讀取 skeleton：對齊 StackWorth 儀表板版面，避免載入跳動。
-const sk = "sk rounded";
-const card =
-  "rounded-2xl border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] sm:px-6";
+const skeleton = "sk rounded-[4px]";
+const panel =
+  "overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 sm:p-6";
 
 export default function HomeLoading() {
   return (
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active="portfolio" />
-      <main className="mx-auto max-w-[1200px] px-7 py-9 pb-28">
+      <main className="mx-auto max-w-[1200px] px-4 pb-28 pt-5 sm:px-6 sm:pt-7 lg:px-7 lg:pt-8">
         <div className="flex flex-col gap-5">
-          {/* Hero */}
-          <section className="px-1 pt-4 sm:pt-7">
-            <div className={`h-3 w-32 ${sk}`} />
-            <div className={`mt-3 h-14 w-72 ${sk}`} />
-            <div className="mt-4 flex gap-3">
-              <div className={`h-8 w-40 rounded-full ${sk}`} />
-              <div className={`h-8 w-28 rounded-full ${sk}`} />
+          <section className="border-b border-[var(--c-border)] pb-7 pt-4 sm:pb-8 sm:pt-7">
+            <div className={`h-3 w-20 ${skeleton}`} />
+            <div className={`mt-3 h-14 w-[min(72vw,360px)] ${skeleton}`} />
+            <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:gap-4">
+              <div className={`h-4 w-44 ${skeleton}`} />
+              <div className={`h-4 w-36 ${skeleton}`} />
             </div>
-            <div className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-[var(--c-border)] bg-[var(--c-border)] sm:grid-cols-4">
-              {[0, 1, 2, 3].map((i) => (
-                <div key={i} className="bg-[var(--c-surface)] px-4 py-4">
-                  <div className={`h-3 w-16 ${sk}`} />
-                  <div className={`mt-2 h-6 w-20 ${sk}`} />
+          </section>
+
+          <section className="overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-border)]">
+            <div className="grid grid-cols-2 gap-px sm:grid-cols-4">
+              {[0, 1, 2, 3].map((index) => (
+                <div
+                  key={index}
+                  className="bg-[var(--c-surface)] px-4 py-4 sm:px-5 sm:py-[18px]"
+                >
+                  <div className={`h-3 w-16 ${skeleton}`} />
+                  <div className={`mt-2 h-6 w-24 ${skeleton}`} />
+                  <div className={`mt-2 h-3 w-20 ${skeleton}`} />
                 </div>
               ))}
             </div>
           </section>
 
-          {/* 趨勢卡 */}
-          <section className={card}>
-            <div className={`h-5 w-32 ${sk}`} />
-            <div className={`mt-2 h-3 w-48 ${sk}`} />
-            <div className={`mt-4 h-[300px] ${sk} opacity-50`} />
+          <section className="overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)]">
+            <div className="flex items-start justify-between gap-4 px-4 pb-4 pt-5 sm:px-6 sm:pt-6">
+              <div>
+                <div className={`h-5 w-28 ${skeleton}`} />
+                <div className={`mt-2 h-3 w-32 ${skeleton}`} />
+              </div>
+              <div className={`h-10 w-24 ${skeleton}`} />
+            </div>
+            {[0, 1, 2, 3].map((index) => (
+              <div
+                key={index}
+                className="flex items-center gap-3 border-t border-[var(--c-border)] px-4 py-4 sm:px-6"
+              >
+                <div className={`h-2 w-2 ${skeleton}`} />
+                <div className={`h-4 w-32 ${skeleton}`} />
+                <div className={`ml-auto h-4 w-24 ${skeleton}`} />
+              </div>
+            ))}
           </section>
 
-          {/* 兩欄 */}
-          <div className="grid grid-cols-1 gap-5 min-[920px]:grid-cols-2">
-            {[0, 1].map((i) => (
-              <section key={i} className={card}>
-                <div className={`h-5 w-28 ${sk}`} />
-                <div className={`mt-4 h-[188px] ${sk} opacity-50`} />
+          <section className={panel}>
+            <div className={`h-5 w-28 ${skeleton}`} />
+            <div className={`mt-2 h-3 w-48 ${skeleton}`} />
+            <div className={`mt-4 h-[280px] ${skeleton} opacity-50`} />
+          </section>
+
+          <div className="grid grid-cols-1 gap-3 min-[920px]:grid-cols-2">
+            {[0, 1].map((index) => (
+              <section key={index} className={panel}>
+                <div className={`h-5 w-28 ${skeleton}`} />
+                <div className={`mt-4 h-[188px] ${skeleton} opacity-50`} />
               </section>
             ))}
           </div>
-
-          {/* 持有資產 */}
-          <section>
-            <div className={`h-7 w-32 ${sk}`} />
-            <div className="mt-4 overflow-hidden rounded-2xl border border-[var(--c-border)] bg-[var(--c-surface)] shadow-[var(--c-shadow)]">
-              {[0, 1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-4 border-b border-[var(--c-border)] px-[18px] py-4 last:border-b-0"
-                >
-                  <div className={`h-4 w-40 ${sk}`} />
-                  <div className={`ml-auto h-4 w-24 ${sk}`} />
-                  <div className={`h-4 w-16 ${sk}`} />
-                </div>
-              ))}
-            </div>
-          </section>
         </div>
       </main>
     </div>

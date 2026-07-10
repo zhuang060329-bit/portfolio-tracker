@@ -6,11 +6,6 @@ import { todayTaipei } from "@/lib/dates";
 import { PrivacyToggle } from "@/components/PrivacyToggle";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
-// 公開展示頁：免登入（proxy 白名單）、不碰 Supabase。
-// 資料由 demo-data 生成（確定性偽隨機），走與真實總覽完全相同的
-// buildDashboardData 計算管線 — XIRR / TWR / Sharpe / 回撤都是算出來的。
-// 互動降級：無刷新鈕、無新增帳戶、持倉不可點（那些路徑需要登入）。
-
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
@@ -25,12 +20,12 @@ export default function DemoPage() {
 
   return (
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
-      <header className="sticky top-0 z-40 border-b border-[var(--c-border)] bg-[color-mix(in_srgb,var(--c-page)_82%,transparent)] backdrop-blur-md backdrop-saturate-150">
-        <div className="mx-auto flex h-[62px] max-w-[1200px] items-center gap-3.5 px-7">
-          <span className="flex shrink-0 items-center gap-2.5">
+      <header className="sticky top-0 z-40 border-b border-[var(--c-border)] bg-[color-mix(in_srgb,var(--c-page)_90%,transparent)] backdrop-blur-xl">
+        <div className="mx-auto flex h-[var(--header-h)] max-w-[1200px] items-center gap-2.5 px-4 sm:px-6 lg:px-7">
+          <span className="flex shrink-0 items-center gap-2">
             <svg
-              width="15"
-              height="15"
+              width="12"
+              height="12"
               viewBox="0 0 16 16"
               fill="currentColor"
               className="text-[var(--c-accent)]"
@@ -38,21 +33,21 @@ export default function DemoPage() {
             >
               <path d="M8 1 L15 8 L8 15 L1 8 Z" />
             </svg>
-            <span className="font-serif text-[21px] font-medium tracking-tight">
+            <span className="text-[17px] font-semibold tracking-[-0.025em] sm:text-[18px]">
               StackWorth
             </span>
           </span>
-          <span className="rounded-full border border-[var(--c-accent)] px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-[var(--c-accent)]">
-            Demo
+          <span className="rounded border border-[var(--c-accent)] px-1.5 py-0.5 text-[9px] font-semibold tracking-[0.06em] text-[var(--c-accent)]">
+            DEMO
           </span>
-          <span className="ml-auto flex items-center gap-1">
+          <span className="ml-auto flex items-center gap-0.5 sm:gap-1">
             <PrivacyToggle />
             <ThemeToggle />
             <a
               href="https://github.com/zhuang060329-bit/portfolio-tracker"
               target="_blank"
               rel="noopener noreferrer"
-              className="ml-1 rounded-[var(--r-control)] border border-[var(--c-border)] px-3 py-1.5 text-[12.5px] font-medium text-[var(--c-muted)] transition-colors hover:border-[var(--c-line-strong)] hover:text-[var(--c-text)]"
+              className="ml-0.5 hidden min-h-9 items-center rounded-[var(--r-control)] border border-[var(--c-border)] px-3 text-[11px] font-medium text-[var(--c-muted)] hover:border-[var(--c-line-strong)] hover:text-[var(--c-text)] sm:inline-flex"
             >
               GitHub
             </a>
@@ -60,14 +55,9 @@ export default function DemoPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1200px] px-7 py-9 pb-28">
-        <p className="mb-2 px-1 text-[12.5px] leading-relaxed text-[var(--c-muted)]">
-          展示資料由固定種子生成，非真實持倉；所有指標（XIRR、TWR、Sharpe、回撤）
-          都經由與正式版相同的計算管線得出。
-          <span className="mt-0.5 block text-[var(--c-faint)]">
-            Generated demo data, not real holdings — every metric is computed
-            by the same pipeline as the production dashboard.
-          </span>
+      <main className="mx-auto max-w-[1200px] px-4 pb-24 pt-5 sm:px-6 sm:pt-7 lg:px-7 lg:pt-8">
+        <p className="mb-3 max-w-2xl text-[11px] leading-relaxed text-[var(--c-muted)] sm:text-[12px]">
+          展示資料由固定種子生成，並非真實持倉；XIRR、TWR、Sharpe 與回撤皆使用正式版相同的計算管線。
         </p>
         <DashboardClient data={dashboard} demo />
       </main>

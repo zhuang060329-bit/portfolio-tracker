@@ -3,8 +3,6 @@ import { SwRegister } from "@/components/SwRegister";
 import { Newsreader, Space_Grotesk, Noto_Sans_TC } from "next/font/google";
 import "./globals.css";
 
-// 字型：Newsreader（serif 標題/大數字）、Space Grotesk（介面，tabular nums）、
-// Noto Sans TC（中文 fallback，preload=false 控首載）
 const fontSerif = Newsreader({
   variable: "--font-serif",
   subsets: ["latin"],
@@ -27,11 +25,10 @@ const fontTc = Noto_Sans_TC({
   preload: false,
 });
 
-// 手機瀏覽器工具列顏色：跟隨系統深淺色，對齊 --c-page。
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#0E1014" },
-    { media: "(prefers-color-scheme: light)", color: "#EAE6D8" },
+    { media: "(prefers-color-scheme: dark)", color: "#0D0F12" },
+    { media: "(prefers-color-scheme: light)", color: "#F1F0EC" },
   ],
 };
 
@@ -40,15 +37,13 @@ export const metadata: Metadata = {
   description: "個人投資組合追蹤工具",
   manifest: "/manifest.webmanifest",
   robots: { index: false, follow: false, nocache: true },
-  appleWebApp: { capable: true, title: "StackWorth", statusBarStyle: "default" },
+  appleWebApp: {
+    capable: true,
+    title: "StackWorth",
+    statusBarStyle: "default",
+  },
 };
 
-// FOUC 預防：
-// 三態主題（light / dark / system），預設 system → 跟隨 prefers-color-scheme。
-// 寫到 dataset.theme 的是「解析後」的二態（light or dark），給 CSS 變數用。
-// localStorage 同時保留：
-//   themePref：使用者選的（light/dark/system）
-//   theme：解析後值（給跨分頁 storage event 同步）
 const themeInit = `(function(){try{
   var pref = localStorage.getItem('themePref') || localStorage.getItem('theme') || 'system';
   if (pref !== 'light' && pref !== 'dark') pref = 'system';

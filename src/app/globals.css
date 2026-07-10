@@ -1,114 +1,103 @@
 @import "tailwindcss";
 
-/* Tailwind v4：讓 `dark:` 變體跟著我們的 [data-theme="dark"] 切換 */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
-/*
- * === StackWorth palette ===
- * 深色優先（:root = 深色 token），淺色由 [data-theme="light"] 覆蓋。
- * --c-up / --c-down：賺綠虧紅。
- */
 :root {
-  --c-page: #0E1014;
-  --c-surface: #15181E;
-  --c-surface-soft: #1A1E26;
-  --c-text: #E8EAEF;
-  --c-muted: #969CA8;
-  --c-faint: #5B616D;
-  --c-accent: #4FA6A0;
-  --c-accent-soft: rgba(79, 166, 160, .14);
-  --c-border: rgba(232, 234, 239, .075);
-  --c-border-soft: rgba(232, 234, 239, .04);
-  --c-line-strong: rgba(232, 234, 239, .15);
-  --c-up: #6FB58D;
-  --c-down: #D98C6B;
-  /* 強對比按鈕（永遠跟 surface 反色）*/
-  --c-btn-strong-bg: #E8EAEF;
-  --c-btn-strong-text: #0E1014;
-  /* 內側頂部高光 + 外側環境陰影 — 讓卡片從深色背景浮起 */
-  --c-shadow: inset 0 1px 0 rgba(232,234,239,0.07), 0 2px 8px rgba(0,0,0,0.55), 0 10px 32px rgba(0,0,0,0.38);
-  /* 骨架 shimmer 掃光色 */
-  --c-shimmer: rgba(255, 255, 255, 0.05);
-}
-
-/* === 半徑 token ===
- * --r-card：大容器  --r-control：按鈕 / 輸入  --r-pill：膠囊 */
-:root {
-  --r-card: 14px;
-  --r-control: 9px;
+  --c-page: #0d0f12;
+  --c-surface: #14171b;
+  --c-surface-soft: #1a1e23;
+  --c-text: #e7e9ec;
+  --c-muted: #9aa0a8;
+  --c-faint: #666d76;
+  --c-accent: #57958f;
+  --c-accent-soft: rgba(87, 149, 143, 0.13);
+  --c-border: rgba(231, 233, 236, 0.09);
+  --c-border-soft: rgba(231, 233, 236, 0.045);
+  --c-line-strong: rgba(231, 233, 236, 0.16);
+  --c-up: #73aa88;
+  --c-down: #d07d67;
+  --c-btn-strong-bg: #e7e9ec;
+  --c-btn-strong-text: #0d0f12;
+  --c-shadow: 0 1px 1px rgba(0, 0, 0, 0.22), 0 10px 28px rgba(0, 0, 0, 0.18);
+  --c-shimmer: rgba(255, 255, 255, 0.045);
+  --r-card: 10px;
+  --r-control: 7px;
   --r-pill: 999px;
-  /* 頁面頂部 header 高度（sticky 定位參照用） */
-  --header-h: 78px;
+  --header-h: 58px;
 }
 
 [data-theme="light"] {
-  --c-page: #EAE6D8;
-  --c-surface: #FBF9F3;
-  --c-surface-soft: #F2EFE4;
-  --c-text: #211E16;
-  --c-muted: #635D4E;
-  --c-faint: #938D7B;
-  --c-accent: #1F7872;
-  --c-accent-soft: rgba(31, 120, 114, 0.12);
-  --c-border: rgba(40, 36, 24, 0.12);
-  --c-border-soft: rgba(40, 36, 24, 0.06);
-  --c-line-strong: rgba(40, 36, 24, 0.20);
-  --c-up: #2F8F5B;
-  --c-down: #C2562F;
-  --c-btn-strong-bg: #211E16;
-  --c-btn-strong-text: #FBF9F3;
-  /* 頂部白色反光 + 外側輕陰影 — 淺色版卡片浮起感 */
-  --c-shadow: inset 0 1px 0 rgba(255,255,255,0.95), 0 1px 3px rgba(40,36,24,.12), 0 10px 28px rgba(40,36,24,.09);
-  --c-shimmer: rgba(0, 0, 0, 0.05);
+  --c-page: #f1f0ec;
+  --c-surface: #fbfbf8;
+  --c-surface-soft: #f4f3ef;
+  --c-text: #1b1e21;
+  --c-muted: #62686e;
+  --c-faint: #92979c;
+  --c-accent: #2e716d;
+  --c-accent-soft: rgba(46, 113, 109, 0.1);
+  --c-border: rgba(27, 30, 33, 0.11);
+  --c-border-soft: rgba(27, 30, 33, 0.055);
+  --c-line-strong: rgba(27, 30, 33, 0.2);
+  --c-up: #317f54;
+  --c-down: #b9573b;
+  --c-btn-strong-bg: #1b1e21;
+  --c-btn-strong-text: #fbfbf8;
+  --c-shadow: 0 1px 2px rgba(27, 30, 33, 0.055), 0 10px 24px rgba(27, 30, 33, 0.045);
+  --c-shimmer: rgba(0, 0, 0, 0.04);
 }
 
-/* === 字型角色 ===
- * --font-serif → Newsreader（大數字、標題）
- * --font-sans → Space Grotesk（介面預設）
- * --font-tc → Noto Sans TC（中文 fallback）
- * Tailwind 的 font-serif / font-sans 透過 layout.tsx 的 className 餵入。
- */
+html {
+  background: var(--c-page);
+}
+
 body {
   background: var(--c-page);
   color: var(--c-text);
-  font-family: var(--font-sans), var(--font-tc),
-    "Noto Sans TC", system-ui, sans-serif;
+  font-family: var(--font-sans), var(--font-tc), "Noto Sans TC", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
-  transition: background 0.4s ease, color 0.4s ease;
+  text-rendering: optimizeLegibility;
+  transition: background 0.25s ease, color 0.25s ease;
 }
 
-/* === 金額遮蔽（header 眼睛切換，見 PrivacyToggle）===
- * .amt：標在絕對金額 / 持有數量的元素上；blur 用 em 隨字級縮放，
- * hero 大字與表格小字遮蔽強度一致。百分比與單價不標。
- * recharts 圖（帳戶詳情頁）走容器 class .amt-chart，只遮 Y 軸刻度與 tooltip。 */
 .amt {
-  transition: filter 0.25s ease;
+  transition: filter 0.2s ease;
 }
+
 [data-privacy="on"] .amt {
   filter: blur(0.32em);
   user-select: none;
 }
-[data-privacy="on"] .amt-chart .yAxis .recharts-cartesian-axis-tick-value {
-  filter: blur(5px);
-}
+
+[data-privacy="on"] .amt-chart .yAxis .recharts-cartesian-axis-tick-value,
 [data-privacy="on"] .amt-chart .recharts-tooltip-wrapper {
   filter: blur(5px);
 }
 
-/* tabular nums 工具類（jsx 設計裡的 .tnum 等價） */
 .tnum {
   font-variant-numeric: tabular-nums lining-nums;
   font-feature-settings: "tnum" 1;
 }
 
-/* === <details> 平滑展開 === */
-details[open] > *:not(summary) {
-  animation: detailsReveal 180ms ease-out;
+.hide-scrollbar {
+  scrollbar-width: none;
 }
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.safe-bottom {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+details[open] > *:not(summary) {
+  animation: detailsReveal 160ms ease-out;
+}
+
 @keyframes detailsReveal {
   from {
     opacity: 0;
-    transform: translateY(-4px);
+    transform: translateY(-3px);
   }
   to {
     opacity: 1;
@@ -121,9 +110,11 @@ details > summary {
   position: relative;
   padding-left: 1.25rem;
 }
+
 details > summary::-webkit-details-marker {
   display: none;
 }
+
 details > summary::before {
   content: "▸";
   position: absolute;
@@ -132,44 +123,39 @@ details > summary::before {
   transform: translateY(-50%);
   font-size: 0.625rem;
   color: var(--c-muted);
-  transition: transform 180ms ease-out;
+  transition: transform 160ms ease-out;
 }
+
 details[open] > summary::before {
   transform: translateY(-50%) rotate(90deg);
 }
 
-/* === Activity 時間軸帳本：列淡入（可被 reduce motion 關閉）=== */
 @keyframes ledgerRowIn {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(5px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
+
 .ledger-row-in {
   opacity: 0;
-  animation: ledgerRowIn 0.4s ease forwards;
-}
-@media (prefers-reduced-motion: reduce) {
-  .ledger-row-in {
-    opacity: 1;
-    animation: none;
-  }
+  animation: ledgerRowIn 0.32s ease forwards;
 }
 
-/* === What-if 推算滑桿（thumb 需原生 CSS，無法用 Tailwind inline）=== */
 .proj-range {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 6px;
+  height: 5px;
   border-radius: 3px;
   outline: none;
   cursor: pointer;
 }
+
 .proj-range::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
@@ -178,13 +164,10 @@ details[open] > summary::before {
   border-radius: 50%;
   background: var(--c-accent);
   border: 3px solid var(--c-surface);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
   cursor: pointer;
-  transition: transform 0.1s;
 }
-.proj-range::-webkit-slider-thumb:hover {
-  transform: scale(1.12);
-}
+
 .proj-range::-moz-range-thumb {
   width: 16px;
   height: 16px;
@@ -194,38 +177,36 @@ details[open] > summary::before {
   cursor: pointer;
 }
 
-/* === 連結 / 按鈕 hover 統一節奏 === */
 a,
 button,
 [role="button"] {
-  transition-property: background-color, border-color, color, fill, stroke,
-    opacity, box-shadow, transform;
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
+  transition-duration: 140ms;
 }
 
-/* === input / textarea：暗色模式下需要可讀的底色 === */
 input,
 textarea,
 select {
   background-color: var(--c-surface);
   color: var(--c-text);
 }
+
 input::placeholder,
 textarea::placeholder {
   color: var(--c-faint);
 }
+
 input:disabled,
 textarea:disabled {
   background-color: var(--c-surface-soft);
   color: var(--c-faint);
 }
 
-/* === 頁面進場動畫 === */
 @keyframes page-in {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(4px);
   }
   to {
     opacity: 1;
@@ -233,7 +214,6 @@ textarea:disabled {
   }
 }
 
-/* === 骨架 shimmer（取代 animate-pulse）=== */
 @keyframes shimmer {
   0% {
     background-position: 200% 0;
@@ -242,26 +222,22 @@ textarea:disabled {
     background-position: -200% 0;
   }
 }
+
 .sk {
   position: relative;
   overflow: hidden;
   background: var(--c-surface-soft);
 }
+
 .sk::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    var(--c-shimmer) 50%,
-    transparent 100%
-  );
+  background: linear-gradient(90deg, transparent 0%, var(--c-shimmer) 50%, transparent 100%);
   background-size: 200% 100%;
   animation: shimmer 1.4s ease-in-out infinite;
 }
 
-/* === 工具提示淡入（圖表 hover tooltip）=== */
 @keyframes tooltip-in {
   from {
     opacity: 0;
@@ -270,24 +246,22 @@ textarea:disabled {
     opacity: 1;
   }
 }
+
 .tooltip-pop {
   animation: tooltip-in 0.12s ease both;
 }
 
-/* === 基礎互動層（優先度低於 Tailwind utilities，active:scale-XX 等類別可覆蓋）=== */
 @layer base {
-  /* 頁面進場 */
   main {
-    animation: page-in 0.3s cubic-bezier(0.4, 0, 0.2, 1) both;
+    animation: page-in 0.22s cubic-bezier(0.4, 0, 0.2, 1) both;
   }
-  /* 按鈕點擊回饋；Tailwind active:scale-* utility 優先度更高，不受此影響 */
+
   button:not(:disabled):active,
   [role="button"]:not(:disabled):active {
-    transform: scale(0.97);
+    transform: scale(0.985);
   }
 }
 
-/* === 完整 prefers-reduced-motion 覆蓋 === */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -295,5 +269,10 @@ textarea:disabled {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .ledger-row-in {
+    opacity: 1;
+    animation: none;
   }
 }
