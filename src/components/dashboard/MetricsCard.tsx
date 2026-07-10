@@ -4,7 +4,6 @@ import { fmtTwd, fmtCompact } from "./DashboardCharts";
 import type { DashSummary } from "./types";
 import { CardHead, sign, toneCls, TONE_TEXT, type Tone } from "./shared";
 
-/* ---------- 指標 + 被動收入 ---------- */
 export function MetricsCard({ s }: { s: DashSummary }) {
   const metrics =
     s.twrShowable && s.twrCum != null
@@ -13,33 +12,50 @@ export function MetricsCard({ s }: { s: DashSummary }) {
             label: "TWR 累積",
             value: `${sign(s.twrCum)}${(Math.abs(s.twrCum) * 100).toFixed(1)}%`,
             tone: toneCls(s.twrCum),
-            hint: "策略本身報酬",
+            hint: "已排除入金與提領",
           },
           s.twrAnnShowable && s.twrAnn != null
             ? {
                 label: "TWR 年化",
                 value: `${sign(s.twrAnn)}${(Math.abs(s.twrAnn) * 100).toFixed(1)}%`,
                 tone: toneCls(s.twrAnn),
-                hint: "可與大盤比較",
+                hint: "快照跨度滿 90 天",
               }
             : {
                 label: "TWR 年化",
                 value: "—",
                 tone: "flat" as Tone,
-                hint: "資料未滿 90 天",
+                hint: "快照跨度未滿 90 天",
               },
-          {
-            label: "最大回撤",
-            value: `−${(Math.abs(s.maxDrawdown ?? 0) * 100).toFixed(1)}%`,
-            tone: "down" as Tone,
-            hint: s.ddPeak && s.ddTrough ? `${s.ddPeak} → ${s.ddTrough}` : "下行風險",
-          },
-          {
-            label: "Sharpe",
-            value: (s.sharpe ?? 0).toFixed(2),
-            tone: (s.sharpe ?? 0) > 1 ? ("up" as Tone) : ("flat" as Tone),
-            hint: ">1 算優秀",
-          },
+          s.maxDrawdown != null
+            ? {
+                label: "最大回撤",
+                value: `−${(Math.abs(s.maxDrawdown) * 100).toFixed(1)}%`,
+                tone: "down" as Tone,
+                hint:
+                  s.ddPeak && s.ddTrough
+                    ? `${s.ddPeak} → ${s.ddTrough}`
+                    : "已排除現金流",
+              }
+            : {
+                label: "最大回撤",
+                value: "—",
+                tone: "flat" as Tone,
+                hint: "尚無回撤",
+              },
+          s.sharpe != null
+            ? {
+                label: "Sharpe",
+                value: s.sharpe.toFixed(2),
+                tone: s.sharpe > 1 ? ("up" as Tone) : ("flat" as Tone),
+                hint: "依實際日曆間隔年化",
+              }
+            : {
+                label: "Sharpe",
+                value: "—",
+                tone: "flat" as Tone,
+                hint: "樣本不足或波動為零",
+              },
         ]
       : null;
 
@@ -48,18 +64,18 @@ export function MetricsCard({ s }: { s: DashSummary }) {
       <CardHead title="績效指標" sub="基於每日淨值快照" />
       {metrics ? (
         <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-[var(--c-border)] bg-[var(--c-border)]">
-          {metrics.map((m) => (
-            <div key={m.label} className="bg-[var(--c-surface)] px-4 py-3.5">
+          {metrics.map((metric) => (
+            <div key={metric.label} className="bg-[var(--c-surface)] px-4 py-3.5">
               <div className="text-[11.5px] text-[var(--c-muted)]">
-                {m.label}
+                {metric.label}
               </div>
               <div
-                className={`mt-1.5 font-serif text-[23px] font-medium tnum ${TONE_TEXT[m.tone]}`}
+                className={`mt-1.5 font-serif text-[23px] font-medium tnum ${TONE_TEXT[metric.tone]}`}
               >
-                {m.value}
+                {metric.value}
               </div>
               <div className="mt-0.5 text-[10.5px] text-[var(--c-faint)]">
-                {m.hint}
+                {metric.hint}
               </div>
             </div>
           ))}
@@ -70,14 +86,15 @@ export function MetricsCard({ s }: { s: DashSummary }) {
             {["TWR 累積", "TWR 年化", "最大回撤", "Sharpe"].map((label) => (
               <div key={label} className="bg-[var(--c-surface)] px-4 py-3.5">
                 <div className="text-[11.5px] text-[var(--c-muted)]">{label}</div>
-                <div className="sk mt-1.5 h-[26px] w-[68px] rounded-md" />
-                <div className="sk mt-1.5 h-[10px] w-[56px] rounded" />
+                <div className="mt-1.5 font-serif text-[23px] font-medium text-[var(--c-faint)] tnum">
+                  —
+                </div>
+                <div className="mt-0.5 text-[10.5px] text-[var(--c-faint)]">
+                  快照未滿 30 天
+                </div>
               </div>
             ))}
           </div>
-          <p className="mt-2 text-[11.5px] text-[var(--c-faint)]">
-            快照滿 30 天後顯示
-          </p>
         </div>
       )}
 
@@ -95,7 +112,8 @@ export function MetricsCard({ s }: { s: DashSummary }) {
             <IncomeStat label="月均" value={`NT$ ${fmtCompact(s.monthlyAvg)}`} />
           </div>
           <p className="mt-3 text-[10.5px] text-[var(--c-faint)]">
-            累計 配息 <span className="amt">NT$ {fmtTwd(s.dividendAll)}</span> · 利息 <span className="amt">NT$ {fmtTwd(s.interestAll)}</span>
+            累計 配息 <span className="amt">NT$ {fmtTwd(s.dividendAll)}</span> · 利息{" "}
+            <span className="amt">NT$ {fmtTwd(s.interestAll)}</span>
           </p>
         </div>
       )}
