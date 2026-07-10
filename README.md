@@ -27,15 +27,17 @@ Holding assets across markets and currencies means brokerage apps only ever show
 
 **The XIRR solver validates its residual before returning a rate.** Every exit path of the Newton-Raphson loop checks `|NPV(rate)|` against a scale-relative tolerance; oscillation, flat derivatives, and hitting the iteration cap all return null instead of a residual value.
 
-**Dashboard scope is the active portfolio.** Totals, the trend curve, performance metrics, income stats, and allocation share one boundary (active accounts), so archiving an account cannot appear as a value drop in TWR.
+**Dashboard scope is the active portfolio.** Summary values, the trend curve, performance metrics, income stats, and allocation share one active-account boundary. Showing archived accounts only expands the holdings ledger; it cannot change the dashboard totals or appear as a value drop in TWR.
 
-**Failure states are explicit.** Benchmark fetchers return empty on failure and the chart bridges gaps with a dashed segment; CoinGecko's 365-day history cap renders BTC as a late-starting series; the service worker caches only an offline page, since showing stale financial numbers is worse than failing to load; a data-health card in settings turns red when the price cron misses a run.
+**Risk metrics preserve cashflow and time boundaries.** Max drawdown is calculated from the cashflow-adjusted TWR index, so withdrawals do not look like market losses. Sharpe converts irregular snapshot intervals to equivalent daily returns and annualizes on calendar days because the portfolio includes assets that trade on weekends.
+
+**Failure states are explicit.** Benchmark fetchers return empty on failure and the chart bridges gaps with a dashed segment; enabled comparison lines share one start date before they are normalized to 100; CoinGecko's history cap renders BTC as a late-starting series; the service worker caches only an offline page, since showing stale financial numbers is worse than failing to load; a data-health card in settings turns red when the price cron misses a run.
 
 ## Verification
 
 - Every server action input passes a Zod schema before touching the database; Supabase RLS and TOTP MFA (AAL2) sit under that.
 - Four local gates before any commit — lint, typecheck, Vitest, build — mirrored in GitHub Actions.
-- Tests target invariants: XIRR residual validation, TWR cashflow isolation, demo-data determinism (regenerating tomorrow does not rewrite yesterday), server-action auth and cooldown boundaries, and the atomic-write RPC against a real Postgres.
+- Tests target invariants: XIRR residual validation, TWR cashflow isolation, cashflow-adjusted drawdown, irregular snapshot intervals, archived-account scope, demo-data determinism, server-action auth and cooldown boundaries, and the atomic-write RPC against a real Postgres.
 - Calendar-date conversions pin `Asia/Taipei` explicitly; Vercel runs in UTC, and a one-day shift in snapshot dates corrupts day-change and TWR.
 
 ## Demo
