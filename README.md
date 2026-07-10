@@ -17,7 +17,7 @@ Holding assets across markets and currencies means brokerage apps only ever show
 - **The data is my real money.** When a metric can't be computed reliably, the UI shows "—" instead of a best guess.
 - **Free-tier quote APIs** (Twelve Data, FinMind, CoinGecko) with hard rate and history limits — refresh paths use cooldowns, and missing data renders as a visible gap rather than an interpolated value.
 - **Daily driver on a phone.** Touch scrubbing on charts, PWA install, one-tap amount masking for public places.
-- **Solo project.** Every write path, metric, and edge case has to be cheap to verify — hence the four-gate discipline below.
+- **Solo project.** Every write path, metric, and edge case has to be cheap to verify — hence the five-gate discipline below.
 
 ## Design decisions
 
@@ -27,15 +27,17 @@ Holding assets across markets and currencies means brokerage apps only ever show
 
 **The XIRR solver validates its residual before returning a rate.** Every exit path of the Newton-Raphson loop checks `|NPV(rate)|` against a scale-relative tolerance; oscillation, flat derivatives, and hitting the iteration cap all return null instead of a residual value.
 
-**Dashboard scope is the active portfolio.** Totals, the trend curve, performance metrics, income stats, and allocation share one boundary (active accounts), so archiving an account cannot appear as a value drop in TWR.
+**Dashboard scope is the active portfolio.** Summary values, the trend curve, performance metrics, income stats, and allocation share one active-account boundary. Showing archived accounts only expands the holdings ledger; it cannot change the dashboard totals or appear as a value drop in TWR.
 
-**Failure states are explicit.** Benchmark fetchers return empty on failure and the chart bridges gaps with a dashed segment; CoinGecko's 365-day history cap renders BTC as a late-starting series; the service worker caches only an offline page, since showing stale financial numbers is worse than failing to load; a data-health card in settings turns red when the price cron misses a run.
+**Risk metrics preserve cashflow and time boundaries.** Max drawdown is calculated from the cashflow-adjusted TWR index, so withdrawals do not look like market losses. Sharpe converts irregular snapshot intervals to equivalent daily returns and annualizes on calendar days because the portfolio includes assets that trade on weekends.
+
+**Failure states are explicit.** Benchmark fetchers return empty on failure and the chart bridges gaps with a dashed segment; enabled comparison lines share one start date before they are normalized to 100; CoinGecko's history cap renders BTC as a late-starting series; the service worker caches only an offline page, since showing stale financial numbers is worse than failing to load; a data-health card in settings turns red when the price cron misses a run.
 
 ## Verification
 
 - Every server action input passes a Zod schema before touching the database; Supabase RLS and TOTP MFA (AAL2) sit under that.
-- Four local gates before any commit — lint, typecheck, Vitest, build — mirrored in GitHub Actions.
-- Tests target invariants: XIRR residual validation, TWR cashflow isolation, demo-data determinism (regenerating tomorrow does not rewrite yesterday), server-action auth and cooldown boundaries, and the atomic-write RPC against a real Postgres.
+- Five gates run before merge — lint, typecheck, unit Vitest, Postgres integration, and production build — mirrored in GitHub Actions.
+- Tests target invariants: XIRR residual validation, TWR cashflow isolation, cashflow-adjusted drawdown, irregular snapshot intervals, archived-account scope, demo-data determinism, server-action auth and cooldown boundaries, and the atomic-write RPC against a real Postgres.
 - Calendar-date conversions pin `Asia/Taipei` explicitly; Vercel runs in UTC, and a one-day shift in snapshot dates corrupts day-change and TWR.
 
 ## Demo
@@ -54,11 +56,11 @@ cp .env.local.example .env.local   # fill in — see docs/REFERENCE.md for the v
 npm run dev
 ```
 
-Gates: `npm run lint` / `typecheck` / `test` / `build`.
+Gates: `npm run lint` / `npm run typecheck` / `npm run test:unit` / `TEST_DATABASE_URL=... npm run test:integration` / `npm run build`.
 
 ## Status and next steps
 
-Running in production (Vercel + Supabase, single user). CI runs lint / typecheck / tests (unit + Postgres integration) / build on every push to main. Recently shipped: public demo route, amount masking, manual refresh with cooldown, PWA install, BTC benchmark, data-health card, and atomic write paths — every account mutation now goes through a single Postgres RPC (`apply_account_mutation`, transaction-per-call), with integration tests running against a real Postgres in CI.
+Running in production (Vercel + Supabase, single user). CI runs lint / typecheck / unit tests / Postgres integration / build on every push to main. Recently shipped: public demo route, amount masking, manual refresh with cooldown, PWA install, BTC benchmark, data-health card, and atomic write paths — every account mutation now goes through a single Postgres RPC (`apply_account_mutation`, transaction-per-call), with integration tests running against a real Postgres in CI.
 
 Next: per-account TWR charts; broader CSV import formats; idempotency guard on recurring-plan execution.
 

@@ -27,7 +27,6 @@ export default async function Home({
   const showArchived = params.archived === "1";
 
   const supabase = await createClient();
-  // 三個彼此無依賴的讀取併批；後續交易/快照查詢要先有 activeAccountIds，故 accounts 在第一批
   const [
     {
       data: { user },
@@ -49,11 +48,8 @@ export default async function Home({
   const activeAccounts = allAccounts.filter((a) => a.status !== "archived");
   const activeAccountIds = activeAccounts.map((a) => a.id);
 
-  // 第二批：交易 / 收入 / 快照 / profile 彼此無依賴，併批。
-  // 口徑：首頁一律「目前組合」= active 帳戶。收入與快照都鎖 active，
-  // 否則歸檔帳戶的歷史收入會混進 YTD / 配息率，歷史快照會留在趨勢曲線裡，
-  // 而 TWR 的現金流又只看 active → 歸檔瞬間被誤判成無提領的資產暴跌。
-  // XIRR 用現金流也只查 active（builder 內的 terminal value 同一個 set）。
+  // 總覽指標一律使用目前 active portfolio。封存切換只控制持倉列表，
+  // 避免 Hero、配置、收入與績效落在不同帳戶邊界。
   const hasActive = activeAccountIds.length > 0;
   const [cfRes, incomeRes, profileRes, snapsRes] = await Promise.all([
     hasActive
@@ -124,7 +120,7 @@ export default async function Home({
 
   const dashboard = buildDashboardData({
     accounts: allAccounts,
-    showArchived,
+    includeArchivedHoldings: showArchived,
     cfRows: (cfRows ?? []) as CashflowRow[],
     incomeRows: (incomeRows ?? []) as IncomeRow[],
     allocationTargets: targets,
