@@ -31,13 +31,15 @@ Holding assets across markets and currencies means brokerage apps only ever show
 
 **Risk metrics preserve cashflow and time boundaries.** Max drawdown is calculated from the cashflow-adjusted TWR index, so withdrawals do not look like market losses. Sharpe converts irregular snapshot intervals to equivalent daily returns and annualizes on calendar days because the portfolio includes assets that trade on weekends.
 
+**Recurring execution is ledger-backed and idempotent.** Cron and manual execution fetch the latest quote, then call one Postgres RPC. The function locks the plan and account, derives the quantity increment from current database values, writes the transaction and snapshot, records the scheduled run, and advances the plan in one transaction. A unique `(plan_id, scheduled_date)` key makes retries and double clicks harmless.
+
 **Failure states are explicit.** Benchmark fetchers return empty on failure and the chart bridges gaps with a dashed segment; enabled comparison lines share one start date before they are normalized to 100; CoinGecko's history cap renders BTC as a late-starting series; the service worker caches only an offline page, since showing stale financial numbers is worse than failing to load; a data-health card in settings turns red when the price cron misses a run.
 
 ## Verification
 
 - Every server action input passes a Zod schema before touching the database; Supabase RLS and TOTP MFA (AAL2) sit under that.
 - Five gates run before merge — lint, typecheck, unit Vitest, Postgres integration, and production build — mirrored in GitHub Actions.
-- Tests target invariants: XIRR residual validation, TWR cashflow isolation, cashflow-adjusted drawdown, irregular snapshot intervals, archived-account scope, demo-data determinism, server-action auth and cooldown boundaries, and the atomic-write RPC against a real Postgres.
+- Tests target invariants: XIRR residual validation, TWR cashflow isolation, cashflow-adjusted drawdown, irregular snapshot intervals, archived-account scope, demo-data determinism, server-action auth and cooldown boundaries, recurring-plan concurrency and rollback, and the atomic-write RPCs against a real Postgres.
 - Calendar-date conversions pin `Asia/Taipei` explicitly; Vercel runs in UTC, and a one-day shift in snapshot dates corrupts day-change and TWR.
 
 ## Demo
@@ -60,9 +62,9 @@ Gates: `npm run lint` / `npm run typecheck` / `npm run test:unit` / `TEST_DATABA
 
 ## Status and next steps
 
-Running in production (Vercel + Supabase, single user). CI runs lint / typecheck / unit tests / Postgres integration / build on every push to main. Recently shipped: public demo route, amount masking, manual refresh with cooldown, PWA install, BTC benchmark, data-health card, and atomic write paths — every account mutation now goes through a single Postgres RPC (`apply_account_mutation`, transaction-per-call), with integration tests running against a real Postgres in CI.
+Running in production (Vercel + Supabase, single user). CI runs lint / typecheck / unit tests / Postgres integration / build on every push to main. Recently shipped: public demo route, amount masking, manual refresh with cooldown, PWA install, BTC benchmark, data-health card, active-portfolio metric boundaries, atomic account writes, and ledger-backed recurring-plan execution.
 
-Next: per-account TWR charts; broader CSV import formats; idempotency guard on recurring-plan execution.
+Next: per-account TWR charts; broader CSV import formats; modular server actions and chart internals.
 
 ## Author
 
