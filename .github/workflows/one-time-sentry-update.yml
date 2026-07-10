@@ -1,0 +1,47 @@
+name: One-time Sentry security update
+
+on:
+  push:
+    branches:
+      - sentry-security-update
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm install @sentry/nextjs@^10.64.0
+
+      - run: npm run lint
+
+      - run: npm run typecheck
+
+      - run: npm run test:unit
+
+      - run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: placeholder_key_for_ci
+
+      - name: Commit the generated lockfile
+        run: |
+          git rm .github/workflows/one-time-sentry-update.yml
+          git add package.json package-lock.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "依賴安全：升級 Sentry 與 OpenTelemetry"
+          git push origin HEAD:sentry-security-update
