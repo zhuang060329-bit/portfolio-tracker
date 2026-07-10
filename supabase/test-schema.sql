@@ -1,8 +1,16 @@
--- 整合測試用最小 schema（鏡射 production 的 accounts / transactions /
--- account_snapshots 欄位；auth.users 外鍵與 RLS 屬 Supabase 環境，測試不含）。
--- 若正式 schema 欄位變動，此檔需同步——integration test 的欄位斷言會抓漂移。
+-- 整合測試用最小 schema。正式欄位變動時需同步，讓 RPC 測試能抓到漂移。
 -- 冪等：可重複套用。
 
+create schema if not exists auth;
+create or replace function auth.uid() returns uuid
+language sql
+stable
+as $$
+  select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid
+$$;
+
+drop table if exists recurring_plan_runs cascade;
+drop table if exists recurring_plans cascade;
 drop table if exists account_snapshots cascade;
 drop table if exists transactions cascade;
 drop table if exists accounts cascade;
@@ -61,4 +69,19 @@ create table account_snapshots (
   value_base numeric(20,2) not null,
   created_at timestamptz not null default now(),
   unique (account_id, snapshot_date)
+);
+
+create table recurring_plans (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null,
+  account_id uuid not null references accounts(id) on delete cascade,
+  amount_twd numeric(20,2) not null check (amount_twd > 0),
+  day_of_month integer not null check (day_of_month between 1 and 28),
+  start_date date not null,
+  next_run_date date not null,
+  last_run_date date,
+  active boolean not null default true,
+  note text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
