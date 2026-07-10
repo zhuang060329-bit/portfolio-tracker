@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { executeRecurringPlan } from "@/lib/contributions";
-import type { FormState } from "./actions";
+import type { FormState } from "./action-shared";
 
 export async function executePlan(
   _previous: FormState,
@@ -45,6 +45,8 @@ export async function executePlan(
   revalidatePath(`/accounts/${plan.account_id}`);
   revalidatePath("/");
   return {
-    ok: result.executed ? "已執行本期定期定額" : "本期已由另一個請求執行",
+    ok: result.executed
+      ? "已執行本期定期定額"
+      : "本期已由另一個請求執行",
   };
 }
