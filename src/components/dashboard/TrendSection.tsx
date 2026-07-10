@@ -60,48 +60,44 @@ export function TrendSection({
     : 0;
 
   return (
-    <section className="mt-5 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] shadow-[var(--c-shadow)]">
-      <div className="mb-3 flex flex-col gap-3 px-5 pt-5 sm:flex-row sm:items-start sm:justify-between sm:gap-4 sm:px-6">
-        <div className="flex items-start gap-2.5">
-          <span
-            aria-hidden="true"
-            className="mt-[3px] h-[15px] w-[3px] shrink-0 rounded-full bg-[var(--c-accent)]"
-          />
-          <div>
-            <h2 className="text-[18px] font-semibold tracking-tight">
-              {mode === "value" ? "淨資產趨勢" : "績效對照"}
-            </h2>
-            <p className="mt-0.5 text-[12.5px] text-[var(--c-muted)]">
-              {mode === "value" ? (
-                enoughValue ? (
-                  <>
-                    此區間淨值變化{" "}
-                    <span className={TONE_TEXT[toneCls(change)]}>
-                      <span className="amt">
-                        {sign(change)}NT${" "}
-                        {Math.abs(Math.round(change)).toLocaleString("en-US")}
-                      </span>
+    <section className="mt-5 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)]">
+      <div className="flex flex-col gap-4 px-4 pb-2 pt-5 sm:flex-row sm:items-start sm:justify-between sm:px-6 sm:pt-6">
+        <div>
+          <h2 className="text-[17px] font-semibold tracking-[-0.015em] sm:text-[18px]">
+            {mode === "value" ? "淨資產趨勢" : "績效對照"}
+          </h2>
+          <p className="mt-1 text-[12px] text-[var(--c-muted)]">
+            {mode === "value" ? (
+              enoughValue ? (
+                <>
+                  區間變化{" "}
+                  <span className={TONE_TEXT[toneCls(change)]}>
+                    <span className="amt font-medium">
+                      {sign(change)}NT${" "}
+                      {Math.abs(Math.round(change)).toLocaleString("en-US")}
                     </span>
-                  </>
-                ) : (
-                  "此區間快照不足兩天"
-                )
+                  </span>
+                </>
               ) : (
-                "啟用線共同起點 = 100 · SPY/QQQ 已換算 TWD"
-              )}
-            </p>
-          </div>
+                "此區間快照不足兩天"
+              )
+            ) : (
+              "啟用線採共同起點 100，SPY／QQQ 已換算 TWD"
+            )}
+          </p>
         </div>
+
         {hasPerf && (
-          <div className="inline-flex self-start rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] p-[3px]">
+          <div className="inline-flex self-start rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-page)] p-1">
             {(["value", "bench"] as const).map((item) => (
               <button
                 key={item}
                 type="button"
+                aria-pressed={mode === item}
                 onClick={() => setMode(item)}
-                className={`whitespace-nowrap rounded-md px-3.5 py-1.5 text-[13px] font-medium transition-all ${
+                className={`min-h-9 whitespace-nowrap rounded-[5px] px-3 text-[12px] font-medium ${
                   mode === item
-                    ? "bg-[var(--c-surface)] text-[var(--c-text)] shadow-sm"
+                    ? "bg-[var(--c-surface-soft)] text-[var(--c-text)]"
                     : "text-[var(--c-muted)]"
                 }`}
               >
@@ -114,16 +110,16 @@ export function TrendSection({
 
       {mode === "value" ? (
         enoughValue ? (
-          <TrendChart key={range} data={sliced} height={300} />
+          <TrendChart key={range} data={sliced} height={280} />
         ) : (
-          <ChartEmpty>此區間快照不足兩天，明天再來看。</ChartEmpty>
+          <ChartEmpty>此區間快照不足兩天。</ChartEmpty>
         )
       ) : enoughBench ? (
         <BenchChart
           key={`${range}-${perfSliced[0].date}`}
           data={perfSliced}
           series={benchmarks}
-          height={300}
+          height={280}
           active={active}
         />
       ) : (
@@ -132,32 +128,34 @@ export function TrendSection({
 
       {mode === "bench" && benchNotice && (
         <p
-          className="mt-2 px-5 text-[11.5px] text-[var(--c-faint)] sm:px-6"
+          className="px-4 text-[11px] text-[var(--c-faint)] sm:px-6"
           role="status"
         >
           {benchNotice}
         </p>
       )}
 
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-4 px-5 pb-4 sm:px-6">
-        <div className="inline-flex gap-0.5">
+      <div className="mt-2 border-t border-[var(--c-border)] px-4 py-3 sm:px-6">
+        <div className="hide-scrollbar flex gap-1 overflow-x-auto">
           {RANGES.map((item) => (
             <button
               key={item.key}
               type="button"
+              aria-pressed={range === item.key}
               onClick={() => setRange(item.key)}
-              className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-all duration-150 ${
+              className={`min-h-9 min-w-11 shrink-0 rounded-[var(--r-control)] px-2.5 text-[11px] font-semibold ${
                 range === item.key
-                  ? "bg-[var(--c-accent-soft)] text-[var(--c-accent)] shadow-[inset_0_-2px_0_var(--c-accent)]"
-                  : "text-[var(--c-muted)] hover:text-[var(--c-text)]"
+                  ? "bg-[var(--c-accent-soft)] text-[var(--c-accent)]"
+                  : "text-[var(--c-muted)] hover:bg-[var(--c-surface-soft)] hover:text-[var(--c-text)]"
               }`}
             >
               {item.key}
             </button>
           ))}
         </div>
+
         {mode === "bench" && (
-          <div className="flex flex-wrap gap-1.5">
+          <div className="hide-scrollbar mt-3 flex gap-1.5 overflow-x-auto pb-1">
             <LegendButton
               on={active.portfolio}
               color="var(--c-accent)"
@@ -207,17 +205,18 @@ function LegendButton({
   return (
     <button
       type="button"
+      aria-pressed={on}
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 rounded-full border border-[var(--c-border)] px-2.5 py-1 text-xs font-medium text-[var(--c-text)] transition-all duration-150 hover:border-[var(--c-line-strong)] hover:bg-[var(--c-surface-soft)] ${
-        on ? "" : "opacity-40 hover:opacity-60"
+      className={`inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-[var(--r-control)] border border-[var(--c-border)] px-2.5 text-[11px] font-medium text-[var(--c-text)] hover:border-[var(--c-line-strong)] hover:bg-[var(--c-surface-soft)] ${
+        on ? "" : "opacity-40"
       }`}
     >
-      <svg width="22" height="10" aria-hidden="true" className="shrink-0">
+      <svg width="20" height="8" aria-hidden="true" className="shrink-0">
         <line
           x1="1"
-          y1="5"
-          x2="21"
-          y2="5"
+          y1="4"
+          x2="19"
+          y2="4"
           stroke={color}
           strokeWidth={dash ? 2 : 3}
           strokeDasharray={dash}
@@ -231,7 +230,7 @@ function LegendButton({
 
 function ChartEmpty({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-[300px] items-center justify-center text-sm text-[var(--c-faint)]">
+    <div className="flex h-[280px] items-center justify-center px-4 text-center text-sm text-[var(--c-faint)]">
       {children}
     </div>
   );
