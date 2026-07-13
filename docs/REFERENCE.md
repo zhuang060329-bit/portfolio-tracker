@@ -26,7 +26,7 @@ Supporting detail for [StackWorth](../README.md): full feature inventory, stack,
 
 | Layer | Choice |
 |---|---|
-| Framework | Next.js 16.2.6 (Turbopack, App Router) |
+| Framework | Next.js 16.2.10 (Turbopack, App Router) |
 | Language | TypeScript 5 |
 | UI | React 19, Tailwind CSS v4, Recharts |
 | Auth | Supabase Auth (email/password + Google OAuth + MFA TOTP AAL2) |

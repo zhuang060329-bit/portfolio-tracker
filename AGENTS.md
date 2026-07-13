@@ -22,7 +22,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 | 層 | 選擇 |
 |---|---|
-| 前端框架 | Next.js 16.2.6（Turbopack；Proxy 取代 Middleware；async cookies、async params） |
+| 前端框架 | Next.js 16.2.10（Turbopack；Proxy 取代 Middleware；async cookies、async params） |
 | React | 19（useActionState、useSyncExternalStore、Suspense for useSearchParams） |
 | 樣式 | Tailwind v4，`@custom-variant dark` 對應 `[data-theme="dark"]` |
 | 圖表 | Recharts |

@@ -29,7 +29,7 @@
 
 ## Tech Stack
 
-* Framework: Next.js 16.2.6（App Router、Turbopack、Proxy 取代 Middleware）+ React 19
+* Framework: Next.js 16.2.10（App Router、Turbopack、Proxy 取代 Middleware）+ React 19
 * Database: Supabase Postgres + RLS（SQL 檔在 `supabase/`，執行順序見 `supabase/README.md`）
 * Auth: Supabase Auth（Email/密碼 + Google OAuth + MFA TOTP，AAL2 強制）
 * Styling: Tailwind CSS v4 + CSS 變數系統（`[data-theme="dark"]` 深色模式）；圖表 Recharts
