@@ -39,7 +39,7 @@ export default async function AccountsPage() {
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active="accounts" userEmail={user?.email} unreadCount={unreadCount} />
 
-      <main className="mx-auto max-w-[880px] px-7 py-9 pb-24">
+      <main className="mx-auto max-w-[880px] px-4 py-9 pb-24 sm:px-6 lg:px-7">
         <div className="mb-5 flex items-center justify-between gap-3">
           <div>
             <h1 className="font-serif text-[26px] font-medium tracking-tight">帳戶</h1>

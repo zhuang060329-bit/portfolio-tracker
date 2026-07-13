@@ -103,6 +103,7 @@ export function SettingsApp({
               key={n.id}
               type="button"
               onClick={() => jump(n.id)}
+              aria-current={active === n.id ? "location" : undefined}
               className={`rounded-lg px-3 py-2 text-left text-[13.5px] font-medium transition-colors ${
                 active === n.id
                   ? "bg-[var(--c-accent-soft)] text-[var(--c-accent)]"
@@ -147,7 +148,7 @@ export function SettingsApp({
         <Section
           id="notif"
           title="通知"
-          desc="選擇接收提醒的管道（背後尚未接 email/push，僅顯示偏好）。"
+          desc="站內警示已啟用；外部通知管道會在完成串接後開放。"
           elRef={registerEl("notif")}
         >
           <NotifInner isAdmin={isAdmin} />
@@ -292,6 +293,7 @@ function Segmented<T extends string>({
           key={o.v}
           type="button"
           onClick={() => onChange(o.v)}
+          aria-pressed={value === o.v}
           className={`whitespace-nowrap rounded-md px-3 py-1.5 text-[12.5px] font-semibold transition-colors ${
             value === o.v
               ? "bg-[var(--c-surface)] text-[var(--c-text)]"
@@ -305,25 +307,23 @@ function Segmented<T extends string>({
   );
 }
 
-function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
+function StatusBadge({
+  children,
+  active = false,
+}: {
+  children: React.ReactNode;
+  active?: boolean;
+}) {
   return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      onClick={onClick}
-      className={`relative h-6 w-[42px] rounded-full border transition-colors ${
-        on
-          ? "border-[var(--c-up)] bg-[var(--c-up)]"
-          : "border-[var(--c-line-strong)] bg-[var(--c-surface-soft)]"
+    <span
+      className={`inline-flex min-h-8 items-center rounded-[var(--r-control)] border px-3 text-[12px] font-medium ${
+        active
+          ? "border-[color-mix(in_srgb,var(--c-up)_35%,transparent)] bg-[color-mix(in_srgb,var(--c-up)_10%,transparent)] text-[var(--c-up)]"
+          : "border-[var(--c-border)] bg-[var(--c-surface-soft)] text-[var(--c-muted)]"
       }`}
     >
-      <span
-        className={`absolute top-[2px] block h-[18px] w-[18px] rounded-full shadow-[0_1px_2px_rgba(0,0,0,.3)] transition-transform ${
-          on ? "translate-x-[20px] bg-white" : "translate-x-[2px] bg-[var(--c-text)]"
-        }`}
-      />
-    </button>
+      {children}
+    </span>
   );
 }
 
@@ -378,9 +378,6 @@ function AccountInner({ user }: { user: SettingsAppProps["user"] }) {
 
 function PrefsInner() {
   const pref = useThemePref() ?? "system";
-  // 占位：基準幣別與精簡數字 UI 完成但底層未接（影響面太廣，留下一輪）
-  const [currency, setCurrency] = useState<"TWD" | "USD">("TWD");
-  const [compact, setCompact] = useState(true);
 
   return (
     <>
@@ -397,19 +394,15 @@ function PrefsInner() {
       </Row>
       <Row
         label="基準幣別"
-        hint="所有資產換算的計價幣別（USD 切換尚未連動底層計算）"
+        hint="目前所有估值、損益與匯出皆以新台幣計算"
       >
-        <Segmented<"TWD" | "USD">
-          value={currency}
-          onChange={setCurrency}
-          options={[
-            { v: "TWD", label: "TWD" },
-            { v: "USD", label: "USD" },
-          ]}
-        />
+        <StatusBadge>固定 TWD</StatusBadge>
       </Row>
-      <Row label="精簡數字" hint="大額顯示為「萬／億」（尚未套到所有頁面）">
-        <Toggle on={compact} onClick={() => setCompact((v) => !v)} />
+      <Row
+        label="數字格式"
+        hint="明細保留完整金額；圖表與小空間自動使用萬／億"
+      >
+        <StatusBadge>依情境自動</StatusBadge>
       </Row>
     </>
   );
@@ -546,18 +539,16 @@ function AllocInner({
  * ============================================================ */
 
 function NotifInner({ isAdmin }: { isAdmin: boolean }) {
-  const [ch, setCh] = useState({ email: true, push: false, weekly: true });
-  const t = (k: keyof typeof ch) => setCh((p) => ({ ...p, [k]: !p[k] }));
   return (
     <>
-      <Row label="Email 通知" hint="警示觸發時寄到信箱（待接 Resend）">
-        <Toggle on={ch.email} onClick={() => t("email")} />
+      <Row label="站內通知" hint="警示觸發後寫入通知中心">
+        <StatusBadge active>已啟用</StatusBadge>
       </Row>
-      <Row label="瀏覽器推播" hint="即時推送到此裝置">
-        <Toggle on={ch.push} onClick={() => t("push")} />
+      <Row label="Email 通知" hint="尚未串接寄信服務">
+        <StatusBadge>尚未開放</StatusBadge>
       </Row>
-      <Row label="每週摘要" hint="每週一寄出組合週報">
-        <Toggle on={ch.weekly} onClick={() => t("weekly")} />
+      <Row label="瀏覽器推播" hint="尚未串接推播服務">
+        <StatusBadge>尚未開放</StatusBadge>
       </Row>
       <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
         <LinkCard href="/alerts" label="警示設定" />

@@ -87,7 +87,7 @@ export function ThemeToggle() {
     return (
       <button
         type="button"
-        aria-label="Toggle theme"
+        aria-label="切換顯示模式"
         className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[var(--c-muted)]"
       />
     );
@@ -97,8 +97,8 @@ export function ThemeToggle() {
     <button
       type="button"
       onClick={toggle}
-      aria-label="Toggle theme"
-      title={resolved === "dark" ? "切到淺色" : "切到暗色"}
+      aria-label={resolved === "dark" ? "切到淺色" : "切到深色"}
+      title={resolved === "dark" ? "切到淺色" : "切到深色"}
       className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg border border-transparent text-[var(--c-muted)] hover:border-[var(--c-border)] hover:bg-[var(--c-surface-soft)] hover:text-[var(--c-text)]"
     >
       {resolved === "dark" ? (

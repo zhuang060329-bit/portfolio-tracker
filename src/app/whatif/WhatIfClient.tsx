@@ -338,6 +338,7 @@ function ProjectionTab({ netWorth }: { netWorth: number }) {
               key={p.label}
               type="button"
               onClick={() => setRet(p.r)}
+              aria-pressed={ret === p.r}
               className={`whitespace-nowrap rounded-lg border px-2.5 py-[5px] text-[12.5px] font-medium transition-all ${
                 ret === p.r
                   ? "border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] bg-[var(--c-accent-soft)] text-[var(--c-accent)]"
@@ -666,6 +667,7 @@ export function WhatIfClient({
             key={t}
             type="button"
             onClick={() => setTab(t)}
+            aria-pressed={tab === t}
             className={`whitespace-nowrap rounded-md px-[18px] py-2 text-[13.5px] font-semibold transition-all ${
               tab === t
                 ? "bg-[var(--c-surface)] text-[var(--c-text)] shadow-sm"

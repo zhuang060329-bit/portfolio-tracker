@@ -55,7 +55,7 @@ export function PrivacyToggle() {
     return (
       <button
         type="button"
-        aria-label="切換金額遮蔽"
+        aria-label="切換金額顯示"
         className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[var(--c-muted)]"
       />
     );
@@ -67,7 +67,7 @@ export function PrivacyToggle() {
     <button
       type="button"
       onClick={() => setPrivacy(masked ? "off" : "on")}
-      aria-label="切換金額遮蔽"
+      aria-label={masked ? "顯示金額" : "遮蔽金額"}
       aria-pressed={masked}
       title={masked ? "顯示金額" : "遮蔽金額"}
       className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg border border-transparent text-[var(--c-muted)] hover:border-[var(--c-border)] hover:bg-[var(--c-surface-soft)] hover:text-[var(--c-text)]"

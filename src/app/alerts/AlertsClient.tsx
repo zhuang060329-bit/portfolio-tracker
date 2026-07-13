@@ -217,6 +217,7 @@ function CreatePanel({ accounts }: { accounts: AlertAccount[] }) {
               key={k}
               type="button"
               onClick={() => setType(k)}
+              aria-pressed={on}
               style={{ "--tc": t.color } as React.CSSProperties}
               className={`flex flex-col items-start gap-[3px] rounded-xl border p-[14px] text-left transition-all duration-150 ${
                 on
