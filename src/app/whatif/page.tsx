@@ -14,17 +14,28 @@ import {
 
 export default async function WhatIfPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const unreadCount = await getUnreadCount();
-
-  // 所有 cashflow_twd（給回測）
-  const { data: cfRows } = await supabase
-    .from("transactions")
-    .select("created_at,cashflow_twd")
-    .not("cashflow_twd", "is", null)
-    .order("created_at", { ascending: true });
+  const [
+    {
+      data: { user },
+    },
+    unreadCount,
+    { data: cfRows },
+    { data: accs },
+  ] = await Promise.all([
+    supabase.auth.getUser(),
+    getUnreadCount(),
+    supabase
+      .from("transactions")
+      .select("created_at,cashflow_twd")
+      .not("cashflow_twd", "is", null)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("accounts")
+      .select(
+        "price_market,quantity,last_unit_price,last_fx_rate,manual_value_base",
+      )
+      .eq("status", "active"),
+  ]);
 
   const cashflows = ((cfRows ?? []) as {
     created_at: string;
@@ -41,12 +52,6 @@ export default async function WhatIfPage() {
     .reduce((s, c) => s + Math.abs(c.amount), 0);
 
   // 目前實際組合估值（= 未來推算的起點本金）
-  const { data: accs } = await supabase
-    .from("accounts")
-    .select(
-      "price_market,quantity,last_unit_price,last_fx_rate,manual_value_base",
-    )
-    .eq("status", "active");
   let actualValue = 0;
   for (const a of accs ?? []) {
     if (a.price_market === "manual") {
@@ -152,7 +157,7 @@ export default async function WhatIfPage() {
   return (
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active="whatif" userEmail={user?.email} unreadCount={unreadCount} />
-      <main className="mx-auto max-w-[1200px] px-7 py-9 pb-28">
+      <main className="mx-auto max-w-[1200px] px-4 py-9 pb-28 sm:px-6 lg:px-7">
         <div className="mb-4 text-sm">
           <Link href="/" className="text-[var(--c-muted)] hover:text-[var(--c-text)]">
             ← 回總覽

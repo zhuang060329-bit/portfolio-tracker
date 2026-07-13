@@ -26,17 +26,18 @@ function valueOf(a: DriftAccount): number {
 
 export default async function AlertsPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const unreadCount = await getUnreadCount();
-
   const [
+    {
+      data: { user },
+    },
+    unreadCount,
     { data: pricedAccounts },
     { data: driftAccounts },
     { data: profile },
     { data: alertRows },
   ] = await Promise.all([
+    supabase.auth.getUser(),
+    getUnreadCount(),
     supabase
       .from("accounts")
       .select("id,name,symbol,price_market,native_currency,last_unit_price")
@@ -126,7 +127,7 @@ export default async function AlertsPage() {
   return (
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active="alerts" userEmail={user?.email} unreadCount={unreadCount} />
-      <main className="mx-auto max-w-[900px] px-7 py-9 pb-28">
+      <main className="mx-auto max-w-[900px] px-4 py-9 pb-28 sm:px-6 lg:px-7">
         <div className="mb-4 text-sm">
           <Link href="/" className="text-[var(--c-muted)] hover:text-[var(--c-text)]">
             ← 回總覽

@@ -45,43 +45,48 @@ export default async function AccountDetail({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const unreadCount = await getUnreadCount();
-
-  const { data: account } = await supabase
-    .from("accounts")
-    .select(
-      "id,name,asset_class,price_market,symbol,quantity,native_currency,last_unit_price,last_fx_rate,manual_value_base,last_priced_at,created_at,cost_basis_twd,cost_basis_native,realized_pnl_twd,status",
-    )
-    .eq("id", id)
-    .single();
+  const [
+    {
+      data: { user },
+    },
+    unreadCount,
+    { data: account },
+    { data: txns },
+    { data: plansData },
+    { data: snapsData },
+  ] = await Promise.all([
+    supabase.auth.getUser(),
+    getUnreadCount(),
+    supabase
+      .from("accounts")
+      .select(
+        "id,name,asset_class,price_market,symbol,quantity,native_currency,last_unit_price,last_fx_rate,manual_value_base,last_priced_at,created_at,cost_basis_twd,cost_basis_native,realized_pnl_twd,status",
+      )
+      .eq("id", id)
+      .single(),
+    supabase
+      .from("transactions")
+      .select(
+        "id,type,quantity_after,unit_price,fx_rate,value_after_base,realized_pnl,cashflow_twd,note,created_at",
+      )
+      .eq("account_id", id)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("recurring_plans")
+      .select(
+        "id,amount_twd,day_of_month,start_date,next_run_date,last_run_date,active,note",
+      )
+      .eq("account_id", id)
+      .order("active", { ascending: false })
+      .order("next_run_date", { ascending: true }),
+    supabase
+      .from("account_snapshots")
+      .select("snapshot_date,value_base")
+      .eq("account_id", id)
+      .order("snapshot_date", { ascending: true }),
+  ]);
   if (!account) notFound();
-
-  const { data: txns } = await supabase
-    .from("transactions")
-    .select(
-      "id,type,quantity_after,unit_price,fx_rate,value_after_base,realized_pnl,cashflow_twd,note,created_at",
-    )
-    .eq("account_id", id)
-    .order("created_at", { ascending: false });
-
-  const { data: plansData } = await supabase
-    .from("recurring_plans")
-    .select(
-      "id,amount_twd,day_of_month,start_date,next_run_date,last_run_date,active,note",
-    )
-    .eq("account_id", id)
-    .order("active", { ascending: false })
-    .order("next_run_date", { ascending: true });
   const plans = (plansData ?? []) as Plan[];
-
-  const { data: snapsData } = await supabase
-    .from("account_snapshots")
-    .select("snapshot_date,value_base")
-    .eq("account_id", id)
-    .order("snapshot_date", { ascending: true });
   const lineData = ((snapsData ?? []) as {
     snapshot_date: string;
     value_base: number;

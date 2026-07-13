@@ -45,16 +45,21 @@ const fmtTime = (iso: string) =>
 
 export default async function NotificationsPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const unreadCount = await getUnreadCount();
-
-  const { data } = await supabase
-    .from("notifications")
-    .select("id,type,title,body,read_at,created_at")
-    .order("created_at", { ascending: false })
-    .limit(200);
+  const [
+    {
+      data: { user },
+    },
+    unreadCount,
+    { data },
+  ] = await Promise.all([
+    supabase.auth.getUser(),
+    getUnreadCount(),
+    supabase
+      .from("notifications")
+      .select("id,type,title,body,read_at,created_at")
+      .order("created_at", { ascending: false })
+      .limit(200),
+  ]);
   const rows = (data ?? []) as Row[];
   const unreadInList = rows.filter((r) => !r.read_at).length;
 

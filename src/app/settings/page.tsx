@@ -7,26 +7,29 @@ import { buildPriceHealth } from "@/lib/price-health";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const [
+    {
+      data: { user },
+    },
+    unreadCount,
+    { data: profile },
+    { data: priced },
+  ] = await Promise.all([
+    supabase.auth.getUser(),
+    getUnreadCount(),
+    supabase.from("profiles").select("allocation_targets").maybeSingle(),
+    supabase
+      .from("accounts")
+      .select("name,last_priced_at")
+      .neq("price_market", "manual")
+      .not("symbol", "is", null)
+      .eq("status", "active"),
+  ]);
   const admin = isAdmin(user?.email);
-  const unreadCount = await getUnreadCount();
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("allocation_targets")
-    .maybeSingle();
   const initialTargets =
     ((profile?.allocation_targets ?? {}) as Record<string, number>) || {};
 
   // 報價健康計算在 lib/price-health（server component render 內不可叫 Date.now）。
-  const { data: priced } = await supabase
-    .from("accounts")
-    .select("name,last_priced_at")
-    .neq("price_market", "manual")
-    .not("symbol", "is", null)
-    .eq("status", "active");
   const priceHealth = buildPriceHealth(
     (priced ?? []) as { name: string; last_priced_at: string | null }[],
   );

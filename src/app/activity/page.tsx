@@ -35,18 +35,23 @@ const taipeiTime = (iso: string) =>
 
 export default async function ActivityPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const unreadCount = await getUnreadCount();
-
-  const { data } = await supabase
-    .from("transactions")
-    .select(
-      "id,type,quantity_after,unit_price,fx_rate,value_after_base,cashflow_twd,note,created_at,account_id,accounts(id,name,price_market,symbol)",
-    )
-    .order("created_at", { ascending: false })
-    .limit(200);
+  const [
+    {
+      data: { user },
+    },
+    unreadCount,
+    { data },
+  ] = await Promise.all([
+    supabase.auth.getUser(),
+    getUnreadCount(),
+    supabase
+      .from("transactions")
+      .select(
+        "id,type,quantity_after,unit_price,fx_rate,value_after_base,cashflow_twd,note,created_at,account_id,accounts(id,name,price_market,symbol)",
+      )
+      .order("created_at", { ascending: false })
+      .limit(200),
+  ]);
 
   const raw = (data ?? []) as unknown as Row[];
   const rows: ActRow[] = raw.map((r) => ({
@@ -76,7 +81,7 @@ export default async function ActivityPage() {
   return (
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active="activity" userEmail={user?.email} unreadCount={unreadCount} />
-      <main className="mx-auto max-w-[1200px] px-7 py-9 pb-28">
+      <main className="mx-auto max-w-[1200px] px-4 py-9 pb-28 sm:px-6 lg:px-7">
         <header className="flex items-start justify-between gap-4">
           <div>
             <h1 className="font-serif text-3xl font-medium tracking-tight">

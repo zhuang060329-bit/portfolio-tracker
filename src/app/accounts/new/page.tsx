@@ -5,10 +5,12 @@ import { getUnreadCount } from "@/lib/notifications";
 
 export default async function NewAccountIndex() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const unreadCount = await getUnreadCount();
+  const [
+    {
+      data: { user },
+    },
+    unreadCount,
+  ] = await Promise.all([supabase.auth.getUser(), getUnreadCount()]);
 
   const items = [
     {
