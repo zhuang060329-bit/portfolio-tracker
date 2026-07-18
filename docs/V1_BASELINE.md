@@ -1,7 +1,7 @@
 # StackWorth v1 基線紀錄
 
-日期：2026-07-18  
-基線：`origin/main` at `98f808fdee48564ed1ee678c8ce157227888f1fa`  
+日期：2026-07-18
+基線：`origin/main` at `98f808fdee48564ed1ee678c8ce157227888f1fa`
 工作分支：`feat/stackworth-v1`
 
 ## 已驗證品質閘門
