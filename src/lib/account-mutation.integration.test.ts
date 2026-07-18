@@ -7,13 +7,14 @@ import { Client } from "pg";
 // - 本地：TEST_DATABASE_URL=postgresql://... npx vitest run
 // - CI：workflow 起 postgres service 並注入同名環境變數
 // - 未設環境變數時整組跳過（單元測試不受影響）
-// beforeAll 直接套 supabase/test-schema.sql + rpc-mutations.sql，
+// beforeAll 直接套最小 schema、既有 RPC 與 v1 migration，
 // 測試檔即為 migration 的可執行規格。
 
 const url = process.env.TEST_DATABASE_URL;
 
 const ACC = "11111111-1111-1111-1111-111111111111";
 const USER = "22222222-2222-2222-2222-222222222222";
+const USER_2 = "33333333-3333-3333-3333-333333333333";
 
 describe.skipIf(!url)("apply_account_mutation (integration)", () => {
   let db: Client;
@@ -24,6 +25,15 @@ describe.skipIf(!url)("apply_account_mutation (integration)", () => {
     const root = join(__dirname, "..", "..");
     await db.query(readFileSync(join(root, "supabase/test-schema.sql"), "utf8"));
     await db.query(readFileSync(join(root, "supabase/rpc-mutations.sql"), "utf8"));
+    await db.query(
+      readFileSync(
+        join(
+          root,
+          "supabase/migrations/20260718032234_stackworth_v1.sql",
+        ),
+        "utf8",
+      ),
+    );
   });
 
   afterAll(async () => {
@@ -31,7 +41,14 @@ describe.skipIf(!url)("apply_account_mutation (integration)", () => {
   });
 
   beforeEach(async () => {
-    await db.query("truncate account_snapshots, transactions, accounts cascade");
+    await db.query(
+      "truncate decision_reviews, investment_decisions, account_status_history, account_snapshots, transactions, accounts, profiles, auth.users cascade",
+    );
+    await db.query(
+      "insert into auth.users (id, email) values ($1, 'test@example.com'), ($2, 'other@example.com')",
+      [USER, USER_2],
+    );
+    await db.query("insert into profiles (id) values ($1), ($2)", [USER, USER_2]);
     await db.query(
       `insert into accounts (id, user_id, name, asset_class, price_market, symbol, quantity, cost_basis_twd)
        values ($1, $2, '測試帳戶', 'fund', 'us', 'VOO', 10, 100000)`,
@@ -75,6 +92,131 @@ describe.skipIf(!url)("apply_account_mutation (integration)", () => {
     const snaps = (await db.query("select * from account_snapshots order by snapshot_date")).rows;
     expect(snaps).toHaveLength(2);
     expect(snaps.every((s) => s.user_id === USER)).toBe(true);
+    expect(snaps.every((s) => Number(s.cost_basis_twd) === 120000)).toBe(true);
+    expect(snaps.every((s) => s.account_status === "active")).toBe(true);
+  });
+
+  it("決策情境快照建立後不可改寫", async () => {
+    const decisionId = "55555555-5555-5555-5555-555555555555";
+    await db.query(
+      `insert into investment_decisions (
+        id, user_id, account_id, decision_date, asset_name, decision_type,
+        thesis, risks, invalidation_conditions, expected_holding_months,
+        confidence, review_date, context_snapshot
+      ) values ($1, $2, $3, '2026-07-01', 'VOO', 'buy', '長期配置',
+        '估值偏高', '基本面惡化', 24, 2, '2027-01-01', '{"value":1000}')`,
+      [decisionId, USER, ACC],
+    );
+
+    await expect(
+      db.query(
+        "update investment_decisions set context_snapshot = '{\"value\":2000}' where id = $1",
+        [decisionId],
+      ),
+    ).rejects.toThrow(/情境快照不可修改/);
+  });
+
+  it("RLS 防止跨使用者讀取與修改決策", async () => {
+    const ownDecision = "55555555-5555-5555-5555-555555555555";
+    const otherDecision = "66666666-6666-6666-6666-666666666666";
+    await insertDecision(db, ownDecision, USER, ACC);
+    await insertDecision(db, otherDecision, USER_2, null);
+
+    await db.query("begin");
+    try {
+      await db.query("set local role authenticated");
+      await db.query("select set_config('request.jwt.claim.sub', $1, true)", [USER]);
+      const visible = await db.query(
+        "select id from investment_decisions order by id",
+      );
+      expect(visible.rows.map((row) => row.id)).toEqual([ownDecision]);
+      const updated = await db.query(
+        "update investment_decisions set thesis = '越權修改' where id = $1 returning id",
+        [otherDecision],
+      );
+      expect(updated.rowCount).toBe(0);
+    } finally {
+      await db.query("rollback");
+    }
+    const other = await db.query(
+      "select thesis from investment_decisions where id = $1",
+      [otherDecision],
+    );
+    expect(other.rows[0].thesis).toBe("長期配置");
+  });
+
+  it("decision 與 transaction/account 外鍵刪除時保留日誌並清空關聯", async () => {
+    const transactionId = "77777777-7777-7777-7777-777777777777";
+    const decisionId = "88888888-8888-8888-8888-888888888888";
+    await db.query(
+      `insert into transactions (id, user_id, account_id, type, value_after_base)
+       values ($1, $2, $3, 'price_update', 100000)`,
+      [transactionId, USER, ACC],
+    );
+    await insertDecision(db, decisionId, USER, ACC, transactionId);
+    await db.query("delete from transactions where id = $1", [transactionId]);
+    expect(
+      (await db.query("select transaction_id from investment_decisions where id = $1", [decisionId])).rows[0]
+        .transaction_id,
+    ).toBeNull();
+    await db.query("delete from accounts where id = $1", [ACC]);
+    expect(
+      (await db.query("select account_id from investment_decisions where id = $1", [decisionId])).rows[0]
+        .account_id,
+    ).toBeNull();
+  });
+
+  it("save_decision_review 原子寫入檢討並更新決策狀態", async () => {
+    const decisionId = "99999999-9999-9999-9999-999999999999";
+    await insertDecision(db, decisionId, USER, ACC);
+    await db.query("select save_decision_review($1, $2)", [
+      decisionId,
+      JSON.stringify({
+        hypothesis_outcome: "假設部分成立",
+        catalyst_outcome: "如期發生",
+        risk_outcome: "風險未發生",
+        plan_followed: true,
+        decision_quality: 3,
+        reflection: "流程一致",
+        next_improvement: "增加估值比較",
+      }),
+    ]);
+    expect(
+      (await db.query("select status from investment_decisions where id = $1", [decisionId])).rows[0]
+        .status,
+    ).toBe("reviewed");
+    expect(
+      (await db.query("select count(*)::int as count from decision_reviews where decision_id = $1", [decisionId])).rows[0]
+        .count,
+    ).toBe(1);
+  });
+
+  it("save_decision_review 透過 RLS 拒絕跨使用者檢討", async () => {
+    const decisionId = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
+    await insertDecision(db, decisionId, USER, ACC);
+    await db.query("begin");
+    try {
+      await db.query("set local role authenticated");
+      await db.query("select set_config('request.jwt.claim.sub', $1, true)", [USER_2]);
+      await expect(
+        db.query("select save_decision_review($1, $2)", [
+          decisionId,
+          JSON.stringify({
+            hypothesis_outcome: "越權檢討",
+            plan_followed: true,
+            decision_quality: 1,
+            reflection: "不應寫入",
+            next_improvement: "不應寫入",
+          }),
+        ]),
+      ).rejects.toThrow(/不存在或無權限/);
+    } finally {
+      await db.query("rollback");
+    }
+    expect(
+      (await db.query("select count(*)::int as count from decision_reviews where decision_id = $1", [decisionId])).rows[0]
+        .count,
+    ).toBe(0);
   });
 
   it("同日快照重寫：upsert 覆蓋，不產生重複列", async () => {
@@ -126,3 +268,21 @@ describe.skipIf(!url)("apply_account_mutation (integration)", () => {
     expect((await db.query("select count(*)::int as n from transactions")).rows[0].n).toBe(0);
   });
 });
+
+async function insertDecision(
+  db: Client,
+  id: string,
+  userId: string,
+  accountId: string | null,
+  transactionId: string | null = null,
+) {
+  await db.query(
+    `insert into investment_decisions (
+      id, user_id, account_id, transaction_id, decision_date, asset_name,
+      decision_type, thesis, risks, invalidation_conditions,
+      expected_holding_months, confidence, review_date, context_snapshot
+    ) values ($1, $2, $3, $4, '2026-07-01', 'VOO', 'buy', '長期配置',
+      '估值偏高', '基本面惡化', 24, 2, '2027-01-01', '{"value":1000}')`,
+    [id, userId, accountId, transactionId],
+  );
+}

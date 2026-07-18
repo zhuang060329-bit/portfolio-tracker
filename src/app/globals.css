@@ -276,3 +276,55 @@ textarea:disabled {
     animation: none;
   }
 }
+
+.print-only {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  html,
+  body,
+  .report-shell,
+  .report-page,
+  .report-card,
+  .report-block {
+    background: #fff !important;
+    color: #171714 !important;
+    box-shadow: none !important;
+  }
+
+  .report-shell > header,
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .report-page {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  .report-block,
+  .report-card,
+  table,
+  tr {
+    break-inside: avoid;
+  }
+
+  .report-block {
+    border-color: #d8d8d2 !important;
+  }
+
+  .report-page main,
+  .report-page {
+    animation: none !important;
+  }
+}

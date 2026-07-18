@@ -174,6 +174,12 @@ function LedgerRow({
             {r.note}
           </div>
         )}
+        <Link
+          href={`/decisions/new?transaction=${encodeURIComponent(r.id)}`}
+          className="mt-2 inline-flex text-[12px] font-medium text-[var(--c-accent)] hover:underline"
+        >
+          連結決策日誌 →
+        </Link>
       </div>
     </div>
   );

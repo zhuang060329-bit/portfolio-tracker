@@ -35,6 +35,17 @@ Holding assets across markets and currencies means brokerage apps only ever show
 
 **Failure states are explicit.** Benchmark fetchers return empty on failure and the chart bridges gaps with a dashed segment; enabled comparison lines share one start date before they are normalized to 100; CoinGecko's history cap renders BTC as a late-starting series; the service worker caches only an offline page, since showing stale financial numbers is worse than failing to load; a data-health card in settings turns red when the price cron misses a run.
 
+**Decision context is write-once.** A decision stores the price, FX rate, position, allocation, cost, unrealized P&L, and portfolio value seen at creation. Database triggers reject later edits to that context while still allowing the thesis, review date, and other user-authored fields to be corrected.
+
+**Historical pages never borrow today's quote.** Replay uses the latest snapshot available on or before the selected date, labels carried-forward values with their source date, and exposes missing data. The attribution equation keeps a visible scale-relative residual instead of hiding an incomplete split.
+
+## v1.0 workflows
+
+- **Decision journal:** create a pre-trade or post-trade record at `/decisions`, optionally link it to an activity transaction, preserve the original context, schedule a review, and record outcome and process separately.
+- **Historical replay and attribution:** choose an as-of date at `/history` to inspect holdings, archived boundaries, price dates, allocation, currency exposure, and a reconciling change breakdown.
+- **Stress test and anti-FOMO check:** use the Portfolio Stress tab at `/whatif` to combine price and FX shocks, then model an external proposed purchase without writing to the ledger.
+- **Monthly report:** select a month at `/reports/monthly`, review returns, attribution, allocation, decisions, gaps, and data health, then use the browser's print-to-PDF flow.
+
 ## Verification
 
 - Every server action input passes a Zod schema before touching the database; Supabase RLS and TOTP MFA (AAL2) sit under that.
@@ -47,6 +58,10 @@ Holding assets across markets and currencies means brokerage apps only ever show
 https://portfolio-tracker-two-rho.vercel.app/demo — no account needed.
 
 Generated data: an 18-month DCA history with a seeded pseudo-random walk, a planted correction regime, one realized loss, dividends and interest. Deterministic per day, so reviewers see the same numbers on revisit. The production dashboard holds personal financial data, so screenshots are intentionally not committed; the demo exists so the product can still be reviewed end to end.
+
+The v1.0 sample flows are `/demo/decisions`, `/demo/history`, `/demo/whatif`, and `/demo/report`. They use deterministic fixtures only and never query an authenticated user's portfolio.
+
+Amount masking remains available in the authenticated app. Printed monthly reports state whether amounts were visible when the report was generated; check that state before saving a PDF on a shared device.
 
 ## Running locally
 
@@ -62,9 +77,9 @@ Gates: `npm run lint` / `npm run typecheck` / `npm run test:unit` / `TEST_DATABA
 
 ## Status and next steps
 
-Running in production (Vercel + Supabase, single user). CI runs lint / typecheck / unit tests / Postgres integration / build on every push to main. Recently shipped: active-portfolio metric boundaries, cashflow-aware risk metrics, ledger-backed recurring-plan execution, modular server actions and chart data logic, and the desktop/mobile financial-workstation interface.
+Running in production (Vercel + Supabase, single user). CI runs lint / typecheck / unit tests / Postgres integration / build on every push to main. Version 1.0 adds the decision journal, historical replay and attribution, deterministic stress tests, the buy-before-check flow, and printable monthly reports. Existing deployments must apply `supabase/migrations/20260718032234_stackworth_v1.sql` before enabling these authenticated routes.
 
-Possible future work: per-account TWR charts; broader CSV import formats; optimistic concurrency for simultaneous manual writes to the same account.
+Known v1.0 limits: replay and reports use bounded snapshot queries and surface truncation or missing prices; review performance depends on stored daily snapshots; browser printing is the PDF path; authenticated create/review flows require a configured Supabase project. See [docs/REFERENCE.md](docs/REFERENCE.md) and [CHANGELOG.md](CHANGELOG.md).
 
 ## Author
 

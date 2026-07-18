@@ -15,7 +15,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **路徑（Windows）**：`D:\ClaudeCode\portfolio-tracker`
 - **GitHub**：`github.com/zhuang060329-bit/portfolio-tracker`（public）
 - **部署**：`https://portfolio-tracker-two-rho.vercel.app`
-- **當前狀態**：上線運作中，Vitest 測試通過（數量以 `npm run test` 實際輸出為準），18 個 routes
+- **當前狀態**：上線運作中；v1.0 原始碼有 32 個 app page/API 入口，測試數量以 `npm run test:unit` 與 `npm run test:integration` 實際輸出為準
 - **完整背景文件**：`docs/StackWorth-專案紀實.pdf`（15 頁，繁中）
 
 ## 二、技術棧
@@ -45,7 +45,10 @@ src/
 │   ├── activity/                ← 變動紀錄列表 + CSV 匯入
 │   ├── alerts/                  ← 警示 CRUD
 │   ├── notifications/           ← 通知中心
-│   ├── whatif/                  ← What-if 模擬器
+│   ├── decisions/               ← 決策日誌 + 檢討
+│   ├── history/                 ← 歷史重播 + 報酬歸因
+│   ├── reports/monthly/         ← 月報 + 列印輸出
+│   ├── whatif/                  ← What-if + 投資組合壓力測試
 │   ├── admin/allowlist/         ← Admin 使用者管理
 │   ├── auth/{callback,mfa,reset-password,signout}/
 │   ├── api/cron/refresh/        ← Vercel cron 入口
@@ -115,8 +118,11 @@ npx tsc --noEmit
 # Lint
 npx eslint src
 
-# 測試
-npx vitest run
+# 單元測試
+npm run test:unit
+
+# Postgres 整合測試（需要獨立測試資料庫）
+TEST_DATABASE_URL=postgresql://... npm run test:integration
 
 # 完整 build（自動跑 tsc）
 NEXT_TELEMETRY_DISABLED=1 npx next build
@@ -127,10 +133,10 @@ npm run dev   # 或 .\start-dev-min.vbs（Windows 後台模式）
 
 ## 六、上線流程
 
-1. 改 code → 跑上述四個驗證指令
-2. `git commit` → `git push origin main`
+1. 改 code → 跑 lint、typecheck、單元測試、Postgres 整合測試、production build
+2. `git commit` → push 功能分支 → 建立 PR
 3. Vercel 自動部署（GitHub webhook）
-4. 若 schema 變更：到 Supabase Dashboard → SQL Editor 跑對應 `.sql`，並在 commit message 提醒使用者
+4. 若 schema 變更：先在測試環境驗證 versioned migration，再由使用者核准正式環境套用
 
 ## 七、重要設計決策
 

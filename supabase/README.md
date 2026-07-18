@@ -11,6 +11,10 @@
 | 5 | `batch2-schema.sql` | `accounts.{status, cost_basis_native}` + `profiles.allocation_targets` | ✅ |
 | 6 | `open-signup.sql` | 移除舊版的 email allowlist trigger（如果跑過 email-allowlist.sql 的話）。改為開放註冊，admin 從 /admin/allowlist 頁面看誰註冊、踢人 | ⭐ 推薦 |
 | 7 | `alerts.sql` | `alerts` + `notifications` 兩張表 + RLS（價格警示、配置失衡提醒） | ✅ |
+| 8 | `rpc-mutations.sql` | 帳戶異動與定期定額的原子交易函式、執行 ledger | ✅ |
+| 9 | `migrations/20260718032234_stackworth_v1.sql` | 決策日誌、決策檢討、帳戶狀態歷史、快照欄位、集中度設定、RLS 與 v1 RPC | ✅ |
+
+既有 StackWorth 部署若已完成 1–8，只執行第 9 個 versioned migration。先在測試或預覽資料庫驗證，再套用正式環境；本 repository 不會自動修改 production schema。
 
 ## 注意事項
 
@@ -21,6 +25,9 @@
   ```
   讓 PostgREST 立刻看到新欄位（部分檔案已自帶這行）。
 - 所有 RLS policy 都綁 `auth.uid()`，使用者只能存取自己的資料；service-role key（給 cron 用）會繞過 RLS。
+- v1 migration 會為 `account_status_history`、`investment_decisions`、`decision_reviews` 建立逐操作 RLS policy，並限制函式執行權限。決策情境快照由 trigger 阻止後續改寫。
+- `save_decision_review` 與更新後的 `apply_account_mutation` 使用 `security invoker`；呼叫者仍受 RLS 限制。
+- migration 不是可逆資料刪除腳本。若要回退，先備份並另寫經審核的 forward migration，不要直接刪除新表。
 
 ## 使用者管理
 

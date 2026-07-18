@@ -2,7 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { SetAllocationTargetsSchema } from "@/lib/schemas/action/set-allocation-targets";
+import {
+  SetAllocationTargetsSchema,
+  SetConcentrationLimitSchema,
+} from "@/lib/schemas/action/set-allocation-targets";
 
 export type FormState = { error?: string } | undefined;
 
@@ -42,5 +45,33 @@ export async function setAllocationTargets(
   if (error) return { error: error.message };
 
   revalidatePath("/");
+  return undefined;
+}
+
+export async function setConcentrationLimit(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const parsed = SetConcentrationLimitSchema.safeParse({
+    concentrationLimitPct: formData.get("concentrationLimitPct"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "輸入資料無效" };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "請先登入" };
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ concentration_limit_pct: parsed.data.concentrationLimitPct })
+    .eq("id", user.id);
+  if (error) return { error: "無法儲存集中度上限" };
+
+  revalidatePath("/settings");
+  revalidatePath("/whatif");
   return undefined;
 }
