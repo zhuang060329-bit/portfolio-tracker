@@ -29,6 +29,7 @@ export function AppHeader({
     { href: "/accounts", label: "帳戶", key: "accounts" },
     { href: "/activity", label: "活動", key: "activity" },
     { href: "/decisions", label: "日誌", key: "decisions" },
+    { href: "/history", label: "歷史", key: "history" },
     { href: "/alerts", label: "提醒", key: "alerts" },
     { href: "/whatif", label: "推演", key: "whatif" },
     { href: "/settings", label: "設定", key: "settings" },
