@@ -22,6 +22,15 @@ describe.skipIf(!url)("execute_recurring_plan_mutation (integration)", () => {
     const root = join(__dirname, "..", "..");
     await db.query(readFileSync(join(root, "supabase/test-schema.sql"), "utf8"));
     await db.query(readFileSync(join(root, "supabase/rpc-mutations.sql"), "utf8"));
+    await db.query(
+      readFileSync(
+        join(
+          root,
+          "supabase/migrations/20260718032234_stackworth_v1.sql",
+        ),
+        "utf8",
+      ),
+    );
   });
 
   afterAll(async () => {
@@ -31,8 +40,13 @@ describe.skipIf(!url)("execute_recurring_plan_mutation (integration)", () => {
 
   beforeEach(async () => {
     await db.query(
-      "truncate recurring_plan_runs, recurring_plans, account_snapshots, transactions, accounts cascade",
+      "truncate recurring_plan_runs, recurring_plans, decision_reviews, investment_decisions, account_status_history, account_snapshots, transactions, accounts, profiles, auth.users cascade",
     );
+    await db.query(
+      "insert into auth.users (id, email) values ($1, 'test@example.com')",
+      [USER_ID],
+    );
+    await db.query("insert into profiles (id) values ($1)", [USER_ID]);
     await db.query(
       `insert into accounts (
         id, user_id, name, asset_class, price_market, symbol, quantity,
@@ -78,6 +92,8 @@ describe.skipIf(!url)("execute_recurring_plan_mutation (integration)", () => {
     const snapshot = (await db.query("select * from account_snapshots")).rows[0];
     expect(toDate(snapshot.snapshot_date)).toBe("2026-07-10");
     expect(Number(snapshot.value_base)).toBe(1200);
+    expect(Number(snapshot.cost_basis_twd)).toBe(1200);
+    expect(snapshot.account_status).toBe("active");
 
     const run = (await db.query("select * from recurring_plan_runs")).rows[0];
     expect(toDate(run.scheduled_date)).toBe("2026-07-05");

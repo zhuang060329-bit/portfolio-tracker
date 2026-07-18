@@ -7,7 +7,7 @@ import { Client } from "pg";
 // - 本地：TEST_DATABASE_URL=postgresql://... npx vitest run
 // - CI：workflow 起 postgres service 並注入同名環境變數
 // - 未設環境變數時整組跳過（單元測試不受影響）
-// beforeAll 直接套 supabase/test-schema.sql + rpc-mutations.sql，
+// beforeAll 直接套最小 schema、既有 RPC 與 v1 migration，
 // 測試檔即為 migration 的可執行規格。
 
 const url = process.env.TEST_DATABASE_URL;
@@ -24,6 +24,15 @@ describe.skipIf(!url)("apply_account_mutation (integration)", () => {
     const root = join(__dirname, "..", "..");
     await db.query(readFileSync(join(root, "supabase/test-schema.sql"), "utf8"));
     await db.query(readFileSync(join(root, "supabase/rpc-mutations.sql"), "utf8"));
+    await db.query(
+      readFileSync(
+        join(
+          root,
+          "supabase/migrations/20260718032234_stackworth_v1.sql",
+        ),
+        "utf8",
+      ),
+    );
   });
 
   afterAll(async () => {
@@ -31,7 +40,14 @@ describe.skipIf(!url)("apply_account_mutation (integration)", () => {
   });
 
   beforeEach(async () => {
-    await db.query("truncate account_snapshots, transactions, accounts cascade");
+    await db.query(
+      "truncate decision_reviews, investment_decisions, account_status_history, account_snapshots, transactions, accounts, profiles, auth.users cascade",
+    );
+    await db.query(
+      "insert into auth.users (id, email) values ($1, 'test@example.com')",
+      [USER],
+    );
+    await db.query("insert into profiles (id) values ($1)", [USER]);
     await db.query(
       `insert into accounts (id, user_id, name, asset_class, price_market, symbol, quantity, cost_basis_twd)
        values ($1, $2, '測試帳戶', 'fund', 'us', 'VOO', 10, 100000)`,
@@ -75,6 +91,28 @@ describe.skipIf(!url)("apply_account_mutation (integration)", () => {
     const snaps = (await db.query("select * from account_snapshots order by snapshot_date")).rows;
     expect(snaps).toHaveLength(2);
     expect(snaps.every((s) => s.user_id === USER)).toBe(true);
+    expect(snaps.every((s) => Number(s.cost_basis_twd) === 120000)).toBe(true);
+    expect(snaps.every((s) => s.account_status === "active")).toBe(true);
+  });
+
+  it("決策情境快照建立後不可改寫", async () => {
+    const decisionId = "55555555-5555-5555-5555-555555555555";
+    await db.query(
+      `insert into investment_decisions (
+        id, user_id, account_id, decision_date, asset_name, decision_type,
+        thesis, risks, invalidation_conditions, expected_holding_months,
+        confidence, review_date, context_snapshot
+      ) values ($1, $2, $3, '2026-07-01', 'VOO', 'buy', '長期配置',
+        '估值偏高', '基本面惡化', 24, 2, '2027-01-01', '{"value":1000}')`,
+      [decisionId, USER, ACC],
+    );
+
+    await expect(
+      db.query(
+        "update investment_decisions set context_snapshot = '{\"value\":2000}' where id = $1",
+        [decisionId],
+      ),
+    ).rejects.toThrow(/情境快照不可修改/);
   });
 
   it("同日快照重寫：upsert 覆蓋，不產生重複列", async () => {

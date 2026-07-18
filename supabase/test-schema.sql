@@ -2,6 +2,23 @@
 -- 冪等：可重複套用。
 
 create schema if not exists auth;
+do $$ begin
+  create role anon;
+exception when duplicate_object then null;
+end $$;
+do $$ begin
+  create role authenticated;
+exception when duplicate_object then null;
+end $$;
+do $$ begin
+  create role service_role;
+exception when duplicate_object then null;
+end $$;
+
+create table if not exists auth.users (
+  id uuid primary key,
+  email text
+);
 create or replace function auth.uid() returns uuid
 language sql
 stable
@@ -11,16 +28,30 @@ $$;
 
 drop table if exists recurring_plan_runs cascade;
 drop table if exists recurring_plans cascade;
+drop table if exists decision_reviews cascade;
+drop table if exists investment_decisions cascade;
+drop table if exists account_status_history cascade;
 drop table if exists account_snapshots cascade;
 drop table if exists transactions cascade;
 drop table if exists accounts cascade;
+drop table if exists profiles cascade;
 drop type if exists txn_type cascade;
 drop type if exists price_market cascade;
 drop type if exists asset_class cascade;
+drop type if exists account_status cascade;
 
 create type asset_class as enum ('liquid_cash','fund','stock','crypto','precious_metal','other_investment','fixed_asset','receivable','liability');
 create type price_market as enum ('us','tw','crypto','manual');
 create type txn_type as enum ('create','adjust_quantity','adjust_balance','price_update','sell','dividend','interest');
+create type account_status as enum ('active','archived');
+
+create table profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  display_name text,
+  base_currency text not null default 'TWD',
+  allocation_targets jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
 
 create table accounts (
   id uuid primary key default gen_random_uuid(),
@@ -38,7 +69,7 @@ create table accounts (
   cost_basis_twd numeric(20,2) not null default 0,
   cost_basis_native numeric(20,8) not null default 0,
   realized_pnl_twd numeric(20,2) not null default 0,
-  status text not null default 'active',
+  status account_status not null default 'active',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
