@@ -19,3 +19,10 @@ export const SetAllocationTargetsSchema = z
   });
 
 export type SetAllocationTargetsInput = z.infer<typeof SetAllocationTargetsSchema>;
+
+export const SetConcentrationLimitSchema = z.object({
+  concentrationLimitPct: z.coerce
+    .number({ error: "集中度上限必須是有效數字" })
+    .positive("集中度上限必須大於 0")
+    .max(100, "集中度上限不可超過 100%"),
+});

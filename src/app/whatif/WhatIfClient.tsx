@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { project, crossMonth, type ProjPoint } from "@/lib/whatif-project";
 import { fmtFull as fmtTwd, fmtCompact } from "@/lib/format";
+import { ScenarioTab, type ScenarioData } from "./ScenarioTab";
 
 const sign = (n: number) => (n > 0 ? "+" : n < 0 ? "−" : "");
 
@@ -653,16 +654,18 @@ function CounterfactualTab({ cf }: { cf: CounterfactualData }) {
 export function WhatIfClient({
   netWorth,
   counterfactual,
+  scenario,
 }: {
   netWorth: number;
   counterfactual: CounterfactualData | null;
+  scenario: ScenarioData;
 }) {
-  const [tab, setTab] = useState<"proj" | "cf">("proj");
+  const [tab, setTab] = useState<"proj" | "cf" | "scenario">("proj");
 
   return (
     <div>
       <div className="mb-6 inline-flex rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] p-[3px]">
-        {(["proj", "cf"] as const).map((t) => (
+        {(["proj", "cf", "scenario"] as const).map((t) => (
           <button
             key={t}
             type="button"
@@ -674,13 +677,15 @@ export function WhatIfClient({
                 : "text-[var(--c-muted)]"
             }`}
           >
-            {t === "proj" ? "未來推算" : "回測對照"}
+            {t === "proj" ? "未來推算" : t === "cf" ? "回測對照" : "壓力與買前檢核"}
           </button>
         ))}
       </div>
 
       {tab === "proj" ? (
         <ProjectionTab netWorth={netWorth} />
+      ) : tab === "scenario" ? (
+        <ScenarioTab data={scenario} />
       ) : counterfactual ? (
         <CounterfactualTab cf={counterfactual} />
       ) : (

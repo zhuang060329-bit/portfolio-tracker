@@ -2,6 +2,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { AppHeader } from "@/components/AppHeader";
 import { getUnreadCount } from "@/lib/notifications";
+import { todayTaipei } from "@/lib/dates";
+import type { ScenarioHolding } from "@/lib/scenario";
 import { fetchUsDailyClose } from "@/lib/prices/twelvedata";
 import { fetchUsdTwdHistory } from "@/lib/prices/fx";
 import { fetchTwDailyClose } from "@/lib/prices/finmind";
@@ -11,6 +13,7 @@ import {
   type CfRow,
   type CounterfactualData,
 } from "./WhatIfClient";
+import type { ScenarioData } from "./ScenarioTab";
 
 export default async function WhatIfPage() {
   const supabase = await createClient();
@@ -21,6 +24,9 @@ export default async function WhatIfPage() {
     unreadCount,
     { data: cfRows },
     { data: accs },
+    { data: profile },
+    { data: recentAdds },
+    { data: openDecisions },
   ] = await Promise.all([
     supabase.auth.getUser(),
     getUnreadCount(),
@@ -32,9 +38,24 @@ export default async function WhatIfPage() {
     supabase
       .from("accounts")
       .select(
-        "price_market,quantity,last_unit_price,last_fx_rate,manual_value_base",
+        "id,name,asset_class,price_market,symbol,quantity,native_currency,last_unit_price,last_fx_rate,manual_value_base",
       )
       .eq("status", "active"),
+    supabase
+      .from("profiles")
+      .select("allocation_targets,concentration_limit_pct")
+      .single(),
+    supabase
+      .from("transactions")
+      .select("account_id")
+      .in("type", ["create", "adjust_quantity"])
+      .lt("cashflow_twd", 0)
+      .gte("created_at", `${subtractDays(todayTaipei(), 30)}T00:00:00+08:00`),
+    supabase
+      .from("investment_decisions")
+      .select("account_id")
+      .eq("status", "open")
+      .not("account_id", "is", null),
   ]);
 
   const cashflows = ((cfRows ?? []) as {
@@ -53,16 +74,39 @@ export default async function WhatIfPage() {
 
   // 目前實際組合估值（= 未來推算的起點本金）
   let actualValue = 0;
+  const scenarioHoldings: ScenarioHolding[] = [];
   for (const a of accs ?? []) {
+    let valueTwd = 0;
     if (a.price_market === "manual") {
-      actualValue += Number(a.manual_value_base ?? 0);
+      valueTwd = Number(a.manual_value_base ?? 0);
     } else {
-      actualValue +=
+      valueTwd =
         Number(a.quantity) *
         Number(a.last_unit_price ?? 0) *
         Number(a.last_fx_rate ?? 1);
     }
+    actualValue += valueTwd;
+    scenarioHoldings.push({
+      id: a.id,
+      name: a.name,
+      symbol: a.symbol,
+      assetClass: a.asset_class,
+      market: a.price_market,
+      currency: a.native_currency,
+      valueTwd,
+    });
   }
+
+  const recentAddsByAccount = countByAccount(recentAdds ?? []);
+  const openDecisionsByAccount = countByAccount(openDecisions ?? []);
+  const scenario: ScenarioData = {
+    holdings: scenarioHoldings,
+    allocationTargets:
+      ((profile?.allocation_targets ?? {}) as Record<string, number>) || {},
+    concentrationLimitPct: Number(profile?.concentration_limit_pct ?? 25),
+    recentAddsByAccount,
+    openDecisionsByAccount,
+  };
 
   const firstDate = cashflows[0]?.date ?? "";
   const hasData = cashflows.length > 0 && totalInvested > 0 && !!firstDate;
@@ -168,14 +212,32 @@ export default async function WhatIfPage() {
             What-if 試算
           </h1>
           <p className="mt-1.5 text-[13.5px] text-[var(--c-muted)]">
-            推算未來淨值與 FIRE 進度，或回看「當初如果全買 ETF」的對照。
+            推算未來淨值、回看 ETF 對照，並測試價格與匯率衝擊下的買後配置。
           </p>
         </header>
 
-        <WhatIfClient netWorth={actualValue} counterfactual={counterfactual} />
+        <WhatIfClient
+          netWorth={actualValue}
+          counterfactual={counterfactual}
+          scenario={scenario}
+        />
       </main>
     </div>
   );
+}
+
+function countByAccount(rows: { account_id: string | null }[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const row of rows) {
+    if (row.account_id) counts[row.account_id] = (counts[row.account_id] ?? 0) + 1;
+  }
+  return counts;
+}
+
+function subtractDays(value: string, days: number): string {
+  const date = new Date(`${value}T12:00:00+08:00`);
+  date.setUTCDate(date.getUTCDate() - days);
+  return date.toLocaleDateString("en-CA", { timeZone: "Asia/Taipei" });
 }
 
 // 把 simulateBuyAndHold 結果整成 CfRow 需要的欄位

@@ -17,7 +17,10 @@ export default async function SettingsPage() {
   ] = await Promise.all([
     supabase.auth.getUser(),
     getUnreadCount(),
-    supabase.from("profiles").select("allocation_targets").maybeSingle(),
+    supabase
+      .from("profiles")
+      .select("allocation_targets,concentration_limit_pct")
+      .maybeSingle(),
     supabase
       .from("accounts")
       .select("name,last_priced_at")
@@ -57,6 +60,7 @@ export default async function SettingsPage() {
           }}
           isAdmin={admin}
           initialTargets={initialTargets}
+          initialConcentrationLimitPct={Number(profile?.concentration_limit_pct ?? 25)}
           priceHealth={priceHealth}
         />
       </main>

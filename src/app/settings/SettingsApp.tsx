@@ -16,6 +16,7 @@ import {
 } from "@/components/ThemeToggle";
 import {
   setAllocationTargets,
+  setConcentrationLimit,
   type FormState as AllocFormState,
 } from "@/lib/profile-actions";
 import { MfaSetupCard } from "./MfaSetupCard";
@@ -52,6 +53,7 @@ export type SettingsAppProps = {
   user: { email: string | null; createdAt: string | null };
   isAdmin: boolean;
   initialTargets: Record<string, number>;
+  initialConcentrationLimitPct: number;
   priceHealth: PriceHealth;
 };
 
@@ -59,6 +61,7 @@ export function SettingsApp({
   user,
   isAdmin,
   initialTargets,
+  initialConcentrationLimitPct,
   priceHealth,
 }: SettingsAppProps) {
   // 用 ref 收集每個 section 的 DOM element 給 scroll-spy 用。
@@ -135,7 +138,10 @@ export function SettingsApp({
           desc="設定各資產類別的目標占比，儀表板會以此標示偏離。"
           elRef={registerEl("alloc")}
         >
-          <AllocInner initialTargets={initialTargets} />
+          <AllocInner
+            initialTargets={initialTargets}
+            initialConcentrationLimitPct={initialConcentrationLimitPct}
+          />
         </Section>
         <Section
           id="security"
@@ -414,8 +420,10 @@ function PrefsInner() {
 
 function AllocInner({
   initialTargets,
+  initialConcentrationLimitPct,
 }: {
   initialTargets: Record<string, number>;
+  initialConcentrationLimitPct: number;
 }) {
   const initial = useMemo(() => {
     const out: Record<string, number> = {};
@@ -447,6 +455,7 @@ function AllocInner({
   }
 
   return (
+    <>
     <form
       action={(fd: FormData) => {
         for (const def of ALLOC_DEFS) {
@@ -529,6 +538,51 @@ function AllocInner({
             </span>
           )}
         </div>
+      </div>
+    </form>
+    <ConcentrationLimitForm initialValue={initialConcentrationLimitPct} />
+    </>
+  );
+}
+
+function ConcentrationLimitForm({ initialValue }: { initialValue: number }) {
+  const [saved, setSaved] = useState(false);
+  const [state, action, pending] = useActionState<AllocFormState, FormData>(
+    setConcentrationLimit,
+    undefined,
+  );
+  return (
+    <form
+      action={(formData) => {
+        setSaved(true);
+        action(formData);
+      }}
+      className="mt-6 flex flex-wrap items-end justify-between gap-4 border-t border-[var(--c-border)] pt-5"
+    >
+      <label className="text-[13px] font-medium">
+        單一持倉集中度上限
+        <span className="mt-0.5 block text-[11.5px] font-normal text-[var(--c-muted)]">
+          anti-FOMO 檢核會以此門檻標示買後權重。
+        </span>
+        <span className="mt-2 inline-flex items-center gap-1 text-[13px] text-[var(--c-muted)]">
+          <input
+            type="number"
+            name="concentrationLimitPct"
+            min={0.1}
+            max={100}
+            step={0.1}
+            defaultValue={initialValue}
+            className="h-[36px] w-[76px] rounded-lg border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 text-right text-[13.5px] font-semibold text-[var(--c-text)]"
+          />
+          %
+        </span>
+      </label>
+      <div className="flex items-center gap-2">
+        {state?.error && <span role="alert" className="text-[12px] text-[var(--c-down)]">{state.error}</span>}
+        {saved && !pending && !state?.error && <span role="status" className="text-[12px] text-[var(--c-up)]">✓ 已儲存</span>}
+        <button type="submit" disabled={pending} className="rounded-lg border border-[var(--c-line-strong)] px-4 py-2 text-[13px] font-medium hover:bg-[var(--c-surface-soft)] disabled:opacity-50">
+          {pending ? "儲存中…" : "儲存上限"}
+        </button>
       </div>
     </form>
   );
