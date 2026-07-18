@@ -10,7 +10,8 @@
 - Branch：`feat/stackworth-v1`
 - Base：`origin/main` at `98f808fdee48564ed1ee678c8ce157227888f1fa`
 - Package version：`1.0.0`
-- 目前 v1 程式尚未 merge、tag、release 或部署；production 資料庫沒有被本次工作修改。
+- Draft PR：`https://github.com/zhuang060329-bit/portfolio-tracker/pull/16`
+- 功能分支已 push；目前尚未 merge、tag、release 或 production 部署，production 資料庫沒有被本次工作修改。
 
 ## v1 範圍
 
@@ -37,10 +38,11 @@
 | `npm.cmd run typecheck` | 通過 |
 | `npm.cmd run test:unit` | 22 files、145 tests 通過 |
 | `npm.cmd run test:integration` | 2 files、16 tests 跳過；本機沒有 `TEST_DATABASE_URL`，Docker daemon 也未運作 |
+| GitHub Actions Postgres integration | PostgreSQL 16；2 files、16 tests 通過 |
 | `npm.cmd run build` | 通過；Next.js 16.2.10，29 個 static page generation jobs；需網路取得既有 Google Fonts |
 | `scripts/browser-smoke.ps1` | 通過；5 個公開 Demo 路由與 375px／360px viewport 斷言 |
 
-整合測試尚未在真實 Postgres 執行，不得描述成通過。CI 設定仍保留 lint、typecheck、unit、Postgres integration 與 build；本機沒有聲稱遠端 CI 結果。
+本機 integration suite 因環境條件跳過；PR #16 的 GitHub Actions 已啟動 PostgreSQL 16，實際執行並通過 16 個 integration tests。CI 的 lint、typecheck、unit、Postgres integration 與 build 均通過，Vercel Preview 也通過。
 
 ## 已知限制
 
@@ -48,11 +50,9 @@
 - 決策檢討的價格、FX、最大有利／不利變動取決於已保存的 daily snapshots；資料不足時顯示缺口或 `—`。
 - 報告輸出採瀏覽器列印／儲存 PDF，未加入 server-side Chromium。
 - 需登入的建立決策、交易連結與完成檢討流程尚未在本機瀏覽器連真實 Supabase 執行；`docs/V1_BROWSER_SMOKE.md` 列出獨立測試環境清單。
-- `gh` CLI 尚未安裝，因此本機尚未 push 功能分支或建立 PR。
 
 ## 下一步
 
-1. 安裝並登入 GitHub CLI；push `feat/stackworth-v1`，建立 draft PR，不合併。
-2. 在獨立 Postgres 設定 `TEST_DATABASE_URL`，執行 16 個 integration tests。
-3. PR 與 CI 通過後，在測試 Supabase 套用 v1 migration 並驗收登入流程。
-4. 只有取得使用者 production 核准後，才套用 migration、merge 或部署；不要建立 tag 或 release。
+1. 在獨立 Supabase 套用 v1 migration，驗收建立決策、交易連結、編輯、封存與完成檢討。
+2. 只有取得使用者明確核准後，才套用 production migration 或 merge PR #16。
+3. 不建立 tag 或 release，除非使用者另行要求。

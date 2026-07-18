@@ -29,7 +29,7 @@
 - replay 與報告使用最多 10,000 筆相關 snapshot；截斷會在 UI 顯示。
 - 歷史價格或 FX snapshot 不足時，拆分與 review 指標會是 null／缺口，系統不使用今天價格補歷史。
 - 自動 review 指標不評斷決策好壞；結果、過程和遵守計畫由使用者分開紀錄。
-- 本機沒有 `TEST_DATABASE_URL`，因此 16 個 Postgres integration tests 是 skipped，不是 passed。
+- 本機沒有 `TEST_DATABASE_URL`，因此本機的 16 個 Postgres integration tests 是 skipped；PR CI 已在 PostgreSQL 16 實際執行並通過 16/16。
 - 已登入瀏覽器寫入流程仍需在獨立 Supabase 測試環境驗收。
 
 ### 驗證結果
@@ -37,6 +37,6 @@
 - lint：通過。
 - typecheck：通過。
 - unit：22 files、145 tests 通過。
-- integration：2 files、16 tests skipped；缺少 `TEST_DATABASE_URL`。
+- integration：本機 2 files、16 tests skipped；GitHub Actions PostgreSQL 16 為 2 files、16 tests 通過。
 - production build：通過；sandbox 外取得專案既有 Google Fonts。
 - browser smoke：五個公開 Demo route、歷史日期切換、情境＋試買、月份切換、金額遮罩、深色模式與三個 viewport 已驗收；自動 script exit code 0。
