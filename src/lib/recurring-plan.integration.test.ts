@@ -43,7 +43,7 @@ describe.skipIf(!url)("execute_recurring_plan_mutation (integration)", () => {
       "truncate recurring_plan_runs, recurring_plans, decision_reviews, investment_decisions, account_status_history, account_snapshots, transactions, accounts, profiles, auth.users cascade",
     );
     await db.query(
-      "insert into auth.users (id, email) values ($1, 'test@example.com')",
+      "insert into auth.users (id, email) values ($1, 'test@example.com') on conflict (id) do nothing",
       [USER_ID],
     );
     await db.query("insert into profiles (id) values ($1)", [USER_ID]);

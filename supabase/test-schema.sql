@@ -26,6 +26,9 @@ as $$
   select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid
 $$;
 
+grant usage on schema public, auth to authenticated;
+grant execute on function auth.uid() to authenticated;
+
 drop table if exists recurring_plan_runs cascade;
 drop table if exists recurring_plans cascade;
 drop table if exists decision_reviews cascade;

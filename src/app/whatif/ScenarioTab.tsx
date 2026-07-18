@@ -23,7 +23,13 @@ const templates: { label: string; shocks: ScenarioShock[] }[] = [
   {
     label: "全球風險下降",
     shocks: [
-      { id: "risk-price", kind: "price", scope: "all", target: null, changePct: -20 },
+      { id: "risk-fund", kind: "price", scope: "asset_class", target: "fund", changePct: -20 },
+      { id: "risk-stock", kind: "price", scope: "asset_class", target: "stock", changePct: -20 },
+      { id: "risk-crypto", kind: "price", scope: "asset_class", target: "crypto", changePct: -20 },
+      { id: "risk-metal", kind: "price", scope: "asset_class", target: "precious_metal", changePct: -20 },
+      { id: "risk-other", kind: "price", scope: "asset_class", target: "other_investment", changePct: -20 },
+      { id: "risk-fixed", kind: "price", scope: "asset_class", target: "fixed_asset", changePct: -20 },
+      { id: "risk-receivable", kind: "price", scope: "asset_class", target: "receivable", changePct: -20 },
       { id: "risk-usd", kind: "fx", scope: "currency", target: "USD", changePct: -5 },
     ],
   },

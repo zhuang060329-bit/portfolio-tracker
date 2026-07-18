@@ -227,6 +227,64 @@ export async function saveDecisionReview(
   return { ok: "檢討已儲存" };
 }
 
+export async function updateInvestmentDecision(
+  _previous: DecisionFormState,
+  formData: FormData,
+): Promise<DecisionFormState> {
+  const decisionId = z.string().uuid().safeParse(formData.get("decisionId"));
+  if (!decisionId.success) return { error: "決策識別碼無效" };
+  const parsed = InvestmentDecisionSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "輸入資料無效" };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "請先登入" };
+
+  const { data: existing, error: existingError } = await supabase
+    .from("investment_decisions")
+    .select("id")
+    .eq("id", decisionId.data)
+    .eq("user_id", user.id)
+    .single();
+  if (existingError || !existing) return { error: "找不到可編輯的決策" };
+
+  const { data: updated, error } = await supabase
+    .from("investment_decisions")
+    .update({
+      decision_date: parsed.data.decisionDate,
+      asset_name: parsed.data.assetName,
+      symbol: parsed.data.symbol || null,
+      decision_type: parsed.data.decisionType,
+      thesis: parsed.data.thesis,
+      catalysts: parsed.data.catalysts,
+      risks: parsed.data.risks,
+      invalidation_conditions: parsed.data.invalidationConditions,
+      expected_holding_months: parsed.data.expectedHoldingMonths,
+      target_return_min_pct: parsed.data.targetReturnMinPct ?? null,
+      target_return_max_pct: parsed.data.targetReturnMaxPct ?? null,
+      max_drawdown_pct: parsed.data.maxDrawdownPct ?? null,
+      confidence: parsed.data.confidence,
+      review_date: parsed.data.reviewDate,
+      tags: parseDecisionTags(parsed.data.tags),
+    })
+    .eq("id", decisionId.data)
+    .eq("user_id", user.id)
+    .select("id")
+    .single();
+  if (error || !updated) {
+    console.error("updateInvestmentDecision failed", { code: error?.code });
+    return { error: "無法更新決策；原始情境未變更，請稍後再試" };
+  }
+
+  revalidatePath("/decisions");
+  revalidatePath(`/decisions/${decisionId.data}`);
+  redirect(`/decisions/${decisionId.data}`);
+}
+
 export async function archiveDecision(formData: FormData): Promise<void> {
   const decisionId = z.string().uuid().safeParse(formData.get("decisionId"));
   if (!decisionId.success) return;
