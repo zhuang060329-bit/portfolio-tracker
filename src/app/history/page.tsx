@@ -4,6 +4,7 @@ import { todayTaipei } from "@/lib/dates";
 import { fmtFull, fmtNum } from "@/lib/format";
 import {
   attributePortfolioPeriod,
+  buildScopeAdjustments,
   replayPortfolioAsOf,
   type AccountStatusEvent,
   type ReplayAccount,
@@ -159,7 +160,21 @@ export default async function HistoryPage({
     statusEvents,
     sourceTruncated: snapshots.length >= SNAPSHOT_LIMIT || statusEvents.length >= STATUS_LIMIT,
   });
-  const attribution = attributePortfolioPeriod({ opening, ending, snapshots, transactions });
+  const scopeAdjustments = buildScopeAdjustments({
+    fromExclusive: startDate,
+    toInclusive: endDate,
+    snapshots,
+    statusEvents,
+  });
+  const attribution = attributePortfolioPeriod({
+    opening,
+    ending,
+    snapshots,
+    transactions,
+    scopeContributionTwd: scopeAdjustments.contributionTwd,
+    scopeWithdrawalTwd: scopeAdjustments.withdrawalTwd,
+    scopeGaps: scopeAdjustments.gaps,
+  });
   if (queryTruncated && !attribution.gaps.includes("交易或歷程查詢已達筆數上限")) {
     attribution.gaps.push("交易或歷程查詢已達筆數上限");
   }
@@ -196,7 +211,7 @@ export default async function HistoryPage({
             <div>
               <h2 className="font-serif text-xl font-medium">報酬歸因與對帳</h2>
               <p className="mt-1 text-[12px] text-[var(--c-muted)]">
-                期初 + 投入 + 市價 + 匯率 + 收入 + 未解釋 = 期末 + 提領。配息與利息同時列為收入及已提領現金。
+                期初 + 投入 + 範圍加入 + 市價 + 匯率 + 收入 + 未解釋 = 期末 + 提領 + 範圍移出。配息與利息同時列為收入及已提領現金。
               </p>
             </div>
             <span className={`rounded-full px-2.5 py-1 text-[11.5px] font-semibold ${attribution.reconciled ? "bg-[color-mix(in_srgb,var(--c-up)_12%,transparent)] text-[var(--c-up)]" : "bg-[color-mix(in_srgb,var(--c-down)_12%,transparent)] text-[var(--c-down)]"}`}>
@@ -210,7 +225,7 @@ export default async function HistoryPage({
             <AttributionMetric label="未解釋差額" value={attribution.residualTwd} alert={!attribution.reconciled} />
           </dl>
           <div className="mt-4 border-t border-[var(--c-border)] pt-3 text-[11.5px] text-[var(--c-muted)]">
-            已實現損益（備忘、不重複加總）：NT$ {fmtFull(attribution.realizedPnlMemoTwd)} · 相對容差：NT$ {fmtNum(attribution.toleranceTwd, 2)}（對帳規模的 0.1%）
+            組合範圍加入／移出：NT$ {fmtFull(attribution.scopeContributionTwd)} / NT$ {fmtFull(attribution.scopeWithdrawalTwd)} · 已實現損益（備忘、不重複加總）：NT$ {fmtFull(attribution.realizedPnlMemoTwd)} · 相對容差：NT$ {fmtNum(attribution.toleranceTwd, 2)}（對帳規模的 0.1%）
           </div>
         </section>
 

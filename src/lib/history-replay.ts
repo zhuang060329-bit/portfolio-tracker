@@ -64,6 +64,8 @@ export type AttributionResult = {
   endingValueTwd: number;
   contributionsTwd: number;
   withdrawalsTwd: number;
+  scopeContributionTwd: number;
+  scopeWithdrawalTwd: number;
   incomeTwd: number;
   marketPriceEffectTwd: number;
   fxEffectTwd: number;
@@ -151,13 +153,19 @@ export function attributePortfolioPeriod({
   ending,
   snapshots,
   transactions,
+  scopeContributionTwd = 0,
+  scopeWithdrawalTwd = 0,
+  scopeGaps = [],
 }: {
   opening: PortfolioReplay;
   ending: PortfolioReplay;
   snapshots: ReplaySnapshot[];
   transactions: ReplayTransaction[];
+  scopeContributionTwd?: number;
+  scopeWithdrawalTwd?: number;
+  scopeGaps?: string[];
 }): AttributionResult {
-  const gaps = new Set([...opening.gaps, ...ending.gaps]);
+  const gaps = new Set([...opening.gaps, ...ending.gaps, ...scopeGaps]);
   let contributionsTwd = 0;
   let withdrawalsTwd = 0;
   let incomeTwd = 0;
@@ -220,10 +228,11 @@ export function attributePortfolioPeriod({
   const knownLeft =
     opening.totalValueTwd +
     contributionsTwd +
+    scopeContributionTwd +
     marketPriceEffectTwd +
     fxEffectTwd +
     incomeTwd;
-  const knownRight = ending.totalValueTwd + withdrawalsTwd;
+  const knownRight = ending.totalValueTwd + withdrawalsTwd + scopeWithdrawalTwd;
   const residualTwd = knownRight - knownLeft;
   const scale = Math.max(
     Math.abs(knownLeft) + Math.abs(knownRight),
@@ -238,6 +247,8 @@ export function attributePortfolioPeriod({
     endingValueTwd: ending.totalValueTwd,
     contributionsTwd,
     withdrawalsTwd,
+    scopeContributionTwd,
+    scopeWithdrawalTwd,
     incomeTwd,
     marketPriceEffectTwd,
     fxEffectTwd,
@@ -247,6 +258,51 @@ export function attributePortfolioPeriod({
     reconciled,
     gaps: [...gaps],
   };
+}
+
+export function buildScopeAdjustments({
+  fromExclusive,
+  toInclusive,
+  snapshots,
+  statusEvents,
+}: {
+  fromExclusive: string;
+  toInclusive: string;
+  snapshots: ReplaySnapshot[];
+  statusEvents: AccountStatusEvent[];
+}): { contributionTwd: number; withdrawalTwd: number; gaps: string[] } {
+  let contributionTwd = 0;
+  let withdrawalTwd = 0;
+  const gaps: string[] = [];
+  const events = statusEvents.filter((event) => {
+    const date = taipeiDate(event.effectiveAt);
+    return (
+      event.source === "account_update" &&
+      date > fromExclusive &&
+      date <= toInclusive
+    );
+  });
+
+  for (const event of events) {
+    const eventDate = taipeiDate(event.effectiveAt);
+    const snapshot = snapshots
+      .filter(
+        (candidate) =>
+          candidate.accountId === event.accountId && candidate.date <= eventDate,
+      )
+      .sort((left, right) => right.date.localeCompare(left.date))[0];
+    if (!snapshot) {
+      gaps.push(`帳戶 ${event.accountId.slice(0, 8)} 在範圍變更時缺少估值快照`);
+      continue;
+    }
+    if (event.status === "archived") withdrawalTwd += Number(snapshot.valueBase);
+    else contributionTwd += Number(snapshot.valueBase);
+  }
+
+  if (contributionTwd !== 0 || withdrawalTwd !== 0) {
+    gaps.push("帳戶啟用／封存以非現金的組合範圍調整列示，未計入實際投入或提領");
+  }
+  return { contributionTwd, withdrawalTwd, gaps };
 }
 
 function statusAsOf(

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   attributePortfolioPeriod,
+  buildScopeAdjustments,
   replayPortfolioAsOf,
   type AccountStatusEvent,
   type ReplayAccount,
@@ -211,5 +212,26 @@ describe("attributePortfolioPeriod", () => {
     const result = attributePortfolioPeriod({ opening, ending, snapshots: [], transactions: [] });
     expect(result.toleranceTwd).toBeCloseTo(0.02001, 8);
     expect(result.reconciled).toBe(true);
+  });
+});
+
+describe("buildScopeAdjustments", () => {
+  it("封存帳戶以組合範圍移出列示，不偽裝成市場虧損", () => {
+    const adjustments = buildScopeAdjustments({
+      fromExclusive: "2026-01-01",
+      toInclusive: "2026-01-03",
+      snapshots,
+      statusEvents: [
+        {
+          accountId: "account-a",
+          status: "archived",
+          effectiveAt: "2026-01-03T08:00:00+08:00",
+          source: "account_update",
+        },
+      ],
+    });
+    expect(adjustments.withdrawalTwd).toBe(34100);
+    expect(adjustments.contributionTwd).toBe(0);
+    expect(adjustments.gaps[0]).toMatch(/非現金/);
   });
 });

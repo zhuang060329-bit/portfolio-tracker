@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { fmtFull, fmtNum } from "@/lib/format";
+import { calculateDecisionReviewMetrics } from "@/lib/decision-review-metrics";
 import { getUnreadCount } from "@/lib/notifications";
 import { createClient } from "@/lib/supabase/server";
 import { archiveDecision } from "../actions";
@@ -97,6 +98,24 @@ export default async function DecisionDetailPage({ params }: { params: Promise<{
   const decision = data as unknown as DecisionRow;
   const review = decision.decision_reviews?.[0] ?? null;
   const snapshot = decision.context_snapshot ?? {};
+  const { data: reviewSnapshots } = decision.account_id
+    ? await supabase
+        .from("account_snapshots")
+        .select("snapshot_date,unit_price,fx_rate")
+        .eq("account_id", decision.account_id)
+        .lte("snapshot_date", decision.review_date)
+        .order("snapshot_date", { ascending: true })
+        .limit(2_000)
+    : { data: [] };
+  const suggestedMetrics = calculateDecisionReviewMetrics({
+    decisionDate: decision.decision_date,
+    reviewDate: decision.review_date,
+    snapshots: (reviewSnapshots ?? []).map((row) => ({
+      date: row.snapshot_date,
+      unitPrice: row.unit_price == null ? null : Number(row.unit_price),
+      fxRate: row.fx_rate == null ? null : Number(row.fx_rate),
+    })),
+  });
 
   return (
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
@@ -163,7 +182,11 @@ export default async function DecisionDetailPage({ params }: { params: Promise<{
               評估決策流程與證據，不以單次盈虧替代判斷品質。
             </p>
           </div>
-          <ReviewForm decisionId={decision.id} initial={review} />
+          <ReviewForm
+            decisionId={decision.id}
+            initial={review}
+            suggested={suggestedMetrics}
+          />
         </section>
       </main>
     </div>

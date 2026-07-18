@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { saveDecisionReview, type DecisionFormState } from "../actions";
+import type { DecisionReviewMetrics } from "@/lib/decision-review-metrics";
 
 type ReviewInitial = {
   hypothesis_outcome: string;
@@ -21,7 +22,7 @@ type ReviewInitial = {
 const inputClass =
   "mt-1.5 w-full rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3.5 py-2.5 text-[14px] outline-none focus:border-[var(--c-accent)] focus:ring-2 focus:ring-[var(--c-accent-soft)]";
 
-export function ReviewForm({ decisionId, initial }: { decisionId: string; initial: ReviewInitial | null }) {
+export function ReviewForm({ decisionId, initial, suggested }: { decisionId: string; initial: ReviewInitial | null; suggested: DecisionReviewMetrics }) {
   const [state, action, pending] = useActionState<DecisionFormState, FormData>(
     saveDecisionReview,
     undefined,
@@ -29,6 +30,11 @@ export function ReviewForm({ decisionId, initial }: { decisionId: string; initia
   return (
     <form action={action} className="mt-5 space-y-4">
       <input type="hidden" name="decisionId" value={decisionId} />
+      {!initial && suggested.startSnapshotDate && suggested.endSnapshotDate && (
+        <p className="rounded-lg bg-[var(--c-surface-soft)] px-3 py-2 text-[11.5px] text-[var(--c-muted)]">
+          已依 {suggested.startSnapshotDate} 至 {suggested.endSnapshotDate} 的單價與匯率快照預填報酬；請依實際情況確認。
+        </p>
+      )}
       <Field label="原始假設後來如何發展？" required>
         <textarea className={`${inputClass} min-h-24 resize-y`} name="hypothesisOutcome" defaultValue={initial?.hypothesis_outcome ?? ""} maxLength={3000} required />
       </Field>
@@ -55,19 +61,19 @@ export function ReviewForm({ decisionId, initial }: { decisionId: string; initia
           </select>
         </Field>
         <Field label="標的報酬（%）">
-          <input className={inputClass} type="number" step="0.01" name="assetReturnPct" defaultValue={initial?.asset_return_pct ?? ""} />
+          <input className={inputClass} type="number" step="0.01" name="assetReturnPct" defaultValue={initial?.asset_return_pct ?? suggested.assetReturnPct ?? ""} />
         </Field>
         <Field label="TWD 報酬（%）">
-          <input className={inputClass} type="number" step="0.01" name="twdReturnPct" defaultValue={initial?.twd_return_pct ?? ""} />
+          <input className={inputClass} type="number" step="0.01" name="twdReturnPct" defaultValue={initial?.twd_return_pct ?? suggested.twdReturnPct ?? ""} />
         </Field>
         <Field label="匯率效果（%）">
-          <input className={inputClass} type="number" step="0.01" name="fxEffectPct" defaultValue={initial?.fx_effect_pct ?? ""} />
+          <input className={inputClass} type="number" step="0.01" name="fxEffectPct" defaultValue={initial?.fx_effect_pct ?? suggested.fxEffectPct ?? ""} />
         </Field>
         <Field label="最大有利變動（%）">
-          <input className={inputClass} type="number" step="0.01" name="maxFavorableExcursionPct" defaultValue={initial?.max_favorable_excursion_pct ?? ""} />
+          <input className={inputClass} type="number" step="0.01" name="maxFavorableExcursionPct" defaultValue={initial?.max_favorable_excursion_pct ?? suggested.maxFavorableExcursionPct ?? ""} />
         </Field>
         <Field label="最大不利變動（%）">
-          <input className={inputClass} type="number" step="0.01" name="maxAdverseExcursionPct" defaultValue={initial?.max_adverse_excursion_pct ?? ""} />
+          <input className={inputClass} type="number" step="0.01" name="maxAdverseExcursionPct" defaultValue={initial?.max_adverse_excursion_pct ?? suggested.maxAdverseExcursionPct ?? ""} />
         </Field>
       </div>
       <Field label="檢討" required>

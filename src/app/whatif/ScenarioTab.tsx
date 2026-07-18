@@ -182,7 +182,7 @@ export function ScenarioTab({ data }: { data: ScenarioData }) {
             </select>
           </label>
           <NumberInput label="外部新增金額（TWD）" value={buyAmountTwd} onChange={setBuyAmountTwd} min={0} max={1_000_000_000} step={1000} />
-          <div className="pb-2 text-right text-[12px] text-[var(--c-muted)]">買後 NT$ {fmtFull(result.finalTotalTwd)}</div>
+          <div className="amt pb-2 text-right text-[12px] text-[var(--c-muted)]">買後 NT$ {fmtFull(result.finalTotalTwd)}</div>
         </div>
         {selected && (
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -220,8 +220,8 @@ export function ScenarioTab({ data }: { data: ScenarioData }) {
               {result.holdings.map((holding) => (
                 <tr key={holding.id} className="border-t border-[var(--c-border)] first:border-t-0">
                   <td className="px-5 py-3.5 font-medium">{holding.name}{holding.symbol ? ` · ${holding.symbol}` : ""}</td>
-                  <td className="px-3 py-3.5 text-right tnum">NT$ {fmtFull(holding.valueTwd)}</td>
-                  <td className="px-3 py-3.5 text-right tnum">NT$ {fmtFull(holding.stressedValueTwd)}</td>
+                  <td className="amt px-3 py-3.5 text-right tnum">NT$ {fmtFull(holding.valueTwd)}</td>
+                  <td className="amt px-3 py-3.5 text-right tnum">NT$ {fmtFull(holding.stressedValueTwd)}</td>
                   <td className="px-3 py-3.5 text-right tnum">{fmtNum(holding.currentWeightPct, 2)}%</td>
                   <td className="px-5 py-3.5 text-right font-semibold tnum">{fmtNum(holding.finalWeightPct, 2)}%</td>
                 </tr>
@@ -251,7 +251,7 @@ function ResultCard({ label, value, signed = false, tone = false }: { label: str
   return (
     <div className="rounded-xl border border-[var(--c-border)] bg-[var(--c-surface)] px-4 py-3">
       <div className="text-[11px] text-[var(--c-muted)]">{label}</div>
-      <div className={`mt-1 text-[18px] font-semibold tnum ${tone ? value < 0 ? "text-[var(--c-down)]" : "text-[var(--c-up)]" : ""}`}>
+      <div className={`amt mt-1 text-[18px] font-semibold tnum ${tone ? value < 0 ? "text-[var(--c-down)]" : "text-[var(--c-up)]" : ""}`}>
         {signed && value > 0 ? "+" : ""}NT$ {fmtFull(value)}
       </div>
     </div>
