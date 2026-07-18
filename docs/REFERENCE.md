@@ -16,6 +16,11 @@ Supporting detail for [StackWorth](../README.md): full feature inventory, stack,
 - **What-if simulator** — "what if I had put everything into VT / 0050 instead?" — replays your actual cashflow history against any ticker's historical price series
 - **Alerts** — price threshold and allocation drift alerts, scanned on each cron run
 - **Activity log** — full transaction history with CSV export and CSV bulk import
+- **Decision journal** — immutable creation context, transaction linkage, due-review queue, editable thesis fields, archive state, and structured reviews
+- **Historical replay** — as-of holdings, account lifecycle boundaries, allocation, currency exposure, price provenance, and visible data gaps
+- **Return attribution** — price, FX, income, contribution, withdrawal, scope-change, realized-P&L memo, and scale-relative residual reconciliation
+- **Portfolio stress test** — deterministic stacked price/FX shocks plus a read-only proposed-purchase concentration check
+- **Monthly report** — selectable month, return and attribution summary, decisions, data health, and print-to-PDF styling
 - **Active vs archived accounts** — all summary metrics remain scoped to active accounts; the archived toggle only expands the holdings ledger
 - **MFA** — TOTP second factor enforced at AAL2 for all authenticated routes
 - **Dark mode** — CSS variable system with `[data-theme="dark"]` toggle
@@ -51,7 +56,11 @@ src/
 │   ├── accounts/new/{stock,crypto,manual}/
 │   ├── activity/                   ← Transaction log + CSV import
 │   ├── alerts/                     ← Alert CRUD
-│   ├── whatif/                     ← What-if simulator
+│   ├── decisions/                  ← Decision journal, edit, archive, and review
+│   ├── history/                    ← Historical replay + attribution
+│   ├── reports/monthly/            ← Selectable print-ready monthly report
+│   ├── whatif/                     ← Existing comparison + portfolio stress tabs
+│   ├── demo/{decisions,history,whatif,report}/
 │   ├── settings/                   ← Profile + tax CSV export
 │   └── api/
 │       ├── cron/refresh/           ← Price refresh, recurring execution, alert scan
@@ -62,11 +71,18 @@ src/
 │   ├── xirr.ts                     ← Newton-Raphson XIRR solver
 │   ├── metrics.ts                  ← TWR, cashflow-adjusted drawdown, interval-aware Sharpe
 │   ├── whatif.ts                   ← Buy-and-hold simulation
+│   ├── decision-review.ts          ← Snapshot-bounded review metrics
+│   ├── history-replay.ts           ← As-of reconstruction + attribution
+│   ├── scenario.ts                 ← Deterministic stacked shocks
+│   ├── monthly-report.ts           ← Month boundaries + report assembly
+│   ├── demo-v1-data.ts             ← Stable public v1 fixtures
 │   ├── contributions.ts            ← Quote acquisition + account/recurring mutation callers
 │   ├── prices/                     ← Quote adapters per market
 │   └── schemas/action/             ← Zod schemas for server action inputs
 ├── proxy.ts                        ← Auth proxy (replaces Next.js Middleware in v16)
-└── ../supabase/rpc-mutations.sql   ← Atomic account writes and recurring execution ledger
+└── ../supabase/
+    ├── rpc-mutations.sql           ← Atomic account writes and recurring execution ledger
+    └── migrations/20260718032234_stackworth_v1.sql
 ```
 
 ---
@@ -120,6 +136,33 @@ src/
 **Asia/Taipei calendar boundary**
 - Snapshot dates, cashflow dates, ranges, YTD, rolling periods, recurring execution dates, and next-run dates use explicit calendar-date handling rather than UTC string truncation
 
+**Decision snapshot and review**
+- `investment_decisions.context_snapshot` is assembled on the server from owned account and snapshot rows at creation time
+- A database trigger prevents updates to the context JSON and its captured timestamp
+- `decision_reviews` is one-to-one with a decision; `save_decision_review` writes the review and decision status in one transaction
+- Automatic review metrics use snapshots between the decision and review dates only; missing price or FX history stays null and is reported
+
+**As-of replay**
+- `account_status_history` records active/archive transitions; account inclusion is evaluated at the selected calendar date
+- A holding uses the latest snapshot on or before the selected date. A carried value includes its source date and never falls back to the current account quote
+- Queries are server-filtered, indexed, and capped at 10,000 relevant snapshot rows. The UI reports truncation; v1.0 does not add an event-sourcing subsystem
+
+**Attribution equation**
+- `ending value = opening value + contributions - withdrawals + price effect + FX effect + income + scope changes + residual`
+- Realized P&L is shown as a memo because proceeds already affect cashflow/value reconciliation; counting it again would duplicate value
+- The warning tolerance is `max(TWD 1, 0.1% × max(|opening|, |ending|, 1))`
+- Price/FX decomposition is available only where both snapshot components exist. Missing components flow to the visible residual and data-gap list
+
+**Stress test and proposed purchase**
+- Price and FX shocks are applied in a stable input order and multiplied when scopes overlap
+- A proposed purchase is external new money, so both the selected holding and final portfolio value increase; no account, transaction, or snapshot is written
+- The global-risk template excludes cash and liabilities from the price shock. All templates are presets, not forecasts
+
+**Monthly report**
+- Month boundaries use Asia/Taipei calendar dates; opening is the latest usable state before the month and ending is the selected month's final state
+- XIRR, TWR, drawdown, attribution, income, decisions, and data gaps reuse the same pure helpers and stored rows as the other v1 pages
+- PDF output uses browser printing. Print CSS removes navigation and controls, forces a light page, avoids splitting report blocks where possible, and states the privacy-mask status
+
 ---
 
 ## Verification Commands
@@ -132,7 +175,9 @@ TEST_DATABASE_URL=postgresql://... npm run test:integration
 npm run build
 ```
 
-The integration suite applies `supabase/test-schema.sql` and `supabase/rpc-mutations.sql` to a real Postgres instance before exercising the database functions.
+The integration suite applies `supabase/test-schema.sql`, `supabase/rpc-mutations.sql`, and `supabase/migrations/20260718032234_stackworth_v1.sql` to a real Postgres instance before exercising the database functions. Without `TEST_DATABASE_URL`, the suite reports every database test as skipped; that is not a passing database run.
+
+Browser smoke-test steps and the Playwright trade-off are recorded in `docs/V1_BROWSER_SMOKE.md`.
 
 ---
 
