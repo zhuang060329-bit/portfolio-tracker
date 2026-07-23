@@ -4,14 +4,23 @@
 - 撰寫方式：Claude Code 於本地讀取 StackWorth 原始碼 + GitHub CLI / API 逐一查證候選專案
 - 範圍：只做研究、比較與規劃；未修改任何產品程式碼、未建立 commit、未 push
 
+> **更正（2026-07-23）**：本報告初版把「匯率歷史表」（原 P0-1）定為正確性風險，前提是
+> `last_fx_rate` 單值造成 cost basis 累積誤差。後續實讀寫入路徑後**此前提不成立、P0 已撤下**：
+> `cost_basis_twd` 存的是每次投入的實際 TWD 原值（[contributions.ts:62](../../src/lib/contributions.ts#L62)），
+> 每筆快照存當下 `fx_rate`（[contributions.ts:73-90](../../src/lib/contributions.ts#L73)、[refresh-prices.ts:47-55](../../src/lib/refresh-prices.ts#L47)），
+> `last_fx_rate` 只用於當前估值（[dashboard-data.ts:105-110](../../src/lib/dashboard-data.ts#L105)）——金錢路徑無匯率累積誤差。
+> 匯率歷史落地降級為 P2（benchmark 匯率可重現 + 多基準幣別的未來前置），不是正確性補洞。
+> 內文各處 P0 匯率相關敘述以本更正為準。已於此更正日交付的項目：XIRR 二分法 fallback、
+> CHANGELOG/SECURITY、`/methodology` 指標說明頁、情境化回歸測試。
+
 ---
 
 ## 1. 執行摘要
 
 - GitHub 上確實存在完成度與成熟度明顯高於 StackWorth 的同類專案，最主要的三個是 **Ghostfolio**（TypeScript 全端 wealth management）、**Portfolio Performance**（14 年歷史的 Java 桌面績效計算工具）、**Wealthfolio**（Rust + Tauri local-first 追蹤器）。
 - StackWorth 在「單人使用範圍內的金融計算正確性」上並不落後——XIRR 殘差驗證、TWR 現金流隔離、cashflow-adjusted drawdown 這些細節，多數同類開源專案沒有做到這個程度。
-- 真正的差距在三個層面：**(a) 市場資料基礎設施**（成熟專案把歷史價格與匯率存成第一級資料表，StackWorth 依賴 last_fx_rate 單值，已知有 cost basis 累積誤差）；**(b) 匯入管線**（成熟專案有券商格式 preset、匯入預覽、dry-run）；**(c) 工程營運紀律**（release tag、changelog、E2E 煙霧測試，StackWorth 目前 0 tags、0 releases）。
-- 建議的最高 ROI 五項改動見第 14、19 節；其中匯率歷史 snapshot 屬正確性問題，列 P0。
+- 真正的差距在三個層面：**(a) 市場資料基礎設施**（成熟專案把歷史價格與匯率存成第一級資料表；StackWorth 的歷史匯率只在快照逐日落地、benchmark 匯率則每次 request 重抓，落地成表可換取可重現與多基準幣別前置——品質項，非正確性）；**(b) 匯入管線**（成熟專案有券商格式 preset、匯入預覽、dry-run）；**(c) 工程營運紀律**（release tag、changelog、E2E 煙霧測試，StackWorth 目前 0 tags、0 releases）。
+- 建議的最高 ROI 改動見第 14、19 節。（初版把匯率歷史表列 P0，已於 2026-07-23 更正撤下——見頂部更正聲明。）
 
 ## 2. StackWorth 現況摘要
 
@@ -53,7 +62,7 @@
 - CI 五道 gate 含真 Postgres 整合測試——小型個人專案少見。
 
 風險：
-- **匯率單值**：`accounts.last_fx_rate` 只存最新匯率，cost basis 有已知累積誤差（AGENTS.md 第十節自承，程式碼驗證：`schema.sql` 無歷史匯率表）。
+- **匯率歷史未成表**：`accounts.last_fx_rate` 只存最新匯率，benchmark 用的歷史匯率每次 request 重抓（`fetchUsdTwdHistory`）、未落地。**注意：這不是 cost basis 正確性問題**——`cost_basis_twd` 存實際投入 TWD、快照存時點 fx（見頂部更正）。落地成表的價值是可重現與多基準幣別前置，屬品質項。
 - **無 release/tag**：`git tag` 為空、GitHub releases 為 0（API 驗證）。回滾依賴逐 commit。
 - **無 E2E**：測試皆為 Vitest 單元/整合，無瀏覽器層驗證（程式碼驗證：無 Playwright/Cypress 依賴）。
 - **元件抽象債**：4 種按鈕風格散在各頁（AGENTS.md 自承的 trade-off）。
@@ -205,7 +214,7 @@ Star/fork 僅列參考，不作為品質依據。「最近推送」為 `pushed_a
 **工程證據**（已讀 `app/models/` 目錄）：
 - `entry.rb` + `entryable.rb`：所有帳戶變動統一為 Entry，再多型分派到交易/估值等型別——與 StackWorth `transactions.txn_type` enum 同構，但多了統一的搜尋層（`entry_search.rb`）。
 - `holding/{forward_calculator, reverse_calculator, gapfillable, materializer, portfolio_cache, portfolio_snapshot}.rb`、`balance/` 同款：**正向（從交易推餘額）與反向（從餘額推缺口）兩個計算器並存，且 gap-filling 是具名模組**。StackWorth 的 snapshot 缺日目前由圖表層虛線橋接；Maybe 把「補洞」本身變成有測試的 domain 物件。
-- `exchange_rate.rb` + `exchange_rate/` concern：**匯率是含日期的第一級資料表**，任何歷史估值用當日匯率——正是 StackWorth cost basis 誤差的正解。
+- `exchange_rate.rb` + `exchange_rate/` concern：**匯率是含日期的第一級資料表**，任何歷史估值用當日匯率。（初版稱此為 StackWorth cost basis 誤差的正解；更正後：StackWorth 無此誤差，此模式對 StackWorth 的價值在多基準幣別時的歷史重算前置，非修 bug。）
 - `app/models/demo/`：demo 資料產生器住在 domain 層，與 StackWorth 的 `demo-data.ts` 同思想，驗證了這條路線。
 
 ### 9.6 Actual（MIT）
@@ -231,8 +240,8 @@ Star/fork 僅列參考，不作為品質依據。「最近推送」為 `pushed_a
 | Portfolio model | account 為中心 + 每日 snapshot | Ghostfolio Order/SymbolProfile/MarketData 分離；Maybe Entry 多型 | 中 | ⚠️ | 只補 MarketData 概念（歷史價格/匯率表），不重構帳戶模型 |
 | Transaction model | txn_type enum 4 種 | Maybe entryable 多型 + 統一搜尋 | 小 | ❌ | 現有 enum 足夠，多型是多人產品的需求 |
 | 績效計算 | XIRR（殘差驗證）+ TWR，117 tests | PP：二分法 seed + Newton；Ghostfolio：情境 spec 群 | 小（品質相當，策略不同） | ✅ | 加二分法 fallback + 情境 fixture 測試 |
-| 價格資料 | 3 provider、last value only、cron 每日 | Ghostfolio 10 provider 同介面 + MarketData 落地 + queue | **大** | ⚠️ | 落地歷史價格/匯率是正確性需求；queue 不需要 |
-| 匯率 | `last_fx_rate` 單值 | Maybe/Ghostfolio：含日期匯率表 | **大（正確性）** | ✅ | P0，見 §14 |
+| 價格資料 | 3 provider、last value only、cron 每日 | Ghostfolio 10 provider 同介面 + MarketData 落地 + queue | 中 | ⚠️ | 歷史落地是可重現/品質需求（非正確性）；queue 不需要 |
+| 匯率 | `last_fx_rate` 單值 + 快照存時點 fx；benchmark 匯率每次重抓 | Maybe/Ghostfolio：含日期匯率表 | 中 | ⚠️ | 品質項（P2），非 P0；cost basis 無誤差，見頂部更正 |
 | Dashboard | 單頁 hero+趨勢+指標+持倉，active-portfolio 邊界 | Ghostfolio 分頁式（總覽/持倉/績效/配置）| 小 | ❌ | 單人工具單頁密度是優點，不學分頁 |
 | 圖表 | Recharts + 觸控 scrub + 虛線缺口 | lightweight-charts canvas 效能；PP heatmap | 小 | ❌ | 資料量（單人每日 snapshot）撐不出 Recharts 瓶頸，不換庫 |
 | Responsive | 桌機/手機雙端已重整（階段四） | Wealthfolio mobile 專用圖表元件 | 小 | ✅ | 已採相同思想；持續即可 |
@@ -276,15 +285,22 @@ Star/fork 僅列參考，不作為品質依據。「最近推送」為 `pushed_a
 
 ## 14. 優化 backlog
 
-### P0-1 匯率與價格歷史 snapshot（正確性）
+### ~~P0-1 匯率與價格歷史 snapshot（正確性）~~ → 已撤下，降級為 P2-5（見下）
 
-- **問題**：`accounts.last_fx_rate` 單值 + snapshot 內 fx_rate 逐日寫入，但 cost basis 回溯計算用的是寫入當下匯率，AGENTS.md 自承有累積誤差；歷史重算（如改基準幣別）無資料可依。
-- **證據**：`supabase/schema.sql`（無匯率歷史表）、AGENTS.md 第十節「匯率歷史 snapshot（修 cost basis 累積誤差）」。
+> **2026-07-23 撤下**：初版把此項定為 P0 正確性風險，前提是 cost basis 用單一匯率回溯而漂移。
+> 實讀寫入路徑後前提不成立：`cost_basis_twd` 存實際投入 TWD（[contributions.ts:62](../../src/lib/contributions.ts#L62)）、
+> 快照存時點 fx、`last_fx_rate` 只用於當前估值——金錢路徑無誤差。故此項不再是正確性補洞。
+> 匯率歷史落地仍有價值，但屬品質/前置，改列 P2-5。
+
+### P2-5 匯率歷史落地（品質 / 多基準幣別前置）
+
+- **問題**：benchmark 用的歷史 USD/TWD 每次 request 重抓（`fetchUsdTwdHistory`，[fx.ts:56](../../src/lib/prices/fx.ts#L56)），未落地；無持久歷史匯率表，未來若改基準幣別（EUR/USD）無法把過往重新表達。
+- **不是**：cost basis 正確性問題（見上撤下說明）。
 - **參考**：Maybe `app/models/exchange_rate.rb`（日期×幣別對唯一鍵）；Ghostfolio `MarketData` + `exchange-rate-data` service。
-- **採用概念**：新表 `fx_rates(date, from_currency, to_currency, rate)`，cron 每日寫入（FinMind 已能供歷史匯率）；估值與 cost basis 查表。**不照搬**：Ghostfolio 的 provider 回填佇列。
+- **採用概念**：新表 `fx_rates(date, from_currency, to_currency, rate)`，cron 每日寫入；benchmark 換算改查表（可重現、可快取）。**不照搬**：Ghostfolio provider 回填佇列。
 - **涉及**：`supabase/`（新 delta SQL）、`src/lib/prices/fx.ts`、`src/lib/dashboard-data.ts`、cron route。
-- **複雜度**：M。**風險**：歷史回填的資料來源額度；舊資料遷移需一次性回填腳本。**前置**：無。
-- **驗收**：改基準幣別或回看任一歷史日，估值使用當日匯率；新增單元測試「同一筆持倉在匯率變動後 cost basis 不漂移」。
+- **複雜度**：M。**風險**：低（顯示層，不動金錢路徑）。**前置**：無，但真正的收益要等「多基準幣別」功能實作時才兌現，可延後。
+- **驗收**：benchmark 匯率改由 `fx_rates` 表供應；重複載入同一天結果一致。
 
 ### P1-1 情境化回歸測試層
 
@@ -339,14 +355,14 @@ Star/fork 僅列參考，不作為品質依據。「最近推送」為 `pushed_a
 ### 分類彙總
 
 - **立即可做（低風險）**：P2-1 release 紀律、P1-3 XIRR fallback、P2-3 規則機器化、P2-4 指標說明頁
-- **一個迭代可完成**：P0-1 匯率歷史表、P1-1 情境測試、P1-2 匯入預覽
+- **一個迭代可完成**：P1-1 情境測試、P1-2 匯入預覽（P2-5 匯率歷史落地可延後至多基準幣別功能時）
 - **需架構調整**：P2-2 元件抽取（跨頁遷移）
 - **暫不值得做**：§13 全表 + 券商 preset（等真實 sample）+ E2E（P3 觀察）
 
 ## 15. 分階段實施路線
 
 1. **第一批（半天級）**：P2-1 → P1-3 → P2-4。零 schema 變更、零架構風險。
-2. **第二批（一個迭代）**：P1-1 情境測試 → P0-1 匯率歷史表（測試先行使 P0 遷移有保護網）→ P1-2 匯入預覽。
+2. **第二批（一個迭代）**：P1-1 情境測試 → P1-2 匯入預覽。（P2-5 匯率歷史落地非當務之急，隨多基準幣別功能一起做。）
 3. **第三批（有保護網後）**：P2-2 元件抽取 + P2-3。
 4. **持續觀察**：每帳戶 TWR、X-ray 規則、E2E。
 
@@ -392,10 +408,10 @@ Star/fork 僅列參考，不作為品質依據。「最近推送」為 `pushed_a
 2. **Portfolio Performance** — 求根器工程與「指標如何計算」的使用者文件。
 3. **Wealthfolio** — 匯入預覽/對映 UX 與行動端專用圖表元件。
 
-**最大差距是什麼？** 不是功能數量，也不是計算品質，而是**資料基礎設施（歷史匯率/價格未落地）與工程營運紀律（無 release/tag/changelog）**。前者是唯一的正確性風險，後者是成本最低的補課。
+**最大差距是什麼？** 不是功能數量，也不是計算品質（計算路徑經實碼查證無正確性缺陷），而是**匯入管線（無預覽/preset）與工程營運紀律（無 release/tag/changelog）**。兩者都是低風險、成本低的補課，非架構問題。（初版曾稱「歷史匯率未落地」為唯一正確性風險，已更正撤下——見頂部聲明。）
 
-**最高 ROI 五項**：① 匯率歷史表（P0-1）② 情境化回歸測試（P1-1）③ 匯入預覽 dry-run（P1-2）④ release 紀律（P2-1）⑤ XIRR 二分法 fallback（P1-3）。
+**最高 ROI 五項**：① XIRR 二分法 fallback（P1-3，已交付）② 情境化回歸測試（P1-1，已交付）③ 匯入預覽 dry-run（P1-2）④ release 紀律（P2-1，已交付 CHANGELOG/SECURITY，尚差打 tag）⑤ 指標說明頁（P2-4，已交付 `/methodology`）。
 
 **看似先進但現在不該做**：AI assistant、事件溯源、CRDT 同步、i18n、Docker 發行、換圖表庫、多使用者（§13）。
 
-**是否接近可長期使用 / 公開展示 / v1.0？** 長期使用：已達成（生產環境日用，CI 綠）。公開展示：`/demo` + README 已具說服力，補上指標說明頁與 release tag 後即完整。v1.0 發布：完成 P0-1 匯率歷史表（消除已知正確性誤差）並打上第一個 tag，就有資格稱 v1.0——差的不是功能，是那一個 tag 和一張匯率表。
+**是否接近可長期使用 / 公開展示 / v1.0？** 長期使用：已達成（生產環境日用，CI 綠）。公開展示：`/demo` + README + 新增的 `/methodology` 已具說服力，補上 release tag 後即完整。v1.0 發布：計算路徑經查證無正確性缺陷、CHANGELOG 已就緒，**只差打上第一個 `v1.0.0` tag**——差的不是功能、也不是那張「匯率表」（已確認非正確性需求），就是那一個 tag。
