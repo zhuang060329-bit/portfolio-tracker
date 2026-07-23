@@ -11,6 +11,18 @@
 - `/methodology` 指標說明頁：公開靜態頁，說明 XIRR、TWR、Sharpe、最大回撤的計算口徑與「為何有時顯示 —」。
 - `SECURITY.md`：安全性回報流程與支援版本說明。
 - 本 `CHANGELOG.md`。
+- `/demo` 專屬載入骨架（`src/app/demo/loading.tsx`）：改用 `DemoV1Header`，避免公開訪客載入瞬間閃到已登入版導覽。
+
+### Security
+- Next.js 升至 16.2.11：涵蓋 App Router Proxy bypass（Turbopack 單語系）、Server Actions SSRF/DoS、cache confusion、Image Optimization SVG DoS、未授權 Server Function 端點揭露等一系列 advisory。
+- `npm audit fix`（非破壞性）清除 brace-expansion、fast-uri、js-yaml、vite 等建置/測試鏈的傳遞漏洞。剩餘 2 項為 Next 自帶 bundled sharp（<0.35）之 libvips CVE，唯一「修法」是把 Next 降級至 14.2.35 並重新引入上述 Proxy bypass，故不採用；本專案不對不受信任影像做 Image Optimization，殘餘風險低。
+
+### Fixed
+- `/methodology` 加入 Proxy 公開白名單：先前只放行 `/login`、`/auth`、`/demo`，公開 Demo 訪客點「指標怎麼算」會被導向登入頁。
+
+### Changed
+- `--c-faint` 文字色提高對比至 WCAG AA：亮色 2.6:1 → 4.70:1、暗色 3.66:1 → 5.58:1，仍低於各自 `--c-muted` 以保留層級。
+- 移除未被任何檔案引用的 `src/components/AllocationTargets.tsx`（設定頁的目標配置由 `SettingsApp` 直接接 `setAllocationTargets` action）。
 
 ## [1.0.0] - 2026-07-18
 

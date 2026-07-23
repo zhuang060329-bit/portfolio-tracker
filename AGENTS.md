@@ -12,7 +12,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## 一、專案基本資料
 
-- **路徑（Windows）**：`D:\ClaudeCode\portfolio-tracker`
+- **路徑（Windows）**：`D:\ClaudeCode\projects\portfolio-tracker`
 - **GitHub**：`github.com/zhuang060329-bit/portfolio-tracker`（public）
 - **部署**：`https://portfolio-tracker-two-rho.vercel.app`
 - **當前狀態**：上線運作中；v1.0 原始碼有 32 個 app page/API 入口，測試數量以 `npm run test:unit` 與 `npm run test:integration` 實際輸出為準
@@ -59,12 +59,15 @@ src/
 │   └── globals.css              ← CSS 變數系統
 ├── components/
 │   ├── AppHeader.tsx            ← 導覽 + 鈴鐺（unreadCount prop）
-│   ├── PortfolioCharts.tsx      ← AllocationPie, NetWorthLine, PerformanceLine
+│   ├── DemoV1Header.tsx         ← 公開 /demo 專屬導覽（總覽/日誌/歷史/壓力/月報）
+│   ├── PortfolioCharts.tsx      ← 帳戶詳情頁用 Recharts 版（AllocationPie, NetWorthLine）
 │   ├── NetWorthPanel.tsx        ← 範圍切換（1M/3M/6M/1Y/ALL）+ NetWorthLine
-│   ├── PerformancePanel.tsx     ← 範圍切換 + benchmark toggle + PerformanceLine
-│   ├── AllocationTargets.tsx    ← 目標 vs 實際（drift > 5% 標紅）
 │   ├── QuickAddFab.tsx          ← 首頁右下浮動 + 快速記帳
-│   └── ThemeToggle.tsx          ← useSyncExternalStore 實作
+│   ├── PrivacyToggle.tsx / ThemeToggle.tsx  ← useSyncExternalStore 實作
+│   └── dashboard/              ← 首頁儀表板（手刻 SVG 圖表）
+│       ├── DashboardClient.tsx, Hero.tsx, Holdings.tsx, MetricsCard.tsx
+│       ├── TrendSection.tsx, AllocationCard.tsx, DashboardCharts.tsx
+│       ├── chart-data.ts, shared.tsx, types.ts, useCountUp.ts
 ├── lib/
 │   ├── prices/                  ← {twelvedata,finmind,coingecko,fx,router,types,http}.ts
 │   ├── xirr.ts, metrics.ts      ← 報酬指標（含測試）
