@@ -1,42 +1,49 @@
 # Changelog
 
-## 1.0.0 - 2026-07-18
+本檔記錄 StackWorth 的重要變更。格式依循 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.1.0/)，版本遵循 [語意化版本](https://semver.org/lang/zh-TW/)。
 
-### 主要功能
+日期為台北時間（Asia/Taipei）。
 
-- 新增投資決策日誌、交易連結、建立時情境快照、編輯、封存、到期檢討與原子 review 儲存。
-- 新增 as-of 歷史重播、帳戶 active/archive 歷史與缺失價格來源標示。
-- 新增期間報酬歸因，分離 contribution、withdrawal、價格、FX、收入、scope change 與 residual。
-- 擴充既有 What-if，加入可疊加的 deterministic price/FX shocks、情境範本與只讀試買檢核。
-- 新增可選月份的投資報告與 print-to-PDF 樣式。
-- 新增四個 deterministic 公開 Demo 流程與可重複的 `scripts/browser-smoke.ps1`。
+## [Unreleased]
+
+### Added
+- XIRR 求根新增二分法 fallback：Newton-Raphson 未通過殘差檢核時，改以二分法在 NPV 變號區間求根，結果仍須通過同一條殘差檢核，通不過一律回 `null`。減少「明明有解卻顯示 —」的情況，且不改動任何既有可解案例的數值。（`src/lib/xirr.ts`）
+- `/methodology` 指標說明頁：公開靜態頁，說明 XIRR、TWR、Sharpe、最大回撤的計算口徑與「為何有時顯示 —」。
+- `SECURITY.md`：安全性回報流程與支援版本說明。
+- 本 `CHANGELOG.md`。
+- `/demo` 專屬載入骨架（`src/app/demo/loading.tsx`）：改用 `DemoV1Header`，避免公開訪客載入瞬間閃到已登入版導覽。
+
+### Security
+- Next.js 升至 16.2.11：涵蓋 App Router Proxy bypass（Turbopack 單語系）、Server Actions SSRF/DoS、cache confusion、Image Optimization SVG DoS、未授權 Server Function 端點揭露等一系列 advisory。
+- `npm audit fix`（非破壞性）清除 brace-expansion、fast-uri、js-yaml、vite 等建置/測試鏈的傳遞漏洞。剩餘 2 項為 Next 自帶 bundled sharp（<0.35）之 libvips CVE，唯一「修法」是把 Next 降級至 14.2.35 並重新引入上述 Proxy bypass，故不採用；本專案不對不受信任影像做 Image Optimization，殘餘風險低。
+
+### Fixed
+- `/methodology` 加入 Proxy 公開白名單：先前只放行 `/login`、`/auth`、`/demo`，公開 Demo 訪客點「指標怎麼算」會被導向登入頁。
+
+### Changed
+- `--c-faint` 文字色提高對比至 WCAG AA：亮色 2.6:1 → 4.70:1、暗色 3.66:1 → 5.58:1，仍低於各自 `--c-muted` 以保留層級。
+- 移除未被任何檔案引用的 `src/components/AllocationTargets.tsx`（設定頁的目標配置由 `SettingsApp` 直接接 `setAllocationTargets` action）。
+
+## [1.0.0] - 2026-07-18
+
+首個標記版本。線上運作於 Vercel + Supabase（單一使用者）。
+
+### 核心功能
+- 多市場、多幣別投資組合追蹤：美股 ETF（Twelve Data）、台股（FinMind）、加密貨幣（CoinGecko）、手動資產，統一以 TWD 呈現。
+- 單一計算管線 `buildDashboardData`（純函式）同時供正式頁與公開 `/demo` 使用；demo 資料為每日決定性生成，非 mockup。
+- 報酬指標：XIRR 與 TWR 並列，採相反現金流慣例；XIRR solver 以殘差驗證把關。
+- 風險指標：以現金流調整後的 TWR 指數計算最大回撤（提領不計為虧損）；Sharpe 將不規則快照區間換算等效單日報酬並以日曆日年化。
+- 帳戶寫入路徑收斂至原子 Postgres RPC（`apply_account_mutation`）；定期定額以 ledger 為底、`(plan_id, scheduled_date)` 唯一鍵保證冪等（`execute_recurring_plan_mutation`）。
+- 投資決策日誌、as-of 歷史重播與報酬歸因、可疊加 shock 的 What-if 壓力測試、可選月份投資報告與 print-to-PDF。
+- 警示、通知中心、CSV 匯入、全交易與年度稅務 CSV 匯出。
+
+### 安全與驗證
+- 每個 server action 輸入先過 Zod schema；其下為 Supabase RLS 與 TOTP MFA（AAL2）。
+- CI 五道 gate：lint、typecheck、單元測試、真 Postgres 整合測試、production build。
+- 日曆日換算明訂 `Asia/Taipei`，避免 Vercel UTC 造成快照日位移。
 
 ### Migration
+- 需先套用 `supabase/migrations/20260718032234_stackworth_v1.sql` 才能使用新的需登入頁面（決策日誌、歷史重播、月報）。請先在測試資料庫執行；本版本沒有直接修改 production。
 
-- 新增 `supabase/migrations/20260718032234_stackworth_v1.sql`。
-- 建立 `account_status_history`、`investment_decisions`、`decision_reviews`，並加入 foreign keys、checks、indexes、grants 與逐操作 RLS。
-- 擴充 profile 集中度設定及 account snapshot 的成本／狀態欄位。
-- 新增情境快照不可改寫 trigger、帳戶狀態與 snapshot trigger、`save_decision_review` RPC，並更新 `apply_account_mutation`。
-
-### 相容性與部署條件
-
-- 沒有移除既有頁面、公開 API route 或環境變數。
-- 既有資料庫必須先套用 v1 migration，才可使用新的需登入頁面。請先在測試資料庫執行；本版本沒有直接修改 production。
-- 沒有新增 npm runtime dependency；月報 PDF 使用瀏覽器列印。
-
-### 已知限制
-
-- replay 與報告使用最多 10,000 筆相關 snapshot；截斷會在 UI 顯示。
-- 歷史價格或 FX snapshot 不足時，拆分與 review 指標會是 null／缺口，系統不使用今天價格補歷史。
-- 自動 review 指標不評斷決策好壞；結果、過程和遵守計畫由使用者分開紀錄。
-- 本機沒有 `TEST_DATABASE_URL`，因此本機的 16 個 Postgres integration tests 是 skipped；PR CI 已在 PostgreSQL 16 實際執行並通過 16/16。
-- 已登入瀏覽器寫入流程仍需在獨立 Supabase 測試環境驗收。
-
-### 驗證結果
-
-- lint：通過。
-- typecheck：通過。
-- unit：22 files、145 tests 通過。
-- integration：本機 2 files、16 tests skipped；GitHub Actions PostgreSQL 16 為 2 files、16 tests 通過。
-- production build：通過；sandbox 外取得專案既有 Google Fonts。
-- browser smoke：五個公開 Demo route、歷史日期切換、情境＋試買、月份切換、金額遮罩、深色模式與三個 viewport 已驗收；自動 script exit code 0。
+[Unreleased]: https://github.com/zhuang060329-bit/portfolio-tracker/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/zhuang060329-bit/portfolio-tracker/releases/tag/v1.0.0

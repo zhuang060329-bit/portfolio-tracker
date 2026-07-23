@@ -13,9 +13,11 @@ export const TONE_TEXT: Record<Tone, string> = {
 export function CardHead({
   title,
   sub,
+  action,
 }: {
   title: string;
   sub?: React.ReactNode;
+  action?: React.ReactNode;
 }) {
   return (
     <div className="mb-4 flex items-start justify-between gap-4">
@@ -29,6 +31,7 @@ export function CardHead({
           </p>
         )}
       </div>
+      {action}
     </div>
   );
 }
