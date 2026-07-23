@@ -11,6 +11,7 @@
 | 5 | `batch2-schema.sql` | `accounts.{status, cost_basis_native}` + `profiles.allocation_targets` | ✅ |
 | 6 | `open-signup.sql` | 移除舊版的 email allowlist trigger（如果跑過 email-allowlist.sql 的話）。改為開放註冊，admin 從 /admin/allowlist 頁面看誰註冊、踢人 | ⭐ 推薦 |
 | 7 | `alerts.sql` | `alerts` + `notifications` 兩張表 + RLS（價格警示、配置失衡提醒） | ✅ |
+| 8 | `rpc-mutations.sql` | 帳戶異動、定期定額 ledger、CSV 收益匯入的原子 RPC | ✅ |
 
 ## 注意事項
 
@@ -21,6 +22,7 @@
   ```
   讓 PostgREST 立刻看到新欄位（部分檔案已自帶這行）。
 - 所有 RLS policy 都綁 `auth.uid()`，使用者只能存取自己的資料；service-role key（給 cron 用）會繞過 RLS。
+- 更新 `rpc-mutations.sql` 後必須在 SQL Editor 重新執行整份檔案，讓 app 與資料庫函式版本一致。
 
 ## 使用者管理
 

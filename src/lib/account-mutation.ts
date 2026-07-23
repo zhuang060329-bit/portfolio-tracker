@@ -38,6 +38,14 @@ export type MutationSnapshot = {
   value_base: number;
 };
 
+export type IncomeImportRow = {
+  accId: string;
+  type: "dividend" | "interest";
+  amount: number;
+  occurredAt: string;
+  note: string | null;
+};
+
 export async function applyAccountMutation(
   supabase: SupabaseClient,
   args: {
@@ -54,4 +62,32 @@ export async function applyAccountMutation(
     p_snapshots: args.snapshots ?? [],
   });
   return { error: error ? error.message : null };
+}
+
+export async function importIncomeTransactions(
+  supabase: SupabaseClient,
+  rows: IncomeImportRow[],
+): Promise<{ imported: number; error: string | null }> {
+  const { data, error } = await supabase.rpc("import_income_transactions", {
+    p_rows: rows.map((row) => ({
+      account_id: row.accId,
+      type: row.type,
+      amount: row.amount,
+      occurred_at: row.occurredAt,
+      note: row.note,
+    })),
+  });
+
+  if (error) return { imported: 0, error: error.message };
+
+  if (data === null || data === undefined) {
+    return { imported: 0, error: "收益匯入結果無效" };
+  }
+
+  const imported = Number(data);
+  if (!Number.isInteger(imported) || imported < 0) {
+    return { imported: 0, error: "收益匯入結果無效" };
+  }
+
+  return { imported, error: null };
 }

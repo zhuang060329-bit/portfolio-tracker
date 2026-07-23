@@ -73,6 +73,162 @@ begin
 end;
 $$;
 
+-- CSV 收益匯入只接收識別與業務欄位；帳戶擁有者、持倉與現值一律在鎖定後重讀。
+-- 所有帳戶依 UUID 排序鎖定，整批流水與 realized_pnl_twd 在同一交易內提交。
+create or replace function public.import_income_transactions(
+  p_rows jsonb
+) returns integer
+language plpgsql
+security invoker
+set search_path = public
+as $$
+declare
+  v_row jsonb;
+  v_account_id uuid;
+  v_account_ids uuid[];
+  v_amount numeric;
+  v_occurred_at timestamptz;
+  v_locked_count integer := 0;
+begin
+  if p_rows is null or jsonb_typeof(p_rows) <> 'array' then
+    raise exception '收益匯入資料必須是陣列';
+  end if;
+  if jsonb_array_length(p_rows) = 0 then
+    return 0;
+  end if;
+
+  for v_row in select value from jsonb_array_elements(p_rows) loop
+    if jsonb_typeof(v_row) <> 'object' then
+      raise exception '收益匯入列格式無效';
+    end if;
+
+    begin
+      v_account_id := nullif(v_row->>'account_id', '')::uuid;
+    exception when invalid_text_representation then
+      raise exception '收益匯入帳戶識別碼無效';
+    end;
+    if v_account_id is null then
+      raise exception '收益匯入缺少帳戶識別碼';
+    end if;
+
+    if coalesce(v_row->>'type', '') not in ('dividend', 'interest') then
+      raise exception '收益匯入類型無效';
+    end if;
+
+    if jsonb_typeof(v_row->'amount') is distinct from 'number' then
+      raise exception '收益匯入金額格式無效';
+    end if;
+    v_amount := (v_row->>'amount')::numeric;
+    if v_amount <= 0 then
+      raise exception '收益匯入金額須為正數';
+    end if;
+
+    if jsonb_typeof(v_row->'occurred_at') is distinct from 'string' then
+      raise exception '收益匯入日期格式無效';
+    end if;
+    begin
+      v_occurred_at := (v_row->>'occurred_at')::timestamptz;
+    exception when invalid_datetime_format or datetime_field_overflow then
+      raise exception '收益匯入日期格式無效';
+    end;
+    if v_occurred_at is null then
+      raise exception '收益匯入缺少日期';
+    end if;
+
+    if v_row ? 'note'
+      and jsonb_typeof(v_row->'note') not in ('string', 'null') then
+      raise exception '收益匯入備註格式無效';
+    end if;
+
+    if v_account_ids is null or not (v_account_id = any(v_account_ids)) then
+      v_account_ids := array_append(v_account_ids, v_account_id);
+    end if;
+  end loop;
+
+  -- 固定鎖定順序，避免兩批跨帳戶匯入互相等待形成 deadlock。
+  for v_account_id in
+    select a.id
+    from public.accounts a
+    where a.id = any(v_account_ids)
+    order by a.id
+    for update
+  loop
+    v_locked_count := v_locked_count + 1;
+  end loop;
+
+  if v_locked_count <> cardinality(v_account_ids) then
+    raise exception '收益匯入包含不存在或無權限的帳戶';
+  end if;
+
+  with parsed as (
+    select
+      (source.row_data->>'account_id')::uuid as account_id,
+      (source.row_data->>'type')::txn_type as type,
+      (source.row_data->>'amount')::numeric as amount,
+      (source.row_data->>'occurred_at')::timestamptz as occurred_at,
+      nullif(btrim(source.row_data->>'note'), '') as note,
+      source.row_number
+    from jsonb_array_elements(p_rows) with ordinality
+      as source(row_data, row_number)
+  )
+  insert into public.transactions (
+    user_id, account_id, type, quantity_after, unit_price, fx_rate,
+    value_after_base, note, created_at, cashflow_twd, realized_pnl
+  )
+  select
+    a.user_id,
+    a.id,
+    p.type,
+    a.quantity,
+    null,
+    null,
+    case
+      when a.price_market = 'manual' then coalesce(a.manual_value_base, 0)
+      else a.quantity * coalesce(a.last_unit_price, 0) * coalesce(a.last_fx_rate, 1)
+    end,
+    format(
+      '%s %s TWD%s',
+      case when p.type = 'dividend' then '配息' else '利息' end,
+      p.amount,
+      case when p.note is null then '' else ' · ' || p.note end
+    ),
+    p.occurred_at,
+    p.amount,
+    p.amount
+  from parsed p
+  join public.accounts a on a.id = p.account_id
+  order by p.row_number;
+
+  update public.accounts a
+  set
+    realized_pnl_twd = coalesce(a.realized_pnl_twd, 0) + delta.amount,
+    updated_at = now()
+  from (
+    select
+      (source.row_data->>'account_id')::uuid as account_id,
+      sum((source.row_data->>'amount')::numeric) as amount
+    from jsonb_array_elements(p_rows) as source(row_data)
+    group by (source.row_data->>'account_id')::uuid
+  ) delta
+  where a.id = delta.account_id;
+
+  return jsonb_array_length(p_rows);
+end;
+$$;
+
+revoke execute on function public.import_income_transactions(jsonb) from public;
+
+do $income_import_grants$
+begin
+  if exists (select 1 from pg_roles where rolname = 'anon') then
+    execute 'revoke execute on function public.import_income_transactions(jsonb) from anon';
+  end if;
+  if exists (select 1 from pg_roles where rolname = 'authenticated') then
+    execute 'grant execute on function public.import_income_transactions(jsonb) to authenticated';
+  end if;
+end
+$income_import_grants$;
+
 -- 每個 plan 的每個 scheduled_date 最多只能成功執行一次。ledger 只記錄已提交成功的執行；
 -- 若帳戶、流水、快照或排程推進任一步失敗，ledger 列也會一併回滾。
 create table if not exists public.recurring_plan_runs (
@@ -318,3 +474,5 @@ begin
   end if;
 end
 $grants$;
+
+notify pgrst, 'reload schema';
