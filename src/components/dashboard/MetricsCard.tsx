@@ -61,7 +61,33 @@ export function MetricsCard({ s }: { s: DashSummary }) {
 
   return (
     <div>
-      <CardHead title="績效指標" sub="基於每日淨值快照" />
+      <CardHead
+        title="績效指標"
+        sub="基於每日淨值快照"
+        action={
+          <a
+            href="/methodology"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-0.5 inline-flex shrink-0 items-center gap-1 text-[11px] font-medium text-[var(--c-muted)] hover:text-[var(--c-text)]"
+          >
+            指標怎麼算
+            <svg
+              width="11"
+              height="11"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M7 17 17 7M9 7h8v8" />
+            </svg>
+          </a>
+        }
+      />
       <div className="grid grid-cols-2 gap-px overflow-hidden rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-border)]">
         {(metrics ?? [
           { label: "TWR 累積", value: "—", tone: "flat" as Tone, hint: "快照未滿 30 天" },
