@@ -199,7 +199,7 @@ export default async function MonthlyReportPage({
   return (
     <div className="report-shell min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active="reports" userEmail={user?.email} unreadCount={unreadCount} />
-      <main className="report-page mx-auto max-w-[1040px] px-4 pb-28 pt-9 sm:px-6">
+      <main id="main" tabIndex={-1} className="report-page mx-auto max-w-[1040px] px-4 pb-28 pt-9 sm:px-6">
         <header className="report-block flex flex-wrap items-start justify-between gap-5 border-b border-[var(--c-line-strong)] pb-6">
           <div>
             <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--c-accent)]">StackWorth Monthly Report</div>

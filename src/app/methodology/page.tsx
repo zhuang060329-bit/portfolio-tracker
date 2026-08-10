@@ -46,7 +46,7 @@ export default function MethodologyPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-[760px] px-4 pb-32 pt-8 sm:px-6 sm:pt-12">
+      <main id="main" tabIndex={-1} className="mx-auto max-w-[760px] px-4 pb-32 pt-8 sm:px-6 sm:pt-12">
         <header className="mb-10">
           <h1 className="font-serif text-[32px] font-medium tracking-tight sm:text-[38px]">
             指標怎麼算

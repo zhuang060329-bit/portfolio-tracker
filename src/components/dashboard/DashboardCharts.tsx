@@ -15,16 +15,18 @@ import { fmtFull, fmtCompact } from "@/lib/format";
 export const fmtTwd = fmtFull;
 export { fmtCompact };
 
-// 資產類別配色（9 類 + fallback）
+// 資產類別配色（9 類 + fallback）。
+// 色值定義在 globals.css，深淺兩個主題各一組：同一組 hex 在淺色底下對比不足，
+// 圓環扇形會分不出來。這裡只引用 token，不放實際色值。
 export const ALLOC_COLORS: Record<string, string> = {
   stock: "var(--c-accent)",
-  fund: "#7FA8C9",
-  crypto: "#C5956B",
-  precious_metal: "#E0B15F",
-  liquid_cash: "#7FBFA3",
-  other_investment: "#B0926A",
-  fixed_asset: "#9C8AA5",
-  receivable: "#7FB0B5",
+  fund: "var(--c-alloc-fund)",
+  crypto: "var(--c-alloc-crypto)",
+  precious_metal: "var(--c-alloc-metal)",
+  liquid_cash: "var(--c-alloc-cash)",
+  other_investment: "var(--c-alloc-other)",
+  fixed_asset: "var(--c-alloc-fixed)",
+  receivable: "var(--c-alloc-receivable)",
   liability: "var(--c-down)",
 };
 export const allocColor = (cls: string) => ALLOC_COLORS[cls] ?? "var(--c-muted)";

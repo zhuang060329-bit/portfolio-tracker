@@ -20,6 +20,19 @@
   --c-btn-strong-text: #0d0f12;
   --c-shadow: 0 1px 1px rgba(0, 0, 0, 0.22), 0 10px 28px rgba(0, 0, 0, 0.18);
   --c-shimmer: rgba(255, 255, 255, 0.045);
+  /* 資產類別色票。圓環扇形與圖例色塊是判讀圖表所需的圖形物件，
+     依 WCAG 1.4.11 需對底色達 3:1。這組為深色模式值（對 --c-page 5.6-9.1:1）。
+     stock 與 liability 直接沿用 --c-accent / --c-down，不另立變數。 */
+  --c-alloc-fund: #7fa8c9;
+  --c-alloc-crypto: #c5956b;
+  --c-alloc-metal: #e0b15f;
+  --c-alloc-cash: #7fbfa3;
+  --c-alloc-other: #b0926a;
+  --c-alloc-fixed: #9c8aa5;
+  --c-alloc-receivable: #7fb0b5;
+  /* 警示訊息文字色。與錯誤訊息同結構（自身 14% 當色底 + 同色文字），
+     此值對該色底 6.97:1。配置色票的琥珀是圖形物件用的，不能直接當字色。 */
+  --c-warn: #e0b15f;
   --r-card: 10px;
   --r-control: 7px;
   --r-pill: 999px;
@@ -38,12 +51,26 @@
   --c-border: rgba(27, 30, 33, 0.11);
   --c-border-soft: rgba(27, 30, 33, 0.055);
   --c-line-strong: rgba(27, 30, 33, 0.2);
-  --c-up: #317f54;
-  --c-down: #b9573b;
+  /* 淺色的漲跌色以最暗的底色 --c-page (#f1f0ec) 為基準壓到 4.6:1，
+     舊值 #317f54 / #b9573b 在該底色上只有 4.29 / 4.10，未達 WCAG 1.4.3 AA。
+     色相與飽和度維持不變，只降明度，兩個主題看起來仍是同一組色。 */
+  --c-up: #2f7950;
+  --c-down: #ac5137;
   --c-btn-strong-bg: #1b1e21;
   --c-btn-strong-text: #fbfbf8;
   --c-shadow: 0 1px 2px rgba(27, 30, 33, 0.055), 0 10px 24px rgba(27, 30, 33, 0.045);
   --c-shimmer: rgba(0, 0, 0, 0.04);
+  /* 深色那組直接搬到淺色只有 1.7-3.1:1，7 色僅 1 色達標，圓環會淡到分不出扇形。
+     同樣只降明度求解，全部壓到對 --c-page 3.15:1 以上。 */
+  --c-alloc-fund: #558cb7;
+  --c-alloc-crypto: #b47a47;
+  --c-alloc-metal: #b17d22;
+  --c-alloc-cash: #4a9574;
+  --c-alloc-other: #a28156;
+  --c-alloc-fixed: #94809d;
+  --c-alloc-receivable: #579096;
+  /* 深色那顆琥珀在淺色底下對自身色底只有 1.75:1，壓到 4.62:1。 */
+  --c-warn: #855e1a;
 }
 
 html {
@@ -57,6 +84,33 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   transition: background 0.25s ease, color 0.25s ease;
+}
+
+/* 跳至主內容連結。不用 clip 隱藏法而是移出畫面上方，取得焦點時滑入，
+   讓鍵盤使用者看得到焦點確實落在這裡。 */
+.skip-link {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  z-index: 100;
+  transform: translate(-50%, -120%);
+  border-radius: 0 0 var(--r-control) var(--r-control);
+  background: var(--c-btn-strong-bg);
+  color: var(--c-btn-strong-text);
+  padding: 0.5rem 1rem;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: var(--c-shadow);
+  transition: transform 140ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.skip-link:focus {
+  transform: translate(-50%, 0);
+}
+
+/* 焦點是程式移過去的，不需要再畫一圈外框。 */
+main:focus {
+  outline: none;
 }
 
 .amt {

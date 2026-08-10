@@ -40,13 +40,15 @@ const NAV = [
 ] as const;
 type NavId = (typeof NAV)[number]["id"];
 
-// jsx 設計的 5 個常用資產類別 + 預設顏色
+// 5 個常用資產類別。色值一律引用 globals.css 的 --c-alloc-* token，
+// 與儀表板圓環共用同一組定義：先前這裡各自寫死 hex，crypto 甚至是紫色
+// (#C58BD6)，與圓環的棕色對不起來，同一個類別在兩頁顯示不同顏色。
 const ALLOC_DEFS: { cls: string; label: string; color: string }[] = [
   { cls: "stock", label: "股票", color: "var(--c-accent)" },
-  { cls: "fund", label: "基金", color: "#7FA8C9" },
-  { cls: "crypto", label: "加密貨幣", color: "#C58BD6" },
-  { cls: "precious_metal", label: "貴金屬", color: "#E0B15F" },
-  { cls: "liquid_cash", label: "流動資金", color: "#7FBFA3" },
+  { cls: "fund", label: "基金", color: "var(--c-alloc-fund)" },
+  { cls: "crypto", label: "加密貨幣", color: "var(--c-alloc-crypto)" },
+  { cls: "precious_metal", label: "貴金屬", color: "var(--c-alloc-metal)" },
+  { cls: "liquid_cash", label: "流動資金", color: "var(--c-alloc-cash)" },
 ];
 
 export type SettingsAppProps = {

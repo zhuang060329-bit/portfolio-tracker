@@ -81,7 +81,7 @@ export default async function ActivityPage() {
   return (
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active="activity" userEmail={user?.email} unreadCount={unreadCount} />
-      <main className="mx-auto max-w-[1200px] px-4 py-9 pb-28 sm:px-6 lg:px-7">
+      <main id="main" tabIndex={-1} className="mx-auto max-w-[1200px] px-4 py-9 pb-28 sm:px-6 lg:px-7">
         <header className="flex items-start justify-between gap-4">
           <div>
             <h1 className="font-serif text-3xl font-medium tracking-tight">

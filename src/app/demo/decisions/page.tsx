@@ -14,7 +14,7 @@ export default function DemoDecisionsPage() {
   return (
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
       <DemoV1Header active="decisions" />
-      <main className="mx-auto max-w-[880px] px-4 pb-24 pt-8 sm:px-6">
+      <main id="main" tabIndex={-1} className="mx-auto max-w-[880px] px-4 pb-24 pt-8 sm:px-6">
         <h1 className="font-serif text-3xl font-medium">決策日誌 Demo</h1>
         <p className="mt-1.5 text-[13px] text-[var(--c-muted)]">固定假資料展示追蹤中、到期與已完成檢討三種狀態。</p>
         <section className="mt-5 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)]">

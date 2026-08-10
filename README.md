@@ -84,3 +84,7 @@ Known v1.0 limits: replay and reports use bounded snapshot queries and surface t
 ## Author
 
 Built by [@zhuang060329-bit](https://github.com/zhuang060329-bit) as a daily-use tool for a multi-asset, multi-currency portfolio.
+
+## License
+
+[MIT](LICENSE).

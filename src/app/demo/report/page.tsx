@@ -20,7 +20,7 @@ export default async function DemoReportPage({ searchParams }: { searchParams: P
   return (
     <div className="report-shell min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
       <DemoV1Header active="report" />
-      <main className="report-page mx-auto max-w-[960px] px-4 pb-24 pt-8 sm:px-6">
+      <main id="main" tabIndex={-1} className="report-page mx-auto max-w-[960px] px-4 pb-24 pt-8 sm:px-6">
         <header className="report-block flex flex-wrap items-start justify-between gap-4 border-b border-[var(--c-line-strong)] pb-5">
           <div><div className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-[var(--c-accent)]">Deterministic Demo Report</div><h1 className="mt-2 font-serif text-4xl font-medium">{bounds.month} 月度投資報告</h1><p className="mt-2 text-[11.5px] text-[var(--c-muted)]">資料截止 {bounds.endDate} 23:59（Asia/Taipei）· 全部為固定示範資料</p></div>
           <div className="flex items-end gap-3">
