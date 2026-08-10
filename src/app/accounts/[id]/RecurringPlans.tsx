@@ -23,6 +23,15 @@ export type Plan = {
 const fmtTwd = (value: number) =>
   value.toLocaleString("zh-TW", { maximumFractionDigits: 0 });
 
+// 定期定額區塊的控制項高度。小螢幕 44px（WCAG 2.5.5 舒適觸控值），
+// sm 以上是滑鼠操作，收到 34px 以免這排在桌機變得笨重。
+// 這排按鈕原本只有 28-30px，手指點「暫停」很容易誤中旁邊的「刪除」。
+const controlH = "h-11 sm:h-[34px]";
+
+// 新增計劃表單是堆疊的完整欄位，桌機給到 38px 與 app 其他表單接近，
+// 不套用上面那排行內控制項的 34px。
+const controlFieldH = "h-11 sm:h-[38px]";
+
 function PlanRow({ plan }: { plan: Plan }) {
   const amountFieldId = useId();
   const [execState, execAction, execPending] = useActionState<FormState, FormData>(
@@ -108,13 +117,13 @@ function PlanRow({ plan }: { plan: Plan }) {
                 min="0.01"
                 disabled={!plan.active}
                 defaultValue={Number(plan.amount_twd)}
-                className="h-[30px] w-full rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] py-0 pl-9 pr-2 text-right text-xs text-[var(--c-text)] tnum outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)] disabled:opacity-40 sm:w-[118px]"
+                className={`${controlH} w-full rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] py-0 pl-9 pr-2 text-right text-xs text-[var(--c-text)] tnum outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)] disabled:opacity-40 sm:w-[118px]`}
               />
             </div>
             <button
               type="submit"
               disabled={execPending || !plan.active}
-              className="rounded-[var(--r-control)] bg-[var(--c-accent)] px-3 py-1.5 text-xs font-semibold text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-40"
+              className={`${controlH} inline-flex shrink-0 items-center rounded-[var(--r-control)] bg-[var(--c-accent)] px-3 text-xs font-semibold text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-40`}
             >
               {execPending ? "執行中…" : "立即執行"}
             </button>
@@ -129,7 +138,7 @@ function PlanRow({ plan }: { plan: Plan }) {
             <button
               type="submit"
               disabled={togglePending}
-              className="rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface)] px-3 py-1.5 text-xs text-[var(--c-text)] hover:bg-[var(--c-page)] disabled:opacity-50"
+              className={`${controlH} inline-flex items-center rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface)] px-3 text-xs text-[var(--c-text)] hover:bg-[var(--c-page)] disabled:opacity-50`}
             >
               {plan.active ? "暫停" : "啟用"}
             </button>
@@ -139,7 +148,7 @@ function PlanRow({ plan }: { plan: Plan }) {
             <button
               type="submit"
               disabled={deletePending}
-              className="text-xs text-[var(--c-muted)] underline hover:text-[var(--c-down)] disabled:opacity-50"
+              className={`${controlH} inline-flex items-center rounded-[var(--r-control)] px-2.5 text-xs text-[var(--c-muted)] underline hover:text-[var(--c-down)] disabled:opacity-50`}
             >
               刪除
             </button>
@@ -186,7 +195,7 @@ function AddPlanForm({ accountId }: { accountId: string }) {
               min="0"
               required
               placeholder="例：10000"
-              className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+              className={`mt-1 ${controlFieldH} rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]`}
             />
           </label>
           <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
@@ -198,7 +207,7 @@ function AddPlanForm({ accountId }: { accountId: string }) {
               max="28"
               required
               defaultValue="5"
-              className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+              className={`mt-1 ${controlFieldH} rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]`}
             />
           </label>
         </div>
@@ -207,7 +216,7 @@ function AddPlanForm({ accountId }: { accountId: string }) {
           <input
             name="startDate"
             type="date"
-            className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+            className={`mt-1 ${controlFieldH} rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]`}
           />
         </label>
         <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
@@ -216,7 +225,7 @@ function AddPlanForm({ accountId }: { accountId: string }) {
             name="note"
             type="text"
             placeholder="例：薪資自動撥入"
-            className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+            className={`mt-1 ${controlFieldH} rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]`}
           />
         </label>
         {state?.error && (
@@ -227,7 +236,7 @@ function AddPlanForm({ accountId }: { accountId: string }) {
         <button
           type="submit"
           disabled={pending}
-          className="self-start rounded-[var(--r-control)] bg-[var(--c-btn-strong-bg)] px-4 py-1.5 text-sm font-medium text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-50"
+          className={`${controlFieldH} inline-flex items-center self-start rounded-[var(--r-control)] bg-[var(--c-btn-strong-bg)] px-4 text-sm font-medium text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-50`}
         >
           {pending ? "建立中…" : "建立計劃"}
         </button>
