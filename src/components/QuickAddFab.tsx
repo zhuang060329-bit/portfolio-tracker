@@ -229,8 +229,10 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
                 </div>
               )}
 
+              {/* 改用 --c-warn：原本寫死 #E0B15F 當字色，在淺色主題下對這塊
+                  14% 色底只有 1.75:1，等於看不見。結構與下方錯誤訊息一致。 */}
               {accountMissingPrice && (
-                <p className="rounded-[var(--r-control)] bg-[color-mix(in_srgb,#E0B15F_14%,transparent)] px-3 py-2 text-xs text-[#E0B15F]">
+                <p className="rounded-[var(--r-control)] bg-[color-mix(in_srgb,var(--c-warn)_14%,transparent)] px-3 py-2 text-xs text-[var(--c-warn)]">
                   此帳戶目前沒有市價，請先到帳戶詳情頁更新價格。
                 </p>
               )}
