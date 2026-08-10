@@ -156,6 +156,7 @@ export async function addByAmount(
   const parsed = AddByAmountSchema.safeParse({
     accountId: String(formData.get("accountId") ?? ""),
     twd: formData.get("twd"),
+    feeTwd: String(formData.get("feeTwd") ?? "").trim() || null,
     priceOverride:
       String(formData.get("priceOverride") ?? "").trim() || null,
     fxOverride: String(formData.get("fxOverride") ?? "").trim() || null,
@@ -169,6 +170,7 @@ export async function addByAmount(
   const {
     accountId,
     twd,
+    feeTwd,
     priceOverride,
     fxOverride,
     occurredAt: occurredAtInput,
@@ -183,6 +185,7 @@ export async function addByAmount(
     userId: user.id,
     account,
     twd,
+    feeTwd,
     priceOverride,
     fxOverride,
     occurredAt,

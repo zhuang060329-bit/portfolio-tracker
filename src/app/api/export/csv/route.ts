@@ -21,6 +21,7 @@ type Row = {
   value_after_base: number | null;
   cashflow_twd: number | null;
   realized_pnl: number | null;
+  fee_twd: number | null;
   note: string | null;
   accounts: {
     name: string;
@@ -42,7 +43,7 @@ export async function GET() {
   const { data, error } = await supabase
     .from("transactions")
     .select(
-      "created_at,type,quantity_after,unit_price,fx_rate,value_after_base,cashflow_twd,realized_pnl,note,accounts(name,price_market,symbol,native_currency)",
+      "created_at,type,quantity_after,unit_price,fx_rate,value_after_base,cashflow_twd,realized_pnl,fee_twd,note,accounts(name,price_market,symbol,native_currency)",
     )
     .order("created_at", { ascending: false });
   if (error) {
@@ -64,6 +65,7 @@ export async function GET() {
     "Value (TWD)",
     "Cashflow (TWD)",
     "Realized PnL (TWD)",
+    "Fee (TWD)",
     "Note",
   ].join(",");
 
@@ -84,6 +86,7 @@ export async function GET() {
         cellNum(r.value_after_base),
         cellNum(r.cashflow_twd),
         cellNum(r.realized_pnl),
+        cellNum(r.fee_twd),
         escapeCsvCell(r.note),
       ].join(","),
     );

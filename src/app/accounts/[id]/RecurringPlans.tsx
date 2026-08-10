@@ -12,6 +12,8 @@ import { executePlan } from "./recurring-execution-action";
 export type Plan = {
   id: string;
   amount_twd: number;
+  /** 每期固定手續費。舊資料在 migration 前沒有這欄，讀到 null 一律當 0。 */
+  fee_twd: number | null;
   day_of_month: number;
   start_date: string;
   next_run_date: string;
@@ -34,6 +36,8 @@ const controlFieldH = "h-11 sm:h-[38px]";
 
 function PlanRow({ plan }: { plan: Plan }) {
   const amountFieldId = useId();
+  const feeFieldId = useId();
+  const planFee = Number(plan.fee_twd ?? 0);
   const [execState, execAction, execPending] = useActionState<FormState, FormData>(
     executePlan,
     undefined,
@@ -65,6 +69,11 @@ function PlanRow({ plan }: { plan: Plan }) {
             每月 {plan.day_of_month} 日{" "}
             <span className="text-[var(--c-muted)]">·</span>{" "}
             <span className="amt">NT$ {fmtTwd(Number(plan.amount_twd))}</span>
+            {planFee > 0 && (
+              <span className="ml-1.5 text-xs font-normal text-[var(--c-muted)]">
+                （含手續費 NT$ {fmtTwd(planFee)}）
+              </span>
+            )}
           </div>
           <div className="mt-1 text-xs text-[var(--c-muted)]">
             下次{" "}
@@ -118,6 +127,29 @@ function PlanRow({ plan }: { plan: Plan }) {
                 disabled={!plan.active}
                 defaultValue={Number(plan.amount_twd)}
                 className={`${controlH} w-full rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] py-0 pl-9 pr-2 text-right text-xs text-[var(--c-text)] tnum outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)] disabled:opacity-40 sm:w-[118px]`}
+              />
+            </div>
+            <label htmlFor={feeFieldId} className="sr-only">
+              本期手續費（TWD），留空沿用計劃設定
+            </label>
+            <div className="relative flex-1 sm:flex-none">
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-[11px] text-[var(--c-faint)]"
+              >
+                費
+              </span>
+              <input
+                // 與金額欄同理：排程日推進就重新掛載，避免上期的手續費留在框裡。
+                key={plan.next_run_date}
+                id={feeFieldId}
+                name="fee"
+                type="number"
+                step="any"
+                min="0"
+                disabled={!plan.active}
+                defaultValue={planFee}
+                className={`${controlH} w-full rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] py-0 pl-7 pr-2 text-right text-xs text-[var(--c-text)] tnum outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)] disabled:opacity-40 sm:w-[86px]`}
               />
             </div>
             <button
@@ -197,6 +229,20 @@ function AddPlanForm({ accountId }: { accountId: string }) {
               placeholder="例：10000"
               className={`mt-1 ${controlFieldH} rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]`}
             />
+          </label>
+          <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+            每期手續費（TWD，留空 = 0）
+            <input
+              name="fee"
+              type="number"
+              step="any"
+              min="0"
+              placeholder="例：500"
+              className={`mt-1 ${controlFieldH} rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]`}
+            />
+            <span className="text-[10px] text-[var(--c-faint)]">
+              內含於每次金額，扣掉後才換算股數。
+            </span>
           </label>
           <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
             每月幾日扣款（1-28）

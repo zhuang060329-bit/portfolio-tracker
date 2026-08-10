@@ -34,6 +34,12 @@ describe.skipIf(!url)("apply_account_mutation (integration)", () => {
         "utf8",
       ),
     );
+    await db.query(
+      readFileSync(
+        join(root, "supabase/migrations/20260810230000_transaction_fee.sql"),
+        "utf8",
+      ),
+    );
   });
 
   afterAll(async () => {

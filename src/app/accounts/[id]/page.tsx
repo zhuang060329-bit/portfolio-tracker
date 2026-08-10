@@ -74,7 +74,7 @@ export default async function AccountDetail({
     supabase
       .from("recurring_plans")
       .select(
-        "id,amount_twd,day_of_month,start_date,next_run_date,last_run_date,active,note",
+        "id,amount_twd,fee_twd,day_of_month,start_date,next_run_date,last_run_date,active,note",
       )
       .eq("account_id", id)
       .order("active", { ascending: false })

@@ -23,6 +23,7 @@ export async function sellQuantity(
     accountId: String(formData.get("accountId") ?? ""),
     sellQty: formData.get("sellQty"),
     proceedsTwd: String(formData.get("proceedsTwd") ?? "").trim() || null,
+    feeTwd: String(formData.get("feeTwd") ?? "").trim() || null,
     priceOverride:
       String(formData.get("priceOverride") ?? "").trim() || null,
     fxOverride: String(formData.get("fxOverride") ?? "").trim() || null,
@@ -37,6 +38,7 @@ export async function sellQuantity(
     accountId,
     sellQty,
     proceedsTwd,
+    feeTwd,
     priceOverride,
     fxOverride,
     occurredAt: occurredAtInput,
@@ -67,9 +69,13 @@ export async function sellQuantity(
 
   const priceUsed = priceOverride ?? quote.unitPrice;
   const fxUsed = fxOverride ?? quote.fxToBase;
-  const proceeds = proceedsTwd ?? sellQty * priceUsed * fxUsed;
+  // proceedsTwd 的語意是「券商實際匯入的淨額」（表單提示已如此寫），所以手續費
+  // 只在留空、由成交價自動估算時才扣。自行填收入時視為已扣過，重複扣會低估收入；
+  // 那種情況下 feeTwd 只入帳留底，不參與計算。
+  const fee = feeTwd ?? 0;
+  const proceeds = proceedsTwd ?? sellQty * priceUsed * fxUsed - fee;
   if (!Number.isFinite(proceeds) || proceeds < 0) {
-    return { error: "收入需為非負數" };
+    return { error: "收入需為非負數（手續費可能已超過成交金額）" };
   }
 
   // 賣出採平均成本法分配成本，已實現損益以實際收入減被分配成本。
@@ -85,7 +91,9 @@ export async function sellQuantity(
     Number(account.realized_pnl_twd ?? 0) + realizedPnl;
 
   const noteParts = [
-    `賣出 ${sellQty} 股，收入 ${Math.round(proceeds)} TWD`,
+    fee > 0
+      ? `賣出 ${sellQty} 股，收入 ${Math.round(proceeds)} TWD（手續費 ${fee}）`
+      : `賣出 ${sellQty} 股，收入 ${Math.round(proceeds)} TWD`,
   ];
   if (note) noteParts.push(note);
 
@@ -131,6 +139,7 @@ export async function sellQuantity(
       value_after_base: newQuantity * quote.unitPrice * quote.fxToBase,
       realized_pnl: realizedPnl,
       cashflow_twd: proceeds,
+      fee_twd: feeTwd,
       note: noteParts.join(" · "),
       created_at: occurredAt.toISOString(),
     },

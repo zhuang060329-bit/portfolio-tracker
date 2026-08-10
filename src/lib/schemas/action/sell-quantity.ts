@@ -11,6 +11,13 @@ export const SellQuantitySchema = z.object({
     .positive("收入需為正數")
     .max(100_000_000, "收入不得超過 1 億")
     .nullable(),
+  // proceedsTwd 的語意本來就是「券商實際匯入的淨額」，所以手續費只在留空、
+  // 由成交價自動估算時才扣；自行填收入時視為已扣過，這欄只入帳留底。
+  feeTwd: z.coerce
+    .number({ error: "手續費必須是數字" })
+    .nonnegative("手續費不得為負數")
+    .max(100_000_000, "手續費不得超過 1 億")
+    .nullable(),
   priceOverride: z.coerce
     .number({ error: "成交價必須是數字" })
     .positive("成交價需為正數")

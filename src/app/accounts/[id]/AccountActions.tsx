@@ -93,6 +93,7 @@ export function AccountActions({
 
   // === 加碼預覽 ===
   const [twd, setTwd] = useState("");
+  const [buyFee, setBuyFee] = useState("");
   const [priceOverride, setPriceOverride] = useState("");
   const [fxOverride, setFxOverride] = useState("");
   const [occurredAt, setOccurredAt] = useState("");
@@ -108,20 +109,31 @@ export function AccountActions({
   const priceN = priceOverride ? Number(priceOverride) : currentPrice;
   const fxN = fxOverride ? Number(fxOverride) : currentFx;
   const perShareTwd = priceN * fxN;
+  // 費用內含：投入金額扣掉手續費才是買到股票的錢。
+  const buyFeeN = buyFee ? Number(buyFee) : 0;
+  const buyInvested =
+    Number.isFinite(buyFeeN) && buyFeeN > 0 ? twdN - buyFeeN : twdN;
   const previewShares =
-    Number.isFinite(twdN) && twdN > 0 && perShareTwd > 0 ? twdN / perShareTwd : 0;
+    Number.isFinite(buyInvested) && buyInvested > 0 && perShareTwd > 0
+      ? buyInvested / perShareTwd
+      : 0;
   const previewNewTotal = currentQty + previewShares;
 
   // === 賣出預覽 ===
   const [sellQtyStr, setSellQtyStr] = useState("");
   const [proceedsStr, setProceedsStr] = useState("");
+  const [sellFee, setSellFee] = useState("");
   const [sellPriceOv, setSellPriceOv] = useState("");
   const [sellFxOv, setSellFxOv] = useState("");
   const sellQtyN = Number(sellQtyStr);
   const sellPriceN = sellPriceOv ? Number(sellPriceOv) : currentPrice;
   const sellFxN = sellFxOv ? Number(sellFxOv) : currentFx;
+  const sellFeeN = sellFee ? Number(sellFee) : 0;
+  // 自行填「實收金額」時該數字已是淨額，手續費不再扣一次，否則會低估收入。
   const defaultProceeds =
-    sellQtyN > 0 ? sellQtyN * sellPriceN * sellFxN : 0;
+    sellQtyN > 0
+      ? sellQtyN * sellPriceN * sellFxN - (Number.isFinite(sellFeeN) ? sellFeeN : 0)
+      : 0;
   const proceedsPreview = proceedsStr ? Number(proceedsStr) : defaultProceeds;
   const allocatedCost =
     currentQty > 0 && sellQtyN > 0 ? currentCost * (sellQtyN / currentQty) : 0;
@@ -174,6 +186,26 @@ export function AccountActions({
                 placeholder="例：50000"
                 className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
               />
+              <span className="mt-1 text-[10px] text-[var(--c-faint)]">
+                實際從戶頭扣掉的總金額，含手續費。
+              </span>
+            </label>
+
+            <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+              手續費（TWD，選填）
+              <input
+                name="feeTwd"
+                type="number"
+                step="any"
+                min="0"
+                value={buyFee}
+                onChange={(e) => setBuyFee(e.target.value)}
+                placeholder="例：500"
+                className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+              />
+              <span className="mt-1 text-[10px] text-[var(--c-faint)]">
+                從投入金額中扣除後才換算股數；成本基礎仍記全額。留空 = 不記錄。
+              </span>
             </label>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -245,6 +277,12 @@ export function AccountActions({
               <span className="ml-1 font-semibold tabular-nums text-[var(--c-text)]">
                 {fmtShares(previewNewTotal)}
               </span>
+              {buyFeeN > 0 && (
+                <div className="mt-1 text-[var(--c-faint)]">
+                  實際買進金額 NT$ {fmtTwd(buyInvested)}（已扣手續費 NT${" "}
+                  {fmtTwd(buyFeeN)}），成本基礎仍記 NT$ {fmtTwd(twdN)}
+                </div>
+              )}
             </div>
 
             {addState?.error && (
@@ -294,7 +332,7 @@ export function AccountActions({
             </label>
 
             <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
-              收入（TWD，留空 = 股數 × 市價 × FX）
+              實收金額（TWD，留空 = 股數 × 市價 × FX − 手續費）
               <input
                 name="proceedsTwd"
                 type="number"
@@ -307,6 +345,23 @@ export function AccountActions({
               />
               <span className="mt-1 text-[10px] text-[var(--c-faint)]">
                 券商實際匯入帳戶金額（扣完手續費）。留空就用市場估算。
+              </span>
+            </label>
+
+            <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+              手續費（TWD，選填）
+              <input
+                name="feeTwd"
+                type="number"
+                step="any"
+                min="0"
+                value={sellFee}
+                onChange={(e) => setSellFee(e.target.value)}
+                placeholder="例：500"
+                className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+              />
+              <span className="mt-1 text-[10px] text-[var(--c-faint)]">
+                只在「實收金額」留空時從估算值扣除；自行填實收金額時視為已扣過，僅記錄。
               </span>
             </label>
 
@@ -361,7 +416,7 @@ export function AccountActions({
 
             <div className="rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3 py-2 text-xs text-[var(--c-muted)]">
               <div>
-                預估收入：
+                預估實收：
                 <span className="amt ml-1 font-semibold tabular-nums text-[var(--c-text)]">
                   NT$ {fmtTwd(proceedsPreview)}
                 </span>
