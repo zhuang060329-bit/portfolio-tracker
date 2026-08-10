@@ -40,6 +40,12 @@ describe.skipIf(!url)("execute_recurring_plan_mutation (integration)", () => {
         "utf8",
       ),
     );
+    await db.query(
+      readFileSync(
+        join(root, "supabase/migrations/20260810230000_transaction_fee.sql"),
+        "utf8",
+      ),
+    );
   });
 
   afterAll(async () => {
@@ -73,10 +79,11 @@ describe.skipIf(!url)("execute_recurring_plan_mutation (integration)", () => {
     expectedRunDate = "2026-07-05",
     source = "cron",
     amountOverride: number | null = null,
+    feeOverride: number | null = null,
   ) =>
     client.query(
       `select * from execute_recurring_plan_mutation(
-        $1, $2, $3, $4, $5, $6, $7, $8
+        $1, $2, $3, $4, $5, $6, $7, $8, $9
       )`,
       [
         planId,
@@ -87,6 +94,7 @@ describe.skipIf(!url)("execute_recurring_plan_mutation (integration)", () => {
         EXECUTED_AT,
         source,
         amountOverride,
+        feeOverride,
       ],
     );
 
@@ -245,6 +253,68 @@ describe.skipIf(!url)("execute_recurring_plan_mutation (integration)", () => {
     expect(toDate(plan.next_run_date)).toBe("2026-08-05");
   });
 
+  it("計劃手續費從本期金額扣掉後才換算股數，成本仍記全額", async () => {
+    // 單位 TWD = 50 × 2 = 100。計劃 200、手續費 40 → (200 − 40) / 100 = 1.6 股。
+    await db.query("delete from recurring_plans where id = $1", [PLAN_ID]);
+    await insertPlan(db, PLAN_ID, 200, 40);
+
+    const result = (await execute(db)).rows[0];
+    expect(result.executed).toBe(true);
+    expect(Number(result.shares_added)).toBeCloseTo(1.6, 8);
+    expect(Number(result.new_quantity)).toBeCloseTo(11.6, 8);
+
+    const account = await accountRow(db);
+    // 成本含費：1000 + 200，不是 + 160。
+    expect(Number(account.cost_basis_twd)).toBe(1200);
+    expect(Number(account.cost_basis_native)).toBe(600);
+
+    const transaction = (await db.query("select * from transactions")).rows[0];
+    expect(Number(transaction.cashflow_twd)).toBe(-200);
+    expect(Number(transaction.fee_twd)).toBe(40);
+    expect(transaction.note).toContain("含手續費");
+
+    const run = (await db.query("select * from recurring_plan_runs")).rows[0];
+    expect(Number(run.amount_twd)).toBe(200);
+    expect(Number(run.fee_twd)).toBe(40);
+  });
+
+  it("manual 覆寫手續費只影響本期，計劃預設值不變", async () => {
+    await db.query("delete from recurring_plans where id = $1", [PLAN_ID]);
+    await insertPlan(db, PLAN_ID, 200, 40);
+
+    // 本期手續費改成 100 → (200 − 100) / 100 = 1 股。
+    const result = (
+      await execute(db, PLAN_ID, "2026-07-05", "manual", null, 100)
+    ).rows[0];
+    expect(result.executed).toBe(true);
+    expect(Number(result.shares_added)).toBeCloseTo(1, 8);
+
+    const transaction = (await db.query("select * from transactions")).rows[0];
+    expect(Number(transaction.fee_twd)).toBe(100);
+    expect(transaction.note).toContain("本期調整");
+
+    const plan = (
+      await db.query("select * from recurring_plans where id = $1", [PLAN_ID])
+    ).rows[0];
+    expect(Number(plan.fee_twd)).toBe(40);
+  });
+
+  it("手續費不得大於或等於本期金額", async () => {
+    await expect(
+      execute(db, PLAN_ID, "2026-07-05", "manual", null, 200),
+    ).rejects.toThrow(/手續費不得大於或等於本期金額/);
+    expect(await count(db, "recurring_plan_runs")).toBe(0);
+    expect(await count(db, "transactions")).toBe(0);
+  });
+
+  it("cron 不接受覆寫手續費", async () => {
+    await expect(
+      execute(db, PLAN_ID, "2026-07-05", "cron", null, 40),
+    ).rejects.toThrow(/自動執行不接受覆寫手續費/);
+    expect(await count(db, "recurring_plan_runs")).toBe(0);
+    expect(await count(db, "transactions")).toBe(0);
+  });
+
   it("cron 不接受覆寫金額", async () => {
     await expect(
       execute(db, PLAN_ID, "2026-07-05", "cron", 500),
@@ -270,13 +340,18 @@ describe.skipIf(!url)("execute_recurring_plan_mutation (integration)", () => {
   });
 });
 
-async function insertPlan(client: Client, id: string, amount: number) {
+async function insertPlan(
+  client: Client,
+  id: string,
+  amount: number,
+  fee = 0,
+) {
   await client.query(
     `insert into recurring_plans (
-      id, user_id, account_id, amount_twd, day_of_month,
+      id, user_id, account_id, amount_twd, fee_twd, day_of_month,
       start_date, next_run_date, active
-    ) values ($1, $2, $3, $4, 5, '2026-07-01', '2026-07-05', true)`,
-    [id, USER_ID, ACCOUNT_ID, amount],
+    ) values ($1, $2, $3, $4, $5, 5, '2026-07-01', '2026-07-05', true)`,
+    [id, USER_ID, ACCOUNT_ID, amount, fee],
   );
 }
 

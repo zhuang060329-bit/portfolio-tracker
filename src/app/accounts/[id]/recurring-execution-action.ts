@@ -11,16 +11,18 @@ export async function executePlan(
   formData: FormData,
 ): Promise<FormState> {
   const rawAmount = String(formData.get("amount") ?? "").trim();
+  const rawFee = String(formData.get("fee") ?? "").trim();
   const parsed = ExecuteRecurringPlanSchema.safeParse({
     planId: String(formData.get("planId") ?? ""),
-    // 留空 = 不覆寫，沿用計劃金額。
+    // 留空 = 不覆寫，沿用計劃的預設值。
     ...(rawAmount === "" ? {} : { amount: rawAmount }),
+    ...(rawFee === "" ? {} : { fee: rawFee }),
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "輸入資料無效" };
   }
 
-  const { planId, amount } = parsed.data;
+  const { planId, amount, fee } = parsed.data;
 
   const supabase = await createClient();
   const {
@@ -30,7 +32,7 @@ export async function executePlan(
 
   const { data: plan, error: planError } = await supabase
     .from("recurring_plans")
-    .select("id,account_id,next_run_date,active,amount_twd")
+    .select("id,account_id,next_run_date,active,amount_twd,fee_twd")
     .eq("id", planId)
     .single();
   if (planError || !plan) return { error: "找不到計劃" };
@@ -43,9 +45,11 @@ export async function executePlan(
     .single();
   if (accountError || !account) return { error: "找不到帳戶" };
 
-  // 與計劃金額相同就不算覆寫，ledger 備註維持一般定期定額。
-  const overrides =
+  // 與計劃預設值相同就不算覆寫，ledger 備註維持一般定期定額。
+  const amountOverridden =
     amount !== undefined && amount !== Number(plan.amount_twd);
+  const feeOverridden =
+    fee !== undefined && fee !== Number(plan.fee_twd ?? 0);
 
   const result = await executeRecurringPlan({
     supabase,
@@ -53,7 +57,8 @@ export async function executePlan(
     expectedRunDate: plan.next_run_date,
     account,
     source: "manual",
-    amountOverride: overrides ? amount : null,
+    amountOverride: amountOverridden ? amount : null,
+    feeOverride: feeOverridden ? fee : null,
   });
   if (!result.ok) return { error: result.error };
 
@@ -61,9 +66,15 @@ export async function executePlan(
   revalidatePath("/");
 
   if (!result.executed) return { ok: "本期已由另一個請求執行" };
-  return {
-    ok: overrides
-      ? `已用 NT$ ${amount.toLocaleString("zh-TW", { maximumFractionDigits: 2 })} 執行本期定期定額`
-      : "已執行本期定期定額",
-  };
+  if (!amountOverridden && !feeOverridden) {
+    return { ok: "已執行本期定期定額" };
+  }
+  const parts: string[] = [];
+  if (amountOverridden) parts.push(`NT$ ${fmtTwd(amount!)}`);
+  if (feeOverridden) parts.push(`手續費 NT$ ${fmtTwd(fee!)}`);
+  return { ok: `已用 ${parts.join("、")} 執行本期定期定額` };
+}
+
+function fmtTwd(value: number): string {
+  return value.toLocaleString("zh-TW", { maximumFractionDigits: 2 });
 }

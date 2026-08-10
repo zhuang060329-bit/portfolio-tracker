@@ -14,6 +14,8 @@ export async function createRecurringPlan(
   const parsed = CreateRecurringPlanSchema.safeParse({
     accountId: String(formData.get("accountId") ?? ""),
     amount: String(formData.get("amount") ?? ""),
+    // 留空 = 0，代表這個計劃沒有手續費。
+    fee: String(formData.get("fee") ?? "").trim() || 0,
     dayOfMonth: String(formData.get("dayOfMonth") ?? ""),
     startDate: String(formData.get("startDate") ?? "").trim() || null,
     note: String(formData.get("note") ?? "").trim() || null,
@@ -22,7 +24,7 @@ export async function createRecurringPlan(
     return { error: parsed.error.issues[0]?.message ?? "輸入資料無效" };
   }
 
-  const { accountId, amount, dayOfMonth, startDate, note } = parsed.data;
+  const { accountId, amount, fee, dayOfMonth, startDate, note } = parsed.data;
   const supabase = await createClient();
   const {
     data: { user },
@@ -45,6 +47,7 @@ export async function createRecurringPlan(
     user_id: user.id,
     account_id: accountId,
     amount_twd: amount,
+    fee_twd: fee,
     day_of_month: dayOfMonth,
     start_date: startDateFinal,
     next_run_date: firstMonthlyRunDate(startDateFinal, dayOfMonth),

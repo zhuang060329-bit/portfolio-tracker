@@ -29,12 +29,15 @@ export async function applyContribution(args: {
   userId: string;
   account: ContributionAccount;
   twd: number;
+  /** 手續費（TWD），費用內含於 twd。null = 未記錄。 */
+  feeTwd: number | null;
   priceOverride: number | null;
   fxOverride: number | null;
   occurredAt: Date;
   noteSuffix: string | null;
 }): Promise<ContributionResult> {
   const { supabase, account, twd, priceOverride, fxOverride, occurredAt } = args;
+  const feeTwd = args.feeTwd;
 
   if (account.price_market === "manual" || !account.symbol) {
     return { ok: false, error: "此操作僅限非手動帳戶" };
@@ -57,14 +60,23 @@ export async function applyContribution(args: {
   if (!Number.isFinite(perShareTwd) || perShareTwd <= 0) {
     return { ok: false, error: "換算失敗：單位 TWD 為零或無效" };
   }
-  const sharesAdded = twd / perShareTwd;
+  // 費用內含：twd 是實際從戶頭出去的錢，扣掉手續費才是買到股票的錢。
+  // 成本基礎則含費（證券會計慣例），所以 newCost 加的是 twd 而非 invested。
+  const fee = feeTwd ?? 0;
+  if (fee >= twd) {
+    return { ok: false, error: "手續費不得大於或等於投入金額" };
+  }
+  const invested = twd - fee;
+  const sharesAdded = invested / perShareTwd;
   const newQty = Number(account.quantity) + sharesAdded;
   const newCost = Number(account.cost_basis_twd ?? 0) + twd;
   const nativeAdded = fxUsed > 0 ? twd / fxUsed : 0;
   const newCostNative =
     Number(account.cost_basis_native ?? 0) + nativeAdded;
 
-  const noteParts = [`加碼 ${twd} TWD`];
+  const noteParts = [
+    fee > 0 ? `加碼 ${twd} TWD（含手續費 ${fee}）` : `加碼 ${twd} TWD`,
+  ];
   if (args.noteSuffix) noteParts.push(args.noteSuffix);
 
   const occurredDate = occurredAt.toLocaleDateString("en-CA", {
@@ -108,6 +120,7 @@ export async function applyContribution(args: {
       note: noteParts.join(" · "),
       created_at: occurredAt.toISOString(),
       cashflow_twd: -twd,
+      fee_twd: feeTwd,
     },
     snapshots,
   });
@@ -140,8 +153,8 @@ type RecurringRpcRow = {
 };
 
 // 報價在應用層取得；帳戶增量、流水、快照、ledger 與排程推進由單一 RPC 提交。
-// amountOverride 只給 manual 用：本期改用指定金額，計劃的預設金額不變。
-// cron 一律不帶（RPC 端也會拒絕），自動執行維持固定金額。
+// amountOverride / feeOverride 只給 manual 用：本期改用指定值，計劃的預設值不變。
+// cron 一律不帶（RPC 端也會拒絕），自動執行維持計劃設定的金額與手續費。
 export async function executeRecurringPlan(args: {
   supabase: SupabaseClient;
   planId: string;
@@ -150,12 +163,17 @@ export async function executeRecurringPlan(args: {
   source: "cron" | "manual";
   executedAt?: Date;
   amountOverride?: number | null;
+  feeOverride?: number | null;
 }): Promise<RecurringExecutionResult> {
   const { supabase, planId, expectedRunDate, account, source } = args;
   const amountOverride = args.amountOverride ?? null;
+  const feeOverride = args.feeOverride ?? null;
 
   if (source === "cron" && amountOverride !== null) {
     return { ok: false, error: "自動執行不接受覆寫金額" };
+  }
+  if (source === "cron" && feeOverride !== null) {
+    return { ok: false, error: "自動執行不接受覆寫手續費" };
   }
 
   if (account.status === "archived") {
@@ -197,6 +215,7 @@ export async function executeRecurringPlan(args: {
       p_priced_at: quote.asOf,
       p_source: source,
       p_amount_override: amountOverride,
+      p_fee_override: feeOverride,
     },
   );
   if (error) return { ok: false, error: error.message };

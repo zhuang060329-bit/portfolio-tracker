@@ -28,6 +28,8 @@ export type MutationTransaction = {
   created_at?: string;
   cashflow_twd?: number | null;
   realized_pnl?: number | null;
+  /** 手續費（TWD）。null / 省略 = 未記錄，不等於 0。 */
+  fee_twd?: number | null;
 };
 
 export type MutationSnapshot = {

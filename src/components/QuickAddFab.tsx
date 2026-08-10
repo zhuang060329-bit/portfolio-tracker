@@ -253,7 +253,7 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
               </button>
 
               <p className="text-[10px] leading-relaxed text-[var(--c-faint)]">
-                依目前報價估算；自訂成交價、匯率或時間請進入帳戶詳情頁。
+                依目前報價估算，不記手續費；要記手續費或自訂成交價、匯率、時間請進入帳戶詳情頁。
               </p>
             </form>
           </div>
