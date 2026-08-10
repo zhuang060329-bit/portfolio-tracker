@@ -19,10 +19,14 @@ export function AppHeader({
   active,
   userEmail,
   unreadCount = 0,
+  authPending = false,
 }: {
   active: Active;
   userEmail?: string | null;
   unreadCount?: number;
+  // 登入狀態尚未確定（loading.tsx 骨架不能自己 fetch user）。
+  // 此時右上角渲染等寬佔位，不渲染「登入」按鈕，避免切頁時閃出登入又跳回去。
+  authPending?: boolean;
 }) {
   const navItems: { href: string; label: string; key: Active }[] = [
     { href: "/", label: "總覽", key: "portfolio" },
@@ -64,7 +68,7 @@ export function AppHeader({
         </nav>
 
         <div className="ml-auto flex h-full items-center gap-1 sm:gap-1.5">
-          {userEmail && (
+          {userEmail ? (
             <Link
               href="/notifications"
               aria-label={`通知${unreadCount > 0 ? `，${unreadCount} 則未讀` : ""}`}
@@ -78,14 +82,21 @@ export function AppHeader({
                 </span>
               )}
             </Link>
-          )}
+          ) : authPending ? (
+            <span
+              aria-hidden="true"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-control)] text-[var(--c-faint)]"
+            >
+              <BellIcon />
+            </span>
+          ) : null}
 
           <PrivacyToggle />
           <div className="hidden md:block">
             <ThemeToggle />
           </div>
 
-          {userEmail && (
+          {userEmail ? (
             <Link
               href="/settings"
               title={userEmail}
@@ -94,7 +105,14 @@ export function AppHeader({
             >
               {initials}
             </Link>
-          )}
+          ) : authPending ? (
+            <span
+              aria-hidden="true"
+              className="hidden h-8 w-8 items-center justify-center rounded-full border border-[var(--c-border)] bg-[var(--c-surface)] text-[11px] font-semibold text-[var(--c-faint)] sm:inline-flex"
+            >
+              {initials}
+            </span>
+          ) : null}
 
           <div className="md:hidden">
             <MobileNavToggle
@@ -104,7 +122,7 @@ export function AppHeader({
             />
           </div>
 
-          {!userEmail && (
+          {!userEmail && !authPending && (
             <Link
               href="/login"
               className="rounded-[var(--r-control)] border border-[var(--c-line-strong)] bg-[var(--c-surface)] px-3 py-2 text-xs font-medium text-[var(--c-text)] hover:bg-[var(--c-surface-soft)]"

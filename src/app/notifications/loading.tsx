@@ -3,7 +3,7 @@ import { AppHeader } from "@/components/AppHeader";
 export default function NotificationsLoading() {
   return (
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
-      <AppHeader active={null} />
+      <AppHeader active={null} authPending />
       <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         <div className="mb-4 h-4 w-24 animate-pulse rounded bg-[var(--c-border)]" />
         <div className="h-8 w-20 animate-pulse rounded bg-[var(--c-border)]" />

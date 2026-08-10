@@ -7,7 +7,7 @@ const card =
 export default function WhatIfLoading() {
   return (
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
-      <AppHeader active="whatif" />
+      <AppHeader active="whatif" authPending />
       <main className="mx-auto max-w-[1200px] px-7 py-9 pb-28">
         <div className={`mb-4 h-4 w-20 ${sk}`} />
         <div className={`h-9 w-40 ${sk}`} />
