@@ -58,7 +58,7 @@ export default async function DecisionsPage() {
   return (
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active="decisions" userEmail={user?.email} unreadCount={unreadCount} />
-      <main className="mx-auto max-w-[920px] px-4 pb-28 pt-9 sm:px-6 lg:px-7">
+      <main id="main" tabIndex={-1} className="mx-auto max-w-[920px] px-4 pb-28 pt-9 sm:px-6 lg:px-7">
         <header className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="font-serif text-3xl font-medium tracking-tight">決策日誌</h1>

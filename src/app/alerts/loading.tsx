@@ -8,7 +8,7 @@ export default function AlertsLoading() {
   return (
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active="alerts" authPending />
-      <main className="mx-auto max-w-[820px] px-7 py-9 pb-28">
+      <main id="main" tabIndex={-1} className="mx-auto max-w-[820px] px-7 py-9 pb-28">
         <div className={`mb-4 h-4 w-20 ${sk}`} />
         <div className="flex items-start justify-between gap-4">
           <div>

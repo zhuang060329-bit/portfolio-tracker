@@ -66,7 +66,7 @@ export default async function NotificationsPage() {
   return (
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active={null} userEmail={user?.email} unreadCount={unreadCount} />
-      <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      <main id="main" tabIndex={-1} className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         <div className="mb-4 text-sm">
           <Link href="/" className="text-[var(--c-muted)] hover:text-[var(--c-text)]">
             ← 回總覽

@@ -74,6 +74,13 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
       </head>
       <body className="min-h-full flex flex-col">
+        {/* 跳至主內容（WCAG 2.4.1 Bypass Blocks，Level A）。
+            導覽列每頁有 7 個項目加通知與帳號，鍵盤使用者換頁都要重 tab 一遍。
+            平時視覺隱藏，取得焦點才顯示；目標 <main> 帶 tabIndex={-1}，
+            否則 Safari 只會捲動而不移動焦點。 */}
+        <a href="#main" className="skip-link">
+          跳至主內容
+        </a>
         <SwRegister />
         {children}
       </body>

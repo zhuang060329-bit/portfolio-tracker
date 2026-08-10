@@ -4,7 +4,7 @@ export default function AccountDetailLoading() {
   return (
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active="accounts" authPending />
-      <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      <main id="main" tabIndex={-1} className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         <div className="mb-4 h-4 w-24 animate-pulse rounded bg-[var(--c-border)]" />
         <header className="border-b border-[var(--c-border)] pb-6">
           <div className="h-3 w-20 animate-pulse rounded bg-[var(--c-border)]" />

@@ -44,7 +44,7 @@ export default async function SettingsPage() {
         userEmail={user?.email}
         unreadCount={unreadCount}
       />
-      <main className="mx-auto max-w-[1200px] px-4 pb-32 pt-8 sm:px-6 sm:pt-10">
+      <main id="main" tabIndex={-1} className="mx-auto max-w-[1200px] px-4 pb-32 pt-8 sm:px-6 sm:pt-10">
         <header className="mb-6">
           <h1 className="font-serif text-[32px] font-medium tracking-tight">
             設定

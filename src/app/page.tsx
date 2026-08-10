@@ -144,7 +144,7 @@ export default async function Home({
           }))}
       />
 
-      <main className="mx-auto max-w-[1200px] px-4 pb-28 pt-5 sm:px-6 sm:pt-7 lg:px-7 lg:pt-8">
+      <main id="main" tabIndex={-1} className="mx-auto max-w-[1200px] px-4 pb-28 pt-5 sm:px-6 sm:pt-7 lg:px-7 lg:pt-8">
         <DashboardClient data={dashboard} />
       </main>
     </div>

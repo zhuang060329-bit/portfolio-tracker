@@ -24,7 +24,7 @@ export default function DemoWhatIfPage() {
   return (
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
       <DemoV1Header active="scenario" />
-      <main className="mx-auto max-w-[1100px] px-4 pb-24 pt-8 sm:px-6">
+      <main id="main" tabIndex={-1} className="mx-auto max-w-[1100px] px-4 pb-24 pt-8 sm:px-6">
         <h1 className="font-serif text-3xl font-medium">壓力與買前檢核 Demo</h1>
         <p className="mb-5 mt-1.5 text-[13px] text-[var(--c-muted)]">固定持倉可自由套用衝擊與試買金額；重新整理後回到相同初始資料。</p>
         <ScenarioTab data={scenario} />
