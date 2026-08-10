@@ -1,7 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
+import { DeleteMyAccountSchema } from "@/lib/schemas/action/delete-my-account";
 import {
   SetAllocationTargetsSchema,
   SetConcentrationLimitSchema,
@@ -74,4 +77,60 @@ export async function setConcentrationLimit(
   revalidatePath("/settings");
   revalidatePath("/whatif");
   return undefined;
+}
+
+/**
+ * 使用者自行刪除帳戶。不可逆。
+ *
+ * 刪 auth.users 那一列，其餘資料靠 FK on delete cascade 連鎖清除：
+ * profiles / accounts / transactions / account_snapshots / account_status_history /
+ * investment_decisions（連帶 decision_reviews）/ recurring_plans（連帶 recurring_plan_runs）/
+ * alerts / notifications。
+ *
+ * 刪 auth.users 需要 service-role，RLS 繞不過去，所以這裡用 service client；
+ * 但目標 id 一律取自 session，不接受表單傳入的 userId，避免變成任意刪除的入口。
+ * admin 那支 deleteUser（allowlist-actions）維持「不能刪自己」的限制不動。
+ */
+export async function deleteMyAccount(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const parsed = DeleteMyAccountSchema.safeParse({
+    confirmEmail: formData.get("confirmEmail"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "輸入資料無效" };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "請先登入" };
+  if (!user.email) return { error: "此帳號沒有 email，無法自助刪除，請聯繫 admin" };
+
+  if (parsed.data.confirmEmail.toLowerCase() !== user.email.toLowerCase()) {
+    return { error: "輸入的 email 與登入帳號不符" };
+  }
+
+  // createServiceClient 在缺 env 時會 throw。放著不接的話 server action 直接炸掉，
+  // 使用者看到的是錯誤邊界而不是表單內的訊息，所以在這裡收成 FormState。
+  let svc: ReturnType<typeof createServiceClient>;
+  try {
+    svc = createServiceClient();
+  } catch {
+    console.error("[deleteMyAccount] service client 初始化失敗");
+    return { error: "刪除功能暫時無法使用，請聯繫 admin" };
+  }
+
+  const { error } = await svc.auth.admin.deleteUser(user.id);
+  if (error) {
+    // 不把底層訊息回給 client，也不把 user id / email 寫進 log。
+    console.error("[deleteMyAccount] admin.deleteUser 失敗");
+    return { error: "刪除失敗，資料未變更。請稍後再試或聯繫 admin" };
+  }
+
+  // 使用者已不存在，走 local scope 只清本機 cookie，不再打一次必然失敗的撤銷 API。
+  await supabase.auth.signOut({ scope: "local" });
+  redirect("/login");
 }

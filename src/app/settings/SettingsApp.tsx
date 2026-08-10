@@ -168,7 +168,7 @@ export function SettingsApp({
           elRef={registerEl("data")}
         >
           <PriceHealthInner health={priceHealth} />
-          <DataInner />
+          <DataInner email={user.email} />
         </Section>
         <p className="mt-9 border-t border-[var(--c-border)] pt-6 text-center text-xs text-[var(--c-faint)]">
           StackWorth · 以 TWD 為基準幣別
@@ -635,7 +635,7 @@ function LinkCard({ href, label }: { href: string; label: string }) {
  * 6. Data & export
  * ============================================================ */
 
-function DataInner() {
+function DataInner({ email }: { email: string | null }) {
   const yr = new Date().getFullYear();
   return (
     <>
@@ -676,7 +676,7 @@ function DataInner() {
           ⤓ 匯出
         </a>
       </Row>
-      <DeleteAccountSection />
+      <DeleteAccountSection email={email} />
     </>
   );
 }
