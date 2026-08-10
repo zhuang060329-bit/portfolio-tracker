@@ -7,7 +7,7 @@ const panel =
 export default function HomeLoading() {
   return (
     <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
-      <AppHeader active="portfolio" />
+      <AppHeader active="portfolio" authPending />
       <main className="mx-auto max-w-[1200px] px-4 pb-28 pt-5 sm:px-6 sm:pt-7 lg:px-7 lg:pt-8">
         <div className="flex flex-col gap-5">
           <section className="border-b border-[var(--c-border)] pb-7 pt-4 sm:pb-8 sm:pt-7">

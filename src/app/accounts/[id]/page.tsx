@@ -317,7 +317,7 @@ export default async function AccountDetail({
               定期定額
             </h2>
             <p className="mt-1 text-xs text-[var(--c-muted)]">
-              定期定額計劃。「立即執行」會依當下市價換算股數買入，並把下次執行日推到下個月。
+              定期定額計劃。「立即執行」會依當下市價換算股數買入，並把下次執行日推到下個月。執行前可改「本期金額」加碼或減碼，只影響這一次；計劃的每月金額與自動執行維持不變。
             </p>
             <div className="mt-3">
               <RecurringPlans plans={plans} accountId={account.id} />

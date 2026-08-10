@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useId } from "react";
 import {
   createRecurringPlan,
   deletePlan,
@@ -23,7 +23,17 @@ export type Plan = {
 const fmtTwd = (value: number) =>
   value.toLocaleString("zh-TW", { maximumFractionDigits: 0 });
 
+// 定期定額區塊的控制項高度。小螢幕 44px（WCAG 2.5.5 舒適觸控值），
+// sm 以上是滑鼠操作，收到 34px 以免這排在桌機變得笨重。
+// 這排按鈕原本只有 28-30px，手指點「暫停」很容易誤中旁邊的「刪除」。
+const controlH = "h-11 sm:h-[34px]";
+
+// 新增計劃表單是堆疊的完整欄位，桌機給到 38px 與 app 其他表單接近，
+// 不套用上面那排行內控制項的 34px。
+const controlFieldH = "h-11 sm:h-[38px]";
+
 function PlanRow({ plan }: { plan: Plan }) {
+  const amountFieldId = useId();
   const [execState, execAction, execPending] = useActionState<FormState, FormData>(
     executePlan,
     undefined,
@@ -78,12 +88,42 @@ function PlanRow({ plan }: { plan: Plan }) {
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <form action={execAction}>
+          <form
+            action={execAction}
+            className="flex basis-full items-center gap-1.5 sm:basis-auto"
+          >
             <input type="hidden" name="planId" value={plan.id} />
+            <label htmlFor={amountFieldId} className="sr-only">
+              本期金額（TWD），留空沿用計劃金額
+            </label>
+            <div className="relative flex-1 sm:flex-none">
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-[11px] text-[var(--c-faint)]"
+              >
+                NT$
+              </span>
+              <input
+                // 排程日一推進就重新掛載，把金額重設回計劃預設值。
+                // 否則 defaultValue 只在掛載時生效，上期打的覆寫金額會留在框裡，
+                // 下期不小心直接送出就沿用了上期的加減碼決定。
+                key={plan.next_run_date}
+                id={amountFieldId}
+                name="amount"
+                type="number"
+                step="any"
+                // 金額欄位是 numeric(20,2)，RPC 也先 round 到 2 位才驗證正數。
+                // min 設 0 會讓 0 通過瀏覽器驗證、白跑一趟 server 才被擋。
+                min="0.01"
+                disabled={!plan.active}
+                defaultValue={Number(plan.amount_twd)}
+                className={`${controlH} w-full rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] py-0 pl-9 pr-2 text-right text-xs text-[var(--c-text)] tnum outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)] disabled:opacity-40 sm:w-[118px]`}
+              />
+            </div>
             <button
               type="submit"
               disabled={execPending || !plan.active}
-              className="rounded-[var(--r-control)] bg-[var(--c-accent)] px-3 py-1.5 text-xs font-semibold text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-40"
+              className={`${controlH} inline-flex shrink-0 items-center rounded-[var(--r-control)] bg-[var(--c-accent)] px-3 text-xs font-semibold text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-40`}
             >
               {execPending ? "執行中…" : "立即執行"}
             </button>
@@ -98,7 +138,7 @@ function PlanRow({ plan }: { plan: Plan }) {
             <button
               type="submit"
               disabled={togglePending}
-              className="rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface)] px-3 py-1.5 text-xs text-[var(--c-text)] hover:bg-[var(--c-page)] disabled:opacity-50"
+              className={`${controlH} inline-flex items-center rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface)] px-3 text-xs text-[var(--c-text)] hover:bg-[var(--c-page)] disabled:opacity-50`}
             >
               {plan.active ? "暫停" : "啟用"}
             </button>
@@ -108,7 +148,7 @@ function PlanRow({ plan }: { plan: Plan }) {
             <button
               type="submit"
               disabled={deletePending}
-              className="text-xs text-[var(--c-muted)] underline hover:text-[var(--c-down)] disabled:opacity-50"
+              className={`${controlH} inline-flex items-center rounded-[var(--r-control)] px-2.5 text-xs text-[var(--c-muted)] underline hover:text-[var(--c-down)] disabled:opacity-50`}
             >
               刪除
             </button>
@@ -155,7 +195,7 @@ function AddPlanForm({ accountId }: { accountId: string }) {
               min="0"
               required
               placeholder="例：10000"
-              className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+              className={`mt-1 ${controlFieldH} rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]`}
             />
           </label>
           <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
@@ -167,7 +207,7 @@ function AddPlanForm({ accountId }: { accountId: string }) {
               max="28"
               required
               defaultValue="5"
-              className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+              className={`mt-1 ${controlFieldH} rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]`}
             />
           </label>
         </div>
@@ -176,7 +216,7 @@ function AddPlanForm({ accountId }: { accountId: string }) {
           <input
             name="startDate"
             type="date"
-            className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+            className={`mt-1 ${controlFieldH} rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]`}
           />
         </label>
         <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
@@ -185,7 +225,7 @@ function AddPlanForm({ accountId }: { accountId: string }) {
             name="note"
             type="text"
             placeholder="例：薪資自動撥入"
-            className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+            className={`mt-1 ${controlFieldH} rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]`}
           />
         </label>
         {state?.error && (
@@ -196,7 +236,7 @@ function AddPlanForm({ accountId }: { accountId: string }) {
         <button
           type="submit"
           disabled={pending}
-          className="self-start rounded-[var(--r-control)] bg-[var(--c-btn-strong-bg)] px-4 py-1.5 text-sm font-medium text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-50"
+          className={`${controlFieldH} inline-flex items-center self-start rounded-[var(--r-control)] bg-[var(--c-btn-strong-bg)] px-4 text-sm font-medium text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-50`}
         >
           {pending ? "建立中…" : "建立計劃"}
         </button>

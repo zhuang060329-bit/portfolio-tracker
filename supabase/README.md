@@ -13,8 +13,9 @@
 | 7 | `alerts.sql` | `alerts` + `notifications` 兩張表 + RLS（價格警示、配置失衡提醒） | ✅ |
 | 8 | `rpc-mutations.sql` | 帳戶異動與定期定額的原子交易函式、執行 ledger | ✅ |
 | 9 | `migrations/20260718032234_stackworth_v1.sql` | 決策日誌、決策檢討、帳戶狀態歷史、快照欄位、集中度設定、RLS 與 v1 RPC | ✅ |
+| 10 | `migrations/20260810155500_recurring_amount_override.sql` | `execute_recurring_plan_mutation` 加 `p_amount_override`：手動執行可覆寫本期金額，cron 一律沿用計劃金額 | ✅ |
 
-既有 StackWorth 部署若已完成 1–8，只執行第 9 個 versioned migration。先在測試或預覽資料庫驗證，再套用正式環境；本 repository 不會自動修改 production schema。
+既有 StackWorth 部署若已完成 1–9，只執行第 10 個 versioned migration。先在測試或預覽資料庫驗證，再套用正式環境；本 repository 不會自動修改 production schema。
 
 ## 注意事項
 

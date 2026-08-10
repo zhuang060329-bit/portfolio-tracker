@@ -66,6 +66,7 @@ describe("executeRecurringPlan", () => {
       p_fx_rate: 32,
       p_priced_at: "2026-07-10T01:59:00.000Z",
       p_source: "cron",
+      p_amount_override: null,
     });
     expect(result).toEqual({
       ok: true,
@@ -74,6 +75,55 @@ describe("executeRecurringPlan", () => {
       newQty: 12.625,
       nextRunDate: "2026-08-05",
     });
+  });
+
+  it("manual 覆寫金額原樣傳給 RPC", async () => {
+    const { client, rpc } = clientWithRpc({
+      data: [
+        {
+          executed: true,
+          shares_added: "0.9375",
+          new_quantity: "12.9375",
+          next_run_date: "2026-08-05",
+        },
+      ],
+      error: null,
+    });
+
+    await executeRecurringPlan({
+      supabase: client,
+      planId: "plan-1",
+      expectedRunDate: "2026-07-05",
+      account: ACCOUNT,
+      source: "manual",
+      executedAt: EXECUTED_AT,
+      amountOverride: 15000,
+    });
+
+    expect(rpc).toHaveBeenCalledWith(
+      "execute_recurring_plan_mutation",
+      expect.objectContaining({
+        p_source: "manual",
+        p_amount_override: 15000,
+      }),
+    );
+  });
+
+  it("cron 帶覆寫金額在抓價前就被拒絕", async () => {
+    const { client, rpc } = clientWithRpc({ data: null, error: null });
+
+    const result = await executeRecurringPlan({
+      supabase: client,
+      planId: "plan-1",
+      expectedRunDate: "2026-07-05",
+      account: ACCOUNT,
+      source: "cron",
+      amountOverride: 15000,
+    });
+
+    expect(result).toEqual({ ok: false, error: "自動執行不接受覆寫金額" });
+    expect(quoteMock).not.toHaveBeenCalled();
+    expect(rpc).not.toHaveBeenCalled();
   });
 
   it("stale caller 回傳未執行，不視為錯誤", async () => {

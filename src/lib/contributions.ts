@@ -140,6 +140,8 @@ type RecurringRpcRow = {
 };
 
 // 報價在應用層取得；帳戶增量、流水、快照、ledger 與排程推進由單一 RPC 提交。
+// amountOverride 只給 manual 用：本期改用指定金額，計劃的預設金額不變。
+// cron 一律不帶（RPC 端也會拒絕），自動執行維持固定金額。
 export async function executeRecurringPlan(args: {
   supabase: SupabaseClient;
   planId: string;
@@ -147,8 +149,14 @@ export async function executeRecurringPlan(args: {
   account: RecurringExecutionAccount;
   source: "cron" | "manual";
   executedAt?: Date;
+  amountOverride?: number | null;
 }): Promise<RecurringExecutionResult> {
   const { supabase, planId, expectedRunDate, account, source } = args;
+  const amountOverride = args.amountOverride ?? null;
+
+  if (source === "cron" && amountOverride !== null) {
+    return { ok: false, error: "自動執行不接受覆寫金額" };
+  }
 
   if (account.status === "archived") {
     return { ok: false, error: "帳戶已歸檔" };
@@ -188,6 +196,7 @@ export async function executeRecurringPlan(args: {
       p_fx_rate: quote.fxToBase,
       p_priced_at: quote.asOf,
       p_source: source,
+      p_amount_override: amountOverride,
     },
   );
   if (error) return { ok: false, error: error.message };
