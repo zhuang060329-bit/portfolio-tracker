@@ -31,6 +31,15 @@ describe.skipIf(!url)("execute_recurring_plan_mutation (integration)", () => {
         "utf8",
       ),
     );
+    await db.query(
+      readFileSync(
+        join(
+          root,
+          "supabase/migrations/20260810155500_recurring_amount_override.sql",
+        ),
+        "utf8",
+      ),
+    );
   });
 
   afterAll(async () => {
@@ -63,12 +72,22 @@ describe.skipIf(!url)("execute_recurring_plan_mutation (integration)", () => {
     planId = PLAN_ID,
     expectedRunDate = "2026-07-05",
     source = "cron",
+    amountOverride: number | null = null,
   ) =>
     client.query(
       `select * from execute_recurring_plan_mutation(
-        $1, $2, $3, $4, $5, $6, $7
+        $1, $2, $3, $4, $5, $6, $7, $8
       )`,
-      [planId, expectedRunDate, EXECUTED_AT, 50, 2, EXECUTED_AT, source],
+      [
+        planId,
+        expectedRunDate,
+        EXECUTED_AT,
+        50,
+        2,
+        EXECUTED_AT,
+        source,
+        amountOverride,
+      ],
     );
 
   it("單次執行將帳戶、流水、快照、ledger 與排程日期一併提交", async () => {
@@ -196,6 +215,58 @@ describe.skipIf(!url)("execute_recurring_plan_mutation (integration)", () => {
     ).rows[0];
     expect(manual.executed).toBe(true);
     expect(toDate(manual.next_run_date)).toBe("2026-08-05");
+  });
+
+  it("manual 覆寫金額只影響本期，計劃預設金額不變", async () => {
+    // 計劃金額 200，本期改成 500：單位 TWD 為 100，故加 5 股而非 2 股。
+    const result = (
+      await execute(db, PLAN_ID, "2026-07-05", "manual", 500)
+    ).rows[0];
+    expect(result.executed).toBe(true);
+    expect(Number(result.shares_added)).toBeCloseTo(5, 8);
+    expect(Number(result.new_quantity)).toBeCloseTo(15, 8);
+
+    const account = await accountRow(db);
+    expect(Number(account.cost_basis_twd)).toBe(1500);
+    expect(Number(account.cost_basis_native)).toBe(750);
+
+    const transaction = (await db.query("select * from transactions")).rows[0];
+    expect(Number(transaction.cashflow_twd)).toBe(-500);
+    expect(transaction.note).toContain("本期調整");
+
+    // ledger 記的是本期真實金額，不是計劃預設值。
+    const run = (await db.query("select * from recurring_plan_runs")).rows[0];
+    expect(Number(run.amount_twd)).toBe(500);
+
+    const plan = (
+      await db.query("select * from recurring_plans where id = $1", [PLAN_ID])
+    ).rows[0];
+    expect(Number(plan.amount_twd)).toBe(200);
+    expect(toDate(plan.next_run_date)).toBe("2026-08-05");
+  });
+
+  it("cron 不接受覆寫金額", async () => {
+    await expect(
+      execute(db, PLAN_ID, "2026-07-05", "cron", 500),
+    ).rejects.toThrow(/自動執行不接受覆寫金額/);
+    expect(await count(db, "recurring_plan_runs")).toBe(0);
+    expect(await count(db, "transactions")).toBe(0);
+  });
+
+  it("覆寫金額需為正數且不得超過 1 億", async () => {
+    await expect(
+      execute(db, PLAN_ID, "2026-07-05", "manual", 0),
+    ).rejects.toThrow(/本期金額需為正數/);
+    await expect(
+      execute(db, PLAN_ID, "2026-07-05", "manual", 100000001),
+    ).rejects.toThrow(/不得超過 1 億/);
+    expect(await count(db, "recurring_plan_runs")).toBe(0);
+    expect(await count(db, "transactions")).toBe(0);
+
+    const plan = (
+      await db.query("select * from recurring_plans where id = $1", [PLAN_ID])
+    ).rows[0];
+    expect(toDate(plan.next_run_date)).toBe("2026-07-05");
   });
 });
 

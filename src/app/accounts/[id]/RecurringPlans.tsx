@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useId } from "react";
 import {
   createRecurringPlan,
   deletePlan,
@@ -24,6 +24,7 @@ const fmtTwd = (value: number) =>
   value.toLocaleString("zh-TW", { maximumFractionDigits: 0 });
 
 function PlanRow({ plan }: { plan: Plan }) {
+  const amountFieldId = useId();
   const [execState, execAction, execPending] = useActionState<FormState, FormData>(
     executePlan,
     undefined,
@@ -78,8 +79,29 @@ function PlanRow({ plan }: { plan: Plan }) {
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <form action={execAction}>
+          <form action={execAction} className="flex items-center gap-1.5">
             <input type="hidden" name="planId" value={plan.id} />
+            <label htmlFor={amountFieldId} className="sr-only">
+              本期金額（TWD），留空沿用計劃金額
+            </label>
+            <div className="relative">
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-[11px] text-[var(--c-faint)]"
+              >
+                NT$
+              </span>
+              <input
+                id={amountFieldId}
+                name="amount"
+                type="number"
+                step="any"
+                min="0"
+                disabled={!plan.active}
+                defaultValue={Number(plan.amount_twd)}
+                className="h-[30px] w-[118px] rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] py-0 pl-9 pr-2 text-right text-xs text-[var(--c-text)] tnum outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)] disabled:opacity-40"
+              />
+            </div>
             <button
               type="submit"
               disabled={execPending || !plan.active}
@@ -216,6 +238,9 @@ export function RecurringPlans({
     <div className="flex flex-col gap-3">
       {plans.length > 0 ? (
         <div className="flex flex-col gap-2">
+          <p className="text-xs text-[var(--c-muted)]">
+            執行前可改「本期金額」來加碼或減碼，只影響這一次。計劃的每月金額與自動執行維持不變。
+          </p>
           {plans.map((plan) => (
             <PlanRow key={plan.id} plan={plan} />
           ))}
