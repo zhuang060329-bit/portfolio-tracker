@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AccountActions } from "./AccountActions";
 import { RecurringPlans, type Plan } from "./RecurringPlans";
+import { TransactionReversal } from "./TransactionReversal";
 import { NetWorthPanel } from "@/components/NetWorthPanel";
 import { AppHeader } from "@/components/AppHeader";
 import { computeXirr } from "@/lib/xirr";
@@ -25,6 +26,19 @@ const TXN_LABEL: Record<string, string> = {
   sell: "賣出",
   dividend: "配息",
   interest: "利息",
+};
+
+type TxnRow = {
+  id: string;
+  type: string;
+  quantity_after: number | null;
+  unit_price: number | null;
+  fx_rate: number | null;
+  value_after_base: number | null;
+  realized_pnl: number | null;
+  cashflow_twd: number | null;
+  reversal_of: string | null;
+  created_at: string;
 };
 
 const fmtTime = (iso: string) =>
@@ -67,7 +81,7 @@ export default async function AccountDetail({
     supabase
       .from("transactions")
       .select(
-        "id,type,quantity_after,unit_price,fx_rate,value_after_base,realized_pnl,cashflow_twd,note,created_at",
+        "id,type,quantity_after,unit_price,fx_rate,value_after_base,realized_pnl,cashflow_twd,fee_twd,reversal_of,note,created_at",
       )
       .eq("account_id", id)
       .order("created_at", { ascending: false }),
@@ -127,6 +141,13 @@ export default async function AccountDetail({
   const sign = (n: number) => (n > 0 ? "+" : n < 0 ? "−" : "");
   const pnlClass = tone(pnl);
   const pnlSign = sign(pnl);
+
+  // 已經被沖銷過的原始交易，不再提供第二次更正入口。
+  const reversedIds = new Set(
+    ((txns ?? []) as TxnRow[])
+      .map((t) => t.reversal_of)
+      .filter((v): v is string => v !== null),
+  );
 
   // 本帳戶 XIRR
   const accountCashflows = ((txns ?? []) as {
@@ -340,30 +361,21 @@ export default async function AccountDetail({
                   <th className="px-4 py-3 text-right font-semibold">現金流</th>
                   <th className="px-4 py-3 text-right font-semibold">已實現</th>
                   <th className="px-4 py-3 text-left font-semibold">時間</th>
+                  <th className="px-4 py-3 text-right font-semibold">更正</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--c-border-soft)]">
                 {(txns ?? []).length === 0 && (
                   <tr>
                     <td
-                      colSpan={8}
+                      colSpan={9}
                       className="px-4 py-6 text-center text-sm text-[var(--c-muted)]"
                     >
                       無變動記錄
                     </td>
                   </tr>
                 )}
-                {((txns ?? []) as {
-                  id: string;
-                  type: string;
-                  quantity_after: number | null;
-                  unit_price: number | null;
-                  fx_rate: number | null;
-                  value_after_base: number | null;
-                  realized_pnl: number | null;
-                  cashflow_twd: number | null;
-                  created_at: string;
-                }[]).map((t) => {
+                {(txns as TxnRow[] | null ?? []).map((t, index) => {
                   const cf = t.cashflow_twd === null ? null : Number(t.cashflow_twd);
                   const rp =
                     t.realized_pnl === null ? null : Number(t.realized_pnl);
@@ -400,6 +412,20 @@ export default async function AccountDetail({
                       </td>
                       <td className="whitespace-nowrap px-4 py-2.5 text-[var(--c-muted)]">
                         {fmtTime(t.created_at)}
+                      </td>
+                      <td className="px-4 py-2.5 text-right text-xs">
+                        <TransactionReversal
+                          accountId={id}
+                          target={{
+                            id: t.id,
+                            type: t.type,
+                            cashflow_twd: t.cashflow_twd,
+                            isReversal: t.reversal_of !== null,
+                            alreadyReversed: reversedIds.has(t.id),
+                            // txns 以 created_at 由新到舊排序，第 0 列就是最新一筆。
+                            isLatest: index === 0,
+                          }}
+                        />
                       </td>
                     </tr>
                   );
