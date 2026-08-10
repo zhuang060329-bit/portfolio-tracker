@@ -447,13 +447,38 @@ function AlertCard({
             type="submit"
             title="刪除"
             aria-label="刪除提醒"
-            className="grid h-[34px] w-[34px] place-items-center rounded-[9px] border border-transparent text-sm text-[var(--c-muted)] transition-colors hover:border-[color-mix(in_srgb,var(--c-down)_30%,transparent)] hover:bg-[color-mix(in_srgb,var(--c-down)_12%,transparent)] hover:text-[var(--c-down)]"
+            className="grid h-11 w-11 place-items-center rounded-[9px] border border-transparent text-[var(--c-muted)] transition-colors hover:border-[color-mix(in_srgb,var(--c-down)_30%,transparent)] hover:bg-[color-mix(in_srgb,var(--c-down)_12%,transparent)] hover:text-[var(--c-down)]"
           >
-            🗑
+            <TrashIcon />
           </button>
         </form>
       </div>
     </div>
+  );
+}
+
+/* 全站唯一一顆彩色 emoji 原本在這裡。emoji 的字形由作業系統決定，
+   顏色不吃 currentColor，hover 變紅時只有外框跟著變、圖示本身不變，
+   而且各平台長得不一樣。改成跟 AppHeader 同一套 inline SVG。 */
+function TrashIcon() {
+  return (
+    <svg
+      width="17"
+      height="17"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M4 7h16" />
+      <path d="M10 4h4" />
+      <path d="M6 7l1 12.5a1.5 1.5 0 0 0 1.5 1.5h7a1.5 1.5 0 0 0 1.5-1.5L18 7" />
+      <path d="M10 11v6" />
+      <path d="M14 11v6" />
+    </svg>
   );
 }
 
