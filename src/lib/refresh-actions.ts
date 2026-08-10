@@ -27,7 +27,11 @@ export async function refreshMyPrices(): Promise<RefreshState> {
     .neq("price_market", "manual")
     .not("symbol", "is", null)
     .eq("status", "active");
-  if (qErr) return { ok: false, error: qErr.message };
+  if (qErr) {
+    // 原本直接回 qErr.message，那是 PostgREST 的原文，會把欄位名與 policy 名帶到前端。
+    console.error(`[refreshMyPrices] 查詢帳戶失敗 code=${qErr.code ?? "unknown"}`);
+    return { ok: false, error: "讀取帳戶失敗，請稍後再試" };
+  }
   if (!rows || rows.length === 0)
     return { ok: false, error: "沒有可刷新的帳戶" };
 
