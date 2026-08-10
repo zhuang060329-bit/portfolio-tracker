@@ -86,7 +86,7 @@ export function AllocationCard({
                 type="button"
                 aria-pressed={selectedClass === item.cls}
                 aria-label={`${item.label}：實際 ${item.actual.toFixed(1)}%、目標 ${item.target.toFixed(0)}%`}
-                className={`grid min-h-11 w-full grid-cols-[auto_54px_1fr_56px] items-center gap-2.5 rounded-[var(--r-control)] px-1.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-[var(--c-accent)] ${
+                className={`grid min-h-11 w-full grid-cols-[auto_54px_1fr_56px] items-center gap-2.5 rounded-[var(--r-control)] px-1.5 text-left ${
                   selectedClass && selectedClass !== item.cls ? "opacity-40" : ""
                 }`}
                 onMouseEnter={() => setSelectedClass(item.cls)}

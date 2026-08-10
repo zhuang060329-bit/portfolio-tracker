@@ -651,7 +651,7 @@ function DataInner({ email }: { email: string | null }) {
           <select
             name="year"
             defaultValue={yr}
-            className="h-[38px] rounded-lg border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3 text-[13.5px] text-[var(--c-text)] outline-none"
+            className="h-[38px] rounded-lg border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3 text-[13.5px] text-[var(--c-text)]"
           >
             {Array.from({ length: 5 }, (_, i) => yr - i).map((y) => (
               <option key={y} value={y}>

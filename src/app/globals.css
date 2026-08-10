@@ -206,7 +206,6 @@ details[open] > summary::before {
   width: 100%;
   height: 5px;
   border-radius: 3px;
-  outline: none;
   cursor: pointer;
 }
 
@@ -313,6 +312,25 @@ textarea:disabled {
   button:not(:disabled):active,
   [role="button"]:not(:disabled):active {
     transform: scale(0.985);
+  }
+
+  /* 焦點環：全站唯一來源。整條包在 :where() 裡讓權重歸零，加上它住在 base layer，
+     任何元件的 utility class 都蓋得掉，要自訂焦點樣式不必打架。
+     用 outline 而不是 box-shadow / ring：outline 不會被祖先的 overflow:hidden 裁掉，
+     而且 Windows 高對比模式只認得 outline。
+     tabindex="-1" 排除掉，那是程式移焦點用的（例如 skip link 指向的 main）。 */
+  :where(
+    a[href],
+    button,
+    [role="button"],
+    summary,
+    input,
+    select,
+    textarea,
+    [tabindex]:not([tabindex="-1"])
+  ):focus-visible {
+    outline: 2px solid var(--c-accent);
+    outline-offset: 2px;
   }
 }
 

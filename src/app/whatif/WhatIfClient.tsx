@@ -367,7 +367,7 @@ function ProjectionTab({ netWorth }: { netWorth: number }) {
                 const v = e.target.value === "" ? 0 : Number(e.target.value);
                 setRet(Math.max(-5, Math.min(20, v)));
               }}
-              className={`w-[42px] border-none bg-transparent text-right text-[13px] font-semibold outline-none ${
+              className={`w-[42px] border-none bg-transparent text-right text-[13px] font-semibold ${
                 !isPreset ? "text-[var(--c-accent)]" : "text-[var(--c-text)]"
               }`}
             />
