@@ -1,7 +1,22 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
-import { NetWorthLine } from "./PortfolioCharts";
+
+/* recharts 是全站最大的第三方相依，但只有帳戶詳情頁這一張折線圖在用
+   （儀表板的圖是手刻 SVG）。靜態匯入等於每個進到這頁的人都得先下載完整個
+   圖表庫才看得到頁面其他部分，所以拆成動態載入。
+   ssr:false：圖表要量 container 寬度才畫得出來，SSR 那份必定要在 client 重畫，
+   先產一份丟掉沒有意義。載入中先放骨架，避免圖表出現時把下面的內容往下推。 */
+const NetWorthLine = dynamic(
+  () => import("./PortfolioCharts").then((m) => m.NetWorthLine),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="sk h-[260px] w-full rounded-[var(--r-card)]" />
+    ),
+  },
+);
 
 type Range = "1M" | "3M" | "6M" | "1Y" | "ALL";
 
