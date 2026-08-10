@@ -41,3 +41,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 design-imports/
+
+# 字體工具鏈（scripts/build-fonts.py）
+# 上游變數字體原檔約 12.5 MB，只是本機快取；產出的 woff2 才進版控。
+/.font-src/
+/.venv-fonts/
