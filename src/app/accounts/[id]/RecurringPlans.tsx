@@ -103,7 +103,9 @@ function PlanRow({ plan }: { plan: Plan }) {
                 name="amount"
                 type="number"
                 step="any"
-                min="0"
+                // 金額欄位是 numeric(20,2)，RPC 也先 round 到 2 位才驗證正數。
+                // min 設 0 會讓 0 通過瀏覽器驗證、白跑一趟 server 才被擋。
+                min="0.01"
                 disabled={!plan.active}
                 defaultValue={Number(plan.amount_twd)}
                 className="h-[30px] w-full rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] py-0 pl-9 pr-2 text-right text-xs text-[var(--c-text)] tnum outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)] disabled:opacity-40 sm:w-[118px]"
