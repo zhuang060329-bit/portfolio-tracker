@@ -142,7 +142,7 @@ TEST_DATABASE_URL=postgresql://... npm run test:integration
 NEXT_TELEMETRY_DISABLED=1 npx next build
 
 # 本機開發
-npm run dev   # 或 .\start-dev-min.vbs（Windows 後台模式）
+npm run dev   # Mac 也可用工作區根的 start-dev-portfolio.command（不在本 repo 內）
 ```
 
 ## 六、上線流程
