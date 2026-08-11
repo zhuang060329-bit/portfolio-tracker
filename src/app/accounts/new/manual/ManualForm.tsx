@@ -2,12 +2,15 @@
 
 import { useActionState } from "react";
 import { createManualAccount, type FormState } from "../actions";
+import { useActionAnnounce } from "@/components/a11y/use-action-announce";
 
 export function ManualForm() {
   const [state, action, pending] = useActionState<FormState, FormData>(
     createManualAccount,
     undefined,
   );
+  // 成功會導頁，元件跟著卸載，所以不給成功句；這裡要播報的是失敗。
+  useActionAnnounce(state, pending);
 
   return (
     <form

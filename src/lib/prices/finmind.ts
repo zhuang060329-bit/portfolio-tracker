@@ -1,5 +1,6 @@
 import type { PriceProvider } from "./types";
 import { fetchWithRetry } from "./http";
+import { consumeApiQuota } from "@/lib/api-budget";
 
 /**
  * 台股歷史日 close。給績效對照與 What-if 模擬用。
@@ -11,6 +12,8 @@ export async function fetchTwDailyClose(
 ): Promise<{ date: string; close: number }[]> {
   if (!startDate) return [];
   try {
+    // 例外會被下面的 catch 收成空陣列，呼叫端本來就有 fallback。
+    await consumeApiQuota("finmind");
     const url = `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=${encodeURIComponent(
       symbol,
     )}&start_date=${startDate}`;
@@ -33,6 +36,7 @@ export async function fetchTwDailyClose(
 export const finmindProvider: PriceProvider = {
   market: "tw",
   async getQuote(symbol) {
+    await consumeApiQuota("finmind");
     const start = new Date(Date.now() - 14 * 86400000)
       .toISOString()
       .slice(0, 10);

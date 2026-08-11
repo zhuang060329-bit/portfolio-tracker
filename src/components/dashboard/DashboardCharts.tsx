@@ -198,7 +198,7 @@ export function TrendChart({
   return (
     <div
       ref={wrapRef}
-      className="relative w-full rounded-[6px] outline-none focus-visible:ring-2 focus-visible:ring-[var(--c-accent)]"
+      className="relative w-full rounded-[6px]"
       style={{ touchAction: "pan-y" }}
       tabIndex={0}
       role="application"
@@ -466,7 +466,7 @@ export function BenchChart({
   return (
     <div
       ref={wrapRef}
-      className="relative w-full rounded-[6px] outline-none focus-visible:ring-2 focus-visible:ring-[var(--c-accent)]"
+      className="relative w-full rounded-[6px]"
       style={{ touchAction: "pan-y" }}
       tabIndex={0}
       role="application"

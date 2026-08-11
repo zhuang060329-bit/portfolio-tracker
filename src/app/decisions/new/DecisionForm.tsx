@@ -7,6 +7,7 @@ import {
   updateInvestmentDecision,
   type DecisionFormState,
 } from "../actions";
+import { useActionAnnounce } from "@/components/a11y/use-action-announce";
 
 type AccountOption = {
   id: string;
@@ -67,6 +68,8 @@ export function DecisionForm({
     submitAction,
     undefined,
   );
+  // 成功會導頁，元件跟著卸載，所以不給成功句；這裡要播報的是失敗。
+  useActionAnnounce(state, pending);
   const linkedAccountId = linkedTransaction?.account_id ?? "";
   const linkedName = linkedTransaction?.accounts?.name ?? "已刪除帳戶";
 
@@ -173,7 +176,7 @@ export function DecisionForm({
       </FormSection>
 
       {state?.error && (
-        <p role="alert" className="rounded-lg bg-[color-mix(in_srgb,var(--c-down)_10%,transparent)] px-4 py-3 text-[13px] text-[var(--c-down)]">
+        <p className="rounded-lg bg-[color-mix(in_srgb,var(--c-down)_10%,transparent)] px-4 py-3 text-[13px] text-[var(--c-down)]">
           {state.error}
         </p>
       )}

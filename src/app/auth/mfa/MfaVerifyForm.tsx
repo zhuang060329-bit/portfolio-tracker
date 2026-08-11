@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { safeInternalPath } from "@/lib/safe-redirect";
+import { useAnnounceValue } from "@/components/a11y/use-action-announce";
 
 export function MfaVerifyForm() {
   const router = useRouter();
@@ -16,6 +17,8 @@ export function MfaVerifyForm() {
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // 驗證失敗的訊息沒有任何 ARIA，讀屏不會唸；推去播報中心。
+  useAnnounceValue(error, "assertive");
 
   const supabase = createClient();
 

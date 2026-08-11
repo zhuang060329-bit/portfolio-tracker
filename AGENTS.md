@@ -55,6 +55,7 @@ src/
 │   ├── api/export/csv/          ← 全部交易 CSV
 │   ├── api/export/tax-csv/      ← 年度稅務報表
 │   ├── login/, settings/
+│   ├── fonts/                   ← 自架字體 woff2（由 scripts/build-fonts.py 產生）
 │   ├── layout.tsx, loading.tsx, error.tsx, not-found.tsx
 │   └── globals.css              ← CSS 變數系統
 ├── components/
@@ -87,6 +88,9 @@ supabase/                        ← SQL 檔（執行順序見 supabase/README.m
 ├── realized-pnl-cashflow.sql, batch2-schema.sql,
 ├── open-signup.sql, alerts.sql
 
+scripts/
+└── build-fonts.py               ← 產生 src/app/fonts/（不在建置流程內，見第七節）
+
 docs/
 ├── StackWorth-專案紀實.pdf      ← 完整背景（小白版）
 └── build_pdf.py                 ← 生成腳本（reportlab + 微軟正黑體）
@@ -109,6 +113,13 @@ vitest.config.ts                 ← 測試設定（數量以 npm run test 為�
 | `CRON_SECRET` | Bearer token 驗證 cron 路由 |
 | `ADMIN_EMAILS` | 逗號分隔 admin email（未設則無 admin） |
 | `SENTRY_DSN`（選用） | 設了才會回報 |
+| `API_BUDGET_TWELVEDATA`（選用） | 美股／匯率每日呼叫上限，未設為 500 |
+| `API_BUDGET_FINMIND`（選用） | 台股／匯率每日呼叫上限，未設為 500 |
+| `API_BUDGET_COINGECKO`（選用） | 加密每日呼叫上限，未設為 500 |
+
+> 三個 `API_BUDGET_*` 的預設值 500 是保守的自訂預算，**不是**各家 API 公布的額度。
+> 請依你實際的方案自行設定。填 0 代表完全停用該來源；填錯（負數、小數、非數字）
+> 會退回預設值而不是關掉守門。
 
 ## 五、開發 / 驗證指令
 
@@ -151,6 +162,20 @@ npm run dev   # 或 .\start-dev-min.vbs（Windows 後台模式）
 - **What-if 模擬**：只算「投入」（負現金流），buy-and-hold，不考慮配息再投資/交易成本
 - **AppHeader unreadCount**：每個 server page 自己 fetch 傳入（保持 sync 元件，避免 client pages 不能 render async server component 的問題）
 - **CSS 變數系統**：避免硬編碼顏色，深色模式靠 `[data-theme="dark"]` 自動翻轉
+- **字體自架**：三支字體改 `next/font/local`，檔案 commit 在 `src/app/fonts/`，
+  由 `scripts/build-fonts.py` 產生（需要 Python + fonttools，**不在建置流程內**，
+  Vercel 不需要 Python）。動機是 `next/font/google` 建置時抓 Noto Sans TC 會失敗。
+  注意 `next/font/google` 本來就已經自架了，執行期不連 Google，所以這次換的是
+  「建置期的外部相依」，不是「執行期的外部相依」。
+  取捨（實測）：Google 版把 TC 切成 105 片、瀏覽器按 unicode-range 取用，
+  首次進首頁下載 1,137 KB / 17 個請求，逛完全站累計 1,641 KB / 28 個請求；
+  `next/font/local` 沒辦法逐檔宣告 unicode-range，改成一包 Big5 常用字
+  （5,907 字、1,683 KB、1 個請求），首頁多 546 KB，但之後不再有任何字體請求。
+  三支都用變數字體，一個檔涵蓋全字重（原本各 3–4 個靜態字重）。
+  字集是 Big5 符號區 + 常用字 + 17 個 UI 專用符號（`▸ ✓ ← ↑` 等，其中
+  6 個上游 Noto Sans TC 本來就沒有，維持掉到系統字體，與改動前一致）。
+  改動 UI 文案後跑 `python scripts/build-fonts.py --audit` 檢查有沒有掉字。
+  subset 保留全部 layout features，`tnum` / `lnum` 在，金額欄位對齊不受影響。
 - **手動帳戶**：不適用 addByAmount；FAB 與部分 query 自動排除
 - **服務選擇**：全部用免費額度可運作；個人單用不會撞限
 

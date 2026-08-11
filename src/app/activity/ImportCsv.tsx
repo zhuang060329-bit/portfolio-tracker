@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useActionState } from "react";
 import { importIncomeCsv, type ImportResult } from "./actions";
+import { useActionAnnounce } from "@/components/a11y/use-action-announce";
 
 // StackWorth 風格的可收合匯入面板，沿用真實的 importIncomeCsv server action。
 export function ImportCsv() {
@@ -11,6 +12,12 @@ export function ImportCsv() {
   const [state, action, pending] = useActionState<ImportResult, FormData>(
     importIncomeCsv,
     undefined,
+  );
+  // 匯入結果是數字，唸出筆數才有意義，成功句照當下的結果組。
+  useActionAnnounce(
+    state,
+    pending,
+    state?.ok ? `已匯入 ${state.imported} 筆，略過 ${state.skipped} 筆` : undefined,
   );
 
   return (

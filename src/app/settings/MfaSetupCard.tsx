@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useAnnounceValue } from "@/components/a11y/use-action-announce";
 
 /**
  * MFA 設定卡片（StackWorth 風格）。
@@ -31,6 +32,7 @@ export function MfaSetupCard() {
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  useAnnounceValue(error, "assertive");
 
   const supabase = createClient();
 

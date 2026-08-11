@@ -1,12 +1,14 @@
 import type { PriceProvider } from "./types";
 import { fetchWithRetry } from "./http";
 import { getUsdTwdRate } from "./fx";
+import { consumeApiQuota } from "@/lib/api-budget";
 
 // 美股：Twelve Data（Basic 免費）。回傳 USD，需換匯成 base（TWD）。
 // symbol 為美股 ticker（如 QQQM）。
 export const twelveDataProvider: PriceProvider = {
   market: "us",
   async getQuote(symbol, baseCurrency) {
+    await consumeApiQuota("twelvedata");
     const url = `https://api.twelvedata.com/price?symbol=${encodeURIComponent(
       symbol,
     )}&apikey=${process.env.TWELVE_DATA_API_KEY}`;
@@ -40,6 +42,7 @@ export async function fetchUsDailyClose(
   const key = process.env.TWELVE_DATA_API_KEY;
   if (!key) return [];
   try {
+    await consumeApiQuota("twelvedata");
     // Twelve Data time_series；用 outputsize=5000 拿夠久。
     const url =
       `https://api.twelvedata.com/time_series` +
@@ -75,6 +78,7 @@ export async function fetchUsdTwdHistory(
   const key = process.env.TWELVE_DATA_API_KEY;
   if (!key) return map;
   try {
+    await consumeApiQuota("twelvedata");
     const url =
       `https://api.twelvedata.com/time_series` +
       `?symbol=USD/TWD` +

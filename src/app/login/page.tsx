@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAnnounceValue } from "@/components/a11y/use-action-announce";
 import { createClient } from "@/lib/supabase/client";
 
 type Mode = "signIn" | "signUp" | "reset";
@@ -12,6 +13,10 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  // 全站播報收斂到同一個常駐 live region，所以底下那塊成功訊息的
+  // role="status" / aria-live 也一併移除，避免同一句被唸兩次。
+  useAnnounceValue(error, "assertive");
+  useAnnounceValue(message, "polite");
 
   const supabase = createClient();
 
@@ -157,11 +162,7 @@ export default function LoginPage() {
             </p>
           )}
           {message && (
-            <div
-              role="status"
-              aria-live="polite"
-              className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-up)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-up)_10%,var(--c-surface))] px-3.5 py-3 text-sm text-[var(--c-up)]"
-            >
+            <div className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-up)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-up)_10%,var(--c-surface))] px-3.5 py-3 text-sm text-[var(--c-up)]">
               <div className="flex items-start gap-2">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="mt-[2px] shrink-0"><path d="M3 8l3.5 3.5 6.5-7"/></svg>
                 <p className="whitespace-pre-line leading-snug">{message}</p>

@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { saveDecisionReview, type DecisionFormState } from "../actions";
+import { useActionAnnounce } from "@/components/a11y/use-action-announce";
 import type { DecisionReviewMetrics } from "@/lib/decision-review-metrics";
 
 type ReviewInitial = {
@@ -27,6 +28,8 @@ export function ReviewForm({ decisionId, initial, suggested }: { decisionId: str
     saveDecisionReview,
     undefined,
   );
+  // saveDecisionReview 成功時回 ok:"檢討已儲存"，hook 會直接用那句。
+  useActionAnnounce(state, pending);
   return (
     <form action={action} className="mt-5 space-y-4">
       <input type="hidden" name="decisionId" value={decisionId} />
@@ -82,8 +85,8 @@ export function ReviewForm({ decisionId, initial, suggested }: { decisionId: str
       <Field label="下一次要改進什麼？" required>
         <textarea className={`${inputClass} min-h-20 resize-y`} name="nextImprovement" defaultValue={initial?.next_improvement ?? ""} maxLength={2000} required />
       </Field>
-      {state?.error && <p role="alert" className="text-[13px] text-[var(--c-down)]">{state.error}</p>}
-      {state?.ok && <p role="status" className="text-[13px] text-[var(--c-up)]">{state.ok}</p>}
+      {state?.error && <p className="text-[13px] text-[var(--c-down)]">{state.error}</p>}
+      {state?.ok && <p className="text-[13px] text-[var(--c-up)]">{state.ok}</p>}
       <div className="flex justify-end">
         <button type="submit" disabled={pending} className="rounded-[var(--r-control)] bg-[var(--c-accent)] px-5 py-2.5 text-[13.5px] font-semibold text-[var(--c-btn-strong-text)] hover:brightness-110 disabled:opacity-50">
           {pending ? "儲存中…" : initial ? "更新檢討" : "儲存檢討"}

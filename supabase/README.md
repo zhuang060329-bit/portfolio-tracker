@@ -17,7 +17,9 @@
 | 11 | `migrations/20260810230000_transaction_fee.sql` | `transactions.fee_twd` / `recurring_plans.fee_twd` / `recurring_plan_runs.fee_twd`；`apply_account_mutation` 寫入手續費，`execute_recurring_plan_mutation` 加 `p_fee_override` | ✅ |
 | 12 | `migrations/20260810234500_transaction_reversal.sql` | `transactions.reversal_of` + `reverse_transaction_mutation`（撤銷最新一筆 / 沖銷較早的一筆）；補 `recurring_plan_runs` 的 delete policy | ✅ |
 
-既有 StackWorth 部署若已完成 1–11，只執行第 12 個 versioned migration。先在測試或預覽資料庫驗證，再套用正式環境；本 repository 不會自動修改 production schema。
+| 13 | `migrations/20260811120000_api_budget.sql` | `api_usage` 表 + `consume_api_quota`：免費報價 API 的全域每日預算，防止共用 key 被打爆 | ✅ |
+
+既有 StackWorth 部署若已完成 1–12，只執行第 13 個 versioned migration。先在測試或預覽資料庫驗證，再套用正式環境；本 repository 不會自動修改 production schema。
 
 ## 注意事項
 

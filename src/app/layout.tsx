@@ -1,28 +1,45 @@
 import type { Metadata, Viewport } from "next";
 import { SwRegister } from "@/components/SwRegister";
-import { Newsreader, Space_Grotesk, Noto_Sans_TC } from "next/font/google";
+import { LiveAnnouncer } from "@/components/a11y/LiveAnnouncer";
+import localFont from "next/font/local";
 import "./globals.css";
 
-const fontSerif = Newsreader({
+/* 字體自架。檔案由 scripts/build-fonts.py 產生並 commit 進 repo，
+   建置流程不需要 Python，也不對外抓字體——建置期抓 Noto Sans TC 失敗
+   是這次改動要解決的問題。
+
+   三支都是變數字體，一個檔涵蓋整個字重範圍，取代原本各三到四個靜態字重。 */
+
+const fontSerif = localFont({
+  src: "./fonts/Newsreader-latin.woff2",
   variable: "--font-serif",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
+  weight: "200 800",
   display: "swap",
+  adjustFontFallback: "Times New Roman",
+  fallback: ["Georgia", "serif"],
 });
 
-const fontSans = Space_Grotesk({
+const fontSans = localFont({
+  src: "./fonts/SpaceGrotesk-latin.woff2",
   variable: "--font-sans",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: "300 700",
   display: "swap",
+  adjustFontFallback: "Arial",
+  fallback: ["system-ui", "sans-serif"],
 });
 
-const fontTc = Noto_Sans_TC({
+/* preload 關掉：這個檔 1.68 MB，preload 會讓它跟關鍵 JS 搶頻寬，
+   而 display:swap 本來就會先用系統中文字體把字顯示出來。
+   adjustFontFallback 也關掉：那個選項只會拿 Arial / Times 的度量去校正，
+   對中文字沒有意義，硬套反而會讓 fallback 期間的字級不對。 */
+const fontTc = localFont({
+  src: "./fonts/NotoSansTC-big5.woff2",
   variable: "--font-tc",
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
+  weight: "100 900",
   display: "swap",
   preload: false,
+  adjustFontFallback: false,
+  fallback: ["system-ui", "sans-serif"],
 });
 
 export const viewport: Viewport = {
@@ -82,6 +99,9 @@ export default function RootLayout({
           跳至主內容
         </a>
         <SwRegister />
+        {/* 常駐播報區。動作結果要被螢幕閱讀器唸到，live region 必須先存在於
+            無障礙樹裡，所以掛在這裡而不是跟訊息一起條件渲染。 */}
+        <LiveAnnouncer />
         {children}
       </body>
     </html>

@@ -14,6 +14,7 @@ import {
   updatePrice,
   type FormState,
 } from "./actions";
+import { useActionAnnounce } from "@/components/a11y/use-action-announce";
 
 type Props = {
   accountId: string;
@@ -89,6 +90,20 @@ export function AccountActions({
     isArchived ? unarchiveAccount : archiveAccount,
     undefined,
   );
+
+  /* 這幾支 action 成功時只做 revalidatePath、不回訊息，畫面靠重新渲染反映結果。
+     視覺上看得出來，讀屏使用者沒有任何線索，所以成功句在這裡補。
+     歸檔／恢復自己會回 ok 字串，hook 會優先用那個。 */
+  useActionAnnounce(updateState, updatePending, "報價已更新");
+  useActionAnnounce(addState, addPending, "加碼已記錄");
+  useActionAnnounce(sellState, sellPending, "賣出已記錄");
+  useActionAnnounce(divState, divPending, "配息已記錄");
+  useActionAnnounce(intState, intPending, "利息已記錄");
+  useActionAnnounce(qtyState, qtyPending, "股數已調整");
+  useActionAnnounce(balState, balPending, "餘額已修改");
+  useActionAnnounce(delState, delPending);
+  useActionAnnounce(archState, archPending);
+
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   // === 加碼預覽 ===
@@ -159,7 +174,7 @@ export function AccountActions({
             <span className="text-xs text-[var(--c-down)]">{updateState.error}</span>
           )}
           {updateState?.ok && (
-            <span className="text-xs text-[var(--c-up)]" role="status">✓ {updateState.ok}</span>
+            <span className="text-xs text-[var(--c-up)]">✓ {updateState.ok}</span>
           )}
         </form>
       )}
@@ -291,7 +306,7 @@ export function AccountActions({
               </p>
             )}
             {addState?.ok && (
-              <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-up)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-up)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-up)]" role="status">
+              <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-up)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-up)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-up)]">
                 ✓ {addState.ok}
               </p>
             )}
@@ -443,7 +458,7 @@ export function AccountActions({
               </p>
             )}
             {sellState?.ok && (
-              <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-up)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-up)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-up)]" role="status">
+              <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-up)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-up)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-up)]">
                 ✓ {sellState.ok}
               </p>
             )}
@@ -503,7 +518,7 @@ export function AccountActions({
               </p>
             )}
             {divState?.ok && (
-              <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-up)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-up)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-up)]" role="status">
+              <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-up)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-up)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-up)]">
                 ✓ {divState.ok}
               </p>
             )}
@@ -562,7 +577,7 @@ export function AccountActions({
             </p>
           )}
           {intState?.ok && (
-            <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-up)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-up)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-up)]" role="status">
+            <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-up)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-up)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-up)]">
               ✓ {intState.ok}
             </p>
           )}
@@ -605,7 +620,7 @@ export function AccountActions({
               </p>
             )}
             {qtyState?.ok && (
-              <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-up)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-up)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-up)]" role="status">
+              <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-up)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-up)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-up)]">
                 ✓ {qtyState.ok}
               </p>
             )}
@@ -646,7 +661,7 @@ export function AccountActions({
               </p>
             )}
             {balState?.ok && (
-              <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-up)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-up)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-up)]" role="status">
+              <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-up)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-up)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-up)]">
                 ✓ {balState.ok}
               </p>
             )}
