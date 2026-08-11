@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useAnnounceValue } from "@/components/a11y/use-action-announce";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -11,6 +12,7 @@ export default function ResetPasswordPage() {
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  useAnnounceValue(error, "assertive");
   const [success, setSuccess] = useState(false);
 
   const supabase = createClient();

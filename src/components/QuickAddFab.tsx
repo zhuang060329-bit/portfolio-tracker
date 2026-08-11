@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { addByAmount, type FormState } from "@/app/accounts/[id]/actions";
+import { useActionAnnounce } from "@/components/a11y/use-action-announce";
 
 type Account = {
   id: string;
@@ -26,6 +27,8 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
     addByAmount,
     undefined,
   );
+  // 成功時對話框會關閉，畫面上沒有任何成功訊息可讀，所以補一句。
+  useActionAnnounce(state, pending, "加碼已記錄");
   const dialogRef = useRef<HTMLDivElement>(null);
   const restoreRef = useRef<HTMLElement | null>(null);
   const previousPending = useRef(false);

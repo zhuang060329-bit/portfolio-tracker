@@ -19,6 +19,7 @@ import {
   setConcentrationLimit,
   type FormState as AllocFormState,
 } from "@/lib/profile-actions";
+import { useActionAnnounce } from "@/components/a11y/use-action-announce";
 import { MfaSetupCard } from "./MfaSetupCard";
 import { DeleteAccountSection } from "./DeleteAccountSection";
 import { fmtUpdatedAt } from "@/lib/format";
@@ -444,6 +445,8 @@ function AllocInner({
     setAllocationTargets,
     undefined,
   );
+  // 成功時畫面只是靜靜地存好，沒有任何訊息，所以補一句。
+  useActionAnnounce(state, pending, "配置目標已儲存");
 
   function update(cls: string, v: string) {
     const n = v === "" ? 0 : Math.max(0, Math.min(100, Number(v)));
@@ -553,6 +556,7 @@ function ConcentrationLimitForm({ initialValue }: { initialValue: number }) {
     setConcentrationLimit,
     undefined,
   );
+  useActionAnnounce(state, pending, "集中度上限已儲存");
   return (
     <form
       action={(formData) => {
@@ -580,8 +584,8 @@ function ConcentrationLimitForm({ initialValue }: { initialValue: number }) {
         </span>
       </label>
       <div className="flex items-center gap-2">
-        {state?.error && <span role="alert" className="text-[12px] text-[var(--c-down)]">{state.error}</span>}
-        {saved && !pending && !state?.error && <span role="status" className="text-[12px] text-[var(--c-up)]">✓ 已儲存</span>}
+        {state?.error && <span className="text-[12px] text-[var(--c-down)]">{state.error}</span>}
+        {saved && !pending && !state?.error && <span className="text-[12px] text-[var(--c-up)]">✓ 已儲存</span>}
         <button type="submit" disabled={pending} className="rounded-lg border border-[var(--c-line-strong)] px-4 py-2 text-[13px] font-medium hover:bg-[var(--c-surface-soft)] disabled:opacity-50">
           {pending ? "儲存中…" : "儲存上限"}
         </button>

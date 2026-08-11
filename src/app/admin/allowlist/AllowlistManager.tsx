@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { deleteUser, type FormState } from "@/lib/allowlist-actions";
+import { useActionAnnounce } from "@/components/a11y/use-action-announce";
 
 export type UserRow = {
   id: string;
@@ -35,6 +36,8 @@ function DeleteButton({
     deleteUser,
     undefined,
   );
+  // 成功時該列會從清單消失，讀屏使用者不會察覺，所以補一句成功。
+  useActionAnnounce(state, pending, "使用者已刪除");
   const [confirm, setConfirm] = useState(false);
 
   if (isSelf) {

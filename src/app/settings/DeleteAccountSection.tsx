@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { deleteMyAccount, type FormState } from "@/lib/profile-actions";
+import { useActionAnnounce } from "@/components/a11y/use-action-announce";
 
 /**
  * 刪除帳戶區（危險區）。
@@ -17,6 +18,8 @@ export function DeleteAccountSection({ email }: { email: string | null }) {
     deleteMyAccount,
     undefined,
   );
+  // 成功會 signOut 後導去 /login，所以只播報失敗。
+  useActionAnnounce(state, pending);
 
   const matched =
     email !== null && typed.trim().toLowerCase() === email.toLowerCase();
@@ -81,10 +84,7 @@ export function DeleteAccountSection({ email }: { email: string | null }) {
           </label>
 
           {state?.error && (
-            <p
-              role="alert"
-              className="mt-3 rounded-lg bg-[color-mix(in_srgb,var(--c-down)_14%,transparent)] px-3 py-2 text-[12px] text-[var(--c-down)]"
-            >
+            <p className="mt-3 rounded-lg bg-[color-mix(in_srgb,var(--c-down)_14%,transparent)] px-3 py-2 text-[12px] text-[var(--c-down)]">
               {state.error}
             </p>
           )}

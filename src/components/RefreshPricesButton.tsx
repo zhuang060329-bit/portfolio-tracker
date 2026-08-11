@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { refreshMyPrices } from "@/lib/refresh-actions";
+import { announce } from "@/components/a11y/live-announcer";
 
 // 手動刷新報價鈕。放在「報價更新於 …」旁邊，總覽 hero 與帳戶詳情頁共用。
 // - 進行中：箭頭旋轉、不可再按
@@ -21,8 +22,10 @@ export function RefreshPricesButton() {
     };
   }, []);
 
-  function flash(text: string) {
+  // 這行回饋 4 秒就消失，讀屏使用者很可能還沒讀到就沒了，所以同步推去播報中心。
+  function flash(text: string, tone: "polite" | "assertive" = "polite") {
     setMsg(text);
+    announce(text, tone);
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => setMsg(null), 4000);
   }
@@ -41,7 +44,7 @@ export function RefreshPricesButton() {
       } else if (r.waitSec != null) {
         flash(`剛更新過，${Math.ceil(r.waitSec / 60)} 分鐘後可再刷新`);
       } else {
-        flash(`刷新失敗：${r.error}`);
+        flash(`刷新失敗：${r.error}`, "assertive");
       }
     });
   }
@@ -72,10 +75,7 @@ export function RefreshPricesButton() {
         </svg>
       </button>
       {msg && (
-        <span
-          role="status"
-          className="whitespace-nowrap text-[11px] text-[var(--c-faint)]"
-        >
+        <span className="whitespace-nowrap text-[11px] text-[var(--c-faint)]">
           {msg}
         </span>
       )}

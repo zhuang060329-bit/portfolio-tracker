@@ -7,6 +7,7 @@ import {
   toggleAlert,
   type FormState,
 } from "@/lib/alert-actions";
+import { useActionAnnounce } from "@/components/a11y/use-action-announce";
 
 export type AlertAccount = {
   id: string;
@@ -181,6 +182,8 @@ function CreatePanel({ accounts }: { accounts: AlertAccount[] }) {
     createAlert,
     undefined,
   );
+  // createAlert 的 ok 是 boolean，沒有訊息本文，成功句在這裡給。
+  useActionAnnounce(state, pending, "警示已新增");
   const [type, setType] = useState<AlertType>("price_above");
   const [accountId, setAccountId] = useState(accounts[0]?.id ?? "");
   const [threshold, setThreshold] = useState("");

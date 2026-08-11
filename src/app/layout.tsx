@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { SwRegister } from "@/components/SwRegister";
+import { LiveAnnouncer } from "@/components/a11y/LiveAnnouncer";
 import localFont from "next/font/local";
 import "./globals.css";
 
@@ -98,6 +99,9 @@ export default function RootLayout({
           跳至主內容
         </a>
         <SwRegister />
+        {/* 常駐播報區。動作結果要被螢幕閱讀器唸到，live region 必須先存在於
+            無障礙樹裡，所以掛在這裡而不是跟訊息一起條件渲染。 */}
+        <LiveAnnouncer />
         {children}
       </body>
     </html>

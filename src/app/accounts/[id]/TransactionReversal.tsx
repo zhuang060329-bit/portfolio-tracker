@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { reverseTransaction } from "./reversal-actions";
 import type { FormState } from "./action-shared";
 import { reversalMode, type ReversalTarget } from "@/lib/transaction-reversal";
+import { useActionAnnounce } from "@/components/a11y/use-action-announce";
 
 export type { ReversalTarget };
 
@@ -35,6 +36,8 @@ export function TransactionReversal({
     reverseTransaction,
     undefined,
   );
+  // reverseTransaction 成功時回 ok:「已撤銷這筆交易」／「已記錄一筆沖銷交易」。
+  useActionAnnounce(state, pending);
 
   if (target.isReversal) {
     return <span className="text-[var(--c-faint)]">沖銷紀錄</span>;
@@ -70,10 +73,7 @@ export function TransactionReversal({
         {copy.body}
       </p>
       {state?.error && (
-        <p
-          role="alert"
-          className="w-[248px] rounded-[var(--r-control)] bg-[color-mix(in_srgb,var(--c-down)_14%,transparent)] px-2 py-1.5 text-left text-[11px] leading-relaxed text-[var(--c-down)]"
-        >
+        <p className="w-[248px] rounded-[var(--r-control)] bg-[color-mix(in_srgb,var(--c-down)_14%,transparent)] px-2 py-1.5 text-left text-[11px] leading-relaxed text-[var(--c-down)]">
           {state.error}
         </p>
       )}

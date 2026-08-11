@@ -8,6 +8,7 @@ import {
   type FormState,
 } from "./actions";
 import { executePlan } from "./recurring-execution-action";
+import { useActionAnnounce } from "@/components/a11y/use-action-announce";
 
 export type Plan = {
   id: string;
@@ -50,6 +51,12 @@ function PlanRow({ plan }: { plan: Plan }) {
     FormState,
     FormData
   >(deletePlan, undefined);
+
+  // 這三支成功時都回 ok 字串（已執行本期定期定額／計畫已暫停／計畫已刪除），
+  // hook 直接沿用，不另外給成功句。
+  useActionAnnounce(execState, execPending);
+  useActionAnnounce(toggleState, togglePending);
+  useActionAnnounce(deleteState, deletePending);
 
   const error =
     execState?.error || toggleState?.error || deleteState?.error;
@@ -206,6 +213,8 @@ function AddPlanForm({ accountId }: { accountId: string }) {
     createRecurringPlan,
     undefined,
   );
+  // createRecurringPlan 成功時回 ok:「定期定額計畫已建立」。
+  useActionAnnounce(state, pending);
 
   return (
     <details className="rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)]">
