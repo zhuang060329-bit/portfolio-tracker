@@ -132,7 +132,10 @@ export async function importIncomeCsv(
       continue;
     }
     const type = normalizeType(typeRaw);
-    if (!type) {
+    // normalizeType 現在認得全部七種 txn_type，但寫入路徑還只支援收益兩種
+    // （買賣的重放邏輯在階段 8c）。這裡先收窄，行為與先前完全一致：
+    // 先前 buy 會得到 null 被退回，現在得到 adjust_quantity 一樣被退回。
+    if (type !== "dividend" && type !== "interest") {
       skipped++;
       errors.push(
         `第 ${i + 1} 列：type "${typeRaw}" 無法辨識（須為配息/股息/dividend 或利息/interest）`,
