@@ -20,7 +20,7 @@ export default async function DemoHistoryPage({ searchParams }: { searchParams: 
   const scope = buildScopeAdjustments({ fromExclusive: openingDate, toInclusive: targetDate, snapshots: data.snapshots, statusEvents: data.statusEvents });
   const attribution = attributePortfolioPeriod({ opening, ending, snapshots: data.snapshots, transactions: data.transactions, scopeContributionTwd: scope.contributionTwd, scopeWithdrawalTwd: scope.withdrawalTwd, scopeGaps: scope.gaps });
   return (
-    <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
+    <div className="min-h-dvh bg-[var(--c-page)] text-[var(--c-text)]">
       <DemoV1Header active="history" />
       <main id="main" tabIndex={-1} className="mx-auto max-w-[980px] px-4 pb-24 pt-8 sm:px-6">
         <div className="flex flex-wrap items-start justify-between gap-4">

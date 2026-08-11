@@ -38,7 +38,7 @@ export default async function SettingsPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
+    <div className="min-h-dvh bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader
         active="settings"
         userEmail={user?.email}

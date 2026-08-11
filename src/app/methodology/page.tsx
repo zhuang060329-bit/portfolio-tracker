@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 // 任一計算邏輯調整時，此頁需同步。
 export default function MethodologyPage() {
   return (
-    <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
+    <div className="min-h-dvh bg-[var(--c-page)] text-[var(--c-text)]">
       <header className="sticky top-0 z-40 border-b border-[var(--c-border)] bg-[color-mix(in_srgb,var(--c-page)_90%,transparent)] backdrop-blur-xl">
         <div className="mx-auto flex h-[var(--header-h)] max-w-[1200px] items-center gap-2.5 px-4 sm:px-6 lg:px-7">
           <Link

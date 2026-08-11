@@ -125,7 +125,7 @@ export default async function AlertsPage() {
   const activeCount = alerts.filter((a) => a.active).length;
 
   return (
-    <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
+    <div className="min-h-dvh bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active="alerts" userEmail={user?.email} unreadCount={unreadCount} />
       <main id="main" tabIndex={-1} className="mx-auto max-w-[900px] px-4 py-9 pb-28 sm:px-6 lg:px-7">
         <div className="mb-4 text-sm">

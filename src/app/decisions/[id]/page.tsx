@@ -118,7 +118,7 @@ export default async function DecisionDetailPage({ params }: { params: Promise<{
   });
 
   return (
-    <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
+    <div className="min-h-dvh bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active="decisions" userEmail={user?.email} unreadCount={unreadCount} />
       <main id="main" tabIndex={-1} className="mx-auto max-w-[920px] px-4 pb-28 pt-9 sm:px-6">
         <Link href="/decisions" className="text-[13px] text-[var(--c-muted)] hover:text-[var(--c-accent)]">

@@ -18,7 +18,7 @@ export default function DemoPage() {
   const dashboard = buildDashboardData(buildDemoInputs(today));
 
   return (
-    <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
+    <div className="min-h-dvh bg-[var(--c-page)] text-[var(--c-text)]">
       <DemoV1Header active="overview" />
 
       <main id="main" tabIndex={-1} className="mx-auto max-w-[1200px] px-4 pb-24 pt-5 sm:px-6 sm:pt-7 lg:px-7 lg:pt-8">

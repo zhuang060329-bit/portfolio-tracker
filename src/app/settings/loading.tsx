@@ -2,7 +2,7 @@ import { AppHeader } from "@/components/AppHeader";
 
 export default function SettingsLoading() {
   return (
-    <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
+    <div className="min-h-dvh bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active="settings" authPending />
       <main id="main" tabIndex={-1} className="mx-auto max-w-[1200px] px-4 pb-32 pt-8 sm:px-6 sm:pt-10">
         <div className="h-9 w-20 animate-pulse rounded bg-[var(--c-surface-soft)]" />

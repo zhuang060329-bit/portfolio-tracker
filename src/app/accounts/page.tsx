@@ -36,7 +36,7 @@ export default async function AccountsPage() {
   const archived = rows.filter((a) => a.status === "archived");
 
   return (
-    <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
+    <div className="min-h-dvh bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active="accounts" userEmail={user?.email} unreadCount={unreadCount} />
 
       <main id="main" tabIndex={-1} className="mx-auto max-w-[880px] px-4 py-9 pb-24 sm:px-6 lg:px-7">

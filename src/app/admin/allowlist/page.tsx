@@ -32,7 +32,7 @@ export default async function AdminUsers() {
   }));
 
   return (
-    <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
+    <div className="min-h-dvh bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active={null} userEmail={user.email} />
       <main id="main" tabIndex={-1} className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         <div className="mb-4 text-sm">
