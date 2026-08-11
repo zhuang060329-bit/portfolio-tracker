@@ -1,11 +1,13 @@
 import type { PriceProvider } from "./types";
 import { fetchWithRetry } from "./http";
+import { consumeApiQuota } from "@/lib/api-budget";
 
 // 加密貨幣：CoinGecko Demo API。可直接要 vs_currencies=twd，免換匯。
 // symbol 為 CoinGecko id（如 bitcoin）。
 export const coingeckoProvider: PriceProvider = {
   market: "crypto",
   async getQuote(symbol, baseCurrency) {
+    await consumeApiQuota("coingecko");
     const vs = baseCurrency.toLowerCase();
     const url = `https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(
       symbol,
@@ -35,6 +37,9 @@ export async function fetchBtcDailyCloseTwd(
 ): Promise<{ date: string; close: number }[]> {
   if (!startDate) return [];
   try {
+    // 額度不足會丟例外，被下面的 catch 收成空陣列——圖表照樣畫得出來，
+    // 只是少一條線，比整頁掛掉好。api-budget 自己會留 log。
+    await consumeApiQuota("coingecko");
     const spanDays = Math.ceil(
       (Date.now() - Date.parse(`${startDate}T00:00:00Z`)) / 86_400_000,
     );

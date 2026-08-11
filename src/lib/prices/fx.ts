@@ -1,4 +1,5 @@
 import { fetchWithRetry } from "./http";
+import { consumeApiQuota } from "@/lib/api-budget";
 
 // USD -> TWD 匯率。主來源 Twelve Data forex（實測免費版可用）；
 // 失敗時退到 FinMind TaiwanExchangeRate（同樣免費）。
@@ -15,6 +16,7 @@ export async function getUsdTwdRate(): Promise<number> {
 }
 
 async function twelveDataUsdTwd(): Promise<number> {
+  await consumeApiQuota("twelvedata");
   const url = `https://api.twelvedata.com/price?symbol=USD/TWD&apikey=${process.env.TWELVE_DATA_API_KEY}`;
   const res = await fetchWithRetry(url);
   const json = await res.json();
@@ -28,6 +30,7 @@ async function twelveDataUsdTwd(): Promise<number> {
 }
 
 async function finmindUsdTwd(): Promise<number> {
+  await consumeApiQuota("finmind");
   const start = new Date(Date.now() - 14 * 86400000).toISOString().slice(0, 10);
   const url = `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanExchangeRate&data_id=USD&start_date=${start}`;
   const res = await fetchWithRetry(url, {
@@ -58,6 +61,7 @@ export async function fetchUsdTwdHistory(
 ): Promise<{ date: string; rate: number }[]> {
   if (!startDate) return [];
   try {
+    await consumeApiQuota("finmind");
     const url = `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanExchangeRate&data_id=USD&start_date=${startDate}`;
     const res = await fetch(url, {
       headers: { Authorization: `Bearer ${process.env.FINMIND_TOKEN ?? ""}` },

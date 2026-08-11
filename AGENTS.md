@@ -113,6 +113,13 @@ vitest.config.ts                 ← 測試設定（數量以 npm run test 為�
 | `CRON_SECRET` | Bearer token 驗證 cron 路由 |
 | `ADMIN_EMAILS` | 逗號分隔 admin email（未設則無 admin） |
 | `SENTRY_DSN`（選用） | 設了才會回報 |
+| `API_BUDGET_TWELVEDATA`（選用） | 美股／匯率每日呼叫上限，未設為 500 |
+| `API_BUDGET_FINMIND`（選用） | 台股／匯率每日呼叫上限，未設為 500 |
+| `API_BUDGET_COINGECKO`（選用） | 加密每日呼叫上限，未設為 500 |
+
+> 三個 `API_BUDGET_*` 的預設值 500 是保守的自訂預算，**不是**各家 API 公布的額度。
+> 請依你實際的方案自行設定。填 0 代表完全停用該來源；填錯（負數、小數、非數字）
+> 會退回預設值而不是關掉守門。
 
 ## 五、開發 / 驗證指令
 
