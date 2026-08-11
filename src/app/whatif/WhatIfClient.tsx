@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { project, crossMonth, type ProjPoint } from "@/lib/whatif-project";
 import { fmtFull as fmtTwd, fmtCompact } from "@/lib/format";
 import { ScenarioTab, type ScenarioData } from "./ScenarioTab";
+import { RebalanceTab } from "./RebalanceTab";
 
 const sign = (n: number) => (n > 0 ? "+" : n < 0 ? "−" : "");
 
@@ -660,12 +661,14 @@ export function WhatIfClient({
   counterfactual: CounterfactualData | null;
   scenario: ScenarioData;
 }) {
-  const [tab, setTab] = useState<"proj" | "cf" | "scenario">("proj");
+  const [tab, setTab] = useState<"proj" | "cf" | "scenario" | "rebalance">(
+    "proj",
+  );
 
   return (
     <div>
-      <div className="mb-6 inline-flex rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] p-[3px]">
-        {(["proj", "cf", "scenario"] as const).map((t) => (
+      <div className="mb-6 inline-flex flex-wrap rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] p-[3px]">
+        {(["proj", "cf", "scenario", "rebalance"] as const).map((t) => (
           <button
             key={t}
             type="button"
@@ -677,7 +680,13 @@ export function WhatIfClient({
                 : "text-[var(--c-muted)]"
             }`}
           >
-            {t === "proj" ? "未來推算" : t === "cf" ? "回測對照" : "壓力與買前檢核"}
+            {t === "proj"
+              ? "未來推算"
+              : t === "cf"
+                ? "回測對照"
+                : t === "scenario"
+                  ? "壓力與買前檢核"
+                  : "再平衡"}
           </button>
         ))}
       </div>
@@ -686,6 +695,13 @@ export function WhatIfClient({
         <ProjectionTab netWorth={netWorth} />
       ) : tab === "scenario" ? (
         <ScenarioTab data={scenario} />
+      ) : tab === "rebalance" ? (
+        <RebalanceTab
+          data={{
+            holdings: scenario.holdings,
+            allocationTargets: scenario.allocationTargets,
+          }}
+        />
       ) : counterfactual ? (
         <CounterfactualTab cf={counterfactual} />
       ) : (
