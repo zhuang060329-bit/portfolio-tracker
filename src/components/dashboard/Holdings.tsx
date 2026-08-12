@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { allocColor, fmtTwd } from "./DashboardCharts";
 import type { Holding } from "./types";
 import { sign, toneCls, TONE_TEXT } from "./shared";
+import { useFlipRows } from "./useFlipRows";
 
 type SortKey = "name" | "value" | "day" | "pnl";
 
@@ -32,6 +33,9 @@ export function Holdings({
 }) {
   const [sortKey, setSortKey] = useState<SortKey>("value");
   const [direction, setDirection] = useState(-1);
+  // 桌面表格與手機卡片是兩份同時存在的 DOM，共用一個 hook 但 key 要分開，
+  // 不然同一個 holding.id 會互相覆蓋。前綴 d- / m- 就夠。
+  const flip = useFlipRows<string>();
 
   const rows = useMemo(() => {
     const sorted = [...holdings];
@@ -55,6 +59,8 @@ export function Holdings({
   const activeCount = holdings.filter((holding) => holding.status !== "archived").length;
 
   function setSort(key: SortKey) {
+    // 只有這裡 arm FLIP。背景刷新報價讓市值變、順序跟著重排時不會動畫。
+    flip.capture();
     if (key === sortKey) setDirection((current) => -current);
     else {
       setSortKey(key);
@@ -180,6 +186,7 @@ export function Holdings({
                   return (
                     <tr
                       key={holding.id}
+                      ref={flip.register(`d-${holding.id}`)}
                       className={`border-b border-[var(--c-border)] hover:bg-[var(--c-surface-soft)] ${
                         holding.status === "archived" ? "opacity-60" : ""
                       }`}
@@ -363,12 +370,17 @@ export function Holdings({
               );
 
               return demo ? (
-                <div key={holding.id} className={rowClass}>
+                <div
+                  key={holding.id}
+                  ref={flip.register(`m-${holding.id}`)}
+                  className={rowClass}
+                >
                   {content}
                 </div>
               ) : (
                 <Link
                   key={holding.id}
+                  ref={flip.register(`m-${holding.id}`)}
                   href={`/accounts/${holding.id}`}
                   className={`${rowClass} hover:bg-[var(--c-surface-soft)] active:bg-[var(--c-accent-soft)]`}
                 >
