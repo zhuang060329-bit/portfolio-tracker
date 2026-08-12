@@ -198,6 +198,20 @@ npm run dev   # Mac 也可用工作區根的 start-dev-portfolio.command（不�
   兩端曾經默默脫鉤過：匯出寫 `Cashflow (TWD)`、匯入只認 `amount`，
   導致自家匯出檔一列都匯不回來，而當時沒有任何測試會發現。
   改匯出欄位時要連 `HEADER_ALIASES` 一起改，`csv-import-helpers` 的測試會擋。
+- **CSP 由 `src/proxy.ts` 每 request 產生 nonce，政策在 `src/lib/csp.ts`**，
+  不放 `next.config.ts`（那裡的 headers 是靜態的，發不出每次不同的 nonce）。
+  三件事改之前先看清楚：
+  - **`style-src` 只能是 `'self' 'unsafe-inline'`**。全站 40 幾處 `style={{...}}`
+    是動態算出來的顏色與寬度，SSR 後是 `style="..."` 屬性，會被 `style-src` 擋。
+    而且只要該指令帶了 nonce，瀏覽器就依 CSP3 忽略 `'unsafe-inline'`，
+    所以刻意不放 nonce。這不是漏做，是收不了。
+  - **不要加 `'strict-dynamic'`**，即使官方範例有。加了 `'self'` 會被忽略，
+    而 `/demo`、`/demo/whatif`、`/demo/report` 的初始 HTML 各有一支 Next 內部
+    chunk（`useMergedRef`，`next/link` 用）是無 nonce 的 parser-inserted script，
+    會被擋掉，那三頁的 `next/link` 就失效。Report-Only 階段以瀏覽器實測確認。
+    `src/lib/csp.test.ts` 有一條測試釘住這件事。
+  - **用了 nonce = 全站動態渲染**。改動前有 7 個靜態頁，之後 0 個。
+    這是 Next 官方文件明列的取捨（ISR 停用、CDN 不能快取）。
 - **手動帳戶**：不適用 addByAmount；FAB 與部分 query 自動排除
 - **服務選擇**：全部用免費額度可運作；個人單用不會撞限
 
@@ -217,6 +231,13 @@ npm run dev   # Mac 也可用工作區根的 start-dev-portfolio.command（不�
 1. **必做**：到 Supabase SQL Editor 跑 `supabase/alerts.sql`（alerts + notifications 兩張表）
 2. **選做**：要 email 警示就在 Vercel 加 `RESEND_API_KEY`，告知 AI 接 Resend SDK 到 `alerts-scan.ts`
 3. **例行**：每年 5 月報稅前到 `/settings` 下載年度稅務報表 CSV
+4. **待辦：把 CSP 從只回報改成實際攔截**。目前 `src/lib/csp.ts` 的
+   `CSP_ENFORCE = false`，發的是 `Content-Security-Policy-Report-Only`，
+   瀏覽器照常渲染、只在 console 記違規。作法：開站繞一圈（首頁、`/whatif` 圖表、
+   `/settings` 的 MFA QR、登入與 OAuth、`/demo`），確認 console 沒有 CSP 違規，
+   再把 `CSP_ENFORCE` 翻成 `true`。翻的時候 `csp.test.ts` 會有兩條測試轉紅，
+   那是刻意的提醒，一併更新即可。
+   本機已用 production build 驗過公開頁；**登入後的頁面與 Google OAuth 尚未驗證**。
 
 ## 十、未做但討論過的功能（按曾認可的優先級）
 

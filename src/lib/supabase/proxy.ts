@@ -2,8 +2,26 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 // Session 刷新 + 未登入導向。Next 16 用 Proxy（root src/proxy.ts）每個 request 呼叫此函式。
-export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request });
+//
+// extraRequestHeaders 是給 CSP 用的（x-nonce 與 Content-Security-Policy）。
+// 這些標頭必須進到往下傳的 request 裡，Next 才解析得出 nonce。
+// 每次都用 new Headers(request.headers) 重建而不是共用同一個物件：
+// 下面的 setAll 會先 request.cookies.set() 再重建 response，
+// 共用舊物件的話那些更新過的 cookie 就不會被帶下去。
+export async function updateSession(
+  request: NextRequest,
+  extraRequestHeaders?: Record<string, string>,
+) {
+  const nextInit = () => {
+    if (!extraRequestHeaders) return { request };
+    const headers = new Headers(request.headers);
+    for (const [key, value] of Object.entries(extraRequestHeaders)) {
+      headers.set(key, value);
+    }
+    return { request: { headers } };
+  };
+
+  let supabaseResponse = NextResponse.next(nextInit());
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -17,7 +35,7 @@ export async function updateSession(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value),
           );
-          supabaseResponse = NextResponse.next({ request });
+          supabaseResponse = NextResponse.next(nextInit());
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options),
           );
