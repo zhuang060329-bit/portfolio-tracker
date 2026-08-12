@@ -15,7 +15,10 @@ StackWorth 是工具型 UI，核心指標是資料可讀性，不是視覺衝擊
 
 ## 現有設計系統
 
-- 沿用現有 Motion + React Bits 方案
+- 動畫零依賴，不要找 animation library。`package.json` 沒有 Motion，也沒有 React Bits
+  （這裡原本寫「沿用現有 Motion + React Bits 方案」，與實際情況不符，2026-08-12 更正）。
+  現況：CSS `@keyframes` 6 支在 `globals.css`；JS 只有 `useCountUp.ts`（rAF）
+  與 `useFlipRows.ts`（Web Animations API）。要新增動畫就照這兩支的寫法手寫
 - 禁止引入 GSAP 或 Lenis（那是 movie-app 的動畫工具，不適用工具型 UI）
 - CSS 變數系統（`globals.css`）維持現有架構，深色模式靠 `[data-theme="dark"]` 自動翻轉
 - 顏色慣例：賺綠虧紅（西方慣例），不改
