@@ -3,12 +3,17 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import {
-  HEADER_ALIASES,
-  findHeaderIndex,
-  normalizeType,
-  parseAmount,
-  parseFlexibleDate,
+  hasCostBasisColumns,
+  mapHeader,
+  missingRequiredColumns,
 } from "@/lib/csv-import-helpers";
+import {
+  buildImportPlan,
+  dedupeKey,
+  parseCsvLine,
+  parseRows,
+  type PlanAccount,
+} from "@/lib/csv-import-plan";
 
 export type ImportResult =
   | {
@@ -20,43 +25,20 @@ export type ImportResult =
   | { ok: false; error: string }
   | undefined;
 
-// 簡易 CSV line parser（支援引號跳脫）
-function parseCsvLine(line: string): string[] {
-  const cols: string[] = [];
-  let cur = "";
-  let inQuotes = false;
-  for (let i = 0; i < line.length; i++) {
-    const c = line[i];
-    if (inQuotes) {
-      if (c === '"') {
-        if (line[i + 1] === '"') {
-          cur += '"';
-          i++;
-        } else {
-          inQuotes = false;
-        }
-      } else {
-        cur += c;
-      }
-    } else {
-      if (c === '"') inQuotes = true;
-      else if (c === ",") {
-        cols.push(cur);
-        cur = "";
-      } else cur += c;
-    }
-  }
-  cols.push(cur);
-  return cols;
-}
-
-// CSV 匯入：支援 dividend / interest 兩種型別，欄位可中英文。
-// 必要欄位（含別名）：date / account / type / amount
-// 選填：note
-// type 可以是 dividend / interest / 配息 / 股息 / 利息 等
-// 日期支援 ISO / yyyy/m/d / m/d/yyyy 多種格式
-// account 用名稱比對，找不到就跳過該列。
-export async function importIncomeCsv(
+/**
+ * CSV 匯入：支援全部七種交易型別，欄位可中英文，也吃得下 /api/export/csv 的匯出檔。
+ *
+ * 必要欄位（含別名）：date / account / type，加上金額擇一（amount 或 Cashflow (TWD)）。
+ * 其餘欄位有就用、沒有就退回較保守的行為。
+ *
+ * 兩條規則值得先知道：
+ * 1. 部位異動（買進 / 賣出 / 餘額調整 / 建立）只能匯進「還沒有任何交易」的帳戶。
+ *    這些列設定的是絕對狀態，寫進已有歷史的帳戶等於拿另一段歷史的終值覆蓋現況。
+ *    配息與利息是增量，不受此限，行為與先前完全相同。
+ * 2. 同帳戶、同時間、同型別視為重複，直接跳過並回報，避免同一份檔案匯兩次
+ *    把部位變成兩倍。
+ */
+export async function importTransactionsCsv(
   _prev: ImportResult,
   formData: FormData,
 ): Promise<ImportResult> {
@@ -81,144 +63,130 @@ export async function importIncomeCsv(
   const header = parseCsvLine(lines[0]).map((h) =>
     h.trim().toLowerCase().replace(/^"|"$/g, ""),
   );
-  const dateI = findHeaderIndex(header, HEADER_ALIASES.date);
-  const accI = findHeaderIndex(header, HEADER_ALIASES.account);
-  const typeI = findHeaderIndex(header, HEADER_ALIASES.type);
-  const amountI = findHeaderIndex(header, HEADER_ALIASES.amount);
-  const noteI = findHeaderIndex(header, HEADER_ALIASES.note);
-  if (dateI < 0 || accI < 0 || typeI < 0 || amountI < 0) {
-    return {
-      ok: false,
-      error:
-        "CSV 缺少必要欄位：日期(date) / 帳戶(account) / 類型(type) / 金額(amount / amount_twd)",
-    };
+  const cols = mapHeader(header);
+  const missing = missingRequiredColumns(cols);
+  if (missing.length > 0) {
+    return { ok: false, error: `CSV 缺少必要欄位：${missing.join("、")}` };
   }
+  const hasCostBasis = hasCostBasisColumns(cols);
 
-  // 預先抓使用者所有帳戶供名稱比對
-  const { data: accs } = await supabase
+  const { rows, errors: parseErrors } = parseRows(lines, cols);
+
+  const { data: accountRows, error: accErr } = await supabase
     .from("accounts")
     .select(
-      "id,name,quantity,manual_value_base,price_market,last_unit_price,last_fx_rate,realized_pnl_twd",
+      "id,name,price_market,quantity,manual_value_base,last_unit_price,last_fx_rate,realized_pnl_twd",
     );
-  const accByName = new Map<string, NonNullable<typeof accs>[number]>();
-  for (const a of accs ?? []) {
-    accByName.set(a.name.trim(), a);
+  if (accErr) {
+    console.error(
+      `[importTransactionsCsv] 查詢帳戶失敗 code=${accErr.code ?? "unknown"}`,
+    );
+    return { ok: false, error: "讀取帳戶失敗，請稍後再試" };
   }
 
-  type Row = {
-    accId: string;
-    type: "dividend" | "interest";
-    amount: number;
-    occurredAt: Date;
-    note: string | null;
-    curValue: number;
-    qty: number;
-  };
-  const rows: Row[] = [];
-  const errors: string[] = [];
-  let skipped = 0;
+  const referenced = new Set(rows.map((r) => r.accountName));
+  const relevant = (accountRows ?? []).filter((a) =>
+    referenced.has(a.name.trim()),
+  );
 
-  for (let i = 1; i < lines.length; i++) {
-    const cols = parseCsvLine(lines[i]);
-    const dateStr = (cols[dateI] ?? "").trim();
-    const accName = (cols[accI] ?? "").trim();
-    const typeRaw = (cols[typeI] ?? "").trim();
-    const amount = parseAmount(cols[amountI] ?? "");
-    const note = noteI >= 0 ? (cols[noteI] ?? "").trim() || null : null;
+  const history = await loadHistory(
+    supabase,
+    relevant.map((a) => a.id),
+  );
+  if (history === null) {
+    return { ok: false, error: "讀取既有交易失敗，請稍後再試" };
+  }
 
-    if (!dateStr || !accName) {
-      skipped++;
-      errors.push(`第 ${i + 1} 列：date / account 為空`);
-      continue;
-    }
-    const type = normalizeType(typeRaw);
-    // normalizeType 現在認得全部七種 txn_type，但寫入路徑還只支援收益兩種
-    // （買賣的重放邏輯在階段 8c）。這裡先收窄，行為與先前完全一致：
-    // 先前 buy 會得到 null 被退回，現在得到 adjust_quantity 一樣被退回。
-    if (type !== "dividend" && type !== "interest") {
-      skipped++;
-      errors.push(
-        `第 ${i + 1} 列：type "${typeRaw}" 無法辨識（須為配息/股息/dividend 或利息/interest）`,
-      );
-      continue;
-    }
-    if (!Number.isFinite(amount) || amount <= 0) {
-      skipped++;
-      errors.push(`第 ${i + 1} 列：金額須為正數`);
-      continue;
-    }
-    const occurredAt = parseFlexibleDate(dateStr);
-    if (!occurredAt) {
-      skipped++;
-      errors.push(`第 ${i + 1} 列：date "${dateStr}" 格式無效`);
-      continue;
-    }
-    const acc = accByName.get(accName);
-    if (!acc) {
-      skipped++;
-      errors.push(`第 ${i + 1} 列：找不到帳戶「${accName}」`);
-      continue;
-    }
-
-    const curValue =
-      acc.price_market === "manual"
-        ? Number(acc.manual_value_base ?? 0)
-        : Number(acc.quantity) *
-          Number(acc.last_unit_price ?? 0) *
-          Number(acc.last_fx_rate ?? 1);
-
-    rows.push({
-      accId: acc.id,
-      type,
-      amount,
-      occurredAt,
-      note,
-      curValue,
-      qty: Number(acc.quantity),
+  const accountsByName = new Map<string, PlanAccount>();
+  for (const a of relevant) {
+    const seen = history.get(a.id);
+    accountsByName.set(a.name.trim(), {
+      id: a.id,
+      name: a.name.trim(),
+      priceMarket: a.price_market,
+      quantity: Number(a.quantity ?? 0),
+      manualValueBase:
+        a.manual_value_base == null ? null : Number(a.manual_value_base),
+      lastUnitPrice:
+        a.last_unit_price == null ? null : Number(a.last_unit_price),
+      lastFxRate: a.last_fx_rate == null ? null : Number(a.last_fx_rate),
+      realizedPnlTwd: Number(a.realized_pnl_twd ?? 0),
+      hasExistingTransactions: (seen?.size ?? 0) > 0,
+      existingKeys: seen ?? new Set<string>(),
     });
   }
 
-  if (rows.length === 0) {
+  const plan = buildImportPlan(rows, accountsByName, { hasCostBasis });
+  const errors = [...parseErrors, ...plan.errors];
+  const skipped = parseErrors.length + plan.skipped;
+
+  if (plan.transactions.length === 0) {
     return { ok: true, imported: 0, skipped, errors };
   }
 
-  // 批次 insert transactions
-  const txInserts = rows.map((r) => ({
-    user_id: user.id,
-    account_id: r.accId,
-    type: r.type,
-    quantity_after: r.qty,
-    unit_price: null,
-    fx_rate: null,
-    value_after_base: r.curValue,
-    realized_pnl: r.amount,
-    cashflow_twd: r.amount,
-    note: r.note ? `${r.type === "dividend" ? "配息" : "利息"} ${r.amount} TWD · ${r.note}` : `${r.type === "dividend" ? "配息" : "利息"} ${r.amount} TWD`,
-    created_at: r.occurredAt.toISOString(),
-  }));
-  const { error: insErr } = await supabase
-    .from("transactions")
-    .insert(txInserts);
-  if (insErr) return { ok: false, error: `寫入失敗：${insErr.message}` };
-
-  // 加總每個帳戶的增量並 update realized_pnl_twd
-  const deltaByAcc = new Map<string, number>();
-  for (const r of rows) {
-    deltaByAcc.set(r.accId, (deltaByAcc.get(r.accId) ?? 0) + r.amount);
+  const { error: insErr } = await supabase.from("transactions").insert(
+    plan.transactions.map((t) => ({ ...t, user_id: user.id })),
+  );
+  if (insErr) {
+    console.error(
+      `[importTransactionsCsv] 寫入交易失敗 code=${insErr.code ?? "unknown"}`,
+    );
+    return { ok: false, error: "寫入交易失敗，沒有任何資料被匯入" };
   }
-  for (const [accId, delta] of deltaByAcc.entries()) {
-    const acc = (accs ?? []).find((a) => a.id === accId);
-    if (!acc) continue;
-    await supabase
+
+  // 交易已經寫進去了，接著才更新帳戶終態。兩者不在同一個 transaction 裡：
+  // 這裡若失敗，流水在、帳戶餘額沒跟上，而且重試會被「帳戶已有交易」擋住。
+  // 訊息必須講清楚，讓使用者知道要去看變動紀錄而不是重按一次。
+  for (const { accountId, patch } of plan.accountPatches) {
+    const { error: updErr } = await supabase
       .from("accounts")
-      .update({
-        realized_pnl_twd: Number(acc.realized_pnl_twd ?? 0) + delta,
-      })
-      .eq("id", accId);
+      .update(patch)
+      .eq("id", accountId);
+    if (updErr) {
+      console.error(
+        `[importTransactionsCsv] 更新帳戶失敗 code=${updErr.code ?? "unknown"}`,
+      );
+      return {
+        ok: false,
+        error:
+          "交易已寫入但帳戶餘額更新失敗。請到變動紀錄確認已匯入的內容，不要重複匯入",
+      };
+    }
   }
 
   revalidatePath("/activity");
   revalidatePath("/");
 
-  return { ok: true, imported: rows.length, skipped, errors };
+  return { ok: true, imported: plan.imported, skipped, errors };
+}
+
+/**
+ * 撈出這些帳戶既有交易的指紋，供重複偵測與「帳戶是否全新」判斷。
+ * 查詢失敗回 null——寧可整份退回，也不要因為查不到而把重複偵測整個關掉。
+ */
+async function loadHistory(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  accountIds: string[],
+): Promise<Map<string, Set<string>> | null> {
+  const byAccount = new Map<string, Set<string>>();
+  if (accountIds.length === 0) return byAccount;
+
+  const { data, error } = await supabase
+    .from("transactions")
+    .select("account_id,type,created_at")
+    .in("account_id", accountIds)
+    .limit(20000);
+  if (error) {
+    console.error(
+      `[importTransactionsCsv] 查詢既有交易失敗 code=${error.code ?? "unknown"}`,
+    );
+    return null;
+  }
+
+  for (const t of data ?? []) {
+    const set = byAccount.get(t.account_id) ?? new Set<string>();
+    set.add(dedupeKey(t.type, new Date(t.created_at)));
+    byAccount.set(t.account_id, set);
+  }
+  return byAccount;
 }

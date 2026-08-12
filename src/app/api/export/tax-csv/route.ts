@@ -112,7 +112,7 @@ export async function GET(request: Request) {
   for (const r of rows) {
     const acc = r.accounts;
     const date = r.created_at.slice(0, 10);
-    // dividend / interest 的 unit_price / fx_rate 是 null（由 importIncomeCsv 寫入），輸出為空字串
+    // dividend / interest 的 unit_price / fx_rate 是 null（由 importTransactionsCsv 寫入），輸出為空字串
     lines.push(
       [
         escapeCsvCell(date),
