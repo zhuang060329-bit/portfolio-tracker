@@ -60,8 +60,21 @@ export const HEADER_ALIASES: Record<HeaderKey, string[]> = {
   valueBase: ["value (twd)", "value_after_base", "市值"],
   realizedPnl: ["realized pnl (twd)", "realized_pnl", "已實現損益"],
   feeTwd: ["fee (twd)", "fee_twd", "fee", "手續費"],
-  costBasisTwd: ["cost basis (twd)", "cost_basis_twd", "成本基礎"],
-  costBasisNative: ["cost basis (native)", "cost_basis_native", "成本基礎(原幣)"],
+  // 冠 Account 是因為這是帳戶當前的成本基礎，不是該筆交易當下的值
+  // （transactions 表沒有成本基礎欄，逐筆歷史值不存在）。
+  // 不冠 Account 的寫法保留下來，讓手寫檔也能用。
+  costBasisTwd: [
+    "account cost basis (twd)",
+    "cost basis (twd)",
+    "cost_basis_twd",
+    "成本基礎",
+  ],
+  costBasisNative: [
+    "account cost basis (native)",
+    "cost basis (native)",
+    "cost_basis_native",
+    "成本基礎(原幣)",
+  ],
 };
 
 export function findHeaderIndex(header: string[], candidates: string[]): number {

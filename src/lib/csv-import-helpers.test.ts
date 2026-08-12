@@ -11,32 +11,21 @@ import {
   parseFlexibleDate,
   type RowFacts,
 } from "./csv-import-helpers";
+import { EXPORT_CSV_HEADER } from "./csv";
 
-/** /api/export/csv 目前輸出的表頭，已照匯入端的方式轉小寫。 */
-const EXPORT_HEADER = [
-  "datetime",
-  "account",
-  "market",
-  "symbol",
-  "native",
-  "type",
-  "qty after",
-  "unit price (native)",
-  "fx",
-  "value (twd)",
-  "cashflow (twd)",
-  "realized pnl (twd)",
-  "fee (twd)",
-  "note",
-];
+/**
+ * 現行匯出表頭，直接取自 route 用的同一份常數——這裡是兩端脫鉤的防線，
+ * 不要改成手寫副本。匯入端會先把表頭轉小寫，測試比照辦理。
+ */
+const EXPORT_HEADER_V2 = EXPORT_CSV_HEADER.map((h) => h.toLowerCase());
 
-/** 階段 8b 之後的表頭：成本基礎兩欄插在 Fee 與 Note 之間。 */
-const EXPORT_HEADER_V2 = [
-  ...EXPORT_HEADER.slice(0, 13),
-  "cost basis (twd)",
-  "cost basis (native)",
-  "note",
-];
+/**
+ * 8b 之前的舊表頭：沒有成本基礎兩欄，你手上的舊備份檔仍是這個格式。
+ * 由現行表頭減去那兩欄推導，欄位順序自動跟著現行版本走。
+ */
+const EXPORT_HEADER = EXPORT_HEADER_V2.filter(
+  (h) => !h.startsWith("account cost basis"),
+);
 
 describe("findHeaderIndex", () => {
   it("找到第一個匹配的別名", () => {
@@ -201,6 +190,31 @@ describe("hasCostBasisColumns", () => {
     expect(cols.costBasisTwd).toBe(13);
     expect(cols.costBasisNative).toBe(14);
     expect(cols.note).toBe(15);
+  });
+
+  it("手寫檔不冠 Account 也認得", () => {
+    const cols = mapHeader(["date", "account", "type", "amount", "成本基礎"]);
+    expect(hasCostBasisColumns(cols)).toBe(true);
+    expect(mapHeader(["cost basis (twd)"]).costBasisTwd).toBe(0);
+  });
+});
+
+describe("匯出與匯入的表頭必須對得上", () => {
+  // 這組斷言是 8a 的核心：兩端曾經默默脫鉤，讓自家匯出檔一列都匯不回來。
+  // EXPORT_HEADER_V2 直接取自 route 用的常數，改匯出欄位漏改別名就會紅在這裡。
+  it("現行匯出檔的必要欄位齊全，且帶得出成本基礎", () => {
+    const cols = mapHeader(EXPORT_HEADER_V2);
+    expect(missingRequiredColumns(cols)).toEqual([]);
+    expect(hasCostBasisColumns(cols)).toBe(true);
+  });
+
+  it("每個匯出欄位都對得上一個匯入欄位鍵", () => {
+    const cols = mapHeader(EXPORT_HEADER_V2);
+    const mapped = new Set(Object.values(cols).filter((i) => i >= 0));
+    // market / symbol / native 是匯入端用不到的欄位，其餘都應該被認領。
+    // symbol 雖然在 account 的別名裡，但 account 欄先命中，所以它落在未認領這邊。
+    const unclaimed = EXPORT_HEADER_V2.filter((_, i) => !mapped.has(i));
+    expect(unclaimed).toEqual(["market", "symbol", "native"]);
   });
 });
 
