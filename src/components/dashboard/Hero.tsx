@@ -38,7 +38,17 @@ export function Hero({
           <span className="shrink-0 text-[14px] font-medium text-[var(--c-faint)] sm:text-[16px]">
             NT$
           </span>
-          <span className="amt min-w-0 truncate text-[clamp(40px,7vw,68px)] font-medium leading-[0.92] tracking-[-0.045em] tnum">
+          {/* 這裡原本用 truncate，數字的頂端會被切掉。
+              truncate 帶的是 overflow:hidden，而 leading-[0.92] 讓行框（0.92em）
+              比 Newsreader 自身的字框（1.008em）矮，上下各溢出約 2.75px，
+              於是被裁。實測 62.5px 字級下墨水頂端在基線上方 45.9px，
+              行框只給到 43.25px，短少 2.65px——切的是數字上緣。
+
+              改用 whitespace-nowrap：保留不換行，但不裁切，垂直排版一格未動
+              （拉高 leading 或補 padding 都會讓這塊長高約 6px）。
+              truncate 原本要防的水平溢出實測用不到：375px 下可用寬度 305px，
+              連 NT$9,999,999,999 都只要 265px。 */}
+          <span className="amt min-w-0 whitespace-nowrap text-[clamp(40px,7vw,68px)] font-medium leading-[0.92] tracking-[-0.045em] tnum">
             {Math.round(total).toLocaleString("en-US")}
           </span>
         </div>
