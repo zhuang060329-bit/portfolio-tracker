@@ -15,7 +15,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **路徑（Windows）**：`D:\ClaudeCode\projects\portfolio-tracker`
 - **GitHub**：`github.com/zhuang060329-bit/portfolio-tracker`（public）
 - **部署**：`https://portfolio-tracker-two-rho.vercel.app`
-- **當前狀態**：上線運作中；v1.0 原始碼有 32 個 app page/API 入口，測試數量以 `npm run test:unit` 與 `npm run test:integration` 實際輸出為準
+- **當前狀態**：上線運作中，目前版本 **v1.1.0**（2026-08-12）。v1.0 原始碼有 32 個 app page/API 入口，測試數量以 `npm run test:unit` 與 `npm run test:integration` 實際輸出為準。各版本變更見 `CHANGELOG.md`
 - **完整背景文件**：`docs/StackWorth-專案紀實.pdf`（15 頁，繁中）
 
 ## 二、技術棧
