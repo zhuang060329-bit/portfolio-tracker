@@ -2,15 +2,15 @@
 
 import { useState } from "react";
 import { useActionState } from "react";
-import { importIncomeCsv, type ImportResult } from "./actions";
+import { importTransactionsCsv, type ImportResult } from "./actions";
 import { useActionAnnounce } from "@/components/a11y/use-action-announce";
 
-// StackWorth 風格的可收合匯入面板，沿用真實的 importIncomeCsv server action。
+// StackWorth 風格的可收合匯入面板，沿用真實的 importTransactionsCsv server action。
 export function ImportCsv() {
   const [open, setOpen] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
   const [state, action, pending] = useActionState<ImportResult, FormData>(
-    importIncomeCsv,
+    importTransactionsCsv,
     undefined,
   );
   // 匯入結果是數字，唸出筆數才有意義，成功句照當下的結果組。
@@ -36,7 +36,7 @@ export function ImportCsv() {
         </span>
         匯入 CSV
         <span className="ml-auto truncate text-[11.5px] font-normal text-[var(--c-faint)]">
-          配息 / 利息 · 支援中英文欄位
+          交易紀錄 · 吃得下匯出檔與中英文欄位
         </span>
       </button>
 
@@ -61,15 +61,19 @@ export function ImportCsv() {
               </li>
               <li>
                 <b className="font-semibold text-[var(--c-text)]">類型</b> type /
-                類型（配息 / dividend / 利息 / interest）
+                類型（配息 / 利息 / 買進 / 賣出 / buy / sell）
               </li>
               <li>
                 <b className="font-semibold text-[var(--c-text)]">金額</b> amount /
-                金額（正數，自動去除逗號與 NT$）
+                金額，或匯出檔的 Cashflow（自動去除逗號與 NT$）
               </li>
               <li>
                 <b className="font-semibold text-[var(--c-text)]">備註</b> note /
                 備註（選填）
+              </li>
+              <li className="mt-1 text-[var(--c-faint)]">
+                買賣需要匯出檔才帶得回成本基礎，且只能匯進尚無交易的帳戶；
+                配息與利息任何帳戶都可以，同帳戶同時間的重複列會自動跳過。
               </li>
             </ul>
           </div>

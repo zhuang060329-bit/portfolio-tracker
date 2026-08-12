@@ -18,7 +18,7 @@ export default async function DemoReportPage({ searchParams }: { searchParams: P
   const due = data.decisions.filter((decision) => decision.status === "open" && decision.reviewDate <= bounds.endDate);
   const reviewed = data.decisions.filter((decision) => decision.status === "reviewed");
   return (
-    <div className="report-shell min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
+    <div className="report-shell min-h-dvh bg-[var(--c-page)] text-[var(--c-text)]">
       <DemoV1Header active="report" />
       <main id="main" tabIndex={-1} className="report-page mx-auto max-w-[960px] px-4 pb-24 pt-8 sm:px-6">
         <header className="report-block flex flex-wrap items-start justify-between gap-4 border-b border-[var(--c-line-strong)] pb-5">

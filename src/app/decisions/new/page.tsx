@@ -62,7 +62,7 @@ export default async function NewDecisionPage({
     : today;
 
   return (
-    <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
+    <div className="min-h-dvh bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active="decisions" userEmail={user?.email} unreadCount={unreadCount} />
       <main id="main" tabIndex={-1} className="mx-auto max-w-[820px] px-4 pb-28 pt-9 sm:px-6">
         <header>

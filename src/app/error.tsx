@@ -21,7 +21,7 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <main id="main" tabIndex={-1} className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[var(--c-page)] p-6 text-center">
+    <main id="main" tabIndex={-1} className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-[var(--c-page)] p-6 text-center">
       <p className="font-serif text-3xl font-semibold tracking-tight text-[var(--c-text)]">
         出了點問題
       </p>

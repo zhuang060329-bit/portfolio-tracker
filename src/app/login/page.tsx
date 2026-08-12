@@ -92,7 +92,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main id="main" tabIndex={-1} className="flex min-h-screen flex-col items-center justify-center bg-[var(--c-page)] p-6">
+    <main id="main" tabIndex={-1} className="flex min-h-dvh flex-col items-center justify-center bg-[var(--c-page)] p-6">
       <div className="w-full max-w-sm rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-8 shadow-[var(--c-shadow)]">
         <div className="flex flex-col gap-2">
           <h1 className="font-serif text-2xl font-semibold tracking-tight text-[var(--c-text)]">

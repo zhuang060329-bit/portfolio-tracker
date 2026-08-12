@@ -143,7 +143,10 @@ export function TrendSection({
               type="button"
               aria-pressed={range === item.key}
               onClick={() => setRange(item.key)}
-              className={`min-h-9 min-w-11 shrink-0 rounded-[var(--r-control)] px-2.5 text-[11px] font-semibold ${
+              /* 區間鈕是主圖表上最常按的控制項，拉到 44×44 過 WCAG 2.5.5（AAA）。
+                 同檔另外三處 min-h-9（模式切換、圖例鈕）不在本次範圍，仍是 36px，
+                 過 2.5.8（AA，24px）但未達 AAA。 */
+              className={`min-h-11 min-w-11 shrink-0 rounded-[var(--r-control)] px-2.5 text-[11px] font-semibold ${
                 range === item.key
                   ? "bg-[var(--c-accent-soft)] text-[var(--c-accent)]"
                   : "text-[var(--c-muted)] hover:bg-[var(--c-surface-soft)] hover:text-[var(--c-text)]"

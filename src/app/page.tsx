@@ -124,7 +124,7 @@ export default async function Home({
   });
 
   return (
-    <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
+    <div className="min-h-dvh bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader
         active="portfolio"
         userEmail={user?.email}

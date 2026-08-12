@@ -22,7 +22,7 @@ export default function DemoWhatIfPage() {
     ),
   };
   return (
-    <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
+    <div className="min-h-dvh bg-[var(--c-page)] text-[var(--c-text)]">
       <DemoV1Header active="scenario" />
       <main id="main" tabIndex={-1} className="mx-auto max-w-[1100px] px-4 pb-24 pt-8 sm:px-6">
         <h1 className="font-serif text-3xl font-medium">壓力與買前檢核 Demo</h1>

@@ -12,7 +12,7 @@ export default function DemoDecisionsPage() {
   const today = todayTaipei();
   const data = buildDemoV1Data(today);
   return (
-    <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
+    <div className="min-h-dvh bg-[var(--c-page)] text-[var(--c-text)]">
       <DemoV1Header active="decisions" />
       <main id="main" tabIndex={-1} className="mx-auto max-w-[880px] px-4 pb-24 pt-8 sm:px-6">
         <h1 className="font-serif text-3xl font-medium">決策日誌 Demo</h1>

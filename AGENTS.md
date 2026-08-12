@@ -73,7 +73,9 @@ src/
 │   ├── prices/                  ← {twelvedata,finmind,coingecko,fx,router,types,http}.ts
 │   ├── xirr.ts, metrics.ts      ← 報酬指標（含測試）
 │   ├── whatif.ts                ← Buy-and-hold 模擬（含測試）
-│   ├── csv-import-helpers.ts    ← 欄位嗅探、別名（含測試）
+│   ├── csv.ts                   ← EXPORT_CSV_HEADER（匯出匯入共用）、escapeCsvCell
+│   ├── csv-import-helpers.ts    ← 欄位嗅探、型別別名、列別判定（含測試）
+│   ├── csv-import-plan.ts       ← CSV 解析 + 匯入規劃（純函式，含往返測試）
 │   ├── alerts-scan.ts           ← cron 內呼叫的警示掃描
 │   ├── alert-actions.ts, allowlist-actions.ts, profile-actions.ts
 │   ├── contributions.ts         ← applyContribution 共用 helper
@@ -142,7 +144,7 @@ TEST_DATABASE_URL=postgresql://... npm run test:integration
 NEXT_TELEMETRY_DISABLED=1 npx next build
 
 # 本機開發
-npm run dev   # 或 .\start-dev-min.vbs（Windows 後台模式）
+npm run dev   # Mac 也可用工作區根的 start-dev-portfolio.command（不在本 repo 內）
 ```
 
 ## 六、上線流程
@@ -176,6 +178,26 @@ npm run dev   # 或 .\start-dev-min.vbs（Windows 後台模式）
   6 個上游 Noto Sans TC 本來就沒有，維持掉到系統字體，與改動前一致）。
   改動 UI 文案後跑 `python scripts/build-fonts.py --audit` 檢查有沒有掉字。
   subset 保留全部 layout features，`tnum` / `lnum` 在，金額欄位對齊不受影響。
+- **CSV 匯入採「重放狀態」而非「重跑計算」**：匯入的每一列直接照抄檔案裡的
+  `Qty after` / `Unit price` / `FX` / `Cashflow` / `Realized PnL` / `Fee`，
+  帳戶終態取每個帳戶**時間上**最後一列（匯出檔是由新到舊排序，務必先排序）。
+  不要改成重用 `applyContribution`：它對每一列無條件呼叫 `getQuote()`
+  （N 列 = N 次即時報價，會撞 API 每日預算），而且用**今天**的價格把 TWD
+  換算成股數，匯入歷史買進會算出錯誤股數。
+  重放狀態另有一個好處：加碼與股數調整在 DB 裡都是 `adjust_quantity`，
+  匯出檔分不出來，但兩者終點狀態一樣，不需要知道當初是哪個操作。
+- **匯出的成本基礎是帳戶當前值，不是逐筆歷史值**：`transactions` 表沒有任何
+  成本基礎欄位，`cost_basis_twd` / `cost_basis_native` 只存在於 `accounts`。
+  所以匯出欄名冠 Account，同一帳戶每列都印同一個數字。匯入取最後一列還原終態。
+  代價：手動刪列後再匯入，這個值仍屬於完整歷史，跟保留的子集對不上。
+- **部位異動只能匯進尚無交易的帳戶**：`create` / `adjust_quantity` /
+  `adjust_balance` / `sell` 設定的是絕對狀態，寫進已有歷史的帳戶等於拿另一段
+  歷史的終值覆蓋現況，而且錯得很安靜。配息與利息是增量，任何帳戶都可以。
+  重複偵測用「同帳戶 + 同時間 + 同型別」指紋，不需要 schema 支援。
+- **匯出表頭是 `lib/csv.ts` 的 `EXPORT_CSV_HEADER`**，route 與匯入測試共用同一份。
+  兩端曾經默默脫鉤過：匯出寫 `Cashflow (TWD)`、匯入只認 `amount`，
+  導致自家匯出檔一列都匯不回來，而當時沒有任何測試會發現。
+  改匯出欄位時要連 `HEADER_ALIASES` 一起改，`csv-import-helpers` 的測試會擋。
 - **手動帳戶**：不適用 addByAmount；FAB 與部分 query 自動排除
 - **服務選擇**：全部用免費額度可運作；個人單用不會撞限
 
@@ -186,6 +208,7 @@ npm run dev   # 或 .\start-dev-min.vbs（Windows 後台模式）
 | 4 種按鈕風格散在各頁 | 提取成 Button component 影響面大，現有體驗 OK |
 | AppHeader unreadCount 每頁 fetch | DRY 違規但只是一個 COUNT query，成本低 |
 | serif 標題 + sans-serif 內文 | 設計取向決定，等使用者明說再改 |
+| CSV 匯入的交易寫入與帳戶更新不是原子的 | insert 成功、update 失敗時流水在但餘額沒跟上，且重試會被「帳戶已有交易」擋住。錯誤訊息已提示去看變動紀錄。要做成原子需要新 RPC 與 migration |
 
 ## 九、使用者操作（程式碼無法代勞）
 

@@ -8,7 +8,7 @@ const panel =
 // AppHeader），避免公開訪客在載入瞬間閃到「登入」導覽再跳成 DEMO 版。
 export default function DemoLoading() {
   return (
-    <div className="min-h-screen bg-[var(--c-page)] text-[var(--c-text)]">
+    <div className="min-h-dvh bg-[var(--c-page)] text-[var(--c-text)]">
       <DemoV1Header active="overview" />
       <main id="main" tabIndex={-1} className="mx-auto max-w-[1200px] px-4 pb-24 pt-5 sm:px-6 sm:pt-7 lg:px-7 lg:pt-8">
         <div className={`mb-3 h-3 w-[min(80vw,420px)] ${skeleton}`} />

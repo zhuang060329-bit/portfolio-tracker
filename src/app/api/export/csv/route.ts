@@ -1,8 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
-import { escapeCsvCell } from "@/lib/csv";
+import { EXPORT_CSV_HEADER, escapeCsvCell } from "@/lib/csv";
 
 // CSV 匯出：所有自己帳戶的 transactions（RLS 已綁 user_id）。
 // 帶 UTF-8 BOM，Excel 開啟中文不亂碼。
+//
+// Account cost basis 兩欄是「帳戶當前的成本基礎」，不是該筆交易當下的值——
+// transactions 表沒有成本基礎欄位，逐筆歷史值在資料庫裡根本不存在。
+// 同一帳戶的每一列都會印出同一個數字，這是刻意的：匯入端要的是終點狀態，
+// 取每個帳戶最後一列即可還原。欄名冠上 Account 就是要講明這件事。
+// 代價：手動刪列後再匯入，這個值仍屬於完整歷史，跟保留的子集對不上。
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +34,8 @@ type Row = {
     price_market: string;
     symbol: string | null;
     native_currency: string;
+    cost_basis_twd: number | null;
+    cost_basis_native: number | null;
   } | null;
 };
 
@@ -43,7 +51,7 @@ export async function GET() {
   const { data, error } = await supabase
     .from("transactions")
     .select(
-      "created_at,type,quantity_after,unit_price,fx_rate,value_after_base,cashflow_twd,realized_pnl,fee_twd,note,accounts(name,price_market,symbol,native_currency)",
+      "created_at,type,quantity_after,unit_price,fx_rate,value_after_base,cashflow_twd,realized_pnl,fee_twd,note,accounts(name,price_market,symbol,native_currency,cost_basis_twd,cost_basis_native)",
     )
     .order("created_at", { ascending: false });
   if (error) {
@@ -52,22 +60,7 @@ export async function GET() {
 
   const rows = (data ?? []) as unknown as Row[];
 
-  const header = [
-    "Datetime",
-    "Account",
-    "Market",
-    "Symbol",
-    "Native",
-    "Type",
-    "Qty after",
-    "Unit price (native)",
-    "FX",
-    "Value (TWD)",
-    "Cashflow (TWD)",
-    "Realized PnL (TWD)",
-    "Fee (TWD)",
-    "Note",
-  ].join(",");
+  const header = EXPORT_CSV_HEADER.join(",");
 
   const lines: string[] = [header];
   for (const r of rows) {
@@ -87,6 +80,8 @@ export async function GET() {
         cellNum(r.cashflow_twd),
         cellNum(r.realized_pnl),
         cellNum(r.fee_twd),
+        cellNum(acc?.cost_basis_twd),
+        cellNum(acc?.cost_basis_native),
         escapeCsvCell(r.note),
       ].join(","),
     );
