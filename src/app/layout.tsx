@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
+import { NONCE_HEADER } from "@/lib/csp";
 import { SwRegister } from "@/components/SwRegister";
 import { LiveAnnouncer } from "@/components/a11y/LiveAnnouncer";
 import localFont from "next/font/local";
@@ -76,11 +78,21 @@ const themeInit = `(function(){try{
   document.documentElement.dataset.privacy = 'off';
 }})();`;
 
-export default function RootLayout({
+/* 讀 nonce 會讓整個 app 變成動態渲染——這是 nonce 型 CSP 的既定代價
+   （Next 官方文件明列：static optimization 與 ISR 停用、CDN 不能快取）。
+   改動前有 7 個靜態頁：/login、/methodology、/demo/decisions、/demo/whatif、
+   /auth/mfa、/auth/reset-password、/_not-found。 */
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  /* Next 會自動把 nonce 加到框架 script 與它自己產生的 inline script 上，
+     但這支主題初始化 script 是手寫的，不在自動範圍內，要自己掛。
+     proxy 沒跑到的路徑（見 proxy.ts 的 matcher）拿不到 x-nonce，
+     此時為 undefined，React 不會輸出該屬性。 */
+  const nonce = (await headers()).get(NONCE_HEADER) ?? undefined;
+
   return (
     <html
       lang="zh-Hant"
@@ -88,7 +100,7 @@ export default function RootLayout({
       className={`${fontSerif.variable} ${fontSans.variable} ${fontTc.variable} h-full antialiased`}
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInit }} />
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: themeInit }} />
       </head>
       <body className="min-h-full flex flex-col">
         {/* 跳至主內容（WCAG 2.4.1 Bypass Blocks，Level A）。
