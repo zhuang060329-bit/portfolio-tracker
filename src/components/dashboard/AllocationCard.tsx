@@ -34,9 +34,16 @@ export function AllocationCard({
   allocTargets: AllocTarget[];
   total: number;
 }) {
-  const [selectedClass, setSelectedClass] = useState<string | null>(null);
-  const selected = selectedClass
-    ? allocation.find((item) => item.cls === selectedClass)
+  /* 原本 hover 與 click 共用一個 state，而 onMouseLeave 無條件清成 null，
+     於是滑鼠使用者永遠釘不住任何一類：實測 mouseenter 讓 aria-pressed 變 true、
+     接著 click 反而翻回 false（因為 hover 已經選上了，click 走的是取消那一支），
+     mouseleave 再清一次。aria-pressed 宣告了一個持久狀態，實際上不存在。
+     拆成兩個：hover 是暫時的預覽，click 是釘住的選擇，hover 優先顯示。 */
+  const [pinned, setPinned] = useState<string | null>(null);
+  const [hovered, setHovered] = useState<string | null>(null);
+  const activeClass = hovered ?? pinned;
+  const selected = activeClass
+    ? allocation.find((item) => item.cls === activeClass)
     : null;
 
   return (
@@ -53,8 +60,8 @@ export function AllocationCard({
           <Donut
             data={allocation}
             size={176}
-            onHover={setSelectedClass}
-            hoverCls={selectedClass}
+            onHover={setHovered}
+            hoverCls={activeClass}
           />
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
             {selected ? (
@@ -90,17 +97,19 @@ export function AllocationCard({
               <button
                 key={item.cls}
                 type="button"
-                aria-pressed={selectedClass === item.cls}
+                /* 只反映釘住的狀態。hover 是預覽，報成 pressed 會讓讀屏使用者
+                   聽到一個他沒有做過的選擇。 */
+                aria-pressed={pinned === item.cls}
                 aria-label={`${item.label}：實際 ${item.actual.toFixed(1)}%、目標 ${item.target.toFixed(0)}%`}
                 className={`grid min-h-11 w-full grid-cols-[auto_54px_1fr_56px] items-center gap-2.5 rounded-[var(--r-control)] px-1.5 text-left ${
-                  selectedClass && selectedClass !== item.cls ? "opacity-40" : ""
+                  activeClass && activeClass !== item.cls ? "opacity-40" : ""
                 }`}
-                onMouseEnter={() => setSelectedClass(item.cls)}
-                onMouseLeave={() => setSelectedClass(null)}
-                onFocus={() => setSelectedClass(item.cls)}
-                onBlur={() => setSelectedClass(null)}
+                onMouseEnter={() => setHovered(item.cls)}
+                onMouseLeave={() => setHovered(null)}
+                onFocus={() => setHovered(item.cls)}
+                onBlur={() => setHovered(null)}
                 onClick={() =>
-                  setSelectedClass((current) =>
+                  setPinned((current) =>
                     current === item.cls ? null : item.cls,
                   )
                 }
@@ -109,7 +118,19 @@ export function AllocationCard({
                   className="h-2 w-2 rounded-[2px]"
                   style={{ background: allocColor(item.cls) }}
                 />
-                <span className="truncate text-[length:var(--fs-sm)]">{item.label}</span>
+                {/* 釘住的那一類用 PICK 語彙的文字訊號標出來，讓「滑過」與
+                    「按住不放」兩種狀態分得開——只靠其他列變淡的話，兩者一樣。
+                    這裡不取語彙裡的填色：本區塊落在 page 底色上，實測
+                    surface-soft 對 page 在淺色主題只有 1.027:1，等於沒有。 */}
+                <span
+                  className={`truncate text-[length:var(--fs-sm)] ${
+                    pinned === item.cls
+                      ? "font-semibold text-[var(--c-accent)]"
+                      : ""
+                  }`}
+                >
+                  {item.label}
+                </span>
                 <span className="relative h-[5px] bg-[var(--c-border)]">
                   <span
                     className="absolute inset-y-0 left-0 transition-[width] duration-700 ease-out"
