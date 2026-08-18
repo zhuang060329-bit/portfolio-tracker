@@ -21,13 +21,33 @@ const fontSerif = localFont({
   fallback: ["Georgia", "serif"],
 });
 
+/* 2026-08-18：Space Grotesk → IBM Plex Sans。Space Grotesk 的數字是幾何造型
+   （單層 a、無襯線的 1），放在滿頁市值與損益的帳本裡辨識負擔偏高。
+   Plex Sans 本來就是為工程與財報介面畫的，數字骨架清楚，與 Noto Sans TC
+   的人文骨架也比較搭。上游那條沒人用的 wdth 軸在 build-fonts.py 裡釘死了。 */
 const fontSans = localFont({
-  src: "./fonts/SpaceGrotesk-latin.woff2",
+  src: "./fonts/IBMPlexSans-latin.woff2",
   variable: "--font-sans",
-  weight: "300 700",
+  weight: "100 700",
   display: "swap",
   adjustFontFallback: "Arial",
   fallback: ["system-ui", "sans-serif"],
+});
+
+/* 數字專用等寬，只服務首頁帳本（globals.css 的 .ledger .tnum）。
+   IBM Plex Mono 上游沒有變數檔，所以破例收三個靜態字重——就是首頁
+   實際用到的 400 / 500 / 600，三個檔加起來 26.5 KB。
+   字集也只留數字、貨幣符號與英數，不是整個拉丁範圍。 */
+const fontFigures = localFont({
+  src: [
+    { path: "./fonts/IBMPlexMono-400-digits.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/IBMPlexMono-500-digits.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/IBMPlexMono-600-digits.woff2", weight: "600", style: "normal" },
+  ],
+  variable: "--font-figures",
+  display: "swap",
+  adjustFontFallback: false,
+  fallback: ["ui-monospace", "SFMono-Regular", "monospace"],
 });
 
 /* preload 關掉：這個檔 1.68 MB，preload 會讓它跟關鍵 JS 搶頻寬，
@@ -97,7 +117,7 @@ export default async function RootLayout({
     <html
       lang="zh-Hant"
       suppressHydrationWarning
-      className={`${fontSerif.variable} ${fontSans.variable} ${fontTc.variable} h-full antialiased`}
+      className={`${fontSerif.variable} ${fontSans.variable} ${fontFigures.variable} ${fontTc.variable} h-full antialiased`}
     >
       <head>
         <script nonce={nonce} dangerouslySetInnerHTML={{ __html: themeInit }} />

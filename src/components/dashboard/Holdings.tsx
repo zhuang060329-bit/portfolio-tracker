@@ -4,16 +4,18 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { allocColor, fmtTwd } from "./DashboardCharts";
 import type { Holding } from "./types";
-import { sign, toneCls, TONE_TEXT } from "./shared";
+import { PICK_OFF, PICK_ON, sign, toneCls, TONE_TEXT } from "./shared";
 import { useFlipRows } from "./useFlipRows";
 
 type SortKey = "name" | "value" | "day" | "pnl";
 
+/* 與桌機表頭逐字相同。原本手機寫「名稱」「損益」、桌機寫「帳戶」「未實現」，
+   同一個排序鍵兩個名字，換裝置就得重新對應一次。 */
 const SORT_LABEL: Record<SortKey, string> = {
-  name: "名稱",
+  name: "帳戶",
   value: "市值",
   day: "今日",
-  pnl: "損益",
+  pnl: "未實現",
 };
 
 export function Holdings({
@@ -23,6 +25,7 @@ export function Holdings({
   archivedCount,
   showArchived,
   demo,
+  activeCls,
 }: {
   holdings: Holding[];
   total: number;
@@ -30,6 +33,8 @@ export function Holdings({
   archivedCount: number;
   showArchived: boolean;
   demo?: boolean;
+  /* 旁邊資產配置正在指的類別。null 代表沒有任何類別被選。 */
+  activeCls?: string | null;
 }) {
   const [sortKey, setSortKey] = useState<SortKey>("value");
   const [direction, setDirection] = useState(-1);
@@ -76,6 +81,14 @@ export function Holdings({
       : undefined;
   }
 
+  /* 對到的列用內嵌的 accent 直條標，不用變淡未對到的列：這是一張要讀數字的表，
+     把其他列壓到 0.4 透明度等於讓它們不能讀。inset shadow 不佔位，不會推動內容。
+     底色只是輔助——surface-soft 對 surface 實測 1.073:1，單靠它看不出來。 */
+  const markCls = (cls: string) =>
+    activeCls && activeCls === cls
+      ? "bg-[var(--c-surface-soft)] shadow-[inset_2px_0_0_var(--c-accent)]"
+      : "";
+
   function dayCell(day: number | null) {
     return day == null || day === 0
       ? "—"
@@ -86,10 +99,10 @@ export function Holdings({
     <section className="pb-2 pt-5 sm:pb-4 sm:pt-6">
       <div className="flex items-start justify-between gap-4 px-4 sm:px-6">
         <div>
-          <h2 className="text-[17px] font-semibold tracking-[-0.015em] sm:text-[18px]">
+          <h2 className="text-[length:var(--fs-lg)] font-semibold tracking-[-0.015em]">
             持倉帳本
           </h2>
-          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-[var(--c-muted)]">
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[length:var(--fs-sm)] text-[var(--c-muted)]">
             <span>{activeCount} 個有效帳戶</span>
             {archivedCount > 0 && (
               <>
@@ -110,7 +123,7 @@ export function Holdings({
         {!demo && (
           <Link
             href="/accounts/new"
-            className="inline-flex min-h-10 shrink-0 items-center rounded-[var(--r-control)] bg-[var(--c-accent)] px-3.5 text-[12px] font-semibold text-[var(--c-btn-strong-text)] hover:brightness-110 sm:px-4 sm:text-[13px]"
+            className="inline-flex min-h-10 shrink-0 items-center rounded-[var(--r-control)] bg-[var(--c-accent)] px-3.5 text-[length:var(--fs-sm)] font-semibold text-[var(--c-btn-strong-text)] hover:brightness-110 sm:px-4"
           >
             新增帳戶
           </Link>
@@ -123,17 +136,26 @@ export function Holdings({
         </div>
       ) : (
         <>
-          <div className="hide-scrollbar mt-4 flex gap-1.5 overflow-x-auto px-4 pb-1 md:hidden">
+          {/* 一排沒有名字的藥丸看不出是排序還是篩選，補一個可見標籤，
+              並用 role=group 讓讀屏在進入時先講出「排序」這件事。 */}
+          <div
+            role="group"
+            aria-label="排序方式"
+            className="hide-scrollbar mt-4 flex items-center gap-1.5 overflow-x-auto px-4 pb-1 md:hidden"
+          >
+            <span className="shrink-0 text-[length:var(--fs-micro)] text-[var(--c-faint)]">
+              排序
+            </span>
             {(Object.keys(SORT_LABEL) as SortKey[]).map((key) => (
               <button
                 key={key}
                 type="button"
                 aria-pressed={sortKey === key}
                 onClick={() => setSort(key)}
-                className={`min-h-9 shrink-0 rounded-[var(--r-control)] border px-3 text-[12px] font-medium ${
+                className={`min-h-9 shrink-0 rounded-[var(--r-control)] border px-3 text-[length:var(--fs-sm)] ${
                   sortKey === key
-                    ? "border-[var(--c-line-strong)] bg-[var(--c-surface-soft)] text-[var(--c-text)]"
-                    : "border-[var(--c-border)] text-[var(--c-muted)]"
+                    ? `border-[var(--c-line-strong)] ${PICK_ON}`
+                    : `border-[var(--c-border)] ${PICK_OFF}`
                 }`}
               >
                 {SORT_LABEL[key]}
@@ -143,9 +165,25 @@ export function Holdings({
           </div>
 
           <div className="mt-4 hidden overflow-x-auto md:block">
-            <table className="w-full min-w-[760px] border-collapse text-[13px]">
+            <table className="w-full min-w-[760px] border-collapse text-[length:var(--fs-sm)]">
+              {/* 改版前欄寬全交給瀏覽器自動分配，結果與資訊量相反：實測「配置」
+                  拿到 243px（全表最寬）卻只裝得下 93px 的內容，「市場」用 167px
+                  放兩三個字，而會被 truncate 的「帳戶」只有 218px。
+                  這裡用百分比明寫，把空間還給需要的欄。 */}
+              <colgroup>
+                <col className="w-[24%]" />
+                {/* 市場 13%：表格最窄是 760px（min-w），13% = 99px，扣掉 px-5 的
+                    40px 剛好放得下最長的「加密貨幣」（13px × 4 = 52px）。
+                    先前給 11% 時實測那格斷成「加密貨 / 幣」——中日文可以在任何
+                    字之間斷行，min-content 只有一個字，瀏覽器不會替你擋。 */}
+                <col className="w-[13%]" />
+                <col className="w-[19%]" />
+                <col className="w-[15%]" />
+                <col className="w-[12%]" />
+                <col className="w-[17%]" />
+              </colgroup>
               <thead>
-                <tr className="border-y border-[var(--c-border)] bg-[var(--c-surface-soft)] text-[10px] font-semibold tracking-[0.06em] text-[var(--c-muted)]">
+                <tr className="border-y border-[var(--c-border)] bg-[var(--c-surface-soft)] text-[length:var(--fs-micro)] font-semibold tracking-[0.06em] text-[var(--c-muted)]">
                   <TableHead
                     onClick={() => setSort("name")}
                     align="left"
@@ -159,7 +197,7 @@ export function Holdings({
                     onClick={() => setSort("value")}
                     sorted={sortedOf("value")}
                   >
-                    市值
+                    市值 <Unit />
                   </TableHead>
                   <TableHead
                     onClick={() => setSort("day")}
@@ -171,7 +209,7 @@ export function Holdings({
                     onClick={() => setSort("pnl")}
                     sorted={sortedOf("pnl")}
                   >
-                    未實現
+                    未實現 <Unit />
                   </TableHead>
                 </tr>
               </thead>
@@ -187,9 +225,9 @@ export function Holdings({
                     <tr
                       key={holding.id}
                       ref={flip.register(`d-${holding.id}`)}
-                      className={`border-b border-[var(--c-border)] hover:bg-[var(--c-surface-soft)] ${
-                        holding.status === "archived" ? "opacity-60" : ""
-                      }`}
+                      className={`border-b border-[var(--c-border)] hover:bg-[var(--c-row-hover)] ${markCls(
+                        holding.cls,
+                      )} ${holding.status === "archived" ? "opacity-60" : ""}`}
                     >
                       <td className="max-w-[280px] px-6 py-4 text-left">
                         <div className="flex min-w-0 items-center gap-3">
@@ -210,7 +248,7 @@ export function Holdings({
                                 {holding.name}
                               </Link>
                             )}
-                            <div className="mt-0.5 flex items-center gap-2 text-[10px] text-[var(--c-faint)]">
+                            <div className="mt-0.5 flex items-center gap-2 text-[length:var(--fs-micro)] text-[var(--c-faint)]">
                               {holding.symbol && <span>{holding.symbol}</span>}
                               {holding.status === "archived" && (
                                 <span className="rounded border border-[var(--c-border)] px-1.5 py-0.5">
@@ -221,15 +259,21 @@ export function Holdings({
                           </div>
                         </div>
                       </td>
-                      <td className="px-5 py-4 text-left text-[var(--c-muted)]">
+                      <td className="whitespace-nowrap px-5 py-4 text-left text-[var(--c-muted)]">
                         {marketLabel[holding.market] ?? holding.market}
                       </td>
-                      <td className="px-5 py-4 text-right">
+                      {/* 條改成撐滿欄寬。原本軌道固定 48px，而最大部位只有 39.4%，
+                          實測填色 2.8–18.9px，5.8% 那格是個 2.8px 的點，看不出長短。
+                          軌道跟著欄寬伸縮後同一組資料是 8–57px，才比得出來。
+                          刻度維持 0–100% 絕對值，不改成「相對最大列」：滿格代表
+                          單一帳戶吃掉整個組合，那條空白本身就是集中度的資訊。
+                          軌道底色對卡片只有 1.25:1，留白不會變成噪音。 */}
+                      <td className="px-5 py-4">
                         {share == null ? (
-                          <span className="text-[var(--c-faint)]">—</span>
+                          <span className="block text-right text-[var(--c-faint)]">—</span>
                         ) : (
-                          <span className="inline-flex items-center justify-end gap-2.5">
-                            <span className="h-1 w-12 overflow-hidden bg-[var(--c-border)]">
+                          <span className="flex items-center gap-3">
+                            <span className="h-1 min-w-0 flex-1 overflow-hidden bg-[var(--c-border)]">
                               <span
                                 className="block h-full"
                                 style={{
@@ -238,7 +282,7 @@ export function Holdings({
                                 }}
                               />
                             </span>
-                            <span className="w-9 text-right text-[11px] text-[var(--c-muted)] tnum">
+                            <span className="w-11 shrink-0 text-right text-[length:var(--fs-micro)] text-[var(--c-muted)] tnum">
                               {share.toFixed(1)}%
                             </span>
                           </span>
@@ -265,7 +309,7 @@ export function Holdings({
                               {sign(pnl)}
                               {fmtTwd(Math.abs(pnl))}
                             </div>
-                            <div className="mt-0.5 text-[10px] opacity-80">
+                            <div className="mt-0.5 text-[length:var(--fs-micro)] opacity-80">
                               {sign(pnl)}
                               {Math.abs(pnlPct).toFixed(1)}%
                             </div>
@@ -289,9 +333,13 @@ export function Holdings({
                 holding.status === "archived" || total <= 0
                   ? null
                   : (holding.value / total) * 100;
-              const rowClass = `block border-b border-[var(--c-border)] px-4 py-4 ${
-                holding.status === "archived" ? "opacity-60" : ""
-              }`;
+              /* 密度：改版前每張卡 133px，桌機同一筆資料只用 71px。
+                 拿掉的是間距不是內容——py-4→py-3.5、內部分隔的 mt/pt 3→2、
+                 配置條從「再空 12px 再畫」改成貼在卡片下緣（絕對定位，不佔高度）。
+                 欄位一個沒少。 */
+              const rowClass = `relative block border-b border-[var(--c-border)] px-4 py-3.5 ${markCls(
+                holding.cls,
+              )} ${holding.status === "archived" ? "opacity-60" : ""}`;
               const content = (
                 <>
                   <div className="flex items-start justify-between gap-4">
@@ -301,10 +349,10 @@ export function Holdings({
                         style={{ background: allocColor(holding.cls) }}
                       />
                       <div className="min-w-0">
-                        <div className="truncate text-[14px] font-medium">
+                        <div className="truncate text-[length:var(--fs-sm)] font-medium">
                           {holding.name}
                         </div>
-                        <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-[var(--c-muted)]">
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[length:var(--fs-micro)] text-[var(--c-muted)]">
                           <span>{marketLabel[holding.market] ?? holding.market}</span>
                           {holding.symbol && (
                             <>
@@ -321,16 +369,16 @@ export function Holdings({
                       </div>
                     </div>
                     <div className="shrink-0 text-right">
-                      <div className="amt text-[15px] font-semibold tnum">
+                      <div className="amt text-[length:var(--fs-md)] font-semibold tnum">
                         NT$ {fmtTwd(holding.value)}
                       </div>
-                      <div className="mt-1 text-[10px] text-[var(--c-muted)]">
+                      <div className="mt-1 text-[length:var(--fs-micro)] text-[var(--c-muted)]">
                         {share == null ? "不計入配置" : `配置 ${share.toFixed(1)}%`}
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-3 grid grid-cols-2 border-t border-[var(--c-border-soft)] pt-3 text-[11px]">
+                  <div className="mt-2 grid grid-cols-2 border-t border-[var(--c-border-soft)] pt-2 text-[length:var(--fs-micro)]">
                     <div>
                       <span className="text-[var(--c-faint)]">今日</span>
                       <span
@@ -356,7 +404,7 @@ export function Holdings({
                   </div>
 
                   {share != null && (
-                    <div className="mt-3 h-[3px] overflow-hidden bg-[var(--c-border)]">
+                    <div className="absolute inset-x-0 bottom-0 h-[3px] overflow-hidden bg-[var(--c-border)]">
                       <span
                         className="block h-full"
                         style={{
@@ -382,7 +430,7 @@ export function Holdings({
                   key={holding.id}
                   ref={flip.register(`m-${holding.id}`)}
                   href={`/accounts/${holding.id}`}
-                  className={`${rowClass} hover:bg-[var(--c-surface-soft)] active:bg-[var(--c-accent-soft)]`}
+                  className={`${rowClass} hover:bg-[var(--c-row-hover)] active:bg-[var(--c-accent-soft)]`}
                 >
                   {content}
                 </Link>
@@ -392,6 +440,15 @@ export function Holdings({
         </>
       )}
     </section>
+  );
+}
+
+/* 表格有共同表頭，單位在這裡標一次，儲存格不重複（同 DashboardClient 四格的規則）。
+   改版前整張表沒有任何幣別標示，而「美股 ETF」那列的市值是換算後的台幣，
+   不標的話讀成美元是合理的誤讀。 */
+function Unit() {
+  return (
+    <span className="font-normal tracking-normal text-[var(--c-faint)]">NT$</span>
   );
 }
 
@@ -417,10 +474,16 @@ function TableHead({
 
   return (
     <th scope="col" aria-sort={sorted ?? "none"} className={alignClass}>
+      {/* 正在排序的欄原本只有一個箭頭，欄名本身跟其他欄一模一樣。
+          改用與手機藥丸、區間鈕同一套 PICK 語彙，三個地方講同一句話。
+          表頭列自身底色是 surface-soft，選中填色會與底色同色而看不出來，
+          所以這裡只取語彙裡的文字訊號（accent + 字重）。 */}
       <button
         type="button"
         onClick={onClick}
-        className={`w-full px-5 py-3 font-semibold tracking-[0.06em] ${alignClass} hover:text-[var(--c-text)]`}
+        className={`w-full px-5 py-3 font-semibold tracking-[0.06em] ${alignClass} ${
+          sorted ? "text-[var(--c-accent)]" : "hover:text-[var(--c-text)]"
+        }`}
       >
         {children}
         <span aria-hidden="true">

@@ -14,6 +14,17 @@
   --c-border: rgba(231, 233, 236, 0.09);
   --c-border-soft: rgba(231, 233, 236, 0.045);
   --c-line-strong: rgba(231, 233, 236, 0.16);
+  /* 圖表格線。用 --c-border 時對卡片底色只有 1.25:1，實測等於看不見，
+     Y 軸標籤浮在空中沒有東西把數值連回資料。這裡壓到 ~1.6:1：讀得到，
+     又遠低於資料線本身的 5.2:1，不會跟資料搶。
+     深淺兩組 alpha 不同是量出來的——同一個 alpha 在兩個主題給不同對比。 */
+  --c-grid: rgba(231, 233, 236, 0.17);
+
+  /* 列的 hover 底色。原本沿用 --c-surface-soft，對卡片底色只有 1.073:1——
+     一整條 1142×71 的列變色卻幾乎看不出來。這裡拉到 ~1.245:1：看得見是哪一列，
+     又遠低於任何內容的對比，不會蓋掉數字（文字對比仍有 11.9:1）。
+     深淺兩組 alpha 不同是量出來的，同一個 alpha 在兩個主題給不同對比。 */
+  --c-row-hover: rgba(231, 233, 236, 0.09);
   --c-up: #73aa88;
   --c-down: #d07d67;
   --c-btn-strong-bg: #e7e9ec;
@@ -37,6 +48,33 @@
   --r-control: 7px;
   --r-pill: 999px;
   --header-h: 58px;
+
+  /* 字級尺標。首頁改版前用了 15 個不同 px 值（8/9/10/11/12/13/14/15/16/17/
+     18/20/21/23/24 + clamp），11、12、13 三級在視覺上幾乎分不出來，
+     等於沒有尺標。收成 7 級，級距在底部小、頂部大——密集的表格區需要細分，
+     大數字之間需要拉開。
+
+     刻意不用 Tailwind 的 @theme 覆寫 text-xs / text-sm：那兩個 utility
+     全站用了 243 次，改了會波及 28 個路由，本輪範圍只有首頁。
+
+     --fs-axis   圖表軸標。比 micro 再小一級是刻意的：軸標是圖表家具不是內文，
+                 而且 Y 軸只有 52px 留白，放大到 11px 會讓「3,000萬」這種
+                 標籤溢出左緣。
+     --fs-micro  次要說明、單位、變化幅度（pp）
+     --fs-sm     表格內容、內文、三級標題
+     --fs-md     表格主數字、強調
+     --fs-lg     二級區段標題
+     --fs-xl     一級四格數字、績效指標數字
+     --fs-2xl    圓環中心、一級 primary 數字
+     --fs-display  hero 總淨資產 */
+  --fs-axis: 10px;
+  --fs-micro: 11px;
+  --fs-sm: 13px;
+  --fs-md: 15px;
+  --fs-lg: 18px;
+  --fs-xl: 22px;
+  --fs-2xl: 26px;
+  --fs-display: clamp(40px, 7vw, 64px);
 }
 
 [data-theme="light"] {
@@ -51,6 +89,11 @@
   --c-border: rgba(27, 30, 33, 0.11);
   --c-border-soft: rgba(27, 30, 33, 0.055);
   --c-line-strong: rgba(27, 30, 33, 0.2);
+  /* 同樣約 1.6:1，但淺色需要 0.23 才到得了（深色 0.17 就夠）。 */
+  --c-grid: rgba(27, 30, 33, 0.23);
+
+  /* 同樣約 1.245:1，淺色需要 0.11 才到得了（深色 0.09 就夠）。 */
+  --c-row-hover: rgba(27, 30, 33, 0.11);
   /* 淺色的漲跌色以最暗的底色 --c-page (#f1f0ec) 為基準壓到 4.6:1，
      舊值 #317f54 / #b9573b 在該底色上只有 4.29 / 4.10，未達 WCAG 1.4.3 AA。
      色相與飽和度維持不變，只降明度，兩個主題看起來仍是同一組色。 */
@@ -130,6 +173,22 @@ main:focus {
 .tnum {
   font-variant-numeric: tabular-nums lining-nums;
   font-feature-settings: "tnum" 1;
+}
+
+/* 首頁帳本的數字改等寬（IBM Plex Mono）。
+   範圍限制在 .ledger 之內——那個 class 掛在 DashboardClient 的根節點上。
+   不直接寫進 .tnum 有兩個原因：
+   一是本輪範圍只有首頁，全站 .tnum 有上百處；
+   二是 .tnum 定義在 layer 之外，權重會贏過 Tailwind 的 font-serif utility，
+   直接寫下去會把 hero 大數字與 /whatif 那五處刻意的襯線數字一起吃掉。 */
+.ledger .tnum {
+  font-family: var(--font-figures), ui-monospace, SFMono-Regular, monospace;
+}
+
+/* hero 的大數字是 font-serif 掛在外層、tnum 掛在內層的數字上。
+   襯線是刻意的視覺主角，不讓等寬蓋過去。 */
+.ledger .font-serif .tnum {
+  font-family: var(--font-serif), Georgia, serif;
 }
 
 .hide-scrollbar {
@@ -318,6 +377,32 @@ textarea:disabled {
     animation: page-in 0.22s cubic-bezier(0.4, 0, 0.2, 1) both;
   }
 
+  /* 首頁改由各區塊自己依序進場，整頁一起淡入會把節奏蓋掉，所以關掉外層那層。
+     :has() 讓這條只作用在含 .ledger 的頁面，其他頁維持原本的整頁淡入。 */
+  main:has(.ledger) {
+    animation: none;
+  }
+
+  /* 五個一級區塊依序進場：Hero → 四格 → 持倉與配置 → 趨勢 → 績效。
+     40ms 一階、單個 0.28s，最後一塊在 440ms 結束。順序本身就是版面的閱讀順序，
+     動作是在講「先看這個，再看那個」，不是裝飾。
+     backwards 讓元素在延遲期間先保持在起點，否則會先閃現再退回去。 */
+  .ledger > * {
+    animation: page-in 0.28s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+  }
+  .ledger > *:nth-child(2) {
+    animation-delay: 40ms;
+  }
+  .ledger > *:nth-child(3) {
+    animation-delay: 80ms;
+  }
+  .ledger > *:nth-child(4) {
+    animation-delay: 120ms;
+  }
+  .ledger > *:nth-child(5) {
+    animation-delay: 160ms;
+  }
+
   button:not(:disabled):active,
   [role="button"]:not(:disabled):active {
     transform: scale(0.985);
@@ -351,6 +436,7 @@ textarea:disabled {
 
   /* 三個進場動畫都是 translateY + 淡入，換掉 keyframe 就只剩淡入，時長不動。 */
   main,
+  .ledger > *,
   .ledger-row-in,
   details[open] > *:not(summary) {
     animation-name: fade-in-only;

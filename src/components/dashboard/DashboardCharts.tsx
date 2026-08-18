@@ -10,6 +10,12 @@ import {
   useState,
 } from "react";
 import { fmtFull, fmtCompact } from "@/lib/format";
+import {
+  fmtAxisValue,
+  labelCapacity,
+  niceTicks,
+  pickTickIndices,
+} from "./chart-scale";
 
 // 金額格式統一走 lib/format；fmtTwd 別名保留給既有匯入端。
 export const fmtTwd = fmtFull;
@@ -128,11 +134,10 @@ export function TrendChart({
   const padR = 16;
   const H = height;
   const vals = data.map((d) => d.value);
-  const min = Math.min(...vals);
-  const max = Math.max(...vals);
-  const pad = (max - min) * 0.12 || 1;
-  const lo = min - pad;
-  const hi = max + pad;
+  // 值域交給 niceTicks 決定：刻度落在整數，首尾刻度就是值域端點。
+  // 原本是 min/max 上下各推 12% 當留白，那段留白沒有刻度，等於白白吃掉
+  // 兩成的繪圖高度，線的振幅被壓扁。
+  const { lo, hi, ticks } = niceTicks(Math.min(...vals), Math.max(...vals));
   const nx = (i: number) => padL + (i / (data.length - 1)) * (w - padL - padR);
   const ny = (v: number) => padT + (1 - (v - lo) / (hi - lo)) * (H - padT - padB);
 
@@ -189,7 +194,6 @@ export function TrendChart({
     [hover, data.length],
   );
 
-  const ticks = [0, 0.25, 0.5, 0.75, 1].map((t) => lo + t * (hi - lo));
   const hi_ =
     hover != null && Number.isFinite(hover) && hover < data.length
       ? data[hover]
@@ -222,43 +226,48 @@ export function TrendChart({
             <stop offset="1" stopColor="var(--c-accent)" stopOpacity="0" />
           </linearGradient>
         </defs>
-        {ticks.map((t, i) => (
-          <g key={i}>
+        {ticks.map((t) => (
+          <g key={t}>
             <line
               x1={padL}
               x2={w - padR}
               y1={ny(t)}
               y2={ny(t)}
-              stroke="var(--c-border)"
+              stroke="var(--c-grid)"
               strokeWidth="1"
             />
+            {/* 基線對齊格線中央。原本是 y = ny(t) - 4 把字擺在格線「上方」，
+                最高那條的標籤落在 y=12，貼著 SVG 頂緣，而且字與格線沒有對齊，
+                讀者得自己判斷這個數字屬於哪條線。 */}
             <text
-              x={padL - 6}
-              y={ny(t) - 4}
-              className="amt tnum"
-              fontSize={10}
+              x={padL - 8}
+              y={ny(t)}
+              className="amt tnum text-[length:var(--fs-axis)]"
               fill="var(--c-faint)"
               textAnchor="end"
+              dominantBaseline="middle"
             >
-              {fmtCompact(t)}
+              {fmtAxisValue(t)}
             </text>
           </g>
         ))}
         {data.length >= 3 &&
-          [0, Math.floor((data.length - 1) / 2), data.length - 1].map((di) => (
-            <text
-              key={di}
-              x={nx(di)}
-              y={H - 8}
-              fontSize={10}
-              fill="var(--c-faint)"
-              textAnchor={
-                di === 0 ? "start" : di === data.length - 1 ? "end" : "middle"
-              }
-            >
-              {data[di].date.slice(5).replace("-", "/")}
-            </text>
-          ))}
+          pickTickIndices(data.length, labelCapacity(w - padL - padR)).map(
+            (di, i, all) => (
+              <text
+                key={di}
+                x={nx(di)}
+                y={H - 8}
+                className="text-[length:var(--fs-axis)]"
+                fill="var(--c-faint)"
+                textAnchor={
+                  i === 0 ? "start" : i === all.length - 1 ? "end" : "middle"
+                }
+              >
+                {data[di].date.slice(5).replace("-", "/")}
+              </text>
+            ),
+          )}
         <path
           d={area}
           fill="url(#trendFill)"
@@ -322,7 +331,7 @@ export function TrendChart({
           <div className="amt font-serif text-base font-semibold">
             NT$ {fmtTwd(hi_.value)}
           </div>
-          <div className="mt-px text-[11px] text-[var(--c-muted)]">
+          <div className="mt-px text-[length:var(--fs-micro)] text-[var(--c-muted)]">
             {hi_.date}
           </div>
         </div>
@@ -389,11 +398,10 @@ export function BenchChart({
   const all = keys.flatMap((k) =>
     norm[k].filter((v): v is number => v != null),
   );
-  const min = all.length ? Math.min(...all) : 95;
-  const max = all.length ? Math.max(...all) : 105;
-  const pad = (max - min) * 0.1 || 1;
-  const lo = min - pad;
-  const hi = max + pad;
+  const { lo, hi, ticks } = niceTicks(
+    all.length ? Math.min(...all) : 95,
+    all.length ? Math.max(...all) : 105,
+  );
   const nx = (i: number) => padL + (i / (data.length - 1)) * (w - padL - padR);
   const ny = (v: number) => padT + (1 - (v - lo) / (hi - lo)) * (H - padT - padB);
   const colorOf = (k: string) =>
@@ -461,8 +469,6 @@ export function BenchChart({
       setHover(next);
     }
   };
-  const ticks = [0, 0.25, 0.5, 0.75, 1].map((t) => lo + t * (hi - lo));
-
   return (
     <div
       ref={wrapRef}
@@ -483,70 +489,66 @@ export function BenchChart({
         viewBox={`0 0 ${w} ${H}`}
         style={{ display: "block", overflow: "visible" }}
       >
-        {ticks.map((t, i) => (
-          <g key={i}>
+        {ticks.map((t) => (
+          <g key={t}>
             <line
               x1={padL}
               x2={w - padR}
               y1={ny(t)}
               y2={ny(t)}
-              stroke="var(--c-border)"
+              stroke="var(--c-grid)"
               strokeWidth="1"
             />
             <text
-              x={padL - 6}
-              y={ny(t) - 4}
-              className="tnum"
-              fontSize={10}
+              x={padL - 8}
+              y={ny(t)}
+              className="tnum text-[length:var(--fs-axis)]"
               fill="var(--c-faint)"
               textAnchor="end"
+              dominantBaseline="middle"
             >
               {t.toFixed(0)}
             </text>
           </g>
         ))}
-        {data.length > 1 && (
-          <>
-            <text
-              x={nx(0)}
-              y={H - 8}
-              fontSize={10}
-              fill="var(--c-faint)"
-              textAnchor="start"
-            >
-              {data[0].date.slice(5).replace("-", "/")}
-            </text>
-            {data.length > 60 && (() => {
-              const midI = Math.floor((data.length - 1) / 2);
-              const midDate = data[midI].date;
+        {/* 起點 100 是這張圖的判讀基準，畫實一點讓「贏了大盤還輸了」一眼看出。 */}
+        {lo < 100 && hi > 100 && (
+          <line
+            x1={padL}
+            x2={w - padR}
+            y1={ny(100)}
+            y2={ny(100)}
+            stroke="var(--c-line-strong)"
+            strokeWidth="1"
+          />
+        )}
+        {data.length > 1 &&
+          pickTickIndices(data.length, labelCapacity(w - padL - padR)).map(
+            (di, i, all) => {
               const sameYear =
-                data[0].date.slice(0, 4) === data[data.length - 1].date.slice(0, 4);
-              const label = sameYear
-                ? midDate.slice(5).replace("-", "/")
-                : midDate.slice(0, 7).replace("-", "/");
+                data[0].date.slice(0, 4) ===
+                data[data.length - 1].date.slice(0, 4);
+              const date = data[di].date;
+              const label =
+                sameYear || i === 0 || i === all.length - 1
+                  ? date.slice(5).replace("-", "/")
+                  : date.slice(0, 7).replace("-", "/");
               return (
                 <text
-                  x={nx(midI)}
+                  key={di}
+                  x={nx(di)}
                   y={H - 8}
-                  fontSize={10}
+                  className="text-[length:var(--fs-axis)]"
                   fill="var(--c-faint)"
-                  textAnchor="middle"
+                  textAnchor={
+                    i === 0 ? "start" : i === all.length - 1 ? "end" : "middle"
+                  }
                 >
                   {label}
                 </text>
               );
-            })()}
-            <text
-              x={nx(data.length - 1)}
-              y={H - 8}
-              fontSize={10}
-              fill="var(--c-faint)"
-              textAnchor="end"
-            >
-              {data[data.length - 1].date.slice(5).replace("-", "/")}
-            </text>
-          </>
-        )}
+            },
+          )}
         {keys.map((k) => (
           <path
             key={k}
@@ -612,7 +614,7 @@ export function BenchChart({
           className="tooltip-pop pointer-events-none absolute top-1.5 z-[5] -translate-x-1/2 whitespace-nowrap rounded-[10px] border border-[var(--c-line-strong)] bg-[var(--c-surface-soft)] px-[11px] py-2 shadow-[var(--c-shadow)]"
           style={{ left: Math.min(Math.max(nx(hover), 90), w - 90) }}
         >
-          <div className="mb-1 text-[11px] text-[var(--c-muted)]">
+          <div className="mb-1 text-[length:var(--fs-micro)] text-[var(--c-muted)]">
             {data[hover].date}
           </div>
           {keys.map((k) => {

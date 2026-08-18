@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { Hero, HeroStat } from "./Hero";
 import { fmtTwd } from "./DashboardCharts";
@@ -8,6 +9,7 @@ import { TrendSection } from "./TrendSection";
 import { AllocationCard } from "./AllocationCard";
 import { MetricsCard } from "./MetricsCard";
 import { Holdings } from "./Holdings";
+import { StickySummary } from "./StickySummary";
 export type {
   DashSummary,
   AllocTarget,
@@ -25,6 +27,15 @@ export function DashboardClient({
 }) {
   const summary = data.summary;
 
+  /* 資產類別的選取狀態提到這裡，讓資產配置與持倉帳本共用。
+     pinned 是點下去釘住的、hovered 是滑過的暫時預覽，顯示時 hover 優先。
+     早退在 hook 之後，否則 holdings 為空時 hook 數量會變。 */
+  const [pinnedCls, setPinnedCls] = useState<string | null>(null);
+  const [hoveredCls, setHoveredCls] = useState<string | null>(null);
+  const activeCls = hoveredCls ?? pinnedCls;
+  // 精簡摘要要知道 Hero 什麼時候捲出視野。
+  const heroRef = useRef<HTMLDivElement>(null);
+
   if (!demo && data.holdings.length === 0) {
     return <FirstRun />;
   }
@@ -34,96 +45,149 @@ export function DashboardClient({
       allocation={data.allocation}
       allocTargets={data.allocTargets}
       total={summary.total}
+      pinnedCls={pinnedCls}
+      activeCls={activeCls}
+      onHover={setHoveredCls}
+      onPin={(cls) =>
+        setPinnedCls((current) => (current === cls ? null : cls))
+      }
     />
   );
   const metricsHasContent = summary.twrShowable || summary.hasIncome;
 
+  /* 三級層級。區分手段是「有沒有容器 + 間距 + 字級」，不是圓角或陰影深淺：
+     改版前五個區塊全是同一套 rounded+border+surface，權重一模一樣，
+     眼睛沒有進入點（V1）。實測那層 border 對底色只有 1.25:1，
+     問題從來不是邊界太弱，而是五個東西都戴著同一頂帽子。
+
+     一級 頂部摘要（Hero + 四格關鍵指標）：無容器，落在 page 背景。
+     二級 核心資料（持倉帳本＋資產配置、淨資產趨勢）：唯二保留 surface 容器的區塊。
+     三級 輔助（績效指標）：無容器，靠頂部 hairline 分區。
+     資產配置原本在三級，v1.2 為了讓類別選取連動持倉列而搬進二級（見下方註解）。 */
   return (
-    <div className="flex flex-col">
-      <Hero s={summary} series={data.series} demo={demo} />
-
-      <section className="mt-5 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-border)]">
-        <div className="grid grid-cols-2 gap-px sm:grid-cols-4">
-          <HeroStat
-            label="投入成本"
-            mask
-            value={`NT$ ${fmtTwd(summary.totalCost)}`}
-            sub="目前持有部位"
-          />
-          <HeroStat
-            label="未實現損益"
-            mask
-            value={`${sign(summary.unrealized)}${fmtTwd(Math.abs(summary.unrealized))}`}
-            tone={toneCls(summary.unrealized)}
-            sub={`${sign(summary.unrealizedPct)}${Math.abs(summary.unrealizedPct).toFixed(1)}%`}
-            primary
-          />
-          <HeroStat
-            label="累計已實現"
-            value={
-              summary.totalRealized === 0
-                ? "—"
-                : `${sign(summary.totalRealized)}${fmtTwd(Math.abs(summary.totalRealized))}`
-            }
-            mask
-            tone={toneCls(summary.totalRealized)}
-            sub="賣出與現金收益"
-          />
-          {summary.xirrShowable && summary.xirr != null ? (
-            <HeroStat
-              label="年化 XIRR"
-              value={`${sign(summary.xirr)}${(Math.abs(summary.xirr) * 100).toFixed(1)}%`}
-              tone={toneCls(summary.xirr)}
-              sub="資金加權報酬"
-            />
-          ) : (
-            <HeroStat
-              label="年化 XIRR"
-              value="—"
-              sub="現金流跨度未滿 90 天"
-            />
-          )}
+    /* 精簡摘要放在 .ledger 之外：它是 fixed 不佔版面，而 .ledger 的子元素數量
+       正好是進場節奏的階數（nth-child），多塞一個進去會把整組延遲往後推。 */
+    <>
+      <StickySummary s={summary} watch={heroRef} />
+      {/* .ledger 是首頁數字改等寬的作用域，規則在 globals.css。 */}
+      <div className="ledger flex flex-col">
+        <div ref={heroRef}>
+          <Hero s={summary} series={data.series} demo={demo} />
         </div>
-      </section>
 
-      <section className="mt-5 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)]">
-        <Holdings
-          demo={demo}
-          holdings={data.holdings}
-          total={summary.total}
-          marketLabel={data.marketLabel}
-          archivedCount={data.archivedCount}
-          showArchived={data.showArchived}
-        />
-      </section>
+        {/* 容器底色透出成 1px 分隔線，四格之間有線、外圍沒有框。
+            原本這層還包著卡片殼，等於「卡片裡再放四張卡」（V6）。
 
-      <TrendSection
-        series={data.series}
-        perf={data.perf}
-        benchmarks={data.benchmarks}
-        hasPerf={data.hasPerf}
-        benchNotice={data.benchNotice}
-        today={data.today}
-      />
+            負邊距抵銷格子自己的左右內距：這四格屬於一級，左緣要跟 Hero 對齊。
+            不抵銷的話量出來是 88px，而 Hero 與三級都在 68px（實測）。
+            外緣溢出的部分是格子自身的 page 底色，看不出來；抵銷量恆不大於
+            main 的 gutter（16/24/28 對 16/20/20），不會產生水平捲動。 */}
+        {/* 幣別在「同單位群組」的最上層宣告一次就好。這四格緊接在 Hero 底下、
+            屬於同一個一級摘要區，Hero 的主數字已經用大字寫了 NT$，四格再各自
+            冠一次是重複。改版前只有「投入成本」帶 NT$，另外兩個金額沒有，
+            於是同一列裡三個同單位的數字長成兩種樣子（V3）。
+            去掉而不是補齊，是因為量過寬度：手機半格可用 163px，主格（22px）
+            補上 NT$ 後八位數要 198px，會被 truncate 切掉；而且「投入成本」
+            目前的最壞情況 162px 本來就只剩 1px 餘裕。去掉之後三格都退回百來 px。
+            有共同表頭的地方（持倉表格）改在表頭標一次，規則一致。 */}
+        <section className="-mx-4 bg-[var(--c-border)] sm:-mx-5">
+          <div className="grid grid-cols-2 gap-px sm:grid-cols-4">
+            <HeroStat
+              label="投入成本"
+              mask
+              value={fmtTwd(summary.totalCost)}
+              sub="目前持有部位"
+            />
+            <HeroStat
+              label="未實現損益"
+              mask
+              value={`${sign(summary.unrealized)}${fmtTwd(Math.abs(summary.unrealized))}`}
+              tone={toneCls(summary.unrealized)}
+              sub={`${sign(summary.unrealizedPct)}${Math.abs(summary.unrealizedPct).toFixed(1)}%`}
+              primary
+            />
+            <HeroStat
+              label="累計已實現"
+              value={
+                summary.totalRealized === 0
+                  ? "—"
+                  : `${sign(summary.totalRealized)}${fmtTwd(Math.abs(summary.totalRealized))}`
+              }
+              mask
+              tone={toneCls(summary.totalRealized)}
+              sub="賣出與現金收益"
+            />
+            {summary.xirrShowable && summary.xirr != null ? (
+              <HeroStat
+                label="年化 XIRR"
+                value={`${sign(summary.xirr)}${(Math.abs(summary.xirr) * 100).toFixed(1)}%`}
+                tone={toneCls(summary.xirr)}
+                sub="資金加權報酬"
+              />
+            ) : (
+              <HeroStat
+                label="年化 XIRR"
+                value="—"
+                sub="現金流跨度未滿 90 天"
+              />
+            )}
+          </div>
+        </section>
 
-      {metricsHasContent ? (
-        <section className="mt-5 grid grid-cols-1 gap-3 min-[920px]:grid-cols-2">
-          <div className="overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 sm:p-6">
+        {/* 二級起點。與一級之間拉開 36px，是全頁最大的一段間距，
+            用留白把「摘要」和「明細」切成兩塊。二級彼此只隔 16px，讀起來成一組。
+
+            資產配置從三級搬上來，跟持倉帳本併成同一張卡：兩者講的是同一批部位，
+            一個按帳戶、一個按類別。原本配置在頁尾，實測 1280×800 下持倉表格在
+            y 554–951、資產配置在 y 1466–1912，中間隔 515px，視窗要高於約 1360px
+            才可能同時看到——把類別選取連動到持倉列的話，效果會落在畫面外。
+
+            並排的斷點是算出來的：表格自身 min-w 760px，配置欄要 344px，
+            main 的內容寬是 min(vw,1200)−56。1180px 時內容 1124px 剛好
+            760+20+344；再窄就會逼表格長出橫向捲軸，所以以下改成上下堆疊
+            （堆疊時配置仍緊接在持倉之後，不再隔著整張趨勢圖）。 */}
+        <section className="mt-9 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] min-[1180px]:grid min-[1180px]:grid-cols-[minmax(760px,1fr)_344px]">
+          <div className="min-w-0">
+            <Holdings
+              demo={demo}
+              holdings={data.holdings}
+              total={summary.total}
+              marketLabel={data.marketLabel}
+              archivedCount={data.archivedCount}
+              showArchived={data.showArchived}
+              activeCls={activeCls}
+            />
+          </div>
+          <div className="border-t border-[var(--c-border)] px-4 py-5 sm:px-6 min-[1180px]:border-l min-[1180px]:border-t-0 min-[1180px]:py-6">
             {allocation}
           </div>
-          <div className="overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 sm:p-6">
-            <MetricsCard s={summary} />
-          </div>
         </section>
-      ) : (
-        <section className="mt-5 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 sm:p-6">
-          {allocation}
-          <p className="mt-5 border-t border-[var(--c-border)] pt-4 text-[12px] text-[var(--c-faint)]">
-            TWR、回撤與 Sharpe 會在每日淨值快照滿 30 天後顯示。
-          </p>
+
+        <TrendSection
+          series={data.series}
+          perf={data.perf}
+          benchmarks={data.benchmarks}
+          hasPerf={data.hasPerf}
+          benchNotice={data.benchNotice}
+          today={data.today}
+        />
+
+        {/* 三級。脫掉容器落回 page 背景，靠頂線分區；與二級之間隔 40px，
+            把「這是附註」講清楚。資產配置搬去二級之後這裡只剩績效指標，
+            內容欄寬收在 640px：四格數字撐滿 1144px 會稀得讀不成一組。 */}
+        <section className="mt-10 border-t border-[var(--c-border)] pt-7">
+          {metricsHasContent ? (
+            <div className="max-w-[640px]">
+              <MetricsCard s={summary} />
+            </div>
+          ) : (
+            <p className="text-[length:var(--fs-sm)] text-[var(--c-faint)]">
+              TWR、回撤與 Sharpe 會在每日淨值快照滿 30 天後顯示。
+            </p>
+          )}
         </section>
-      )}
-    </div>
+  </div>
+    </>
   );
 }
 
@@ -140,23 +204,23 @@ function FirstRun() {
       >
         <path d="M8 1 L15 8 L8 15 L1 8 Z" />
       </svg>
-      <h2 className="mt-4 text-[20px] font-semibold tracking-[-0.02em]">
+      <h2 className="mt-4 text-[length:var(--fs-xl)] font-semibold tracking-[-0.02em]">
         從第一個資產開始
       </h2>
-      <p className="mt-2 text-[13px] leading-relaxed text-[var(--c-muted)]">
+      <p className="mt-2 text-[length:var(--fs-sm)] leading-relaxed text-[var(--c-muted)]">
         建立帳戶後，這裡會開始累積淨值趨勢、損益、配置與大盤對照。
         已有歷史紀錄時，也可以直接從 CSV 匯入。
       </p>
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
         <Link
           href="/accounts/new"
-          className="rounded-[var(--r-control)] bg-[var(--c-accent)] px-5 py-2.5 text-[13px] font-semibold text-[var(--c-btn-strong-text)] hover:brightness-110"
+          className="rounded-[var(--r-control)] bg-[var(--c-accent)] px-5 py-2.5 text-[length:var(--fs-sm)] font-semibold text-[var(--c-btn-strong-text)] hover:brightness-110"
         >
           建立第一個帳戶
         </Link>
         <Link
           href="/activity"
-          className="rounded-[var(--r-control)] border border-[var(--c-border)] px-5 py-2.5 text-[13px] font-medium text-[var(--c-muted)] hover:border-[var(--c-line-strong)] hover:text-[var(--c-text)]"
+          className="rounded-[var(--r-control)] border border-[var(--c-border)] px-5 py-2.5 text-[length:var(--fs-sm)] font-medium text-[var(--c-muted)] hover:border-[var(--c-line-strong)] hover:text-[var(--c-text)]"
         >
           匯入 CSV
         </Link>
