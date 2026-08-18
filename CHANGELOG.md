@@ -6,7 +6,11 @@
 
 ## [Unreleased]
 
-首頁總覽的視覺層級與互動整輪重做（v1.2）。只動呈現，資料模型、計算口徑、
+（尚無）
+
+## [1.2.0] - 2026-08-18
+
+首頁總覽的視覺層級與互動整輪重做。只動呈現，資料模型、計算口徑、
 路由與後端行為皆未變動；`xirr` / `metrics` / `whatif` 一行未改，測試數值不變。
 字體替換會連帶影響全站的拉丁字，其餘改動的作用域都在首頁。
 
@@ -63,6 +67,26 @@
 - 持倉表格的配置長條原本軌道固定 48px，最大部位 39.4%，實測填色 2.8–18.9px，
   最小的一格是個 2.8px 的點。軌道改成撐滿欄寬後為 7–47.7px。
 - `/methodology` 連結「指標怎麼算」高度只有 17px，低於 WCAG 2.5.8（AA）的 24×24。
+- **沖銷帶手續費的交易會失敗**。`20260810230000_transaction_fee.sql` 給 `fee_twd` 加的是
+  `check (fee_twd is null or fee_twd >= 0)`，而 45 分鐘後的
+  `20260810234500_transaction_reversal.sql` 沖銷時寫的是 `-v_txn.fee_twd`，兩者矛盾。
+  結果是「沖銷較早的一筆」只要原始交易記過手續費就整筆 rollback。這在 v1.1.0
+  上線當天就存在。放寬約束成 `fee_twd is null or fee_twd >= 0 or reversal_of is not null`：
+  沖銷列是 contra entry，`cashflow_twd` 與 `realized_pnl` 早就是負的，手續費跟著變號才一致。
+
+### Internal
+- **CI 的 Gate 4（Postgres 整合測試）修好**。自 2026-08-12（v1.1.0 發版當天）起每一次都紅，
+  錯誤是 `42723 function "execute_recurring_plan_mutation" already exists with same argument
+  types`：三支整合測試共用同一個 Postgres 卻不清 schema，而 migration 改函式簽名用的是
+  `drop <舊簽名>` + `create <新簽名>`，前一支留下的新簽名不在後一支的 drop 清單裡。
+  各檔 `beforeEach` 的 `truncate` 只清資料表、清不掉函式。改成套 SQL 前先
+  `drop schema public / auth cascade` 再重建。修好之後才浮出上面那條沖銷手續費的 bug——
+  那條測試案例一直都在，只是從來沒真正跑過。
+
+### Migration
+- **必跑**：`supabase/migrations/20260818130000_reversal_negative_fee.sql`。
+  不跑的話「沖銷較早的一筆」對記過手續費的交易仍然會失敗。
+  既有部署若已完成 1–13，只需執行這一支。執行順序見 `supabase/README.md`。
 
 ## [1.1.0] - 2026-08-12
 
@@ -164,6 +188,7 @@
 ### Migration
 - 需先套用 `supabase/migrations/20260718032234_stackworth_v1.sql` 才能使用新的需登入頁面（決策日誌、歷史重播、月報）。請先在測試資料庫執行；本版本沒有直接修改 production。
 
-[Unreleased]: https://github.com/zhuang060329-bit/portfolio-tracker/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/zhuang060329-bit/portfolio-tracker/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/zhuang060329-bit/portfolio-tracker/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/zhuang060329-bit/portfolio-tracker/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/zhuang060329-bit/portfolio-tracker/releases/tag/v1.0.0
