@@ -144,6 +144,22 @@ export function Holdings({
 
           <div className="mt-4 hidden overflow-x-auto md:block">
             <table className="w-full min-w-[760px] border-collapse text-[length:var(--fs-sm)]">
+              {/* 改版前欄寬全交給瀏覽器自動分配，結果與資訊量相反：實測「配置」
+                  拿到 243px（全表最寬）卻只裝得下 93px 的內容，「市場」用 167px
+                  放兩三個字，而會被 truncate 的「帳戶」只有 218px。
+                  這裡用百分比明寫，把空間還給需要的欄。 */}
+              <colgroup>
+                <col className="w-[24%]" />
+                {/* 市場 13%：表格最窄是 760px（min-w），13% = 99px，扣掉 px-5 的
+                    40px 剛好放得下最長的「加密貨幣」（13px × 4 = 52px）。
+                    先前給 11% 時實測那格斷成「加密貨 / 幣」——中日文可以在任何
+                    字之間斷行，min-content 只有一個字，瀏覽器不會替你擋。 */}
+                <col className="w-[13%]" />
+                <col className="w-[19%]" />
+                <col className="w-[15%]" />
+                <col className="w-[12%]" />
+                <col className="w-[17%]" />
+              </colgroup>
               <thead>
                 <tr className="border-y border-[var(--c-border)] bg-[var(--c-surface-soft)] text-[length:var(--fs-micro)] font-semibold tracking-[0.06em] text-[var(--c-muted)]">
                   <TableHead
@@ -221,15 +237,21 @@ export function Holdings({
                           </div>
                         </div>
                       </td>
-                      <td className="px-5 py-4 text-left text-[var(--c-muted)]">
+                      <td className="whitespace-nowrap px-5 py-4 text-left text-[var(--c-muted)]">
                         {marketLabel[holding.market] ?? holding.market}
                       </td>
-                      <td className="px-5 py-4 text-right">
+                      {/* 條改成撐滿欄寬。原本軌道固定 48px，而最大部位只有 39.4%，
+                          實測填色 2.8–18.9px，5.8% 那格是個 2.8px 的點，看不出長短。
+                          軌道跟著欄寬伸縮後同一組資料是 8–57px，才比得出來。
+                          刻度維持 0–100% 絕對值，不改成「相對最大列」：滿格代表
+                          單一帳戶吃掉整個組合，那條空白本身就是集中度的資訊。
+                          軌道底色對卡片只有 1.25:1，留白不會變成噪音。 */}
+                      <td className="px-5 py-4">
                         {share == null ? (
-                          <span className="text-[var(--c-faint)]">—</span>
+                          <span className="block text-right text-[var(--c-faint)]">—</span>
                         ) : (
-                          <span className="inline-flex items-center justify-end gap-2.5">
-                            <span className="h-1 w-12 overflow-hidden bg-[var(--c-border)]">
+                          <span className="flex items-center gap-3">
+                            <span className="h-1 min-w-0 flex-1 overflow-hidden bg-[var(--c-border)]">
                               <span
                                 className="block h-full"
                                 style={{
@@ -238,7 +260,7 @@ export function Holdings({
                                 }}
                               />
                             </span>
-                            <span className="w-9 text-right text-[length:var(--fs-micro)] text-[var(--c-muted)] tnum">
+                            <span className="w-11 shrink-0 text-right text-[length:var(--fs-micro)] text-[var(--c-muted)] tnum">
                               {share.toFixed(1)}%
                             </span>
                           </span>
