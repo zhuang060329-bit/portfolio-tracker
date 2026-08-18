@@ -60,7 +60,8 @@ export function TrendSection({
     : 0;
 
   return (
-    <section className="mt-5 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)]">
+    /* 二級容器。與上方持倉帳本只隔 16px：兩者同級，讀起來要成一組。 */
+    <section className="mt-4 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)]">
       <div className="flex flex-col gap-4 px-4 pb-2 pt-5 sm:flex-row sm:items-start sm:justify-between sm:px-6 sm:pt-6">
         <div>
           <h2 className="text-[17px] font-semibold tracking-[-0.015em] sm:text-[18px]">

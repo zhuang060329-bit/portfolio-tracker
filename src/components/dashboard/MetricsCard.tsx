@@ -88,14 +88,20 @@ export function MetricsCard({ s }: { s: DashSummary }) {
           </a>
         }
       />
-      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-border)]">
+      {/* 去掉圓角外框：這裡原本是「卡片裡再放一個盒子」（V6），兩層圓角兩層邊。
+          現在三級本身沒有容器，四格之間只留底色透出的 1px 分隔線。 */}
+      <div className="grid grid-cols-2 gap-px bg-[var(--c-border)]">
         {(metrics ?? [
           { label: "TWR 累積", value: "—", tone: "flat" as Tone, hint: "快照未滿 30 天" },
           { label: "TWR 年化", value: "—", tone: "flat" as Tone, hint: "快照未滿 30 天" },
           { label: "最大回撤", value: "—", tone: "flat" as Tone, hint: "快照未滿 30 天" },
           { label: "Sharpe", value: "—", tone: "flat" as Tone, hint: "快照未滿 30 天" },
-        ]).map((metric) => (
-          <div key={metric.label} className="bg-[var(--c-surface)] px-3.5 py-3.5 sm:px-4">
+        ]).map((metric, index) => (
+          /* 沒有外框之後，內距只留在分隔線那一側，格子內容才會與區段左右緣切齊。 */
+          <div
+            key={metric.label}
+            className={`bg-[var(--c-page)] py-3.5 ${index % 2 === 0 ? "pr-4" : "pl-4"}`}
+          >
             <div className="text-[10px] font-medium text-[var(--c-muted)]">
               {metric.label}
             </div>

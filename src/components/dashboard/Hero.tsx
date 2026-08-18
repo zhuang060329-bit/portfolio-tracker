@@ -112,7 +112,9 @@ export function HeroStat({
   mask?: boolean;
 }) {
   return (
-    <div className="min-w-0 bg-[var(--c-surface)] px-4 py-4 sm:px-5 sm:py-[18px]">
+    /* 底色跟著頁面而不是卡片：這四格屬於一級摘要區，不再是卡片內容。
+       仍需要明確的底色，因為父層用自身底色透出當分隔線。 */
+    <div className="min-w-0 bg-[var(--c-page)] px-4 py-4 sm:px-5 sm:py-[18px]">
       <div className="text-[11px] font-medium text-[var(--c-muted)]">{label}</div>
       <div
         className={`mt-2 truncate ${primary ? "text-[23px]" : "text-[20px]"} font-semibold tracking-[-0.025em] tnum ${
