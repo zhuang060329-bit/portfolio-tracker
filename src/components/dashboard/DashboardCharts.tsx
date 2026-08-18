@@ -242,8 +242,7 @@ export function TrendChart({
             <text
               x={padL - 8}
               y={ny(t)}
-              className="amt tnum"
-              fontSize={10}
+              className="amt tnum text-[length:var(--fs-axis)]"
               fill="var(--c-faint)"
               textAnchor="end"
               dominantBaseline="middle"
@@ -259,7 +258,7 @@ export function TrendChart({
                 key={di}
                 x={nx(di)}
                 y={H - 8}
-                fontSize={10}
+                className="text-[length:var(--fs-axis)]"
                 fill="var(--c-faint)"
                 textAnchor={
                   i === 0 ? "start" : i === all.length - 1 ? "end" : "middle"
@@ -332,7 +331,7 @@ export function TrendChart({
           <div className="amt font-serif text-base font-semibold">
             NT$ {fmtTwd(hi_.value)}
           </div>
-          <div className="mt-px text-[11px] text-[var(--c-muted)]">
+          <div className="mt-px text-[length:var(--fs-micro)] text-[var(--c-muted)]">
             {hi_.date}
           </div>
         </div>
@@ -503,8 +502,7 @@ export function BenchChart({
             <text
               x={padL - 8}
               y={ny(t)}
-              className="tnum"
-              fontSize={10}
+              className="tnum text-[length:var(--fs-axis)]"
               fill="var(--c-faint)"
               textAnchor="end"
               dominantBaseline="middle"
@@ -540,7 +538,7 @@ export function BenchChart({
                   key={di}
                   x={nx(di)}
                   y={H - 8}
-                  fontSize={10}
+                  className="text-[length:var(--fs-axis)]"
                   fill="var(--c-faint)"
                   textAnchor={
                     i === 0 ? "start" : i === all.length - 1 ? "end" : "middle"
@@ -616,7 +614,7 @@ export function BenchChart({
           className="tooltip-pop pointer-events-none absolute top-1.5 z-[5] -translate-x-1/2 whitespace-nowrap rounded-[10px] border border-[var(--c-line-strong)] bg-[var(--c-surface-soft)] px-[11px] py-2 shadow-[var(--c-shadow)]"
           style={{ left: Math.min(Math.max(nx(hover), 90), w - 90) }}
         >
-          <div className="mb-1 text-[11px] text-[var(--c-muted)]">
+          <div className="mb-1 text-[length:var(--fs-micro)] text-[var(--c-muted)]">
             {data[hover].date}
           </div>
           {keys.map((k) => {

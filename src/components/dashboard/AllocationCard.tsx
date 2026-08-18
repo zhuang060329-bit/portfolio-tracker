@@ -53,23 +53,23 @@ export function AllocationCard({
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
             {selected ? (
               <>
-                <div className="text-[11px] text-[var(--c-muted)]">
+                <div className="text-[length:var(--fs-micro)] text-[var(--c-muted)]">
                   {selected.label}
                 </div>
-                <div className="mt-1 text-[24px] font-semibold tracking-[-0.03em] tnum">
+                <div className="mt-1 text-[length:var(--fs-2xl)] font-semibold tracking-[-0.03em] tnum">
                   {selected.pct.toFixed(1)}%
                 </div>
-                <div className="amt mt-1 text-[11px] text-[var(--c-faint)] tnum">
+                <div className="amt mt-1 text-[length:var(--fs-micro)] text-[var(--c-faint)] tnum">
                   NT$ {fmtCompact(selected.value)}
                 </div>
               </>
             ) : (
               <>
-                <div className="text-[11px] text-[var(--c-muted)]">總資產</div>
-                <div className="amt mt-1 text-[24px] font-semibold tracking-[-0.03em] tnum">
+                <div className="text-[length:var(--fs-micro)] text-[var(--c-muted)]">總資產</div>
+                <div className="amt mt-1 text-[length:var(--fs-2xl)] font-semibold tracking-[-0.03em] tnum">
                   {fmtCompact(total)}
                 </div>
-                <div className="mt-1 text-[11px] text-[var(--c-faint)]">
+                <div className="mt-1 text-[length:var(--fs-micro)] text-[var(--c-faint)]">
                   {allocation.length} 類
                 </div>
               </>
@@ -103,7 +103,7 @@ export function AllocationCard({
                   className="h-2 w-2 rounded-[2px]"
                   style={{ background: allocColor(item.cls) }}
                 />
-                <span className="truncate text-[12px]">{item.label}</span>
+                <span className="truncate text-[length:var(--fs-sm)]">{item.label}</span>
                 <span className="relative h-[5px] bg-[var(--c-border)]">
                   <span
                     className="absolute inset-y-0 left-0 transition-[width] duration-700 ease-out"
@@ -123,12 +123,12 @@ export function AllocationCard({
                   )}
                 </span>
                 <span className="flex flex-col items-end leading-tight">
-                  <span className="text-[12px] font-medium tnum">
+                  <span className="text-[length:var(--fs-sm)] font-medium tnum">
                     {item.actual.toFixed(1)}%
                   </span>
                   {drift && (
                     <span
-                      className="mt-0.5 text-[9px] font-medium tnum"
+                      className="mt-0.5 text-[length:var(--fs-micro)] font-medium tnum"
                       style={{ color: drift.tone }}
                     >
                       {drift.text}
@@ -138,7 +138,7 @@ export function AllocationCard({
               </button>
             );
           })}
-          <p className="mt-1 text-[10px] text-[var(--c-faint)]">
+          <p className="mt-1 text-[length:var(--fs-micro)] text-[var(--c-faint)]">
             細線標示目標配置
           </p>
         </div>

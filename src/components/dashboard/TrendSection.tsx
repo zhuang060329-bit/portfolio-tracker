@@ -64,10 +64,10 @@ export function TrendSection({
     <section className="mt-4 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)]">
       <div className="flex flex-col gap-4 px-4 pb-2 pt-5 sm:flex-row sm:items-start sm:justify-between sm:px-6 sm:pt-6">
         <div>
-          <h2 className="text-[17px] font-semibold tracking-[-0.015em] sm:text-[18px]">
+          <h2 className="text-[length:var(--fs-lg)] font-semibold tracking-[-0.015em]">
             {mode === "value" ? "淨資產趨勢" : "績效對照"}
           </h2>
-          <p className="mt-1 text-[12px] text-[var(--c-muted)]">
+          <p className="mt-1 text-[length:var(--fs-sm)] text-[var(--c-muted)]">
             {mode === "value" ? (
               enoughValue ? (
                 <>
@@ -96,7 +96,7 @@ export function TrendSection({
                 type="button"
                 aria-pressed={mode === item}
                 onClick={() => setMode(item)}
-                className={`min-h-9 whitespace-nowrap rounded-[5px] px-3 text-[12px] font-medium ${
+                className={`min-h-9 whitespace-nowrap rounded-[5px] px-3 text-[length:var(--fs-sm)] font-medium ${
                   mode === item
                     ? "bg-[var(--c-surface-soft)] text-[var(--c-text)]"
                     : "text-[var(--c-muted)]"
@@ -129,7 +129,7 @@ export function TrendSection({
 
       {mode === "bench" && benchNotice && (
         <p
-          className="px-4 text-[11px] text-[var(--c-faint)] sm:px-6"
+          className="px-4 text-[length:var(--fs-micro)] text-[var(--c-faint)] sm:px-6"
           role="status"
         >
           {benchNotice}
@@ -147,7 +147,7 @@ export function TrendSection({
               /* 區間鈕是主圖表上最常按的控制項，拉到 44×44 過 WCAG 2.5.5（AAA）。
                  同檔另外三處 min-h-9（模式切換、圖例鈕）不在本次範圍，仍是 36px，
                  過 2.5.8（AA，24px）但未達 AAA。 */
-              className={`min-h-11 min-w-11 shrink-0 rounded-[var(--r-control)] px-2.5 text-[11px] font-semibold ${
+              className={`min-h-11 min-w-11 shrink-0 rounded-[var(--r-control)] px-2.5 text-[length:var(--fs-micro)] font-semibold ${
                 range === item.key
                   ? "bg-[var(--c-accent-soft)] text-[var(--c-accent)]"
                   : "text-[var(--c-muted)] hover:bg-[var(--c-surface-soft)] hover:text-[var(--c-text)]"
@@ -211,7 +211,7 @@ function LegendButton({
       type="button"
       aria-pressed={on}
       onClick={onClick}
-      className={`inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-[var(--r-control)] border border-[var(--c-border)] px-2.5 text-[11px] font-medium text-[var(--c-text)] hover:border-[var(--c-line-strong)] hover:bg-[var(--c-surface-soft)] ${
+      className={`inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-[var(--r-control)] border border-[var(--c-border)] px-2.5 text-[length:var(--fs-micro)] font-medium text-[var(--c-text)] hover:border-[var(--c-line-strong)] hover:bg-[var(--c-surface-soft)] ${
         on ? "" : "opacity-40"
       }`}
     >

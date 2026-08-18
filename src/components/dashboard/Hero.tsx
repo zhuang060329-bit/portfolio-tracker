@@ -31,11 +31,11 @@ export function Hero({
             金額降級成 div，標題另外用 sr-only 給。sr-only 是 clip-path 不是
             display:none，元素仍留在無障礙樹裡，而 CardHead 用 h2，層級接得上。 */}
         <h1 className="sr-only">投資組合總覽</h1>
-        <p className="text-[11px] font-semibold tracking-[0.08em] text-[var(--c-muted)]">
+        <p className="text-[length:var(--fs-micro)] font-semibold tracking-[0.08em] text-[var(--c-muted)]">
           總淨資產
         </p>
         <div className="mt-3 flex min-w-0 items-baseline gap-2 font-serif">
-          <span className="shrink-0 text-[14px] font-medium text-[var(--c-faint)] sm:text-[16px]">
+          <span className="shrink-0 text-[length:var(--fs-sm)] font-medium text-[var(--c-faint)] sm:text-[length:var(--fs-md)]">
             NT$
           </span>
           {/* 這裡原本用 truncate，數字的頂端會被切掉。
@@ -48,12 +48,12 @@ export function Hero({
               （拉高 leading 或補 padding 都會讓這塊長高約 6px）。
               truncate 原本要防的水平溢出實測用不到：375px 下可用寬度 305px，
               連 NT$9,999,999,999 都只要 265px。 */}
-          <span className="amt min-w-0 whitespace-nowrap text-[clamp(40px,7vw,68px)] font-medium leading-[0.92] tracking-[-0.045em] tnum">
+          <span className="amt min-w-0 whitespace-nowrap text-[length:var(--fs-display)] font-medium leading-[0.92] tracking-[-0.045em] tnum">
             {Math.round(total).toLocaleString("en-US")}
           </span>
         </div>
 
-        <div className="mt-4 flex flex-col gap-2 text-[12px] sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4 sm:gap-y-1">
+        <div className="mt-4 flex flex-col gap-2 text-[length:var(--fs-sm)] sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4 sm:gap-y-1">
           {hasDay && (
             <span className={`font-semibold tnum ${TONE_TEXT[s.dayChange! >= 0 ? "up" : "down"]}`}>
               <span className="amt">
@@ -79,11 +79,11 @@ export function Hero({
       {recent.length >= 2 && (
         <div className="border-t border-[var(--c-border)] pt-4 sm:border-l sm:border-t-0 sm:pl-6 sm:pt-0">
           <div className="mb-2 flex items-center justify-between gap-3">
-            <span className="text-[10px] font-semibold tracking-[0.06em] text-[var(--c-muted)]">
+            <span className="text-[length:var(--fs-micro)] font-semibold tracking-[0.06em] text-[var(--c-muted)]">
               近 30 日
             </span>
             <span
-              className={`amt text-[11px] font-semibold tnum ${up30 ? "text-[var(--c-up)]" : "text-[var(--c-down)]"}`}
+              className={`amt text-[length:var(--fs-micro)] font-semibold tnum ${up30 ? "text-[var(--c-up)]" : "text-[var(--c-down)]"}`}
             >
               {sign(change30)}NT${" "}
               {Math.abs(Math.round(change30)).toLocaleString("en-US")}
@@ -115,15 +115,20 @@ export function HeroStat({
     /* 底色跟著頁面而不是卡片：這四格屬於一級摘要區，不再是卡片內容。
        仍需要明確的底色，因為父層用自身底色透出當分隔線。 */
     <div className="min-w-0 bg-[var(--c-page)] px-4 py-4 sm:px-5 sm:py-[18px]">
-      <div className="text-[11px] font-medium text-[var(--c-muted)]">{label}</div>
+      <div className="text-[length:var(--fs-micro)] font-medium text-[var(--c-muted)]">{label}</div>
+      {/* 手機降一級。實測 390 寬時半格可用 163px，而「NT$ 1,075,921」在
+          22px 等寬下要 164px——差 1px 就被 truncate 切成「NT$ 1,075...」。
+          等寬數字比原本的 sans 寬，這是換字體帶進來的，改前 20px sans 沒事。
+          18px 下同一串只要 141px，八位數的組合也還有餘裕。
+          桌機半格約 255px，維持 22 / 26 不動。 */}
       <div
-        className={`mt-2 truncate ${primary ? "text-[23px]" : "text-[20px]"} font-semibold tracking-[-0.025em] tnum ${
+        className={`mt-2 truncate ${primary ? "text-[length:var(--fs-xl)] sm:text-[length:var(--fs-2xl)]" : "text-[length:var(--fs-lg)] sm:text-[length:var(--fs-xl)]"} font-semibold tracking-[-0.025em] tnum ${
           tone ? TONE_TEXT[tone] : ""
         } ${mask ? "amt" : ""}`}
       >
         {value}
       </div>
-      {sub && <div className="mt-1 text-[11px] text-[var(--c-faint)]">{sub}</div>}
+      {sub && <div className="mt-1 text-[length:var(--fs-micro)] text-[var(--c-faint)]">{sub}</div>}
     </div>
   );
 }

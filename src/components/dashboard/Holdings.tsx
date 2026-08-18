@@ -86,10 +86,10 @@ export function Holdings({
     <section className="pb-2 pt-5 sm:pb-4 sm:pt-6">
       <div className="flex items-start justify-between gap-4 px-4 sm:px-6">
         <div>
-          <h2 className="text-[17px] font-semibold tracking-[-0.015em] sm:text-[18px]">
+          <h2 className="text-[length:var(--fs-lg)] font-semibold tracking-[-0.015em]">
             持倉帳本
           </h2>
-          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-[var(--c-muted)]">
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[length:var(--fs-sm)] text-[var(--c-muted)]">
             <span>{activeCount} 個有效帳戶</span>
             {archivedCount > 0 && (
               <>
@@ -110,7 +110,7 @@ export function Holdings({
         {!demo && (
           <Link
             href="/accounts/new"
-            className="inline-flex min-h-10 shrink-0 items-center rounded-[var(--r-control)] bg-[var(--c-accent)] px-3.5 text-[12px] font-semibold text-[var(--c-btn-strong-text)] hover:brightness-110 sm:px-4 sm:text-[13px]"
+            className="inline-flex min-h-10 shrink-0 items-center rounded-[var(--r-control)] bg-[var(--c-accent)] px-3.5 text-[length:var(--fs-sm)] font-semibold text-[var(--c-btn-strong-text)] hover:brightness-110 sm:px-4"
           >
             新增帳戶
           </Link>
@@ -130,7 +130,7 @@ export function Holdings({
                 type="button"
                 aria-pressed={sortKey === key}
                 onClick={() => setSort(key)}
-                className={`min-h-9 shrink-0 rounded-[var(--r-control)] border px-3 text-[12px] font-medium ${
+                className={`min-h-9 shrink-0 rounded-[var(--r-control)] border px-3 text-[length:var(--fs-sm)] font-medium ${
                   sortKey === key
                     ? "border-[var(--c-line-strong)] bg-[var(--c-surface-soft)] text-[var(--c-text)]"
                     : "border-[var(--c-border)] text-[var(--c-muted)]"
@@ -143,9 +143,9 @@ export function Holdings({
           </div>
 
           <div className="mt-4 hidden overflow-x-auto md:block">
-            <table className="w-full min-w-[760px] border-collapse text-[13px]">
+            <table className="w-full min-w-[760px] border-collapse text-[length:var(--fs-sm)]">
               <thead>
-                <tr className="border-y border-[var(--c-border)] bg-[var(--c-surface-soft)] text-[10px] font-semibold tracking-[0.06em] text-[var(--c-muted)]">
+                <tr className="border-y border-[var(--c-border)] bg-[var(--c-surface-soft)] text-[length:var(--fs-micro)] font-semibold tracking-[0.06em] text-[var(--c-muted)]">
                   <TableHead
                     onClick={() => setSort("name")}
                     align="left"
@@ -210,7 +210,7 @@ export function Holdings({
                                 {holding.name}
                               </Link>
                             )}
-                            <div className="mt-0.5 flex items-center gap-2 text-[10px] text-[var(--c-faint)]">
+                            <div className="mt-0.5 flex items-center gap-2 text-[length:var(--fs-micro)] text-[var(--c-faint)]">
                               {holding.symbol && <span>{holding.symbol}</span>}
                               {holding.status === "archived" && (
                                 <span className="rounded border border-[var(--c-border)] px-1.5 py-0.5">
@@ -238,7 +238,7 @@ export function Holdings({
                                 }}
                               />
                             </span>
-                            <span className="w-9 text-right text-[11px] text-[var(--c-muted)] tnum">
+                            <span className="w-9 text-right text-[length:var(--fs-micro)] text-[var(--c-muted)] tnum">
                               {share.toFixed(1)}%
                             </span>
                           </span>
@@ -265,7 +265,7 @@ export function Holdings({
                               {sign(pnl)}
                               {fmtTwd(Math.abs(pnl))}
                             </div>
-                            <div className="mt-0.5 text-[10px] opacity-80">
+                            <div className="mt-0.5 text-[length:var(--fs-micro)] opacity-80">
                               {sign(pnl)}
                               {Math.abs(pnlPct).toFixed(1)}%
                             </div>
@@ -301,10 +301,10 @@ export function Holdings({
                         style={{ background: allocColor(holding.cls) }}
                       />
                       <div className="min-w-0">
-                        <div className="truncate text-[14px] font-medium">
+                        <div className="truncate text-[length:var(--fs-sm)] font-medium">
                           {holding.name}
                         </div>
-                        <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-[var(--c-muted)]">
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[length:var(--fs-micro)] text-[var(--c-muted)]">
                           <span>{marketLabel[holding.market] ?? holding.market}</span>
                           {holding.symbol && (
                             <>
@@ -321,16 +321,16 @@ export function Holdings({
                       </div>
                     </div>
                     <div className="shrink-0 text-right">
-                      <div className="amt text-[15px] font-semibold tnum">
+                      <div className="amt text-[length:var(--fs-md)] font-semibold tnum">
                         NT$ {fmtTwd(holding.value)}
                       </div>
-                      <div className="mt-1 text-[10px] text-[var(--c-muted)]">
+                      <div className="mt-1 text-[length:var(--fs-micro)] text-[var(--c-muted)]">
                         {share == null ? "不計入配置" : `配置 ${share.toFixed(1)}%`}
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-3 grid grid-cols-2 border-t border-[var(--c-border-soft)] pt-3 text-[11px]">
+                  <div className="mt-3 grid grid-cols-2 border-t border-[var(--c-border-soft)] pt-3 text-[length:var(--fs-micro)]">
                     <div>
                       <span className="text-[var(--c-faint)]">今日</span>
                       <span

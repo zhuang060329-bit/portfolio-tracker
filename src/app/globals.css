@@ -42,6 +42,33 @@
   --r-control: 7px;
   --r-pill: 999px;
   --header-h: 58px;
+
+  /* 字級尺標。首頁改版前用了 15 個不同 px 值（8/9/10/11/12/13/14/15/16/17/
+     18/20/21/23/24 + clamp），11、12、13 三級在視覺上幾乎分不出來，
+     等於沒有尺標。收成 7 級，級距在底部小、頂部大——密集的表格區需要細分，
+     大數字之間需要拉開。
+
+     刻意不用 Tailwind 的 @theme 覆寫 text-xs / text-sm：那兩個 utility
+     全站用了 243 次，改了會波及 28 個路由，本輪範圍只有首頁。
+
+     --fs-axis   圖表軸標。比 micro 再小一級是刻意的：軸標是圖表家具不是內文，
+                 而且 Y 軸只有 52px 留白，放大到 11px 會讓「3,000萬」這種
+                 標籤溢出左緣。
+     --fs-micro  次要說明、單位、變化幅度（pp）
+     --fs-sm     表格內容、內文、三級標題
+     --fs-md     表格主數字、強調
+     --fs-lg     二級區段標題
+     --fs-xl     一級四格數字、績效指標數字
+     --fs-2xl    圓環中心、一級 primary 數字
+     --fs-display  hero 總淨資產 */
+  --fs-axis: 10px;
+  --fs-micro: 11px;
+  --fs-sm: 13px;
+  --fs-md: 15px;
+  --fs-lg: 18px;
+  --fs-xl: 22px;
+  --fs-2xl: 26px;
+  --fs-display: clamp(40px, 7vw, 64px);
 }
 
 [data-theme="light"] {
@@ -137,6 +164,22 @@ main:focus {
 .tnum {
   font-variant-numeric: tabular-nums lining-nums;
   font-feature-settings: "tnum" 1;
+}
+
+/* 首頁帳本的數字改等寬（IBM Plex Mono）。
+   範圍限制在 .ledger 之內——那個 class 掛在 DashboardClient 的根節點上。
+   不直接寫進 .tnum 有兩個原因：
+   一是本輪範圍只有首頁，全站 .tnum 有上百處；
+   二是 .tnum 定義在 layer 之外，權重會贏過 Tailwind 的 font-serif utility，
+   直接寫下去會把 hero 大數字與 /whatif 那五處刻意的襯線數字一起吃掉。 */
+.ledger .tnum {
+  font-family: var(--font-figures), ui-monospace, SFMono-Regular, monospace;
+}
+
+/* hero 的大數字是 font-serif 掛在外層、tnum 掛在內層的數字上。
+   襯線是刻意的視覺主角，不讓等寬蓋過去。 */
+.ledger .font-serif .tnum {
+  font-family: var(--font-serif), Georgia, serif;
 }
 
 .hide-scrollbar {

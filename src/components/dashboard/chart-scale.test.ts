@@ -12,7 +12,7 @@ function steps(ticks: number[]): number[] {
 }
 
 describe("niceTicks", () => {
-  it("刻度落在 1/2/5 × 10ⁿ 的倍數上", () => {
+  it("刻度落在 1/2/5 × 10^n 的倍數上", () => {
     const { ticks } = niceTicks(923_000, 1_247_000);
     const step = steps(ticks)[0];
     const mantissa = step / 10 ** Math.floor(Math.log10(step));

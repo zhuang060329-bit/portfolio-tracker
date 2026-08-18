@@ -25,6 +25,7 @@ import urllib.request
 
 from fontTools import subset
 from fontTools.ttLib import TTFont
+from fontTools.varLib import instancer
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / "src" / "app" / "fonts"
@@ -32,9 +33,18 @@ CACHE = ROOT / ".font-src"
 
 UPSTREAM = {
     "NotoSansTC[wght].ttf": "ofl/notosanstc/NotoSansTC%5Bwght%5D.ttf",
-    "SpaceGrotesk[wght].ttf": "ofl/spacegrotesk/SpaceGrotesk%5Bwght%5D.ttf",
+    "IBMPlexSans[wdth,wght].ttf": "ofl/ibmplexsans/IBMPlexSans%5Bwdth%2Cwght%5D.ttf",
     "Newsreader[opsz,wght].ttf": "ofl/newsreader/Newsreader%5Bopsz%2Cwght%5D.ttf",
+    # IBM Plex Mono 上游只有靜態字重，沒有變數檔（google/fonts 的 ofl/ibmplexmono
+    # 底下是 14 個 static ttf）。所以這支破例，只收首頁數字實際用到的三個字重。
+    "IBMPlexMono-Regular.ttf": "ofl/ibmplexmono/IBMPlexMono-Regular.ttf",
+    "IBMPlexMono-Medium.ttf": "ofl/ibmplexmono/IBMPlexMono-Medium.ttf",
+    "IBMPlexMono-SemiBold.ttf": "ofl/ibmplexmono/IBMPlexMono-SemiBold.ttf",
 }
+
+# 等寬只服務數字與貨幣符號，不需要整個拉丁範圍。
+# 少了 LATIN 那一大包附加符號，三個字重加起來才不會比原本的 sans 還大。
+DIGITS = "U+0020,U+0024,U+0025,U+002B,U+002C,U+002D,U+002E,U+002F,U+0030-0039,U+003A,U+0041-005A,U+0061-007A,U+2212"
 
 # Google Fonts 的 "latin" 切片範圍，逐字抄自 css2 API 的輸出。
 # 兩支拉丁字體沿用這個範圍，跟改動前的涵蓋範圍一致。
@@ -71,6 +81,18 @@ def fetch(name: str, path: str) -> pathlib.Path:
         print(f"  下載 {name}")
         with urllib.request.urlopen(url) as r:
             dest.write_bytes(r.read())
+    return dest
+
+
+def pin(src: pathlib.Path, **axes: float) -> pathlib.Path:
+    """把用不到的變數軸釘死再子集化。
+
+    IBM Plex Sans 上游帶 wght 與 wdth 兩軸，專案沒有任何地方用 font-stretch。
+    留著那條軸要多 22 KB（68.3 → 46.3 KB），釘掉純賺，wght 100–700 不受影響。
+    """
+    dest = CACHE / f"{src.stem}-pinned.ttf"
+    if not dest.exists():
+        instancer.instantiateVariableFont(TTFont(src), axes, inplace=False).save(dest)
     return dest
 
 
@@ -121,8 +143,20 @@ def main() -> None:
     srcs = {n: fetch(n, p) for n, p in UPSTREAM.items()}
 
     print("拉丁字體（變數，一個檔涵蓋全字重）")
-    run(srcs["SpaceGrotesk[wght].ttf"], OUT / "SpaceGrotesk-latin.woff2", unicodes=LATIN)
+    run(
+        pin(srcs["IBMPlexSans[wdth,wght].ttf"], wdth=100),
+        OUT / "IBMPlexSans-latin.woff2",
+        unicodes=LATIN,
+    )
     run(srcs["Newsreader[opsz,wght].ttf"], OUT / "Newsreader-latin.woff2", unicodes=LATIN)
+
+    print("等寬數字（靜態三字重：400 / 500 / 600）")
+    for weight, name in ((400, "Regular"), (500, "Medium"), (600, "SemiBold")):
+        run(
+            srcs[f"IBMPlexMono-{name}.ttf"],
+            OUT / f"IBMPlexMono-{weight}-digits.woff2",
+            unicodes=DIGITS,
+        )
 
     print("繁中字體（Big5 符號區 + 常用字 + UI 額外符號）")
     chars = big5_block(0xA1, 0xA3) | big5_block(0xA4, 0xC6) | set(EXTRA)

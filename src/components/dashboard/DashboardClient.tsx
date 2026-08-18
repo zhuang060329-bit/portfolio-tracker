@@ -47,7 +47,8 @@ export function DashboardClient({
      二級 核心資料（持倉帳本、淨資產趨勢）：唯二保留 surface 容器的區塊。
      三級 輔助（資產配置、績效指標）：無容器，靠頂部 hairline 分區。 */
   return (
-    <div className="flex flex-col">
+    /* .ledger 是首頁數字改等寬的作用域，規則在 globals.css。 */
+    <div className="ledger flex flex-col">
       <Hero s={summary} series={data.series} demo={demo} />
 
       {/* 容器底色透出成 1px 分隔線，四格之間有線、外圍沒有框。
@@ -135,7 +136,7 @@ export function DashboardClient({
       ) : (
         <section className="mt-10 border-t border-[var(--c-border)] pt-7">
           {allocation}
-          <p className="mt-6 text-[12px] text-[var(--c-faint)]">
+          <p className="mt-6 text-[length:var(--fs-sm)] text-[var(--c-faint)]">
             TWR、回撤與 Sharpe 會在每日淨值快照滿 30 天後顯示。
           </p>
         </section>
@@ -157,23 +158,23 @@ function FirstRun() {
       >
         <path d="M8 1 L15 8 L8 15 L1 8 Z" />
       </svg>
-      <h2 className="mt-4 text-[20px] font-semibold tracking-[-0.02em]">
+      <h2 className="mt-4 text-[length:var(--fs-xl)] font-semibold tracking-[-0.02em]">
         從第一個資產開始
       </h2>
-      <p className="mt-2 text-[13px] leading-relaxed text-[var(--c-muted)]">
+      <p className="mt-2 text-[length:var(--fs-sm)] leading-relaxed text-[var(--c-muted)]">
         建立帳戶後，這裡會開始累積淨值趨勢、損益、配置與大盤對照。
         已有歷史紀錄時，也可以直接從 CSV 匯入。
       </p>
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
         <Link
           href="/accounts/new"
-          className="rounded-[var(--r-control)] bg-[var(--c-accent)] px-5 py-2.5 text-[13px] font-semibold text-[var(--c-btn-strong-text)] hover:brightness-110"
+          className="rounded-[var(--r-control)] bg-[var(--c-accent)] px-5 py-2.5 text-[length:var(--fs-sm)] font-semibold text-[var(--c-btn-strong-text)] hover:brightness-110"
         >
           建立第一個帳戶
         </Link>
         <Link
           href="/activity"
-          className="rounded-[var(--r-control)] border border-[var(--c-border)] px-5 py-2.5 text-[13px] font-medium text-[var(--c-muted)] hover:border-[var(--c-line-strong)] hover:text-[var(--c-text)]"
+          className="rounded-[var(--r-control)] border border-[var(--c-border)] px-5 py-2.5 text-[length:var(--fs-sm)] font-medium text-[var(--c-muted)] hover:border-[var(--c-line-strong)] hover:text-[var(--c-text)]"
         >
           匯入 CSV
         </Link>
