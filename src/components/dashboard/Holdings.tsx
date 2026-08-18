@@ -159,7 +159,7 @@ export function Holdings({
                     onClick={() => setSort("value")}
                     sorted={sortedOf("value")}
                   >
-                    市值
+                    市值 <Unit />
                   </TableHead>
                   <TableHead
                     onClick={() => setSort("day")}
@@ -171,7 +171,7 @@ export function Holdings({
                     onClick={() => setSort("pnl")}
                     sorted={sortedOf("pnl")}
                   >
-                    未實現
+                    未實現 <Unit />
                   </TableHead>
                 </tr>
               </thead>
@@ -392,6 +392,15 @@ export function Holdings({
         </>
       )}
     </section>
+  );
+}
+
+/* 表格有共同表頭，單位在這裡標一次，儲存格不重複（同 DashboardClient 四格的規則）。
+   改版前整張表沒有任何幣別標示，而「美股 ETF」那列的市值是換算後的台幣，
+   不標的話讀成美元是合理的誤讀。 */
+function Unit() {
+  return (
+    <span className="font-normal tracking-normal text-[var(--c-faint)]">NT$</span>
   );
 }
 

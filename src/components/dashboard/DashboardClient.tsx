@@ -58,12 +58,20 @@ export function DashboardClient({
           不抵銷的話量出來是 88px，而 Hero 與三級都在 68px（實測）。
           外緣溢出的部分是格子自身的 page 底色，看不出來；抵銷量恆不大於
           main 的 gutter（16/24/28 對 16/20/20），不會產生水平捲動。 */}
+      {/* 幣別在「同單位群組」的最上層宣告一次就好。這四格緊接在 Hero 底下、
+          屬於同一個一級摘要區，Hero 的主數字已經用大字寫了 NT$，四格再各自
+          冠一次是重複。改版前只有「投入成本」帶 NT$，另外兩個金額沒有，
+          於是同一列裡三個同單位的數字長成兩種樣子（V3）。
+          去掉而不是補齊，是因為量過寬度：手機半格可用 163px，主格（22px）
+          補上 NT$ 後八位數要 198px，會被 truncate 切掉；而且「投入成本」
+          目前的最壞情況 162px 本來就只剩 1px 餘裕。去掉之後三格都退回百來 px。
+          有共同表頭的地方（持倉表格）改在表頭標一次，規則一致。 */}
       <section className="-mx-4 bg-[var(--c-border)] sm:-mx-5">
         <div className="grid grid-cols-2 gap-px sm:grid-cols-4">
           <HeroStat
             label="投入成本"
             mask
-            value={`NT$ ${fmtTwd(summary.totalCost)}`}
+            value={fmtTwd(summary.totalCost)}
             sub="目前持有部位"
           />
           <HeroStat
