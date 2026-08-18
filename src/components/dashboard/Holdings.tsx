@@ -4,16 +4,18 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { allocColor, fmtTwd } from "./DashboardCharts";
 import type { Holding } from "./types";
-import { sign, toneCls, TONE_TEXT } from "./shared";
+import { PICK_OFF, PICK_ON, sign, toneCls, TONE_TEXT } from "./shared";
 import { useFlipRows } from "./useFlipRows";
 
 type SortKey = "name" | "value" | "day" | "pnl";
 
+/* 與桌機表頭逐字相同。原本手機寫「名稱」「損益」、桌機寫「帳戶」「未實現」，
+   同一個排序鍵兩個名字，換裝置就得重新對應一次。 */
 const SORT_LABEL: Record<SortKey, string> = {
-  name: "名稱",
+  name: "帳戶",
   value: "市值",
   day: "今日",
-  pnl: "損益",
+  pnl: "未實現",
 };
 
 export function Holdings({
@@ -123,17 +125,26 @@ export function Holdings({
         </div>
       ) : (
         <>
-          <div className="hide-scrollbar mt-4 flex gap-1.5 overflow-x-auto px-4 pb-1 md:hidden">
+          {/* 一排沒有名字的藥丸看不出是排序還是篩選，補一個可見標籤，
+              並用 role=group 讓讀屏在進入時先講出「排序」這件事。 */}
+          <div
+            role="group"
+            aria-label="排序方式"
+            className="hide-scrollbar mt-4 flex items-center gap-1.5 overflow-x-auto px-4 pb-1 md:hidden"
+          >
+            <span className="shrink-0 text-[length:var(--fs-micro)] text-[var(--c-faint)]">
+              排序
+            </span>
             {(Object.keys(SORT_LABEL) as SortKey[]).map((key) => (
               <button
                 key={key}
                 type="button"
                 aria-pressed={sortKey === key}
                 onClick={() => setSort(key)}
-                className={`min-h-9 shrink-0 rounded-[var(--r-control)] border px-3 text-[length:var(--fs-sm)] font-medium ${
+                className={`min-h-9 shrink-0 rounded-[var(--r-control)] border px-3 text-[length:var(--fs-sm)] ${
                   sortKey === key
-                    ? "border-[var(--c-line-strong)] bg-[var(--c-surface-soft)] text-[var(--c-text)]"
-                    : "border-[var(--c-border)] text-[var(--c-muted)]"
+                    ? `border-[var(--c-line-strong)] ${PICK_ON}`
+                    : `border-[var(--c-border)] ${PICK_OFF}`
                 }`}
               >
                 {SORT_LABEL[key]}
@@ -448,10 +459,16 @@ function TableHead({
 
   return (
     <th scope="col" aria-sort={sorted ?? "none"} className={alignClass}>
+      {/* 正在排序的欄原本只有一個箭頭，欄名本身跟其他欄一模一樣。
+          改用與手機藥丸、區間鈕同一套 PICK 語彙，三個地方講同一句話。
+          表頭列自身底色是 surface-soft，選中填色會與底色同色而看不出來，
+          所以這裡只取語彙裡的文字訊號（accent + 字重）。 */}
       <button
         type="button"
         onClick={onClick}
-        className={`w-full px-5 py-3 font-semibold tracking-[0.06em] ${alignClass} hover:text-[var(--c-text)]`}
+        className={`w-full px-5 py-3 font-semibold tracking-[0.06em] ${alignClass} ${
+          sorted ? "text-[var(--c-accent)]" : "hover:text-[var(--c-text)]"
+        }`}
       >
         {children}
         <span aria-hidden="true">

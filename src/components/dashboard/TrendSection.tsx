@@ -9,7 +9,7 @@ import {
   type SeriesPoint,
 } from "./DashboardCharts";
 import { RANGES, sliceByRange, sliceToCommonStart } from "./chart-data";
-import { sign, TONE_TEXT, toneCls } from "./shared";
+import { PICK_OFF, PICK_ON, sign, TONE_TEXT, toneCls } from "./shared";
 
 export function TrendSection({
   series,
@@ -96,10 +96,8 @@ export function TrendSection({
                 type="button"
                 aria-pressed={mode === item}
                 onClick={() => setMode(item)}
-                className={`min-h-9 whitespace-nowrap rounded-[5px] px-3 text-[length:var(--fs-sm)] font-medium ${
-                  mode === item
-                    ? "bg-[var(--c-surface-soft)] text-[var(--c-text)]"
-                    : "text-[var(--c-muted)]"
+                className={`min-h-9 whitespace-nowrap rounded-[5px] px-3 text-[length:var(--fs-sm)] ${
+                  mode === item ? PICK_ON : PICK_OFF
                 }`}
               >
                 {item === "value" ? "淨值" : "大盤對照"}
@@ -147,10 +145,8 @@ export function TrendSection({
               /* 區間鈕是主圖表上最常按的控制項，拉到 44×44 過 WCAG 2.5.5（AAA）。
                  同檔另外三處 min-h-9（模式切換、圖例鈕）不在本次範圍，仍是 36px，
                  過 2.5.8（AA，24px）但未達 AAA。 */
-              className={`min-h-11 min-w-11 shrink-0 rounded-[var(--r-control)] px-2.5 text-[length:var(--fs-micro)] font-semibold ${
-                range === item.key
-                  ? "bg-[var(--c-accent-soft)] text-[var(--c-accent)]"
-                  : "text-[var(--c-muted)] hover:bg-[var(--c-surface-soft)] hover:text-[var(--c-text)]"
+              className={`min-h-11 min-w-11 shrink-0 rounded-[var(--r-control)] px-2.5 text-[length:var(--fs-micro)] ${
+                range === item.key ? PICK_ON : PICK_OFF
               }`}
             >
               {item.key}
@@ -211,8 +207,13 @@ function LegendButton({
       type="button"
       aria-pressed={on}
       onClick={onClick}
-      className={`inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-[var(--r-control)] border border-[var(--c-border)] px-2.5 text-[length:var(--fs-micro)] font-medium text-[var(--c-text)] hover:border-[var(--c-line-strong)] hover:bg-[var(--c-surface-soft)] ${
-        on ? "" : "opacity-40"
+      /* 開關語彙：邊框深淺 + 透明度，刻意不填色。填色是 PICK_ON 的專屬訊號，
+         留給「互斥選擇」用；圖例是各自獨立的布林，兩者不該長得像。
+         原本開與關只差透明度一個訊號，關掉的那條與「還沒 hover 過」難分。 */
+      className={`inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-[var(--r-control)] border px-2.5 text-[length:var(--fs-micro)] font-medium text-[var(--c-text)] hover:bg-[var(--c-surface-soft)] ${
+        on
+          ? "border-[var(--c-line-strong)]"
+          : "border-[var(--c-border)] opacity-45"
       }`}
     >
       <svg width="20" height="8" aria-hidden="true" className="shrink-0">
