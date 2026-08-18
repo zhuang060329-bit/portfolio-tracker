@@ -25,6 +25,7 @@ export function Holdings({
   archivedCount,
   showArchived,
   demo,
+  activeCls,
 }: {
   holdings: Holding[];
   total: number;
@@ -32,6 +33,8 @@ export function Holdings({
   archivedCount: number;
   showArchived: boolean;
   demo?: boolean;
+  /* 旁邊資產配置正在指的類別。null 代表沒有任何類別被選。 */
+  activeCls?: string | null;
 }) {
   const [sortKey, setSortKey] = useState<SortKey>("value");
   const [direction, setDirection] = useState(-1);
@@ -77,6 +80,14 @@ export function Holdings({
         : "ascending"
       : undefined;
   }
+
+  /* 對到的列用內嵌的 accent 直條標，不用變淡未對到的列：這是一張要讀數字的表，
+     把其他列壓到 0.4 透明度等於讓它們不能讀。inset shadow 不佔位，不會推動內容。
+     底色只是輔助——surface-soft 對 surface 實測 1.073:1，單靠它看不出來。 */
+  const markCls = (cls: string) =>
+    activeCls && activeCls === cls
+      ? "bg-[var(--c-surface-soft)] shadow-[inset_2px_0_0_var(--c-accent)]"
+      : "";
 
   function dayCell(day: number | null) {
     return day == null || day === 0
@@ -214,9 +225,9 @@ export function Holdings({
                     <tr
                       key={holding.id}
                       ref={flip.register(`d-${holding.id}`)}
-                      className={`border-b border-[var(--c-border)] hover:bg-[var(--c-surface-soft)] ${
-                        holding.status === "archived" ? "opacity-60" : ""
-                      }`}
+                      className={`border-b border-[var(--c-border)] hover:bg-[var(--c-surface-soft)] ${markCls(
+                        holding.cls,
+                      )} ${holding.status === "archived" ? "opacity-60" : ""}`}
                     >
                       <td className="max-w-[280px] px-6 py-4 text-left">
                         <div className="flex min-w-0 items-center gap-3">
@@ -322,9 +333,9 @@ export function Holdings({
                 holding.status === "archived" || total <= 0
                   ? null
                   : (holding.value / total) * 100;
-              const rowClass = `block border-b border-[var(--c-border)] px-4 py-4 ${
-                holding.status === "archived" ? "opacity-60" : ""
-              }`;
+              const rowClass = `block border-b border-[var(--c-border)] px-4 py-4 ${markCls(
+                holding.cls,
+              )} ${holding.status === "archived" ? "opacity-60" : ""}`;
               const content = (
                 <>
                   <div className="flex items-start justify-between gap-4">

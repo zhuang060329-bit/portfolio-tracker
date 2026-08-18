@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { Hero, HeroStat } from "./Hero";
 import { fmtTwd } from "./DashboardCharts";
@@ -25,6 +26,13 @@ export function DashboardClient({
 }) {
   const summary = data.summary;
 
+  /* 資產類別的選取狀態提到這裡，讓資產配置與持倉帳本共用。
+     pinned 是點下去釘住的、hovered 是滑過的暫時預覽，顯示時 hover 優先。
+     早退在 hook 之後，否則 holdings 為空時 hook 數量會變。 */
+  const [pinnedCls, setPinnedCls] = useState<string | null>(null);
+  const [hoveredCls, setHoveredCls] = useState<string | null>(null);
+  const activeCls = hoveredCls ?? pinnedCls;
+
   if (!demo && data.holdings.length === 0) {
     return <FirstRun />;
   }
@@ -34,6 +42,12 @@ export function DashboardClient({
       allocation={data.allocation}
       allocTargets={data.allocTargets}
       total={summary.total}
+      pinnedCls={pinnedCls}
+      activeCls={activeCls}
+      onHover={setHoveredCls}
+      onPin={(cls) =>
+        setPinnedCls((current) => (current === cls ? null : cls))
+      }
     />
   );
   const metricsHasContent = summary.twrShowable || summary.hasIncome;
@@ -111,16 +125,32 @@ export function DashboardClient({
       </section>
 
       {/* 二級起點。與一級之間拉開 36px，是全頁最大的一段間距，
-          用留白把「摘要」和「明細」切成兩塊。二級彼此只隔 16px，讀起來成一組。 */}
-      <section className="mt-9 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)]">
-        <Holdings
-          demo={demo}
-          holdings={data.holdings}
-          total={summary.total}
-          marketLabel={data.marketLabel}
-          archivedCount={data.archivedCount}
-          showArchived={data.showArchived}
-        />
+          用留白把「摘要」和「明細」切成兩塊。二級彼此只隔 16px，讀起來成一組。
+
+          資產配置從三級搬上來，跟持倉帳本併成同一張卡：兩者講的是同一批部位，
+          一個按帳戶、一個按類別。原本配置在頁尾，實測 1280×800 下持倉表格在
+          y 554–951、資產配置在 y 1466–1912，中間隔 515px，視窗要高於約 1360px
+          才可能同時看到——把類別選取連動到持倉列的話，效果會落在畫面外。
+
+          並排的斷點是算出來的：表格自身 min-w 760px，配置欄要 344px，
+          main 的內容寬是 min(vw,1200)−56。1180px 時內容 1124px 剛好
+          760+20+344；再窄就會逼表格長出橫向捲軸，所以以下改成上下堆疊
+          （堆疊時配置仍緊接在持倉之後，不再隔著整張趨勢圖）。 */}
+      <section className="mt-9 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] min-[1180px]:grid min-[1180px]:grid-cols-[minmax(760px,1fr)_344px]">
+        <div className="min-w-0">
+          <Holdings
+            demo={demo}
+            holdings={data.holdings}
+            total={summary.total}
+            marketLabel={data.marketLabel}
+            archivedCount={data.archivedCount}
+            showArchived={data.showArchived}
+            activeCls={activeCls}
+          />
+        </div>
+        <div className="border-t border-[var(--c-border)] px-4 py-5 sm:px-6 min-[1180px]:border-l min-[1180px]:border-t-0 min-[1180px]:py-6">
+          {allocation}
+        </div>
       </section>
 
       <TrendSection
@@ -132,23 +162,20 @@ export function DashboardClient({
         today={data.today}
       />
 
-      {/* 三級。脫掉容器落回 page 背景，靠頂線分區；桌機兩欄之間用垂直細線，
-          手機上下排時改水平線。與二級之間隔 40px，把「這是附註」講清楚。 */}
-      {metricsHasContent ? (
-        <section className="mt-10 grid grid-cols-1 border-t border-[var(--c-border)] pt-7 min-[920px]:grid-cols-2">
-          <div className="min-[920px]:pr-8">{allocation}</div>
-          <div className="mt-8 border-t border-[var(--c-border)] pt-7 min-[920px]:mt-0 min-[920px]:border-l min-[920px]:border-t-0 min-[920px]:pl-8 min-[920px]:pt-0">
+      {/* 三級。脫掉容器落回 page 背景，靠頂線分區；與二級之間隔 40px，
+          把「這是附註」講清楚。資產配置搬去二級之後這裡只剩績效指標，
+          內容欄寬收在 640px：四格數字撐滿 1144px 會稀得讀不成一組。 */}
+      <section className="mt-10 border-t border-[var(--c-border)] pt-7">
+        {metricsHasContent ? (
+          <div className="max-w-[640px]">
             <MetricsCard s={summary} />
           </div>
-        </section>
-      ) : (
-        <section className="mt-10 border-t border-[var(--c-border)] pt-7">
-          {allocation}
-          <p className="mt-6 text-[length:var(--fs-sm)] text-[var(--c-faint)]">
+        ) : (
+          <p className="text-[length:var(--fs-sm)] text-[var(--c-faint)]">
             TWR、回撤與 Sharpe 會在每日淨值快照滿 30 天後顯示。
           </p>
-        </section>
-      )}
+        )}
+      </section>
     </div>
   );
 }

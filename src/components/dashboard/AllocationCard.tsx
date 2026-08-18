@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   allocColor,
   Donut,
@@ -25,31 +24,42 @@ function driftInfo(actual: number, target: number) {
   return { text: `${sign(drift)}${magnitude.toFixed(1)}pp`, tone };
 }
 
+/* 狀態住在 DashboardClient，因為持倉帳本也要用同一個選取。
+   hover 與 click 分成兩個是先前修掉的一個 bug：共用一個 state 時
+   onMouseLeave 會把 click 的結果一併清掉，滑鼠使用者永遠釘不住。 */
 export function AllocationCard({
   allocation,
   allocTargets,
   total,
+  pinnedCls,
+  activeCls,
+  onHover,
+  onPin,
 }: {
   allocation: AllocDatum[];
   allocTargets: AllocTarget[];
   total: number;
+  pinnedCls: string | null;
+  activeCls: string | null;
+  onHover: (cls: string | null) => void;
+  onPin: (cls: string) => void;
 }) {
-  /* 原本 hover 與 click 共用一個 state，而 onMouseLeave 無條件清成 null，
-     於是滑鼠使用者永遠釘不住任何一類：實測 mouseenter 讓 aria-pressed 變 true、
-     接著 click 反而翻回 false（因為 hover 已經選上了，click 走的是取消那一支），
-     mouseleave 再清一次。aria-pressed 宣告了一個持久狀態，實際上不存在。
-     拆成兩個：hover 是暫時的預覽，click 是釘住的選擇，hover 優先顯示。 */
-  const [pinned, setPinned] = useState<string | null>(null);
-  const [hovered, setHovered] = useState<string | null>(null);
-  const activeClass = hovered ?? pinned;
-  const selected = activeClass
-    ? allocation.find((item) => item.cls === activeClass)
+  const selected = activeCls
+    ? allocation.find((item) => item.cls === activeCls)
     : null;
 
   return (
     <div>
       <CardHead title="資產配置" sub="目前配置與目標比例" />
-      <div className="grid grid-cols-1 items-center gap-6 sm:grid-cols-[176px_1fr] sm:gap-7">
+      {/* 圓環與清單只在 640–1179px 之間並排。≥1180px 時本卡被塞進 344px 的窄欄
+          （見 DashboardClient 的並排斷點），並排會把清單擠到 160px——實測欄位
+          需要 8+54+bar+56 加三個間距，長條只剩 12px——所以那個區間上下堆疊。
+          寫成 sm:max-[1180px] 這種區間而不是 sm 疊 min-[1180px]：後者實測
+          被 sm 蓋過（量到 grid-template-columns 仍是 176px 160px），
+          兩條規則的先後順序不該賭。上界寫 1180 而不是 1179，是因為 Tailwind v4
+          把 max-[N] 編成 `not (min-width: N)`，是嚴格小於；寫 1179 時
+          視窗剛好 1179px 會兩條規則都不成立，掉進縫裡。 */}
+      <div className="grid grid-cols-1 items-center gap-6 sm:max-[1180px]:grid-cols-[176px_1fr] sm:max-[1180px]:gap-7">
         {/* 中心字級從 --fs-2xl 降到 --fs-xl。Donut 的孔徑是算得出來的：
             size 176 → rad 74、inner 48，孔徑 96px。而 26px 下最寬的字串
             （「120.0萬」「9,999萬」這類四位數萬）量到 99–104px，本來就壓在
@@ -60,8 +70,8 @@ export function AllocationCard({
           <Donut
             data={allocation}
             size={176}
-            onHover={setHovered}
-            hoverCls={activeClass}
+            onHover={onHover}
+            hoverCls={activeCls}
           />
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
             {selected ? (
@@ -99,20 +109,16 @@ export function AllocationCard({
                 type="button"
                 /* 只反映釘住的狀態。hover 是預覽，報成 pressed 會讓讀屏使用者
                    聽到一個他沒有做過的選擇。 */
-                aria-pressed={pinned === item.cls}
+                aria-pressed={pinnedCls === item.cls}
                 aria-label={`${item.label}：實際 ${item.actual.toFixed(1)}%、目標 ${item.target.toFixed(0)}%`}
                 className={`grid min-h-11 w-full grid-cols-[auto_54px_1fr_56px] items-center gap-2.5 rounded-[var(--r-control)] px-1.5 text-left ${
-                  activeClass && activeClass !== item.cls ? "opacity-40" : ""
+                  activeCls && activeCls !== item.cls ? "opacity-40" : ""
                 }`}
-                onMouseEnter={() => setHovered(item.cls)}
-                onMouseLeave={() => setHovered(null)}
-                onFocus={() => setHovered(item.cls)}
-                onBlur={() => setHovered(null)}
-                onClick={() =>
-                  setPinned((current) =>
-                    current === item.cls ? null : item.cls,
-                  )
-                }
+                onMouseEnter={() => onHover(item.cls)}
+                onMouseLeave={() => onHover(null)}
+                onFocus={() => onHover(item.cls)}
+                onBlur={() => onHover(null)}
+                onClick={() => onPin(item.cls)}
               >
                 <span
                   className="h-2 w-2 rounded-[2px]"
@@ -124,7 +130,7 @@ export function AllocationCard({
                     surface-soft 對 page 在淺色主題只有 1.027:1，等於沒有。 */}
                 <span
                   className={`truncate text-[length:var(--fs-sm)] ${
-                    pinned === item.cls
+                    pinnedCls === item.cls
                       ? "font-semibold text-[var(--c-accent)]"
                       : ""
                   }`}
