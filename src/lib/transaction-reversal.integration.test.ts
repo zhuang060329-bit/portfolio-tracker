@@ -1,7 +1,7 @@
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { Client } from "pg";
+import { resetAndApply } from "./integration-test-db";
 
 const url = process.env.TEST_DATABASE_URL;
 const ACCOUNT_ID = "11111111-1111-1111-1111-111111111111";
@@ -14,17 +14,15 @@ describe.skipIf(!url)("reverse_transaction_mutation (integration)", () => {
   beforeAll(async () => {
     db = new Client({ connectionString: url });
     await db.connect();
-    const root = join(__dirname, "..", "..");
-    for (const file of [
+    await resetAndApply(db, join(__dirname, "..", ".."), [
       "supabase/test-schema.sql",
       "supabase/rpc-mutations.sql",
       "supabase/migrations/20260718032234_stackworth_v1.sql",
       "supabase/migrations/20260810155500_recurring_amount_override.sql",
       "supabase/migrations/20260810230000_transaction_fee.sql",
       "supabase/migrations/20260810234500_transaction_reversal.sql",
-    ]) {
-      await db.query(readFileSync(join(root, file), "utf8"));
-    }
+      "supabase/migrations/20260818130000_reversal_negative_fee.sql",
+    ]);
   });
 
   afterAll(async () => {
