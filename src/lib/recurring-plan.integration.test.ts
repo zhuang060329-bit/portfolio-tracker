@@ -1,7 +1,7 @@
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { Client } from "pg";
+import { resetAndApply } from "./integration-test-db";
 
 const url = process.env.TEST_DATABASE_URL;
 const ACCOUNT_ID = "11111111-1111-1111-1111-111111111111";
@@ -16,36 +16,18 @@ describe.skipIf(!url)("execute_recurring_plan_mutation (integration)", () => {
 
   beforeAll(async () => {
     db = new Client({ connectionString: url });
-    db2 = new Client({ connectionString: url });
     await db.connect();
+    await resetAndApply(db, join(__dirname, "..", ".."), [
+      "supabase/test-schema.sql",
+      "supabase/rpc-mutations.sql",
+      "supabase/migrations/20260718032234_stackworth_v1.sql",
+      "supabase/migrations/20260810155500_recurring_amount_override.sql",
+      "supabase/migrations/20260810230000_transaction_fee.sql",
+    ]);
+    // 第二條連線在 schema 重建之後才接：它只用來驗併發，沒必要讓它經歷
+    // 一次 drop schema，也省得去想連線層的快取。
+    db2 = new Client({ connectionString: url });
     await db2.connect();
-    const root = join(__dirname, "..", "..");
-    await db.query(readFileSync(join(root, "supabase/test-schema.sql"), "utf8"));
-    await db.query(readFileSync(join(root, "supabase/rpc-mutations.sql"), "utf8"));
-    await db.query(
-      readFileSync(
-        join(
-          root,
-          "supabase/migrations/20260718032234_stackworth_v1.sql",
-        ),
-        "utf8",
-      ),
-    );
-    await db.query(
-      readFileSync(
-        join(
-          root,
-          "supabase/migrations/20260810155500_recurring_amount_override.sql",
-        ),
-        "utf8",
-      ),
-    );
-    await db.query(
-      readFileSync(
-        join(root, "supabase/migrations/20260810230000_transaction_fee.sql"),
-        "utf8",
-      ),
-    );
   });
 
   afterAll(async () => {

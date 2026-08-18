@@ -1,14 +1,14 @@
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { Client } from "pg";
+import { resetAndApply } from "./integration-test-db";
 
 // apply_account_mutation 的整合測試：打真 Postgres，驗的是 SQL 本身。
 // - 本地：TEST_DATABASE_URL=postgresql://... npx vitest run
 // - CI：workflow 起 postgres service 並注入同名環境變數
 // - 未設環境變數時整組跳過（單元測試不受影響）
-// beforeAll 直接套最小 schema、既有 RPC 與 v1 migration，
-// 測試檔即為 migration 的可執行規格。
+// beforeAll 先把 schema 清空再套最小 schema、既有 RPC 與 v1 migration，
+// 測試檔即為 migration 的可執行規格。清空的理由見 integration-test-db.ts。
 
 const url = process.env.TEST_DATABASE_URL;
 
@@ -22,24 +22,12 @@ describe.skipIf(!url)("apply_account_mutation (integration)", () => {
   beforeAll(async () => {
     db = new Client({ connectionString: url });
     await db.connect();
-    const root = join(__dirname, "..", "..");
-    await db.query(readFileSync(join(root, "supabase/test-schema.sql"), "utf8"));
-    await db.query(readFileSync(join(root, "supabase/rpc-mutations.sql"), "utf8"));
-    await db.query(
-      readFileSync(
-        join(
-          root,
-          "supabase/migrations/20260718032234_stackworth_v1.sql",
-        ),
-        "utf8",
-      ),
-    );
-    await db.query(
-      readFileSync(
-        join(root, "supabase/migrations/20260810230000_transaction_fee.sql"),
-        "utf8",
-      ),
-    );
+    await resetAndApply(db, join(__dirname, "..", ".."), [
+      "supabase/test-schema.sql",
+      "supabase/rpc-mutations.sql",
+      "supabase/migrations/20260718032234_stackworth_v1.sql",
+      "supabase/migrations/20260810230000_transaction_fee.sql",
+    ]);
   });
 
   afterAll(async () => {
