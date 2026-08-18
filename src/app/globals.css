@@ -368,6 +368,32 @@ textarea:disabled {
     animation: page-in 0.22s cubic-bezier(0.4, 0, 0.2, 1) both;
   }
 
+  /* 首頁改由各區塊自己依序進場，整頁一起淡入會把節奏蓋掉，所以關掉外層那層。
+     :has() 讓這條只作用在含 .ledger 的頁面，其他頁維持原本的整頁淡入。 */
+  main:has(.ledger) {
+    animation: none;
+  }
+
+  /* 五個一級區塊依序進場：Hero → 四格 → 持倉與配置 → 趨勢 → 績效。
+     40ms 一階、單個 0.28s，最後一塊在 440ms 結束。順序本身就是版面的閱讀順序，
+     動作是在講「先看這個，再看那個」，不是裝飾。
+     backwards 讓元素在延遲期間先保持在起點，否則會先閃現再退回去。 */
+  .ledger > * {
+    animation: page-in 0.28s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+  }
+  .ledger > *:nth-child(2) {
+    animation-delay: 40ms;
+  }
+  .ledger > *:nth-child(3) {
+    animation-delay: 80ms;
+  }
+  .ledger > *:nth-child(4) {
+    animation-delay: 120ms;
+  }
+  .ledger > *:nth-child(5) {
+    animation-delay: 160ms;
+  }
+
   button:not(:disabled):active,
   [role="button"]:not(:disabled):active {
     transform: scale(0.985);
@@ -401,6 +427,7 @@ textarea:disabled {
 
   /* 三個進場動畫都是 translateY + 淡入，換掉 keyframe 就只剩淡入，時長不動。 */
   main,
+  .ledger > *,
   .ledger-row-in,
   details[open] > *:not(summary) {
     animation-name: fade-in-only;
