@@ -21,6 +21,7 @@ describe.skipIf(!url)("reverse_transaction_mutation (integration)", () => {
       "supabase/migrations/20260810155500_recurring_amount_override.sql",
       "supabase/migrations/20260810230000_transaction_fee.sql",
       "supabase/migrations/20260810234500_transaction_reversal.sql",
+      "supabase/migrations/20260818130000_reversal_negative_fee.sql",
     ]);
   });
 

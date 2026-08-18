@@ -18,8 +18,9 @@
 | 12 | `migrations/20260810234500_transaction_reversal.sql` | `transactions.reversal_of` + `reverse_transaction_mutation`（撤銷最新一筆 / 沖銷較早的一筆）；補 `recurring_plan_runs` 的 delete policy | ✅ |
 
 | 13 | `migrations/20260811120000_api_budget.sql` | `api_usage` 表 + `consume_api_quota`：免費報價 API 的全域每日預算，防止共用 key 被打爆 | ✅ |
+| 14 | `migrations/20260818130000_reversal_negative_fee.sql` | 放寬 `transactions_fee_twd_check`，讓沖銷列可以帶負數手續費。**修 bug：** 不跑的話「沖銷較早的一筆」只要原始交易記過手續費就會失敗 | ✅ |
 
-既有 StackWorth 部署若已完成 1–12，只執行第 13 個 versioned migration。先在測試或預覽資料庫驗證，再套用正式環境；本 repository 不會自動修改 production schema。
+既有 StackWorth 部署若已完成 1–13，只執行第 14 個 versioned migration。先在測試或預覽資料庫驗證，再套用正式環境；本 repository 不會自動修改 production schema。
 
 ## 注意事項
 
