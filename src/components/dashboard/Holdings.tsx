@@ -225,7 +225,7 @@ export function Holdings({
                     <tr
                       key={holding.id}
                       ref={flip.register(`d-${holding.id}`)}
-                      className={`border-b border-[var(--c-border)] hover:bg-[var(--c-surface-soft)] ${markCls(
+                      className={`border-b border-[var(--c-border)] hover:bg-[var(--c-row-hover)] ${markCls(
                         holding.cls,
                       )} ${holding.status === "archived" ? "opacity-60" : ""}`}
                     >
@@ -333,7 +333,11 @@ export function Holdings({
                 holding.status === "archived" || total <= 0
                   ? null
                   : (holding.value / total) * 100;
-              const rowClass = `block border-b border-[var(--c-border)] px-4 py-4 ${markCls(
+              /* 密度：改版前每張卡 133px，桌機同一筆資料只用 71px。
+                 拿掉的是間距不是內容——py-4→py-3.5、內部分隔的 mt/pt 3→2、
+                 配置條從「再空 12px 再畫」改成貼在卡片下緣（絕對定位，不佔高度）。
+                 欄位一個沒少。 */
+              const rowClass = `relative block border-b border-[var(--c-border)] px-4 py-3.5 ${markCls(
                 holding.cls,
               )} ${holding.status === "archived" ? "opacity-60" : ""}`;
               const content = (
@@ -374,7 +378,7 @@ export function Holdings({
                     </div>
                   </div>
 
-                  <div className="mt-3 grid grid-cols-2 border-t border-[var(--c-border-soft)] pt-3 text-[length:var(--fs-micro)]">
+                  <div className="mt-2 grid grid-cols-2 border-t border-[var(--c-border-soft)] pt-2 text-[length:var(--fs-micro)]">
                     <div>
                       <span className="text-[var(--c-faint)]">今日</span>
                       <span
@@ -400,7 +404,7 @@ export function Holdings({
                   </div>
 
                   {share != null && (
-                    <div className="mt-3 h-[3px] overflow-hidden bg-[var(--c-border)]">
+                    <div className="absolute inset-x-0 bottom-0 h-[3px] overflow-hidden bg-[var(--c-border)]">
                       <span
                         className="block h-full"
                         style={{
@@ -426,7 +430,7 @@ export function Holdings({
                   key={holding.id}
                   ref={flip.register(`m-${holding.id}`)}
                   href={`/accounts/${holding.id}`}
-                  className={`${rowClass} hover:bg-[var(--c-surface-soft)] active:bg-[var(--c-accent-soft)]`}
+                  className={`${rowClass} hover:bg-[var(--c-row-hover)] active:bg-[var(--c-accent-soft)]`}
                 >
                   {content}
                 </Link>
