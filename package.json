@@ -16,7 +16,7 @@
   "dependencies": {
     "@sentry/nextjs": "^10.65.0",
     "@supabase/ssr": "^0.10.3",
-    "@supabase/supabase-js": "^2.106.2",
+    "@supabase/supabase-js": "^2.110.8",
     "next": "16.2.11",
     "react": "19.2.8",
     "react-dom": "19.2.7",
