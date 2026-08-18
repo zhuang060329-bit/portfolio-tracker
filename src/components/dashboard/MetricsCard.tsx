@@ -69,7 +69,11 @@ export function MetricsCard({ s }: { s: DashSummary }) {
             href="/methodology"
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-0.5 inline-flex shrink-0 items-center gap-1 text-[length:var(--fs-micro)] font-medium text-[var(--c-muted)] hover:text-[var(--c-text)]"
+            /* 這條連結原本只有 11px 字、沒有垂直內距，實測高度 17px，
+               低於 WCAG 2.5.8（AA）的 24×24。補 min-h-6 撐到 24px；
+               寬度本來就有 70px 有餘。周圍的鈕是 36–44px，這裡是行內文字連結，
+               取 AA 的下限而不是跟著長成一顆鈕。 */
+            className="mt-0.5 inline-flex min-h-6 shrink-0 items-center gap-1 text-[length:var(--fs-micro)] font-medium text-[var(--c-muted)] hover:text-[var(--c-text)]"
           >
             指標怎麼算
             <svg
