@@ -43,6 +43,12 @@ export function AllocationCard({
     <div>
       <CardHead title="資產配置" sub="目前配置與目標比例" />
       <div className="grid grid-cols-1 items-center gap-6 sm:grid-cols-[176px_1fr] sm:gap-7">
+        {/* 中心字級從 --fs-2xl 降到 --fs-xl。Donut 的孔徑是算得出來的：
+            size 176 → rad 74、inner 48，孔徑 96px。而 26px 下最寬的字串
+            （「120.0萬」「9,999萬」這類四位數萬）量到 99–104px，本來就壓在
+            圓環內緣上，資產一到千萬級必定疊字。22px 下同一批字串上限 88px，
+            孔徑還剩 8px，而且 fmtCompact 的輸出長度有上界（萬最多四位、
+            億最多三位有效數字），不可能再長。 */}
         <div className="relative mx-auto h-[176px] w-[176px]">
           <Donut
             data={allocation}
@@ -56,7 +62,7 @@ export function AllocationCard({
                 <div className="text-[length:var(--fs-micro)] text-[var(--c-muted)]">
                   {selected.label}
                 </div>
-                <div className="mt-1 text-[length:var(--fs-2xl)] font-semibold tracking-[-0.03em] tnum">
+                <div className="mt-1 text-[length:var(--fs-xl)] font-semibold tracking-[-0.03em] tnum">
                   {selected.pct.toFixed(1)}%
                 </div>
                 <div className="amt mt-1 text-[length:var(--fs-micro)] text-[var(--c-faint)] tnum">
@@ -66,7 +72,7 @@ export function AllocationCard({
             ) : (
               <>
                 <div className="text-[length:var(--fs-micro)] text-[var(--c-muted)]">總資產</div>
-                <div className="amt mt-1 text-[length:var(--fs-2xl)] font-semibold tracking-[-0.03em] tnum">
+                <div className="amt mt-1 text-[length:var(--fs-xl)] font-semibold tracking-[-0.03em] tnum">
                   {fmtCompact(total)}
                 </div>
                 <div className="mt-1 text-[length:var(--fs-micro)] text-[var(--c-faint)]">
