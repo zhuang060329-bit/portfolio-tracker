@@ -22,9 +22,11 @@ async function twelveDataUsdTwd(): Promise<number> {
   const json = await res.json();
   const rate = Number(json?.price);
   if (!Number.isFinite(rate) || rate <= 0) {
-    throw new Error(
-      `Twelve Data USD/TWD 回傳異常：${JSON.stringify(json).slice(0, 120)}`,
+    // 同 twelvedata.ts：上游原文只進 log，不外流到使用者可見的錯誤字串。
+    console.error(
+      `[fx] USD/TWD 回傳異常 code=${json?.code ?? "unknown"} message=${json?.message ?? ""}`,
     );
+    throw new Error("Twelve Data USD/TWD 匯率回傳異常");
   }
   return rate;
 }

@@ -16,9 +16,13 @@ export const twelveDataProvider: PriceProvider = {
     const json = await res.json();
     const price = Number(json?.price);
     if (!Number.isFinite(price) || price <= 0) {
-      throw new Error(
-        `Twelve Data 找不到 ${symbol} 價格：${JSON.stringify(json).slice(0, 120)}`,
+      // 上游回應原文只進伺服器 log，不進丟給使用者的錯誤訊息——
+      // 這串會一路傳到畫面上的「抓價失敗：」後面，上游改了回應格式
+      // （夾帶請求參數之類）就會跟著外洩。
+      console.error(
+        `[twelvedata] ${symbol} 無有效報價 code=${json?.code ?? "unknown"} message=${json?.message ?? ""}`,
       );
+      throw new Error(`Twelve Data 找不到 ${symbol} 的報價`);
     }
     const fxToBase =
       baseCurrency.toUpperCase() === "USD" ? 1 : await getUsdTwdRate();
