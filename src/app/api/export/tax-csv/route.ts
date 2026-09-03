@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { escapeCsvCell } from "@/lib/csv";
+import { fetchAllPages } from "@/lib/supabase/paginate";
 
 /**
  * 年度稅務報表（台灣海外所得，基本所得稅 / 最低稅負制）。
@@ -68,19 +69,24 @@ export async function GET(request: Request) {
   // 抓該年度內的賣出 / 配息 / 利息
   const start = `${year}-01-01T00:00:00+08:00`;
   const end = `${year + 1}-01-01T00:00:00+08:00`;
-  const { data, error } = await supabase
-    .from("transactions")
-    .select(
-      "created_at,type,quantity_after,unit_price,fx_rate,cashflow_twd,realized_pnl,note,accounts(name,price_market,symbol,native_currency)",
-    )
-    .in("type", ["sell", "dividend", "interest"])
-    .gte("created_at", start)
-    .lt("created_at", end)
-    .order("created_at", { ascending: true });
+  // 逐頁取，理由同 /api/export/csv：報稅報表少一列就是申報短漏。
+  const { data: rows, error } = await fetchAllPages(async (from, to) => {
+    const res = await supabase
+      .from("transactions")
+      .select(
+        "created_at,type,quantity_after,unit_price,fx_rate,cashflow_twd,realized_pnl,note,accounts(name,price_market,symbol,native_currency)",
+      )
+      .in("type", ["sell", "dividend", "interest"])
+      .gte("created_at", start)
+      .lt("created_at", end)
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true })
+      .range(from, to);
+    return { data: res.data as unknown as Row[] | null, error: res.error };
+  });
   if (error) {
     return new Response(`Error: ${error.message}`, { status: 500 });
   }
-  const rows = (data ?? []) as unknown as Row[];
 
   // 統計小計
   let totalRealized = 0;

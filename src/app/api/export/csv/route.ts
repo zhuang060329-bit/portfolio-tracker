@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { EXPORT_CSV_HEADER, escapeCsvCell } from "@/lib/csv";
+import { fetchAllPages } from "@/lib/supabase/paginate";
 
 // CSV 匯出：所有自己帳戶的 transactions（RLS 已綁 user_id）。
 // 帶 UTF-8 BOM，Excel 開啟中文不亂碼。
@@ -48,17 +49,23 @@ export async function GET() {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const { data, error } = await supabase
-    .from("transactions")
-    .select(
-      "created_at,type,quantity_after,unit_price,fx_rate,value_after_base,cashflow_twd,realized_pnl,fee_twd,note,accounts(name,price_market,symbol,native_currency,cost_basis_twd,cost_basis_native)",
-    )
-    .order("created_at", { ascending: false });
+  // 必須逐頁取：PostgREST 的 max-rows（預設 1000）會靜默截斷，
+  // 而這支是「完整備份」用途，少一列都是錯的。
+  // created_at 可能重複，補 id 當 tie-breaker，否則翻頁邊界會漏列或重複。
+  const { data: rows, error } = await fetchAllPages(async (from, to) => {
+    const res = await supabase
+      .from("transactions")
+      .select(
+        "created_at,type,quantity_after,unit_price,fx_rate,value_after_base,cashflow_twd,realized_pnl,fee_twd,note,accounts(name,price_market,symbol,native_currency,cost_basis_twd,cost_basis_native)",
+      )
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .range(from, to);
+    return { data: res.data as unknown as Row[] | null, error: res.error };
+  });
   if (error) {
     return new Response(`Error: ${error.message}`, { status: 500 });
   }
-
-  const rows = (data ?? []) as unknown as Row[];
 
   const header = EXPORT_CSV_HEADER.join(",");
 

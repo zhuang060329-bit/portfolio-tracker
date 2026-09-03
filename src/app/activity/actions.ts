@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { fetchAllPages } from "@/lib/supabase/paginate";
 import {
   hasCostBasisColumns,
   mapHeader,
@@ -171,11 +172,19 @@ async function loadHistory(
   const byAccount = new Map<string, Set<string>>();
   if (accountIds.length === 0) return byAccount;
 
-  const { data, error } = await supabase
-    .from("transactions")
-    .select("account_id,type,created_at")
-    .in("account_id", accountIds)
-    .limit(20000);
+  // 逐頁取。原本寫 .limit(20000)，但 PostgREST 的 max-rows（Supabase 預設
+  // 1000）是硬上限，limit 開再大也會被壓回去——交易破千筆之後這裡只看得到
+  // 一部分歷史，重複偵測會漏判、放行重複交易，而且完全沒有徵兆。
+  // 分頁必須有穩定排序，否則翻頁邊界會漏列；這裡沒有語意上的排序需求，用 id。
+  const { data, error } = await fetchAllPages(async (from, to) => {
+    const res = await supabase
+      .from("transactions")
+      .select("account_id,type,created_at")
+      .in("account_id", accountIds)
+      .order("id", { ascending: true })
+      .range(from, to);
+    return { data: res.data, error: res.error };
+  });
   if (error) {
     console.error(
       `[importTransactionsCsv] 查詢既有交易失敗 code=${error.code ?? "unknown"}`,
