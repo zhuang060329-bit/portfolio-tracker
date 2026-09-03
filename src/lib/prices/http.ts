@@ -25,7 +25,18 @@ export async function fetchWithRetry(
       }
     }
   }
-  throw lastErr ?? new Error(`fetch 失敗：${url}`);
+  throw lastErr ?? new Error(`fetch 失敗：${hostOf(url)} 無回應`);
+}
+
+// 只取 host。完整 URL 帶著 `apikey=` query，而這裡拋出的 message 會被
+// contributions / accounts 的「抓價失敗：」原封不動顯示在使用者畫面上，
+// 也會進 log。host 足以指出哪個上游掛掉，又不帶任何憑證。
+function hostOf(url: string): string {
+  try {
+    return new URL(url).host;
+  } catch {
+    return "上游";
+  }
 }
 
 function backoffMs(attempt: number): number {

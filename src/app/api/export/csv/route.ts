@@ -46,7 +46,10 @@ export async function GET() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return new Response("Unauthorized", { status: 401 });
+    return Response.json(
+      { error: "未登入", code: "UNAUTHORIZED" },
+      { status: 401 },
+    );
   }
 
   // 必須逐頁取：PostgREST 的 max-rows（預設 1000）會靜默截斷，
@@ -64,7 +67,15 @@ export async function GET() {
     return { data: res.data as unknown as Row[] | null, error: res.error };
   });
   if (error) {
-    return new Response(`Error: ${error.message}`, { status: 500 });
+    // 詳情只進 server log；回給 client 的訊息不帶 exception message，
+    // 那會漏出 Postgres 的 schema 細節。
+    console.error(
+      `[export/csv] 查詢交易失敗 code=${error.code ?? "unknown"}`,
+    );
+    return Response.json(
+      { error: "匯出失敗，請稍後再試", code: "EXPORT_QUERY_FAILED" },
+      { status: 500 },
+    );
   }
 
   const header = EXPORT_CSV_HEADER.join(",");

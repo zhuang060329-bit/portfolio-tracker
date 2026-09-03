@@ -54,7 +54,10 @@ export async function GET(request: Request) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return new Response("Unauthorized", { status: 401 });
+    return Response.json(
+      { error: "未登入", code: "UNAUTHORIZED" },
+      { status: 401 },
+    );
   }
 
   const url = new URL(request.url);
@@ -62,8 +65,13 @@ export async function GET(request: Request) {
   const year = yearParam
     ? Number(yearParam)
     : new Date().getFullYear();
-  if (!Number.isFinite(year) || year < 2000 || year > 2100) {
-    return new Response("Invalid year", { status: 400 });
+  // 必須是整數：Number.isFinite 會放行 "2025.5"，組出 `2025.5-01-01` 這種
+  // 無效時間戳丟給 Postgres，換來一個 500 和一則外洩的資料庫錯誤訊息。
+  if (!Number.isInteger(year) || year < 2000 || year > 2100) {
+    return Response.json(
+      { error: "年份參數無效", code: "INVALID_YEAR" },
+      { status: 400 },
+    );
   }
 
   // 抓該年度內的賣出 / 配息 / 利息
@@ -85,7 +93,13 @@ export async function GET(request: Request) {
     return { data: res.data as unknown as Row[] | null, error: res.error };
   });
   if (error) {
-    return new Response(`Error: ${error.message}`, { status: 500 });
+    console.error(
+      `[export/tax-csv] 查詢交易失敗 code=${error.code ?? "unknown"}`,
+    );
+    return Response.json(
+      { error: "匯出失敗，請稍後再試", code: "EXPORT_QUERY_FAILED" },
+      { status: 500 },
+    );
   }
 
   // 統計小計
