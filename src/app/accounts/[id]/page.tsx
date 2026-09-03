@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { fetchAllPages } from "@/lib/supabase/paginate";
 import { createClient } from "@/lib/supabase/server";
 import { AccountActions } from "./AccountActions";
 import { RecurringPlans, type Plan } from "./RecurringPlans";
@@ -78,13 +79,18 @@ export default async function AccountDetail({
       )
       .eq("id", id)
       .single(),
-    supabase
-      .from("transactions")
-      .select(
-        "id,type,quantity_after,unit_price,fx_rate,value_after_base,realized_pnl,cashflow_twd,fee_twd,reversal_of,note,created_at",
-      )
-      .eq("account_id", id)
-      .order("created_at", { ascending: false }),
+    fetchAllPages(async (from, to) => {
+      const res = await supabase
+        .from("transactions")
+        .select(
+          "id,type,quantity_after,unit_price,fx_rate,value_after_base,realized_pnl,cashflow_twd,fee_twd,reversal_of,note,created_at",
+        )
+        .eq("account_id", id)
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: false })
+        .range(from, to);
+      return { data: res.data, error: res.error };
+    }),
     supabase
       .from("recurring_plans")
       .select(
@@ -93,11 +99,15 @@ export default async function AccountDetail({
       .eq("account_id", id)
       .order("active", { ascending: false })
       .order("next_run_date", { ascending: true }),
-    supabase
-      .from("account_snapshots")
-      .select("snapshot_date,value_base")
-      .eq("account_id", id)
-      .order("snapshot_date", { ascending: true }),
+    fetchAllPages(async (from, to) => {
+      const res = await supabase
+        .from("account_snapshots")
+        .select("snapshot_date,value_base")
+        .eq("account_id", id)
+        .order("snapshot_date", { ascending: true })
+        .range(from, to);
+      return { data: res.data, error: res.error };
+    }),
   ]);
   if (!account) notFound();
   const plans = (plansData ?? []) as Plan[];

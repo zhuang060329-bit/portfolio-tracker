@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { fetchAllPages } from "@/lib/supabase/paginate";
 import { createClient } from "@/lib/supabase/server";
 import { AppHeader } from "@/components/AppHeader";
 import { getUnreadCount } from "@/lib/notifications";
@@ -30,11 +31,16 @@ export default async function WhatIfPage() {
   ] = await Promise.all([
     supabase.auth.getUser(),
     getUnreadCount(),
-    supabase
-      .from("transactions")
-      .select("created_at,cashflow_twd")
-      .not("cashflow_twd", "is", null)
-      .order("created_at", { ascending: true }),
+    fetchAllPages(async (from, to) => {
+      const res = await supabase
+        .from("transactions")
+        .select("created_at,cashflow_twd")
+        .not("cashflow_twd", "is", null)
+        .order("created_at", { ascending: true })
+        .order("id", { ascending: true })
+        .range(from, to);
+      return { data: res.data, error: res.error };
+    }),
     supabase
       .from("accounts")
       .select(

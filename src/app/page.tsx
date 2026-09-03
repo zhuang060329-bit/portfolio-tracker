@@ -1,3 +1,4 @@
+import { fetchAllPages } from "@/lib/supabase/paginate";
 import { createClient } from "@/lib/supabase/server";
 import { AppHeader } from "@/components/AppHeader";
 import { QuickAddFab } from "@/components/QuickAddFab";
@@ -50,26 +51,45 @@ export default async function Home({
   const [cashflowResult, incomeResult, profileResult, snapshotResult] =
     await Promise.all([
       hasActive
-        ? supabase
-            .from("transactions")
-            .select("created_at,cashflow_twd")
-            .not("cashflow_twd", "is", null)
-            .in("account_id", activeAccountIds)
+        ? fetchAllPages<CashflowRow>(async (from, to) => {
+            const res = await supabase
+              .from("transactions")
+              .select("created_at,cashflow_twd")
+              .not("cashflow_twd", "is", null)
+              .in("account_id", activeAccountIds)
+              .order("id", { ascending: true })
+              .range(from, to);
+            return { data: res.data as CashflowRow[] | null, error: res.error };
+          })
         : Promise.resolve({ data: null as CashflowRow[] | null }),
       hasActive
-        ? supabase
-            .from("transactions")
-            .select("created_at,type,cashflow_twd")
-            .in("type", ["dividend", "interest"])
-            .in("account_id", activeAccountIds)
+        ? fetchAllPages<IncomeRow>(async (from, to) => {
+            const res = await supabase
+              .from("transactions")
+              .select("created_at,type,cashflow_twd")
+              .in("type", ["dividend", "interest"])
+              .in("account_id", activeAccountIds)
+              .order("id", { ascending: true })
+              .range(from, to);
+            return { data: res.data as IncomeRow[] | null, error: res.error };
+          })
         : Promise.resolve({ data: null as IncomeRow[] | null }),
       supabase.from("profiles").select("allocation_targets").single(),
+      // 逐頁取。這份快照是首頁淨值曲線與 TWR / XIRR / Sharpe / 回撤的來源，
+      // 每天每帳戶一列，10 個帳戶約 100 天就撞到 max-rows 的 1000 列硬上限。
+      // 而且排序是由舊到新，被砍掉的是最新那段——曲線會停在幾個月前，
+      // 指標照樣算得出數字，只是全部錯的，畫面上沒有任何徵兆。
       hasActive
-        ? supabase
-            .from("account_snapshots")
-            .select("account_id,snapshot_date,value_base")
-            .in("account_id", activeAccountIds)
-            .order("snapshot_date", { ascending: true })
+        ? fetchAllPages<SnapshotRow>(async (from, to) => {
+            const res = await supabase
+              .from("account_snapshots")
+              .select("account_id,snapshot_date,value_base")
+              .in("account_id", activeAccountIds)
+              .order("snapshot_date", { ascending: true })
+              .order("account_id", { ascending: true })
+              .range(from, to);
+            return { data: res.data as SnapshotRow[] | null, error: res.error };
+          })
         : Promise.resolve({ data: null as SnapshotRow[] | null }),
     ]);
 
