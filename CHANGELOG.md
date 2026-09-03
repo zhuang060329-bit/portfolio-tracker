@@ -6,7 +6,34 @@
 
 ## [Unreleased]
 
-（尚無）
+> 以下改動已完成並通過四道關卡，2026-09-03 分成 6 個 commit 落在
+> `optimize/2026-09-03` 分支上（`7f5a323`、`3eca6e8`、`a6c86c9`、`7889d53`、
+> `bc40425`，加這份文件對齊）。**尚未 push**。
+
+### Security
+- **CSP 由 `src/proxy.ts` 每 request 產生 nonce**，政策集中在 `src/lib/csp.ts`。
+  目前是 `Content-Security-Policy-Report-Only`，開關是 `CSP_ENFORCE`。
+  公開頁（`/demo`、`/demo/whatif`、`/demo/report`、`/demo/history`、`/login`）
+  已用 production build 在真實瀏覽器實測，console 零違規；登入後的頁面、
+  `/settings` 的 MFA QR、Google OAuth 三段需要真實帳號，尚未測。
+- `upgrade-insecure-requests` 改成只在 `CSP_ENFORCE` 為 true 時送出。
+  它在 Report-Only 政策裡依規範無效，Chrome 每次載入都會印一則假警報。
+- **Next.js 16.2.11 → 16.3.4**、`eslint-config-next` 同步升級，
+  `react-dom` 19.2.7 → 19.2.8（原本與 `react` 不同步）。
+  `npm audit` 由 8 個 high 降到 **0 vulnerabilities**。
+- 移除 `package.json` 的 `overrides.next.postcss = "8.5.10"`。寫下當時是資安修補，
+  但 `next@16.3.4` 自帶 `postcss@8.5.23`，這條 override 已經變成把相依壓回舊版。
+
+### Changed
+- **按鈕統一成 `.btn` 系統**（`globals.css` + 39 個元件）。原本各處自行拼
+  Tailwind utility，尺寸、圓角、focus ring、disabled 樣式互不一致；
+  現在收斂成 `.btn` 加 `--primary` / `--ghost` / `--danger` 等修飾子，
+  行動版觸控目標一律 ≥ 44px。顏色全部走 CSS 變數，沒有新增硬編碼色值。
+- **Sentry 改成動態 import**（`instrumentation-client.ts`、`app/error.tsx`）。
+  `import * as Sentry` 會把整包 SDK 拉進每頁必載的底座 chunk，
+  即使 DSN 沒設也 tree-shake 不掉（SDK 有 side effect）。
+  每頁必載底座 244.6 KB gzip → **165.9 KB gzip**。
+  代價是 Sentry 非同步載入，瀏覽器剛啟動那一瞬間的錯誤可能來不及捕捉。
 
 ## [1.2.0] - 2026-08-18
 
