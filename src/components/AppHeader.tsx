@@ -125,7 +125,7 @@ export function AppHeader({
           {!userEmail && !authPending && (
             <Link
               href="/login"
-              className="rounded-[var(--r-control)] border border-[var(--c-line-strong)] bg-[var(--c-surface)] px-3 py-2 text-xs font-medium text-[var(--c-text)] hover:bg-[var(--c-surface-soft)]"
+              className="btn btn-outline"
             >
               登入
             </Link>

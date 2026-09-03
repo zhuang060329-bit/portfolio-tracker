@@ -9,7 +9,7 @@ export default function NotFound() {
       <p className="text-sm text-[var(--c-muted)]">找不到這個頁面</p>
       <Link
         href="/"
-        className="mt-2 rounded-sm bg-[var(--c-accent)] px-5 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-90"
+        className="btn btn-primary mt-2"
       >
         回首頁
       </Link>

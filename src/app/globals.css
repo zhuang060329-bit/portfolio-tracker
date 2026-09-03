@@ -323,6 +323,206 @@ textarea:disabled {
   color: var(--c-faint);
 }
 
+/* ── 按鈕 ────────────────────────────────────────────────────────────
+   全站「有圓角又有內距」的控制項共 100 個，原本每一處各寫一串 utility。
+   圓角 12 種寫法（rounded-[var(--r-control)] 51、rounded-lg 24、
+   rounded-full 7、rounded-[9px] 3、rounded-sm 3、rounded-xl 2、rounded-md 2、
+   rounded-[5px]、rounded-[10px]、rounded-[14px]…），字級 11 種
+   （text-sm 19、text-[13px] 19、text-[13.5px] 12、text-xs 11、
+   text-[12.5px] 6…）。--r-control 是 7px、rounded-lg 是 8px，所以有 24 個
+   控制項比另外 51 個圓 1px；13 / 13.5 / 14 三階則是肉眼分不出來的三種尺寸。
+
+   其中 74 個的角色只有四種——實心主動作、中性實心、外框次動作、無框，
+   收進下面這一組 class。剩下 26 個外形相近但角色不同（分頁、篩選 chip、
+   開關、卡片式連結、分段選擇器、FAB）刻意留在原地：它們的樣式隨選中狀態
+   在呼叫端切換，而未分層的 .btn 會贏過那些 utility，套上去等於把狀態關掉。
+
+   焦點環、按下去的縮放、140ms 過場都已經是全站規則（見本檔下半部的
+   :focus-visible 與 a, button, [role="button"] 的 transition），這裡不重複。
+
+   這一段刻意留在 @layer 外面。Tailwind v4 把 utility 收在 layer 裡，
+   未分層的規則權重一律贏過它們，所以 .btn 的內距與字級不會被呼叫端殘留的
+   px-4 / text-sm 蓋掉——要換尺寸只能用下面的 .btn-sm / .btn-lg。
+   （同一個理由寫在 .tnum 那一段。）
+   反過來說，.btn 不設 width 與 white-space，w-full 與 whitespace-nowrap
+   照常作用。 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  border: 1px solid transparent;
+  border-radius: var(--r-control);
+  /* 高度用 min-height 不用 height：中文字比拉丁字高，使用者把瀏覽器
+     字級調大時，固定高度會把字裁掉。 */
+  min-height: 38px;
+  padding-inline: 1rem;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+/* 尺寸三階，對齊 --fs-* 字級尺標。
+   sm 給表格列與卡片內的密集控制項；lg 給整頁只有一個的主動作
+   （登入、驗證碼），44px 是 Apple HIG 的觸控目標下限。 */
+.btn-sm {
+  min-height: 30px;
+  padding-inline: 0.625rem;
+  font-size: var(--fs-micro);
+}
+
+.btn-lg {
+  min-height: 44px;
+  padding-inline: 1.5rem;
+  font-size: var(--fs-md);
+}
+
+/* 只有圖示、沒有文字：寬度等於高度，內距歸零。 */
+.btn-icon {
+  width: 38px;
+  padding-inline: 0;
+}
+
+.btn-icon.btn-sm {
+  width: 30px;
+}
+
+.btn-icon.btn-lg {
+  width: 44px;
+}
+
+/* 實心主動作。一頁只給一個——次要動作用 .btn-outline。
+   文字色一律 --c-btn-strong-text：深色主題下對 --c-accent 是 5.58:1，
+   淺色 5.48:1。原本 error / not-found 兩頁寫死 text-white，深色主題只有
+   3.44:1，未達 WCAG 1.4.3 AA。 */
+.btn-primary {
+  background-color: var(--c-accent);
+  color: var(--c-btn-strong-text);
+}
+
+/* 中性實心：某一區塊自己的動作（帳戶頁的各段送出），不跟頁面主 CTA 搶。 */
+.btn-neutral {
+  background-color: var(--c-btn-strong-bg);
+  color: var(--c-btn-strong-text);
+}
+
+/* 破壞性動作沿用漲跌色的跌色，不另外引進一個紅色 token。
+   深色 6.23:1、淺色 5.08:1。 */
+.btn-danger {
+  background-color: var(--c-down);
+  color: var(--c-btn-strong-text);
+}
+
+.btn-primary:hover:not(:disabled),
+.btn-neutral:hover:not(:disabled),
+.btn-danger:hover:not(:disabled) {
+  filter: brightness(1.12);
+}
+
+/* 淺色主題的實心底色本來就偏暗，再提亮會往背景靠、對比反而掉。
+   改成壓暗，兩個主題的 hover 都是「顏色變重一點」。 */
+[data-theme="light"] .btn-primary:hover:not(:disabled),
+[data-theme="light"] .btn-neutral:hover:not(:disabled),
+[data-theme="light"] .btn-danger:hover:not(:disabled) {
+  filter: brightness(0.92);
+}
+
+/* 外框次動作。字重比實心輕一階，讓兩者放在一起時主從關係看得出來。 */
+.btn-outline {
+  border-color: var(--c-line-strong);
+  background-color: var(--c-surface);
+  color: var(--c-text);
+  font-weight: 500;
+}
+
+.btn-outline:hover:not(:disabled) {
+  background-color: var(--c-surface-soft);
+}
+
+/* 破壞性次動作：刪除帳戶、停用 MFA。這兩處原本各自手寫一串
+   color-mix(in srgb, var(--c-down) 35%, transparent) 的框線配 12% 的 hover 底，
+   同一個意圖抄了兩遍。不用實心的 .btn-danger，因為它們只是「開啟確認流程」的
+   入口，真正的刪除發生在確認之後——留在外框這一階，只把顏色換成跌色。 */
+.btn-outline-danger {
+  border-color: color-mix(in srgb, var(--c-down) 35%, transparent);
+  background-color: var(--c-surface);
+  color: var(--c-down);
+  font-weight: 500;
+}
+
+.btn-outline-danger:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--c-down) 12%, transparent);
+}
+
+/* 無框：密集區域裡的第三順位動作，與圖示鈕。 */
+.btn-ghost {
+  background-color: transparent;
+  color: var(--c-muted);
+  font-weight: 500;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background-color: var(--c-surface-soft);
+  color: var(--c-text);
+}
+
+/* 停用：透明度壓到 0.45（Material 給的區間是 0.38–0.5）再加游標，
+   兩個訊號都給。只靠透明度時，淺色主題上看起來像是「次要按鈕」，
+   分不出是停用。hover 的 filter 一併關掉，否則停用的按鈕滑過去還會亮。 */
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: none;
+}
+
+/* 刪除鍵：無框，但滑過去時轉成跌色，讓破壞性動作在按下之前就先表明身分。 */
+.btn-ghost-danger:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--c-down) 12%, transparent);
+  color: var(--c-down);
+}
+
+/* 觸控裝置一律撐到 44px（Apple HIG 的下限）。
+   原本有兩處寫成 min-h-11 sm:min-h-9，但斷點分的是螢幕寬度、不是輸入方式——
+   平板橫置時螢幕夠寬，點下去的仍然是手指。pointer: coarse 問的才是這件事。 */
+@media (pointer: coarse) {
+  .btn,
+  .btn-sm,
+  .btn-lg {
+    min-height: 44px;
+  }
+
+  .btn-icon,
+  .btn-icon.btn-sm,
+  .btn-icon.btn-lg {
+    width: 44px;
+  }
+
+  /* 分頁、chip 這類控制項的樣式是在呼叫端依選中狀態切換的，套不了 .btn
+     （未分層的 .btn 會贏過那些 utility，等於把狀態關掉），但觸控下限一樣要顧。
+     .tap-row 只補 min-height 與垂直置中，內距、字級、圓角、顏色全留在呼叫端；
+     整條住在 coarse 裡，滑鼠裝置上它不存在，外觀一格都不動。 */
+  .tap-row {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}
+
+/* 高度交給呼叫端：用在與同一列輸入框對齊的按鈕。
+   那一列的高度是由輸入框定的，min-height 的下限會把整列撐高。
+   寫成 .btn.btn-fit 是為了權重——上面的 coarse 區塊也在設 min-height，
+   靠檔案順序決勝負太脆弱。
+
+   代價是它一併關掉了觸控裝置的 44px 下限，所以**呼叫端必須自己把它補回來**：
+   高度一律寫成 h-11 sm:h-[想要的高度]，手機維持 44px，只有 sm 以上才縮。
+   寫成單一個 h-10 的話，桌機對齊了，手機的點擊區同時掉到 40px，
+   而且因為 min-height 已經被這條規則歸零，沒有任何東西會擋住它。 */
+.btn.btn-fit {
+  min-height: 0;
+}
+
 @keyframes page-in {
   from {
     opacity: 0;

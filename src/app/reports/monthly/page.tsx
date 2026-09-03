@@ -214,7 +214,7 @@ export default async function MonthlyReportPage({
                 報告月份
                 <input type="month" name="month" defaultValue={bounds.month} max={currentMonth} className="mt-1 block h-10 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface)] px-3 text-[13px]" />
               </label>
-              <button type="submit" className="mt-2 h-9 w-full rounded-[var(--r-control)] border border-[var(--c-border)] text-[12px] hover:bg-[var(--c-surface-soft)]">產生月報</button>
+              <button type="submit" className="btn btn-outline mt-2 w-full">產生月報</button>
             </form>
             <PrintReportButton />
           </div>

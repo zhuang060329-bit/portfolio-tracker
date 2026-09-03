@@ -24,7 +24,7 @@ export default async function DemoReportPage({ searchParams }: { searchParams: P
         <header className="report-block flex flex-wrap items-start justify-between gap-4 border-b border-[var(--c-line-strong)] pb-5">
           <div><div className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-[var(--c-accent)]">Deterministic Demo Report</div><h1 className="mt-2 font-serif text-4xl font-medium">{bounds.month} 月度投資報告</h1><p className="mt-2 text-[11.5px] text-[var(--c-muted)]">資料截止 {bounds.endDate} 23:59（Asia/Taipei）· 全部為固定示範資料</p></div>
           <div className="flex items-end gap-3">
-            <form method="GET" className="no-print"><label className="text-[10.5px] text-[var(--c-muted)]">示範月份<input type="month" name="month" defaultValue={bounds.month} max={currentMonth} className="mt-1 block h-10 rounded-lg border border-[var(--c-border)] px-3 text-[12.5px]" /></label><button type="submit" className="mt-2 h-9 w-full rounded-lg border border-[var(--c-border)] text-[12px]">產生</button></form>
+            <form method="GET" className="no-print"><label className="text-[10.5px] text-[var(--c-muted)]">示範月份<input type="month" name="month" defaultValue={bounds.month} max={currentMonth} className="mt-1 block h-10 rounded-lg border border-[var(--c-border)] px-3 text-[12.5px]" /></label><button type="submit" className="btn btn-outline mt-2 w-full">產生</button></form>
             <PrintReportButton />
           </div>
         </header>

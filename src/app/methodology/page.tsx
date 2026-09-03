@@ -38,7 +38,7 @@ export default function MethodologyPage() {
             <ThemeToggle />
             <Link
               href="/demo"
-              className="ml-0.5 inline-flex min-h-9 items-center rounded-[var(--r-control)] border border-[var(--c-border)] px-3 text-[11px] font-medium text-[var(--c-muted)] hover:border-[var(--c-line-strong)] hover:text-[var(--c-text)]"
+              className="btn btn-outline ml-0.5"
             >
               看 Demo
             </Link>

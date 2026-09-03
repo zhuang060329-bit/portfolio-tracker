@@ -67,14 +67,14 @@ function DeleteButton({
       <button
         type="submit"
         disabled={pending}
-        className="rounded-[var(--r-control)] bg-[var(--c-down)] px-2 py-1 text-xs font-medium text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-50"
+        className="btn btn-danger btn-sm"
       >
         {pending ? "刪除中…" : "確定"}
       </button>
       <button
         type="button"
         onClick={() => setConfirm(false)}
-        className="rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface)] px-2 py-1 text-xs text-[var(--c-text)]"
+        className="btn btn-outline btn-sm"
       >
         取消
       </button>

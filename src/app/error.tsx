@@ -42,13 +42,13 @@ export default function GlobalError({
         <button
           type="button"
           onClick={reset}
-          className="rounded-sm bg-[var(--c-accent)] px-5 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-90"
+          className="btn btn-primary"
         >
           重試
         </button>
         <Link
           href="/"
-          className="rounded-sm border border-[var(--c-border)] bg-[var(--c-surface)] px-5 py-2 text-sm text-[var(--c-text)] hover:bg-[var(--c-page)]"
+          className="btn btn-outline"
         >
           回首頁
         </Link>

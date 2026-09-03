@@ -125,7 +125,7 @@ export function ImportCsv() {
           <button
             type="submit"
             disabled={pending}
-            className="self-start rounded-[9px] bg-[var(--c-accent)] px-4 py-2 text-[13.5px] font-semibold text-[var(--c-btn-strong-text)] transition hover:brightness-110 disabled:opacity-50"
+            className="btn btn-primary self-start"
           >
             {pending ? "匯入中…" : "上傳並匯入"}
           </button>

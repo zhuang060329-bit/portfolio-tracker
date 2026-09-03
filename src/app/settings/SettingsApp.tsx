@@ -371,7 +371,7 @@ function AccountInner({ user }: { user: SettingsAppProps["user"] }) {
         <form action="/auth/signout" method="post">
           <button
             type="submit"
-            className="whitespace-nowrap rounded-lg border border-[var(--c-line-strong)] bg-[var(--c-surface)] px-4 py-2 text-[13px] font-medium text-[var(--c-text)] hover:bg-[var(--c-surface-soft)]"
+            className="btn btn-outline whitespace-nowrap"
           >
             登出
           </button>
@@ -521,14 +521,14 @@ function AllocInner({
           <button
             type="button"
             onClick={reset}
-            className="whitespace-nowrap rounded-lg border border-[var(--c-line-strong)] bg-[var(--c-surface)] px-4 py-2 text-[13px] font-medium text-[var(--c-text)] hover:bg-[var(--c-surface-soft)]"
+            className="btn btn-outline whitespace-nowrap"
           >
             還原
           </button>
           <button
             type="submit"
             disabled={!ok || pending}
-            className="whitespace-nowrap rounded-lg bg-[var(--c-accent)] px-4 py-2 text-[13px] font-semibold text-[var(--c-btn-strong-text)] transition-[filter] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45"
+            className="btn btn-primary whitespace-nowrap"
           >
             {pending ? "儲存中…" : "儲存目標"}
           </button>
@@ -586,7 +586,7 @@ function ConcentrationLimitForm({ initialValue }: { initialValue: number }) {
       <div className="flex items-center gap-2">
         {state?.error && <span className="text-[12px] text-[var(--c-down)]">{state.error}</span>}
         {saved && !pending && !state?.error && <span className="text-[12px] text-[var(--c-up)]">✓ 已儲存</span>}
-        <button type="submit" disabled={pending} className="rounded-lg border border-[var(--c-line-strong)] px-4 py-2 text-[13px] font-medium hover:bg-[var(--c-surface-soft)] disabled:opacity-50">
+        <button type="submit" disabled={pending} className="btn btn-outline">
           {pending ? "儲存中…" : "儲存上限"}
         </button>
       </div>
@@ -665,7 +665,7 @@ function DataInner({ email }: { email: string | null }) {
           </select>
           <button
             type="submit"
-            className="whitespace-nowrap rounded-lg border border-[var(--c-line-strong)] bg-[var(--c-surface)] px-4 py-2 text-[13px] font-medium text-[var(--c-text)] hover:bg-[var(--c-surface-soft)]"
+            className="btn btn-outline whitespace-nowrap"
           >
             ⤓ 下載 CSV
           </button>
@@ -675,7 +675,7 @@ function DataInner({ email }: { email: string | null }) {
         <a
           href="/api/export/csv"
           download
-          className="whitespace-nowrap rounded-lg border border-[var(--c-line-strong)] bg-[var(--c-surface)] px-4 py-2 text-[13px] font-medium text-[var(--c-text)] hover:bg-[var(--c-surface-soft)]"
+          className="btn btn-outline whitespace-nowrap"
         >
           ⤓ 匯出
         </a>

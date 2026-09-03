@@ -94,7 +94,7 @@ export default async function ActivityPage() {
           <a
             href="/api/export/csv"
             download
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-[9px] border border-[var(--c-line-strong)] bg-[var(--c-surface)] px-4 py-2.5 text-[13.5px] font-medium text-[var(--c-text)] hover:bg-[var(--c-surface-soft)]"
+            className="btn btn-outline shrink-0"
           >
             ⤓ 下載 CSV
           </a>

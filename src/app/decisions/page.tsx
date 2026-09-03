@@ -68,7 +68,7 @@ export default async function DecisionsPage() {
           </div>
           <Link
             href="/decisions/new"
-            className="rounded-[var(--r-control)] bg-[var(--c-accent)] px-4 py-2.5 text-[13.5px] font-semibold text-[var(--c-btn-strong-text)] hover:brightness-110"
+            className="btn btn-primary"
           >
             ＋ 記錄決策
           </Link>

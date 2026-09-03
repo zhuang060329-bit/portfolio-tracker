@@ -181,13 +181,13 @@ export function DecisionForm({
         </p>
       )}
       <div className="flex items-center justify-end gap-3">
-        <Link href="/decisions" className="rounded-[var(--r-control)] border border-[var(--c-border)] px-4 py-2.5 text-[13.5px] hover:bg-[var(--c-surface-soft)]">
+        <Link href="/decisions" className="btn btn-outline">
           取消
         </Link>
         <button
           type="submit"
           disabled={pending}
-          className="rounded-[var(--r-control)] bg-[var(--c-accent)] px-5 py-2.5 text-[13.5px] font-semibold text-[var(--c-btn-strong-text)] hover:brightness-110 disabled:opacity-50"
+          className="btn btn-primary"
         >
           {pending ? "儲存中…" : decisionId ? "儲存修改" : "儲存決策與情境"}
         </button>

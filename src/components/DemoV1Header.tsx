@@ -17,7 +17,7 @@ export function DemoV1Header({ active }: { active: DemoActive }) {
       <div className="mx-auto flex min-h-[var(--header-h)] max-w-[1200px] flex-wrap items-center gap-2 px-4 py-2 sm:px-6">
         <Link href="/demo" className="font-semibold">StackWorth <span className="ml-1 rounded border border-[var(--c-accent)] px-1.5 py-0.5 text-[9px] text-[var(--c-accent)]">DEMO</span></Link>
         <nav aria-label="Demo 功能" className="order-3 flex w-full gap-1 overflow-x-auto sm:order-none sm:ml-4 sm:w-auto">
-          {items.map((item) => <Link key={item.href} href={item.href} aria-current={active === item.key ? "page" : undefined} className={`whitespace-nowrap rounded-lg px-2.5 py-1.5 text-[12px] ${active === item.key ? "bg-[var(--c-accent-soft)] font-semibold text-[var(--c-accent)]" : "text-[var(--c-muted)] hover:text-[var(--c-text)]"}`}>{item.label}</Link>)}
+          {items.map((item) => <Link key={item.href} href={item.href} aria-current={active === item.key ? "page" : undefined} className={`tap-row whitespace-nowrap rounded-lg px-2.5 py-1.5 text-[12px] ${active === item.key ? "bg-[var(--c-accent-soft)] font-semibold text-[var(--c-accent)]" : "text-[var(--c-muted)] hover:text-[var(--c-text)]"}`}>{item.label}</Link>)}
         </nav>
         <div className="ml-auto flex items-center"><PrivacyToggle /><ThemeToggle /></div>
       </div>

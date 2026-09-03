@@ -193,7 +193,7 @@ export default async function HistoryPage({
           <form method="GET" className="flex flex-wrap items-end gap-2 rounded-xl border border-[var(--c-border)] bg-[var(--c-surface)] p-3">
             <DateInput name="from" label="期初日（不含）" value={startDate} max={previousDate(endDate)} />
             <DateInput name="date" label="回放日" value={endDate} max={today} />
-            <button type="submit" className="h-[38px] rounded-[var(--r-control)] bg-[var(--c-accent)] px-4 text-[13px] font-semibold text-[var(--c-btn-strong-text)] hover:brightness-110">
+            <button type="submit" className="btn btn-primary">
               回放
             </button>
           </form>

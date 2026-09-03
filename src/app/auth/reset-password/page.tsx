@@ -116,7 +116,7 @@ export default function ResetPasswordPage() {
             <button
               type="submit"
               disabled={busy}
-              className="w-full rounded-[var(--r-control)] bg-[var(--c-accent)] px-6 py-2.5 text-sm font-semibold text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-50"
+              className="btn btn-primary btn-lg w-full"
             >
               {busy ? "更新中…" : "更新密碼"}
             </button>

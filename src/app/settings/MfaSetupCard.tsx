@@ -210,7 +210,7 @@ export function MfaSetupCard() {
                   type="button"
                   onClick={verify}
                   disabled={busy || code.length !== 6}
-                  className="whitespace-nowrap rounded-lg bg-[var(--c-accent)] px-4 py-2.5 text-[13px] font-semibold text-[var(--c-btn-strong-text)] transition-[filter] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45"
+                  className="btn btn-primary whitespace-nowrap"
                 >
                   {busy ? "驗證中…" : "驗證並啟用"}
                 </button>
@@ -218,7 +218,7 @@ export function MfaSetupCard() {
                   type="button"
                   onClick={cancelEnroll}
                   disabled={busy}
-                  className="rounded-lg border border-[var(--c-line-strong)] bg-[var(--c-surface)] px-3 py-2 text-[13px] text-[var(--c-text)]"
+                  className="btn btn-outline"
                 >
                   取消
                 </button>
@@ -238,7 +238,7 @@ export function MfaSetupCard() {
             type="button"
             onClick={() => disable(verified.id)}
             disabled={busy}
-            className="whitespace-nowrap rounded-lg border border-[color-mix(in_srgb,var(--c-down)_35%,transparent)] bg-[var(--c-surface)] px-4 py-2 text-[13px] font-medium text-[var(--c-down)] hover:bg-[color-mix(in_srgb,var(--c-down)_12%,transparent)] disabled:opacity-50"
+            className="btn btn-outline-danger whitespace-nowrap"
           >
             停用 MFA
           </button>

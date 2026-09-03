@@ -85,7 +85,7 @@ export function MobileNavToggle({
         aria-label={open ? "關閉導覽" : "開啟導覽"}
         aria-expanded={open}
         aria-controls={panelId}
-        className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-control)] text-[var(--c-muted)] hover:bg-[var(--c-surface-soft)] hover:text-[var(--c-text)]"
+        className="btn btn-ghost btn-icon"
       >
         <svg
           width="19"
@@ -146,7 +146,7 @@ export function MobileNavToggle({
               <form action="/auth/signout" method="post" className="mt-3">
                 <button
                   type="submit"
-                  className="min-h-11 w-full rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface)] px-3 text-sm font-medium text-[var(--c-text)]"
+                  className="btn btn-outline w-full"
                 >
                   登出
                 </button>

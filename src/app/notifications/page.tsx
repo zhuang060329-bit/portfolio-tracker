@@ -90,7 +90,7 @@ export default async function NotificationsPage() {
             <form action={markAllNotificationsRead}>
               <button
                 type="submit"
-                className="rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface)] px-3 py-1.5 text-xs text-[var(--c-text)] hover:bg-[var(--c-surface-soft)]"
+                className="btn btn-outline btn-sm"
               >
                 全部標為已讀
               </button>
@@ -149,7 +149,7 @@ export default async function NotificationsPage() {
                       <input type="hidden" name="id" value={r.id} />
                       <button
                         type="submit"
-                        className="shrink-0 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface)] px-2 py-1 text-[10px] text-[var(--c-muted)] hover:bg-[var(--c-surface-soft)]"
+                        className="btn btn-outline btn-sm shrink-0"
                       >
                         標為已讀
                       </button>

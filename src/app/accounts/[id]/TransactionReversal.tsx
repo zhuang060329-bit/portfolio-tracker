@@ -54,7 +54,7 @@ export function TransactionReversal({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="min-h-11 rounded-[var(--r-control)] px-2 text-xs font-medium text-[var(--c-muted)] hover:bg-[var(--c-surface-soft)] hover:text-[var(--c-down)] sm:min-h-0 sm:py-1"
+        className="btn btn-ghost btn-ghost-danger btn-sm"
       >
         {copy.button}
       </button>
@@ -81,14 +81,14 @@ export function TransactionReversal({
         <button
           type="submit"
           disabled={pending}
-          className="min-h-11 rounded-[var(--r-control)] bg-[var(--c-down)] px-3 text-xs font-semibold text-[var(--c-btn-strong-text)] disabled:opacity-50 sm:min-h-9"
+          className="btn btn-danger btn-sm"
         >
           {pending ? "處理中…" : copy.confirm}
         </button>
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="min-h-11 rounded-[var(--r-control)] border border-[var(--c-line-strong)] bg-[var(--c-surface)] px-3 text-xs text-[var(--c-text)] sm:min-h-9"
+          className="btn btn-outline btn-sm"
         >
           取消
         </button>

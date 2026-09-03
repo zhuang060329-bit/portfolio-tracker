@@ -141,10 +141,10 @@ export default async function DecisionDetailPage({ params }: { params: Promise<{
           </div>
           {decision.status !== "archived" && (
             <div className="flex items-center gap-2">
-              <Link href={`/decisions/${decision.id}/edit`} className="rounded-[var(--r-control)] border border-[var(--c-border)] px-3.5 py-2 text-[12.5px] hover:bg-[var(--c-surface-soft)]">編輯</Link>
+              <Link href={`/decisions/${decision.id}/edit`} className="btn btn-outline">編輯</Link>
               <form action={archiveDecision}>
                 <input type="hidden" name="decisionId" value={decision.id} />
-                <button className="rounded-[var(--r-control)] border border-[var(--c-border)] px-3.5 py-2 text-[12.5px] text-[var(--c-muted)] hover:bg-[var(--c-surface-soft)]">
+                <button className="btn btn-ghost">
                   封存
                 </button>
               </form>

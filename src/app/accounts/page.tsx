@@ -50,7 +50,7 @@ export default async function AccountsPage() {
           </div>
           <Link
             href="/accounts/new"
-            className="shrink-0 rounded-[var(--r-control)] bg-[var(--c-accent)] px-4 py-2.5 text-[13.5px] font-semibold text-[var(--c-btn-strong-text)] transition hover:brightness-110"
+            className="btn btn-primary shrink-0"
           >
             ＋ 新增帳戶
           </Link>
@@ -64,7 +64,7 @@ export default async function AccountsPage() {
             </p>
             <Link
               href="/accounts/new"
-              className="mt-5 inline-block rounded-[var(--r-control)] bg-[var(--c-accent)] px-5 py-2.5 text-[13.5px] font-semibold text-[var(--c-btn-strong-text)] transition hover:brightness-110"
+              className="btn btn-primary mt-5"
             >
               建立第一個帳戶
             </Link>

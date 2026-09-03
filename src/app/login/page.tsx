@@ -113,7 +113,7 @@ export default function LoginPage() {
               type="button"
               onClick={signInGoogle}
               disabled={loading}
-              className="mt-6 w-full rounded-[var(--r-control)] bg-[var(--c-accent)] px-6 py-3 text-sm font-semibold text-[var(--c-btn-strong-text)] transition hover:brightness-110 disabled:opacity-50"
+              className="btn btn-primary btn-lg mt-6 w-full"
             >
               {loading ? "處理中…" : "使用 Google 登入"}
             </button>
@@ -172,7 +172,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-[var(--r-control)] bg-[var(--c-btn-strong-bg)] px-6 py-2.5 text-sm font-semibold text-[var(--c-btn-strong-text)] transition hover:brightness-110 disabled:opacity-50"
+            className="btn btn-neutral btn-lg w-full"
           >
             {loading
               ? "處理中…"

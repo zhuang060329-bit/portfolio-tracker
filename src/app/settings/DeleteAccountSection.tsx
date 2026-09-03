@@ -39,7 +39,7 @@ export function DeleteAccountSection({ email }: { email: string | null }) {
           <button
             type="button"
             onClick={() => setConfirm(true)}
-            className="min-h-11 whitespace-nowrap rounded-lg border border-[color-mix(in_srgb,var(--c-down)_35%,transparent)] bg-[var(--c-surface)] px-4 text-[13px] font-medium text-[var(--c-down)] hover:bg-[color-mix(in_srgb,var(--c-down)_12%,transparent)]"
+            className="btn btn-outline-danger whitespace-nowrap"
           >
             刪除帳戶
           </button>
@@ -93,7 +93,7 @@ export function DeleteAccountSection({ email }: { email: string | null }) {
             <button
               type="submit"
               disabled={pending || !matched}
-              className="min-h-11 rounded-lg bg-[var(--c-down)] px-4 text-[13px] font-semibold text-[var(--c-btn-strong-text)] disabled:cursor-not-allowed disabled:opacity-50"
+              className="btn btn-danger"
             >
               {pending ? "刪除中…" : "永久刪除我的帳戶"}
             </button>
@@ -103,7 +103,7 @@ export function DeleteAccountSection({ email }: { email: string | null }) {
                 setConfirm(false);
                 setTyped("");
               }}
-              className="min-h-11 rounded-lg border border-[var(--c-line-strong)] bg-[var(--c-surface)] px-4 text-[13px] text-[var(--c-text)]"
+              className="btn btn-outline"
             >
               取消
             </button>

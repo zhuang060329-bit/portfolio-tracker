@@ -123,7 +123,7 @@ export function Holdings({
         {!demo && (
           <Link
             href="/accounts/new"
-            className="inline-flex min-h-10 shrink-0 items-center rounded-[var(--r-control)] bg-[var(--c-accent)] px-3.5 text-[length:var(--fs-sm)] font-semibold text-[var(--c-btn-strong-text)] hover:brightness-110 sm:px-4"
+            className="btn btn-primary shrink-0"
           >
             新增帳戶
           </Link>

@@ -219,7 +219,7 @@ npm run dev   # Mac 也可用工作區根的 start-dev-portfolio.command（不�
 
 | 項目 | 為什麼 |
 |---|---|
-| 4 種按鈕風格散在各頁 | 提取成 Button component 影響面大，現有體驗 OK |
+| ~~4 種按鈕風格散在各頁~~ | **2026-09-03 已解決**：`globals.css` 收斂成一套 `.btn` class（`.btn-primary` / `.btn-neutral` / `.btn-danger` / `.btn-outline` / `.btn-outline-danger` / `.btn-ghost`，加 `.btn-sm` / `.btn-lg` / `.btn-icon` / `.btn-fit` 修飾）。行動版列表的整列可點區塊統一為 `.tap-row`。走 CSS class 而不是 React component，是因為按鈕散在 server 與 client component 兩邊，class 兩邊都能用，不必為了樣式把 server component 改成 client |
 | AppHeader unreadCount 每頁 fetch | DRY 違規但只是一個 COUNT query，成本低 |
 | serif 標題 + sans-serif 內文 | 設計取向決定，等使用者明說再改 |
 | CSV 匯入的交易寫入與帳戶更新不是原子的 | insert 成功、update 失敗時流水在但餘額沒跟上，且重試會被「帳戶已有交易」擋住。錯誤訊息已提示去看變動紀錄。要做成原子需要新 RPC 與 migration |

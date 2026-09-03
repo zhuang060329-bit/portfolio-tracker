@@ -88,7 +88,7 @@ export function ReviewForm({ decisionId, initial, suggested }: { decisionId: str
       {state?.error && <p className="text-[13px] text-[var(--c-down)]">{state.error}</p>}
       {state?.ok && <p className="text-[13px] text-[var(--c-up)]">{state.ok}</p>}
       <div className="flex justify-end">
-        <button type="submit" disabled={pending} className="rounded-[var(--r-control)] bg-[var(--c-accent)] px-5 py-2.5 text-[13.5px] font-semibold text-[var(--c-btn-strong-text)] hover:brightness-110 disabled:opacity-50">
+        <button type="submit" disabled={pending} className="btn btn-primary">
           {pending ? "儲存中…" : initial ? "更新檢討" : "儲存檢討"}
         </button>
       </div>

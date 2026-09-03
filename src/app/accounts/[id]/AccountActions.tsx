@@ -166,7 +166,7 @@ export function AccountActions({
           <button
             type="submit"
             disabled={updatePending}
-            className="rounded-[var(--r-control)] bg-[var(--c-accent)] px-4 py-2 text-sm font-semibold text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-50"
+            className="btn btn-primary"
           >
             {updatePending ? "抓最新價中…" : "更新價格"}
           </button>
@@ -313,7 +313,7 @@ export function AccountActions({
             <button
               type="submit"
               disabled={addPending}
-              className="self-start rounded-[var(--r-control)] bg-[var(--c-btn-strong-bg)] px-4 py-1.5 text-sm font-medium text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-50"
+              className="btn btn-neutral self-start"
             >
               {addPending ? "送出中…" : "確認加碼"}
             </button>
@@ -465,7 +465,7 @@ export function AccountActions({
             <button
               type="submit"
               disabled={sellPending}
-              className="self-start rounded-[var(--r-control)] bg-[var(--c-btn-strong-bg)] px-4 py-1.5 text-sm font-medium text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-50"
+              className="btn btn-neutral self-start"
             >
               {sellPending ? "送出中…" : "確認賣出"}
             </button>
@@ -525,7 +525,7 @@ export function AccountActions({
             <button
               type="submit"
               disabled={divPending}
-              className="self-start rounded-[var(--r-control)] bg-[var(--c-btn-strong-bg)] px-4 py-1.5 text-sm font-medium text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-50"
+              className="btn btn-neutral self-start"
             >
               {divPending ? "送出中…" : "記錄配息"}
             </button>
@@ -584,7 +584,7 @@ export function AccountActions({
           <button
             type="submit"
             disabled={intPending}
-            className="self-start rounded-[var(--r-control)] bg-[var(--c-btn-strong-bg)] px-4 py-1.5 text-sm font-medium text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-50"
+            className="btn btn-neutral self-start"
           >
             {intPending ? "送出中…" : "記錄利息"}
           </button>
@@ -627,7 +627,7 @@ export function AccountActions({
             <button
               type="submit"
               disabled={qtyPending}
-              className="self-start rounded-[var(--r-control)] bg-[var(--c-btn-strong-bg)] px-4 py-1.5 text-sm font-medium text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-50"
+              className="btn btn-neutral self-start"
             >
               {qtyPending ? "套用中…" : "套用"}
             </button>
@@ -668,7 +668,7 @@ export function AccountActions({
             <button
               type="submit"
               disabled={balPending}
-              className="self-start rounded-[var(--r-control)] bg-[var(--c-btn-strong-bg)] px-4 py-1.5 text-sm font-medium text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-50"
+              className="btn btn-neutral self-start"
             >
               {balPending ? "套用中…" : "套用"}
             </button>
@@ -716,14 +716,14 @@ export function AccountActions({
             <button
               type="submit"
               disabled={delPending}
-              className="rounded-[var(--r-control)] bg-[var(--c-down)] px-3 py-1 font-medium text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-50"
+              className="btn btn-danger btn-sm"
             >
               {delPending ? "刪除中…" : "我了解，永久刪除"}
             </button>
             <button
               type="button"
               onClick={() => setConfirmDelete(false)}
-              className="rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface)] px-3 py-1 text-[var(--c-text)]"
+              className="btn btn-outline btn-sm"
             >
               取消
             </button>

@@ -88,7 +88,7 @@ export function ThemeToggle() {
       <button
         type="button"
         aria-label="切換顯示模式"
-        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[var(--c-muted)]"
+        className="btn btn-ghost btn-icon"
       />
     );
   }
@@ -99,7 +99,7 @@ export function ThemeToggle() {
       onClick={toggle}
       aria-label={resolved === "dark" ? "切到淺色" : "切到深色"}
       title={resolved === "dark" ? "切到淺色" : "切到深色"}
-      className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg border border-transparent text-[var(--c-muted)] hover:border-[var(--c-border)] hover:bg-[var(--c-surface-soft)] hover:text-[var(--c-text)]"
+      className="btn btn-ghost btn-icon relative"
     >
       {resolved === "dark" ? (
         // 太陽（深色模式時 → 點擊切淺色）

@@ -113,7 +113,7 @@ export function ScenarioTab({ data }: { data: ScenarioData }) {
             <h2 className="text-[19px] font-medium">壓力規則</h2>
             <p className="mt-1 text-[12.5px] text-[var(--c-muted)]">可套用範本，再疊加自訂價格或匯率衝擊。</p>
           </div>
-          <button type="button" onClick={() => setShocks([])} className="rounded-lg border border-[var(--c-border)] px-3 py-2 text-[12px] text-[var(--c-muted)] hover:bg-[var(--c-surface-soft)]">
+          <button type="button" onClick={() => setShocks([])} className="btn btn-outline btn-sm">
             清除規則
           </button>
         </div>
@@ -142,7 +142,7 @@ export function ScenarioTab({ data }: { data: ScenarioData }) {
           </label>
           <NumberInput label="價格衝擊（%）" value={priceChange} onChange={setPriceChange} min={-100} max={300} />
           <NumberInput label="匯率衝擊（%）" value={fxChange} onChange={setFxChange} min={-100} max={300} />
-          <button type="button" onClick={addCustomShock} className="h-10 rounded-lg bg-[var(--c-accent)] px-4 text-[13px] font-semibold text-[var(--c-btn-strong-text)] hover:brightness-110">
+          <button type="button" onClick={addCustomShock} className="h-11 btn btn-primary btn-fit sm:h-10">
             加入
           </button>
         </div>

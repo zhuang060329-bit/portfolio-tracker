@@ -10,7 +10,7 @@ export function PrintReportButton() {
         <button
           type="button"
           onClick={() => window.print()}
-          className="h-10 rounded-[var(--r-control)] bg-[var(--c-accent)] px-4 text-[13px] font-semibold text-[var(--c-btn-strong-text)] hover:brightness-110"
+          className="btn btn-primary"
         >
           列印／儲存 PDF
         </button>

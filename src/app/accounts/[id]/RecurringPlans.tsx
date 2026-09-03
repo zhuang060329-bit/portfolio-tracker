@@ -162,7 +162,7 @@ function PlanRow({ plan }: { plan: Plan }) {
             <button
               type="submit"
               disabled={execPending || !plan.active}
-              className={`${controlH} inline-flex shrink-0 items-center rounded-[var(--r-control)] bg-[var(--c-accent)] px-3 text-xs font-semibold text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-40`}
+              className={`${controlH} btn btn-primary btn-sm btn-fit shrink-0`}
             >
               {execPending ? "執行中…" : "立即執行"}
             </button>
@@ -177,7 +177,7 @@ function PlanRow({ plan }: { plan: Plan }) {
             <button
               type="submit"
               disabled={togglePending}
-              className={`${controlH} inline-flex items-center rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface)] px-3 text-xs text-[var(--c-text)] hover:bg-[var(--c-page)] disabled:opacity-50`}
+              className={`${controlH} btn btn-outline btn-sm btn-fit`}
             >
               {plan.active ? "暫停" : "啟用"}
             </button>
@@ -187,7 +187,7 @@ function PlanRow({ plan }: { plan: Plan }) {
             <button
               type="submit"
               disabled={deletePending}
-              className={`${controlH} inline-flex items-center rounded-[var(--r-control)] px-2.5 text-xs text-[var(--c-muted)] underline hover:text-[var(--c-down)] disabled:opacity-50`}
+              className={`${controlH} btn btn-ghost btn-ghost-danger btn-sm btn-fit underline`}
             >
               刪除
             </button>
@@ -291,7 +291,7 @@ function AddPlanForm({ accountId }: { accountId: string }) {
         <button
           type="submit"
           disabled={pending}
-          className={`${controlFieldH} inline-flex items-center self-start rounded-[var(--r-control)] bg-[var(--c-btn-strong-bg)] px-4 text-sm font-medium text-[var(--c-btn-strong-text)] hover:opacity-90 disabled:opacity-50`}
+          className={`${controlFieldH} btn btn-neutral btn-fit self-start`}
         >
           {pending ? "建立中…" : "建立計劃"}
         </button>

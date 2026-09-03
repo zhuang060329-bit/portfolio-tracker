@@ -50,7 +50,7 @@ export function ManualForm() {
         <button
           type="submit"
           disabled={pending}
-          className="mt-1 self-start rounded-[var(--r-control)] bg-[var(--c-accent)] px-6 py-2.5 text-sm font-semibold text-[var(--c-btn-strong-text)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45"
+          className="btn btn-primary mt-1 self-start"
         >
           {pending ? "建立中…" : "建立帳戶"}
         </button>

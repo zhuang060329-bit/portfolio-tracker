@@ -143,7 +143,7 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label="關閉"
-                className="grid h-10 w-10 place-items-center rounded-[var(--r-control)] text-[var(--c-muted)] hover:bg-[var(--c-surface-soft)] hover:text-[var(--c-text)]"
+                className="btn btn-ghost btn-icon"
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -250,7 +250,7 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
                 disabled={
                   pending || !accountId || !(twdNumber > 0) || accountMissingPrice
                 }
-                className="mt-1 min-h-12 rounded-[var(--r-control)] bg-[var(--c-accent)] px-5 text-sm font-semibold text-[var(--c-btn-strong-text)] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+                className="btn btn-primary btn-lg mt-1"
               >
                 {pending ? "記錄中…" : "確認加碼"}
               </button>

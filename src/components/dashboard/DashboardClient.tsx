@@ -214,13 +214,13 @@ function FirstRun() {
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
         <Link
           href="/accounts/new"
-          className="rounded-[var(--r-control)] bg-[var(--c-accent)] px-5 py-2.5 text-[length:var(--fs-sm)] font-semibold text-[var(--c-btn-strong-text)] hover:brightness-110"
+          className="btn btn-primary"
         >
           建立第一個帳戶
         </Link>
         <Link
           href="/activity"
-          className="rounded-[var(--r-control)] border border-[var(--c-border)] px-5 py-2.5 text-[length:var(--fs-sm)] font-medium text-[var(--c-muted)] hover:border-[var(--c-line-strong)] hover:text-[var(--c-text)]"
+          className="btn btn-outline"
         >
           匯入 CSV
         </Link>

@@ -316,7 +316,7 @@ function CreatePanel({ accounts }: { accounts: AlertAccount[] }) {
         <button
           type="submit"
           disabled={pending || !threshold}
-          className="rounded-[10px] bg-[var(--c-accent)] px-[18px] py-2.5 text-sm font-semibold text-[var(--c-btn-strong-text)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45"
+          className="btn btn-primary"
         >
           {pending ? "建立中…" : "＋ 建立提醒"}
         </button>
@@ -450,7 +450,7 @@ function AlertCard({
             type="submit"
             title="刪除"
             aria-label="刪除提醒"
-            className="grid h-11 w-11 place-items-center rounded-[9px] border border-transparent text-[var(--c-muted)] transition-colors hover:border-[color-mix(in_srgb,var(--c-down)_30%,transparent)] hover:bg-[color-mix(in_srgb,var(--c-down)_12%,transparent)] hover:text-[var(--c-down)]"
+            className="btn btn-ghost btn-ghost-danger btn-icon btn-lg"
           >
             <TrashIcon />
           </button>
