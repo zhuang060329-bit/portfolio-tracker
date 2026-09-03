@@ -242,11 +242,17 @@ npm run dev   # Mac 也可用工作區根的 start-dev-portfolio.command（不�
 3. **例行**：每年 5 月報稅前到 `/settings` 下載年度稅務報表 CSV
 4. **待辦：把 CSP 從只回報改成實際攔截**。目前 `src/lib/csp.ts` 的
    `CSP_ENFORCE = false`，發的是 `Content-Security-Policy-Report-Only`，
-   瀏覽器照常渲染、只在 console 記違規。作法：開站繞一圈（首頁、`/whatif` 圖表、
-   `/settings` 的 MFA QR、登入與 OAuth、`/demo`），確認 console 沒有 CSP 違規，
-   再把 `CSP_ENFORCE` 翻成 `true`。翻的時候 `csp.test.ts` 會有兩條測試轉紅，
-   那是刻意的提醒，一併更新即可。
-   本機已用 production build 驗過公開頁；**登入後的頁面與 Google OAuth 尚未驗證**。
+   瀏覽器照常渲染、只在 console 記違規。
+   **公開頁已在 2026-09-03 用 production build 實測完畢**——`/demo`、`/demo/whatif`、
+   `/demo/report`、`/demo/history`、`/login` 走一遍，console 沒有任何
+   `Refused to …` 或 `[Report Only] Refused …`。
+   **剩下的只有你能做**：登入、`/settings` 的 MFA QR、Google OAuth 這三段要真實帳號。
+   那三段 console 也乾淨之後，把 `CSP_ENFORCE` 翻成 `true`。
+   翻的時候 `csp.test.ts` 會有兩條測試轉紅，那是刻意的提醒，一併更新即可。
+
+   > 實測時 console 會有一則 `An unknown error occurred when fetching the script.`，
+   > 那是 service worker 註冊失敗，**不是 CSP**：同一支 `/sw.js` 用 `fetch()` 拿得到 200，
+   > 而且 `sw.js` 被 proxy matcher 排除、根本沒有 CSP 標頭。在瀏覽器沙箱裡才會出現。
 
 ## 十、未做但討論過的功能（按曾認可的優先級）
 

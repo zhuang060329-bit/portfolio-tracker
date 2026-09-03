@@ -116,7 +116,15 @@ describe("buildCsp：其餘指令", () => {
     expect(directive(csp, "frame-ancestors")).toBe("'none'");
     expect(directive(csp, "worker-src")).toBe("'self'");
     expect(directive(csp, "font-src")).toBe("'self'");
-    expect(directive(csp, "upgrade-insecure-requests")).toBe("");
+  });
+
+  it("upgrade-insecure-requests 跟著 CSP_ENFORCE 走", () => {
+    // Report-Only 政策裡這個指令規範上無效，瀏覽器只會印一則 error。
+    // 所以只在強制執行時才送，避免每頁一則假警報蓋掉真的違規。
+    const csp = buildCsp("n", false);
+    expect(directive(csp, "upgrade-insecure-requests")).toBe(
+      CSP_ENFORCE ? "" : null,
+    );
   });
 
   it("img-src 允許 data:（MFA QR code 是 data URI）", () => {

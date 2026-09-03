@@ -96,8 +96,14 @@ export function buildCsp(nonce: string, isDev: boolean): string {
     "form-action 'self'",
     // 與既有的 X-Frame-Options: DENY 同義，兩個都留著給舊瀏覽器。
     "frame-ancestors 'none'",
-    "upgrade-insecure-requests",
   ];
+
+  // upgrade-insecure-requests 只在強制執行時才送。
+  // 規範明定 Report-Only 政策裡的這個指令無效，Chrome 會在 console 印一則
+  // error（"...is ignored when delivered in a report-only policy"）。
+  // 一直留著等於每開一頁就在 console 塞一則假警報，未來真有違規反而看不見。
+  // 翻 CSP_ENFORCE 的同時它就會自動回來，語意不變。
+  if (CSP_ENFORCE) directives.push("upgrade-insecure-requests");
 
   return directives.join("; ");
 }
