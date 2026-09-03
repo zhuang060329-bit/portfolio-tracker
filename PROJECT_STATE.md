@@ -18,7 +18,9 @@
 
 ### 工作區狀態（2026-09-03）
 
-- 分支 `optimize/2026-09-03`，工作區乾淨。48 個改動檔已切成 6 個 commit：
+- 分支 `main`，工作區乾淨。48 個改動檔切成 6 個 commit，2026-09-03 由
+  `optimize/2026-09-03` **快轉合併**進 `main`（沒有 merge commit）並推送；
+  分支本身也推上去了，留著當紀錄：
 
   | commit | 內容 |
   |---|---|
@@ -27,13 +29,15 @@
   | `a6c86c9` | Sentry 改成動態 import，每頁必載底座少 76 KB |
   | `7889d53` | CSP 公開頁實測完成，並修掉 Report-Only 的假警報 |
   | `bc40425` | 升級 Next 到 16.3.4 並移除 postcss override |
-  | 本次 | 文件對齊（`CHANGELOG.md`、本檔） |
+  | `6c2260b` | 文件對齊（`CHANGELOG.md`、本檔） |
 
 - 有三個檔案（`globals.css`、`error.tsx`、`login/page.tsx`）一份裡混了兩個主題，
   是**按 hunk** 分開 stage 的，不是整檔進同一個 commit。
 - `AGENTS.md` 的 Sentry 那個 hunk 裡夾了一條 `globals.css` 的說明（同一段連續改動，
   拆不開），它跟著 Sentry 那個 commit 走。這是已知的不乾淨處，不是遺漏。
-- **尚未 push**。遠端 `main` 還在 `c6b7eac`。使用者明確指示前不動 git。
+- 合併前 `main` 在 `c6b7eac`（v1.2.0）。四道關卡在合併前已全數跑過並通過，
+  合併是快轉，程式碼內容與當時一致。
+- Vercel 會因為 `main` 推送而自動部署，部署結果請自己去 Vercel 看，本檔不代為宣稱已上線。
 
 ## 現況範圍
 
@@ -140,12 +144,12 @@ client 端導航拿到的 RSC payload 可能還是舊 session 算出來的），
 
 ## 待使用者決定（不經確認不動）
 
-1. **這 6 個 commit 要不要 push**。目前只 commit 沒 push，
-   分支 `optimize/2026-09-03` 只存在本機。要 push 或要先合回 `main`，由使用者決定。
+1. **確認 Vercel 這次部署的結果**，以及要不要為這批改動發一個版號
+   （目前仍掛在 `CHANGELOG.md` 的 `[Unreleased]` 底下）。
 2. **`CSP_ENFORCE` 翻 true**。要先由使用者登入實測（登入後的頁面、
    `/settings` 的 MFA QR、Google OAuth 這三處我沒有帳號可以測），見上。
 
-> 原第 1 點「相依升級」、原「切 commit」一項皆已於 2026-09-03 執行完畢。
+> 原第 1 點「相依升級」、原「切 commit」、原「要不要 push」皆已於 2026-09-03 執行完畢。
 
 ## Handoff
 

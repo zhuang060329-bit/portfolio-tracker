@@ -6,9 +6,9 @@
 
 ## [Unreleased]
 
-> 以下改動已完成並通過四道關卡，2026-09-03 分成 6 個 commit 落在
-> `optimize/2026-09-03` 分支上（`7f5a323`、`3eca6e8`、`a6c86c9`、`7889d53`、
-> `bc40425`，加這份文件對齊）。**尚未 push**。
+> 以下改動已完成並通過四道關卡，2026-09-03 分成 6 個 commit
+> （`7f5a323`、`3eca6e8`、`a6c86c9`、`7889d53`、`bc40425`、`6c2260b`），
+> 已由 `optimize/2026-09-03` 快轉合併進 `main` 並推送。尚未發版號。
 
 ### Security
 - **CSP 由 `src/proxy.ts` 每 request 產生 nonce**，政策集中在 `src/lib/csp.ts`。
