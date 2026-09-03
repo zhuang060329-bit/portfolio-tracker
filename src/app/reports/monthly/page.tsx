@@ -13,6 +13,10 @@ import {
   getMonthBounds,
 } from "@/lib/monthly-report";
 import { getUnreadCount } from "@/lib/notifications";
+import {
+  fetchAllPages,
+  SUPABASE_PAGE_SIZE,
+} from "@/lib/supabase/paginate";
 import { createClient } from "@/lib/supabase/server";
 import { PrintReportButton } from "./PrintReportButton";
 
@@ -89,9 +93,9 @@ export default async function MonthlyReportPage({
     },
     unreadCount,
     { data: accountData },
-    { data: snapshotData },
-    { data: statusData },
-    { data: transactionData },
+    { data: snapshotData, truncated: snapshotTruncated },
+    { data: statusData, truncated: statusTruncated },
+    { data: transactionData, truncated: transactionTruncated },
     { data: newDecisionData },
     { data: dueDecisionData },
     { data: reviewData },
@@ -103,25 +107,40 @@ export default async function MonthlyReportPage({
       .select("id,name,asset_class,symbol,price_market,created_at")
       .lte("created_at", `${bounds.endDate}T23:59:59+08:00`)
       .order("created_at", { ascending: true }),
-    supabase
-      .from("account_snapshots")
-      .select("account_id,snapshot_date,quantity,unit_price,fx_rate,value_base,cost_basis_twd,cost_basis_native,realized_pnl_twd,account_status")
-      .lte("snapshot_date", bounds.endDate)
-      .order("snapshot_date", { ascending: true })
-      .limit(LIMIT),
-    supabase
-      .from("account_status_history")
-      .select("account_id,status,effective_at,source")
-      .lte("effective_at", `${bounds.endDate}T23:59:59+08:00`)
-      .order("effective_at", { ascending: true })
-      .limit(LIMIT),
-    supabase
-      .from("transactions")
-      .select("account_id,type,cashflow_twd,realized_pnl,created_at")
-      .gt("created_at", `${bounds.openingDate}T23:59:59+08:00`)
-      .lte("created_at", `${bounds.endDate}T23:59:59+08:00`)
-      .order("created_at", { ascending: true })
-      .limit(LIMIT),
+    // 逐頁取：`.limit(10_000)` 會被 PostgREST 的 max-rows（預設 1000）壓回去，
+    // 而原本的截斷判定 `length >= LIMIT` 在硬上限之下永遠不成立——
+    // 月報少算了幾個月的快照也不會標示「資料不完整」。
+    fetchAllPages(async (from, to) => {
+      const res = await supabase
+        .from("account_snapshots")
+        .select("account_id,snapshot_date,quantity,unit_price,fx_rate,value_base,cost_basis_twd,cost_basis_native,realized_pnl_twd,account_status")
+        .lte("snapshot_date", bounds.endDate)
+        .order("snapshot_date", { ascending: true })
+        .order("account_id", { ascending: true })
+        .range(from, to);
+      return { data: res.data, error: res.error };
+    }, SUPABASE_PAGE_SIZE, LIMIT),
+    fetchAllPages(async (from, to) => {
+      const res = await supabase
+        .from("account_status_history")
+        .select("account_id,status,effective_at,source")
+        .lte("effective_at", `${bounds.endDate}T23:59:59+08:00`)
+        .order("effective_at", { ascending: true })
+        .order("account_id", { ascending: true })
+        .range(from, to);
+      return { data: res.data, error: res.error };
+    }, SUPABASE_PAGE_SIZE, LIMIT),
+    fetchAllPages(async (from, to) => {
+      const res = await supabase
+        .from("transactions")
+        .select("account_id,type,cashflow_twd,realized_pnl,created_at")
+        .gt("created_at", `${bounds.openingDate}T23:59:59+08:00`)
+        .lte("created_at", `${bounds.endDate}T23:59:59+08:00`)
+        .order("created_at", { ascending: true })
+        .order("id", { ascending: true })
+        .range(from, to);
+      return { data: res.data, error: res.error };
+    }, SUPABASE_PAGE_SIZE, LIMIT),
     supabase
       .from("investment_decisions")
       .select("id,asset_name,decision_type,decision_date")
@@ -177,7 +196,7 @@ export default async function MonthlyReportPage({
     createdAt: transaction.created_at,
   }));
   const sourceTruncated =
-    snapshots.length >= LIMIT || statusEvents.length >= LIMIT || transactions.length >= LIMIT;
+    snapshotTruncated || statusTruncated || transactionTruncated;
   const report = buildMonthlyReport({
     bounds,
     accounts,

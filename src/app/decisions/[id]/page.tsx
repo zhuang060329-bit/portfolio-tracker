@@ -4,6 +4,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { fmtFull, fmtNum } from "@/lib/format";
 import { calculateDecisionReviewMetrics } from "@/lib/decision-review-metrics";
 import { getUnreadCount } from "@/lib/notifications";
+import { fetchAllPages } from "@/lib/supabase/paginate";
 import { createClient } from "@/lib/supabase/server";
 import { archiveDecision } from "../actions";
 import { ReviewForm } from "./ReviewForm";
@@ -98,14 +99,23 @@ export default async function DecisionDetailPage({ params }: { params: Promise<{
   const decision = data as unknown as DecisionRow;
   const review = decision.decision_reviews?.[0] ?? null;
   const snapshot = decision.context_snapshot ?? {};
+  // 逐頁取：`.limit(2_000)` 會被 PostgREST 的 max-rows（預設 1000）壓成 1000，
+  // 也就是約 2.7 年的每日快照。決策檢討期間跨得比這長，指標就是用殘缺序列算的。
   const { data: reviewSnapshots } = decision.account_id
-    ? await supabase
-        .from("account_snapshots")
-        .select("snapshot_date,unit_price,fx_rate")
-        .eq("account_id", decision.account_id)
-        .lte("snapshot_date", decision.review_date)
-        .order("snapshot_date", { ascending: true })
-        .limit(2_000)
+    ? await fetchAllPages<{
+        snapshot_date: string;
+        unit_price: number | null;
+        fx_rate: number | null;
+      }>(async (from, to) => {
+        const res = await supabase
+          .from("account_snapshots")
+          .select("snapshot_date,unit_price,fx_rate")
+          .eq("account_id", decision.account_id)
+          .lte("snapshot_date", decision.review_date)
+          .order("snapshot_date", { ascending: true })
+          .range(from, to);
+        return { data: res.data, error: res.error };
+      })
     : { data: [] };
   const suggestedMetrics = calculateDecisionReviewMetrics({
     decisionDate: decision.decision_date,

@@ -78,3 +78,30 @@ describe("fetchAllPages", () => {
     expect(data).toHaveLength(1000); // 已取回的部分照樣回傳，但 error 不為 null
   });
 });
+
+describe("fetchAllPages 的 maxRows", () => {
+  it("拿滿 maxRows 就停，並回報 truncated", async () => {
+    const src = makeSource(5_000, 1_000);
+    const { data, truncated } = await fetchAllPages(src.page, 1_000, 2_500);
+
+    expect(data).toHaveLength(2_500);
+    expect(truncated).toBe(true);
+  });
+
+  it("maxRows 不是頁長倍數時，最後一頁只要剩下的量", async () => {
+    const src = makeSource(5_000, 1_000);
+    const { data } = await fetchAllPages(src.page, 1_000, 1_200);
+
+    expect(data).toHaveLength(1_200);
+    // 1000 + 200，兩次就夠，不會多抓一整頁再丟掉
+    expect(src.calls).toBe(2);
+  });
+
+  it("總數少於 maxRows 時不算截斷", async () => {
+    const src = makeSource(300, 1_000);
+    const { data, truncated } = await fetchAllPages(src.page, 1_000, 2_500);
+
+    expect(data).toHaveLength(300);
+    expect(truncated).toBe(false);
+  });
+});

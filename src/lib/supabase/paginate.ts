@@ -15,7 +15,7 @@ import type { PostgrestError } from "@supabase/supabase-js";
  */
 export const SUPABASE_PAGE_SIZE = 1000;
 
-// 防呆上限：避免呼叫端排序不穩定或上游行為異常時無限迴圈。
+// 防呆上限，同時是 maxRows 的預設值：避免呼叫端排序不穩定或上游行為異常時無限迴圈。
 const HARD_CAP = 200_000;
 
 export async function fetchAllPages<T>(
@@ -24,12 +24,20 @@ export async function fetchAllPages<T>(
     to: number,
   ) => PromiseLike<{ data: T[] | null; error: PostgrestError | null }>,
   pageSize: number = SUPABASE_PAGE_SIZE,
+  maxRows: number = HARD_CAP,
 ): Promise<{ data: T[]; error: PostgrestError | null; truncated: boolean }> {
   const all: T[] = [];
   let from = 0;
 
   for (;;) {
-    const { data, error } = await page(from, from + pageSize - 1);
+    // 拿滿 maxRows 就停，並告知呼叫端資料不完整。
+    // 頁面若要顯示「資料已截斷」提示，靠的是這面旗標而不是
+    // `rows.length >= LIMIT`——後者在 max-rows 硬上限之下永遠不成立。
+    const remaining = maxRows - all.length;
+    if (remaining <= 0) return { data: all, error: null, truncated: true };
+
+    const size = Math.min(pageSize, remaining);
+    const { data, error } = await page(from, from + size - 1);
     if (error) return { data: all, error, truncated: false };
 
     const rows = data ?? [];
@@ -37,9 +45,5 @@ export async function fetchAllPages<T>(
 
     all.push(...rows);
     from += rows.length;
-
-    if (all.length >= HARD_CAP) {
-      return { data: all, error: null, truncated: true };
-    }
   }
 }

@@ -1,5 +1,9 @@
 import { AppHeader } from "@/components/AppHeader";
 import { ASSET_CLASS_LABEL } from "@/lib/dashboard-data";
+import {
+  fetchAllPages,
+  SUPABASE_PAGE_SIZE,
+} from "@/lib/supabase/paginate";
 import { todayTaipei } from "@/lib/dates";
 import { fmtFull, fmtNum } from "@/lib/format";
 import {
@@ -74,9 +78,9 @@ export default async function HistoryPage({
     },
     unreadCount,
     { data: accountData },
-    { data: snapshotData },
-    { data: statusData },
-    { data: transactionData },
+    { data: snapshotData, truncated: snapshotTruncated },
+    { data: statusData, truncated: statusTruncated },
+    { data: transactionData, truncated: transactionTruncated },
   ] = await Promise.all([
     supabase.auth.getUser(),
     getUnreadCount(),
@@ -85,27 +89,42 @@ export default async function HistoryPage({
       .select("id,name,asset_class,symbol,price_market,created_at")
       .lte("created_at", `${endDate}T23:59:59+08:00`)
       .order("created_at", { ascending: true }),
-    supabase
-      .from("account_snapshots")
-      .select(
-        "account_id,snapshot_date,quantity,unit_price,fx_rate,value_base,cost_basis_twd,cost_basis_native,realized_pnl_twd,account_status",
-      )
-      .lte("snapshot_date", endDate)
-      .order("snapshot_date", { ascending: true })
-      .limit(SNAPSHOT_LIMIT),
-    supabase
-      .from("account_status_history")
-      .select("account_id,status,effective_at,source")
-      .lte("effective_at", `${endDate}T23:59:59+08:00`)
-      .order("effective_at", { ascending: true })
-      .limit(STATUS_LIMIT),
-    supabase
-      .from("transactions")
-      .select("account_id,type,cashflow_twd,realized_pnl,created_at")
-      .gt("created_at", `${startDate}T23:59:59+08:00`)
-      .lte("created_at", `${endDate}T23:59:59+08:00`)
-      .order("created_at", { ascending: true })
-      .limit(TRANSACTION_LIMIT),
+    // 逐頁取：PostgREST 的 max-rows（Supabase 預設 1000）是硬上限，
+    // `.limit(10_000)` 只會拿到 1000 列。原本靠 `length >= LIMIT` 判斷截斷，
+    // 在硬上限之下永遠不成立——歷史重播少了一半資料也不會有任何提示。
+    fetchAllPages(async (from, to) => {
+      const res = await supabase
+        .from("account_snapshots")
+        .select(
+          "account_id,snapshot_date,quantity,unit_price,fx_rate,value_base,cost_basis_twd,cost_basis_native,realized_pnl_twd,account_status",
+        )
+        .lte("snapshot_date", endDate)
+        .order("snapshot_date", { ascending: true })
+        .order("account_id", { ascending: true })
+        .range(from, to);
+      return { data: res.data, error: res.error };
+    }, SUPABASE_PAGE_SIZE, SNAPSHOT_LIMIT),
+    fetchAllPages(async (from, to) => {
+      const res = await supabase
+        .from("account_status_history")
+        .select("account_id,status,effective_at,source")
+        .lte("effective_at", `${endDate}T23:59:59+08:00`)
+        .order("effective_at", { ascending: true })
+        .order("account_id", { ascending: true })
+        .range(from, to);
+      return { data: res.data, error: res.error };
+    }, SUPABASE_PAGE_SIZE, STATUS_LIMIT),
+    fetchAllPages(async (from, to) => {
+      const res = await supabase
+        .from("transactions")
+        .select("account_id,type,cashflow_twd,realized_pnl,created_at")
+        .gt("created_at", `${startDate}T23:59:59+08:00`)
+        .lte("created_at", `${endDate}T23:59:59+08:00`)
+        .order("created_at", { ascending: true })
+        .order("id", { ascending: true })
+        .range(from, to);
+      return { data: res.data, error: res.error };
+    }, SUPABASE_PAGE_SIZE, TRANSACTION_LIMIT),
   ]);
 
   const accounts = ((accountData ?? []) as AccountRow[]).map<ReplayAccount>((account) => ({
@@ -142,23 +161,21 @@ export default async function HistoryPage({
     createdAt: transaction.created_at,
   }));
   const queryTruncated =
-    snapshots.length >= SNAPSHOT_LIMIT ||
-    statusEvents.length >= STATUS_LIMIT ||
-    transactions.length >= TRANSACTION_LIMIT;
+    snapshotTruncated || statusTruncated || transactionTruncated;
 
   const opening = replayPortfolioAsOf({
     targetDate: startDate,
     accounts,
     snapshots,
     statusEvents,
-    sourceTruncated: snapshots.length >= SNAPSHOT_LIMIT || statusEvents.length >= STATUS_LIMIT,
+    sourceTruncated: snapshotTruncated || statusTruncated,
   });
   const ending = replayPortfolioAsOf({
     targetDate: endDate,
     accounts,
     snapshots,
     statusEvents,
-    sourceTruncated: snapshots.length >= SNAPSHOT_LIMIT || statusEvents.length >= STATUS_LIMIT,
+    sourceTruncated: snapshotTruncated || statusTruncated,
   });
   const scopeAdjustments = buildScopeAdjustments({
     fromExclusive: startDate,
