@@ -22,7 +22,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 | 層 | 選擇 |
 |---|---|
-| 前端框架 | Next.js 16.2.10（Turbopack；Proxy 取代 Middleware；async cookies、async params） |
+| 前端框架 | Next.js 16.3.4（Turbopack；Proxy 取代 Middleware；async cookies、async params） |
 | React | 19（useActionState、useSyncExternalStore、Suspense for useSearchParams） |
 | 樣式 | Tailwind v4，`@custom-variant dark` 對應 `[data-theme="dark"]` |
 | 圖表 | Recharts |
@@ -276,6 +276,11 @@ npm run dev   # Mac 也可用工作區根的 start-dev-portfolio.command（不�
 - 不擅自做使用者沒明說的決定；遇到設計方向選擇先問
 - 不可逆操作（刪檔、覆寫、rebase --force）執行前先確認
 - 跑 build / test 失敗就停下來修，不要 push 失敗的東西
+- **`package.json` 加 `overrides` 時，一併寫下它的退場條件**（2026-09-03 加）。
+  這裡曾有一條 `overrides.next.postcss = "8.5.10"`，寫下當時是資安修補；
+  等 `next` 自己帶的 postcss 超過那個版本之後，同一條就變成把相依壓回舊版。
+  override 沒有到期日，`npm audit` 也不會提醒——只能靠升級時順手複查。
+  該條已於 2026-09-03 隨 Next 16.3.4 升級刪除。
 
 ## 十二、近期 commit 歷程（最新在前）
 

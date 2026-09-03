@@ -86,6 +86,12 @@ export default function LoginPage() {
         setLoading(false);
         setError(e3.message);
       } else {
+        // 這裡刻意用整頁重載，不是 router.push()。
+        // signInWithPassword 剛把 Supabase session cookie 寫進瀏覽器，
+        // client 端導航拿到的 RSC payload 可能還是舊 session 算出來的；
+        // 硬導向能保證 server component 重新讀一次 cookie。
+        // eslint-config-next 16.3.4 起會對這行出 warning，這裡是有意為之。
+        // eslint-disable-next-line @next/next/no-location-assign-relative-destination
         window.location.href = "/";
       }
     }
