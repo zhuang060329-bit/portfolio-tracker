@@ -37,7 +37,10 @@ export async function createAlert(
     threshold,
     note,
   });
-  if (error) return { error: error.message };
+  if (error) {
+    console.error(`[createAlert] 寫入失敗 code=${error.code ?? "unknown"}`);
+    return { error: "建立警示失敗，請稍後再試" };
+  }
 
   revalidatePath("/alerts");
   return { ok: true };

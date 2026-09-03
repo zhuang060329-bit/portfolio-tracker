@@ -45,7 +45,12 @@ export async function setAllocationTargets(
     .from("profiles")
     .update({ allocation_targets: targets })
     .eq("id", user.id);
-  if (error) return { error: error.message };
+  if (error) {
+    console.error(
+      `[setAllocationTargets] 更新失敗 code=${error.code ?? "unknown"}`,
+    );
+    return { error: "儲存目標配置失敗，請稍後再試" };
+  }
 
   revalidatePath("/");
   return undefined;

@@ -21,7 +21,10 @@ async function setStatus(
     .from("accounts")
     .update({ status })
     .eq("id", accountId);
-  if (error) return { error: error.message };
+  if (error) {
+    console.error(`[setAccountStatus] 更新失敗 code=${error.code ?? "unknown"}`);
+    return { error: "操作失敗，資料未變更。請重新整理後再試" };
+  }
 
   revalidatePath("/");
   revalidatePath(`/accounts/${accountId}`);

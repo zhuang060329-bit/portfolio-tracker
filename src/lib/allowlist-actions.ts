@@ -34,7 +34,11 @@ export async function deleteUser(
 
   const svc = createServiceClient();
   const { error } = await svc.auth.admin.deleteUser(userId);
-  if (error) return { error: error.message };
+  if (error) {
+    // 不印 userId：admin 操作 log 也不需要把被刪除者的 id 留下來。
+    console.error(`[deleteAllowlistUser] admin.deleteUser 失敗`);
+    return { error: "刪除失敗，資料未變更。請稍後再試" };
+  }
 
   revalidatePath("/admin/allowlist");
   return undefined;
