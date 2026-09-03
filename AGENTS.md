@@ -32,7 +32,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 | 排程 | Vercel Cron 每日 06:00 UTC（= 台北 14:00） |
 | 報價 | Twelve Data（美股 + USD/TWD）、FinMind（台股 + 0050 + 歷史匯率）、CoinGecko（加密） |
 | 測試 | Vitest（測試數量以 `npm run test` 實際輸出為準） |
-| 監控 | Sentry SDK（DSN 未設則 no-op） |
+| 監控 | Sentry SDK（DSN 未設則 no-op；**動態 import**，見第七節） |
 
 ## 三、目錄重點
 
@@ -198,6 +198,15 @@ npm run dev   # Mac 也可用工作區根的 start-dev-portfolio.command（不�
   兩端曾經默默脫鉤過：匯出寫 `Cashflow (TWD)`、匯入只認 `amount`，
   導致自家匯出檔一列都匯不回來，而當時沒有任何測試會發現。
   改匯出欄位時要連 `HEADER_ALIASES` 一起改，`csv-import-helpers` 的測試會擋。
+- **Sentry 走動態 import，不用 `import * as Sentry`**。靜態 import 會把整包 SDK
+  拉進「每頁必載」的底座 chunk，而且即使 `NEXT_PUBLIC_SENTRY_DSN` 沒設、
+  守門的 `if` 在建置期就是 false，bundler 仍然不會 tree-shake 掉（SDK 有 side effect）。
+  改成 `import("@sentry/nextjs").then(...)` 之後，底座由 244.6 KB 降到 168.5 KB gzip，
+  每開一頁省 76 KB。代價是 Sentry 非同步載入，瀏覽器剛啟動那一瞬間的錯誤可能漏掉。
+  涉及 `src/instrumentation-client.ts` 與 `src/app/error.tsx` 兩處，改回靜態就會退回原狀。
+- **`globals.css` 有一行 `@source not "../../**/*.md";`，別刪**。Tailwind v4 的
+  自動內容偵測會把 repo 裡的 `.md` 也當成模板掃，於是文件裡隨手寫的 class 名
+  （包括 AGENTS.md 舉例用的）會被當成真的在用而產出 CSS。這行把 markdown 排除掉。
 - **CSP 由 `src/proxy.ts` 每 request 產生 nonce，政策在 `src/lib/csp.ts`**，
   不放 `next.config.ts`（那裡的 headers 是靜態的，發不出每次不同的 nonce）。
   三件事改之前先看清楚：
