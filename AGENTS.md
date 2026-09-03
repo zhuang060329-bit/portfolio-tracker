@@ -221,6 +221,26 @@ npm run dev   # Mac 也可用工作區根的 start-dev-portfolio.command（不�
     `src/lib/csp.test.ts` 有一條測試釘住這件事。
   - **用了 nonce = 全站動態渲染**。改動前有 7 個靜態頁，之後 0 個。
     這是 Next 官方文件明列的取捨（ISR 停用、CDN 不能快取）。
+- **Supabase 有 1000 列的硬上限，多筆查詢一律走 `fetchAllPages`**。PostgREST 的
+  `db-max-rows` 在 Supabase 預設是 1000，而且是**硬上限不是預設值**：寫
+  `.limit(10000)` 會被無聲夾回 1000，沒有 error、沒有 warning、回傳的
+  `data.length` 就是 1000。2026-09-04 一次 review 在 12 個查詢裡發現這個問題，
+  分三個 commit 修掉。要點：
+  - 多筆查詢用 `src/lib/supabase/paginate.ts` 的 `fetchAllPages(page, pageSize, maxRows)`。
+    offset 依**實際回傳列數**前進，不是依 `pageSize`——上游把頁長夾小時，
+    照 `pageSize` 跳會直接跳過中間的資料。
+  - **每個分頁查詢都要有穩定的次要排序**（`.order("id")` 之類）。
+    只排 `snapshot_date` 這種會重複的欄位，同值列在頁邊界可能被跳過或重複。
+  - **`rows.length >= LIMIT` 偵測不到截斷**。在硬上限之下永遠只會拿到 1000 列，
+    LIMIT 設 10,000 時這個判斷恆為 false，「資料不完整」的提示永遠不會亮。
+    要用 `fetchAllPages` 回傳的 `truncated` 旗標。`history/page.tsx` 與
+    `reports/monthly/page.tsx` 兩處原本就是這樣壞的。
+  - **排序方向決定被砍掉的是哪一段**。首頁 `account_snapshots` 是由舊到新排，
+    截斷砍掉的是**最新**那段：淨值曲線停在幾個月前，TWR / XIRR / Sharpe / 回撤
+    照樣算得出數字，只是全部錯的，畫面上沒有任何徵兆。這是「顯示錯的」，
+    不是「顯示少的」。
+  - `accounts` / `profiles` / `alerts` / `investment_decisions` **刻意不分頁**：
+    個人使用不會接近 1000 列，加分頁只是多幾趟往返。要改成多使用者再回來看。
 - **手動帳戶**：不適用 addByAmount；FAB 與部分 query 自動排除
 - **服務選擇**：全部用免費額度可運作；個人單用不會撞限
 
