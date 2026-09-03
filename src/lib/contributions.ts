@@ -218,7 +218,16 @@ export async function executeRecurringPlan(args: {
       p_fee_override: feeOverride,
     },
   );
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    // 與 reversal-actions.ts 同一套判準：P0001 是 plpgsql raise exception，
+    // 訊息是我們自己在 SQL 裡寫的中文說明（為什麼這期不能執行），顯示出來才有用。
+    // 其他 SQLSTATE 是底層錯誤，原文會帶出欄位名與 policy 名稱，只印 code 到 log。
+    if (error.code === "P0001") return { ok: false, error: error.message };
+    console.error(
+      `[executeRecurringPlan] RPC 失敗 code=${error.code ?? "unknown"}`,
+    );
+    return { ok: false, error: "定期定額執行失敗，資料未變更。請稍後再試" };
+  }
 
   const row = (Array.isArray(data) ? data[0] : data) as RecurringRpcRow | null;
   if (!row || typeof row.executed !== "boolean" || !row.next_run_date) {

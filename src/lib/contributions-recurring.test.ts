@@ -16,7 +16,7 @@ const ACCOUNT = {
 const EXECUTED_AT = new Date("2026-07-10T02:00:00.000Z");
 
 function clientWithRpc(
-  result: { data: unknown; error: { message: string } | null },
+  result: { data: unknown; error: { message: string; code?: string } | null },
 ) {
   const rpc = vi.fn().mockResolvedValue(result);
   return {
@@ -236,9 +236,10 @@ describe("executeRecurringPlan", () => {
   });
 
   it("抓價與 RPC 錯誤都回傳可顯示訊息", async () => {
+    // 非 P0001：底層錯誤，原文（欄位名、policy 名）不外流，只回固定訊息。
     const { client } = clientWithRpc({
       data: null,
-      error: { message: "database unavailable" },
+      error: { message: "database unavailable", code: "42501" },
     });
     const rpcError = await executeRecurringPlan({
       supabase: client,
@@ -247,7 +248,10 @@ describe("executeRecurringPlan", () => {
       account: ACCOUNT,
       source: "cron",
     });
-    expect(rpcError).toEqual({ ok: false, error: "database unavailable" });
+    expect(rpcError).toEqual({
+      ok: false,
+      error: "定期定額執行失敗，資料未變更。請稍後再試",
+    });
 
     quoteMock.mockRejectedValueOnce(new Error("rate limited"));
     const quoteError = await executeRecurringPlan({
@@ -261,6 +265,23 @@ describe("executeRecurringPlan", () => {
       ok: false,
       error: "抓價失敗：rate limited",
     });
+  });
+
+  it("P0001 是 SQL 裡自己寫的說明，原文要顯示給使用者", async () => {
+    const { client } = clientWithRpc({
+      data: null,
+      error: { message: "這期已經執行過了", code: "P0001" },
+    });
+
+    const result = await executeRecurringPlan({
+      supabase: client,
+      planId: "plan-1",
+      expectedRunDate: "2026-07-05",
+      account: ACCOUNT,
+      source: "cron",
+    });
+
+    expect(result).toEqual({ ok: false, error: "這期已經執行過了" });
   });
 
   it("拒絕無效報價與不完整 RPC 回應", async () => {
