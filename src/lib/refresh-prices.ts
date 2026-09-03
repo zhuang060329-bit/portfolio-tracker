@@ -10,7 +10,19 @@ import type { Market } from "@/lib/prices/types";
 // - refresh-actions 用 RLS user client 呼叫 → 只刷該使用者自己的帳戶
 // 兩端共用同一份邏輯，避免 cron 與手動刷新的行為漂移。
 
-export type RefreshResult = { ok: number; failed: number; errors: string[] };
+export type MarketStat = { ok: number; failed: number };
+
+export type RefreshResult = {
+  ok: number;
+  failed: number;
+  errors: string[];
+  // 連帳戶清單都查不到：一筆都沒刷到。少了這面旗標，查詢失敗與「今天本來
+  // 就沒有待刷帳戶」在監控端長得一模一樣（ok=0、failed=0），整條 cron 掛掉
+  // 也看不出來。
+  queryFailed?: boolean;
+  // 依市場分列的成功／失敗。市場與報價來源一對一，用來判斷是哪一家掛了。
+  byMarket?: Record<string, MarketStat>;
+};
 
 export async function refreshAccountPrices(
   supabase: SupabaseClient,
@@ -21,12 +33,28 @@ export async function refreshAccountPrices(
     .neq("price_market", "manual")
     .not("symbol", "is", null)
     .eq("status", "active");
-  if (error) return { ok: 0, failed: 0, errors: [error.message] };
+  if (error) {
+    // 只回 code，不回 error.message：那是 Postgres 原文，會帶出 schema 細節。
+    return {
+      ok: 0,
+      failed: 0,
+      queryFailed: true,
+      byMarket: {},
+      errors: [`查詢帳戶清單失敗 code=${error.code ?? "unknown"}`],
+    };
+  }
 
   let ok = 0;
   let failed = 0;
   const errors: string[] = [];
+  const byMarket: Record<string, MarketStat> = {};
+  const bump = (market: string, key: "ok" | "failed") => {
+    const stat = (byMarket[market] ??= { ok: 0, failed: 0 });
+    stat[key] += 1;
+  };
+
   for (const acc of data ?? []) {
+    const market = String(acc.price_market);
     try {
       const quote = await getQuote(
         acc.price_market as Market,
@@ -57,10 +85,12 @@ export async function refreshAccountPrices(
       if (m) throw new Error(m);
 
       ok++;
+      bump(market, "ok");
     } catch (e) {
       failed++;
+      bump(market, "failed");
       errors.push(`${acc.symbol}: ${(e as Error).message}`);
     }
   }
-  return { ok, failed, errors };
+  return { ok, failed, errors, queryFailed: false, byMarket };
 }

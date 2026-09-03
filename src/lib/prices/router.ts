@@ -25,3 +25,11 @@ export function getQuote(
 ): Promise<PriceQuote> {
   return getProvider(market).getQuote(symbol, baseCurrency);
 }
+
+// 報價來源的顯示名稱。cron log 要能一眼看出是哪一家掛了，
+// 而 accounts.price_market 存的是 "us" / "tw" / "crypto"，看不出上游是誰。
+export const PROVIDER_LABEL: Record<Market, string> = {
+  crypto: "CoinGecko",
+  us: "TwelveData",
+  tw: "FinMind",
+};

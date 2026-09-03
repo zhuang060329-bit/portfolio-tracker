@@ -53,7 +53,15 @@ export async function scanAlerts(supabase: SupabaseClient) {
     .from("alerts")
     .select("id,user_id,type,account_id,threshold,note,last_triggered_at")
     .eq("active", true);
-  if (error) return { triggered: 0, errors: [error.message] };
+  if (error) {
+    // queryFailed 讓「查詢掛掉」與「今天沒有任何警示要觸發」在監控端分得開，
+    // 兩者原本都是 triggered=0。error.message 是 Postgres 原文，只回 code。
+    return {
+      triggered: 0,
+      queryFailed: true,
+      errors: [`查詢警示失敗 code=${error.code ?? "unknown"}`],
+    };
+  }
 
   // 預先抓所有可能需要的帳戶與 profile 一次
   const accountIds = new Set<string>();
@@ -205,5 +213,5 @@ export async function scanAlerts(supabase: SupabaseClient) {
     }
   }
 
-  return { triggered, errors };
+  return { triggered, queryFailed: false, errors };
 }
