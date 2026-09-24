@@ -52,7 +52,7 @@ export function planFlip<K>(
 
 function prefersReducedMotion(): boolean {
   // WAAPI 動畫不受 globals.css 那段 @media (prefers-reduced-motion) 管轄，
-  // 得在 JS 這邊自己擋。寫法對齊 useCountUp。
+  // 得在 JS 這邊直接查詢使用者偏好並略過 FLIP。
   return (
     typeof window !== "undefined" &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches

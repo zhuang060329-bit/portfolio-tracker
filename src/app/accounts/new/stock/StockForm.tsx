@@ -31,11 +31,11 @@ export function StockForm() {
         <fieldset className="flex flex-col gap-[7px] text-xs font-medium text-[var(--c-muted)]">
           市場
           <div className="mt-0.5 flex gap-2">
-            <label className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3 py-2.5 text-[13px] font-medium transition-all has-[:checked]:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] has-[:checked]:bg-[var(--c-accent-soft)] has-[:checked]:text-[var(--c-accent)]">
+            <label className="tap-row flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3 py-2.5 text-[13px] font-medium transition-colors has-[:checked]:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] has-[:checked]:bg-[var(--c-accent-soft)] has-[:checked]:text-[var(--c-accent)]">
               <input type="radio" name="market" value="us" defaultChecked className="sr-only" />
               美股
             </label>
-            <label className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3 py-2.5 text-[13px] font-medium transition-all has-[:checked]:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] has-[:checked]:bg-[var(--c-accent-soft)] has-[:checked]:text-[var(--c-accent)]">
+            <label className="tap-row flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3 py-2.5 text-[13px] font-medium transition-colors has-[:checked]:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] has-[:checked]:bg-[var(--c-accent-soft)] has-[:checked]:text-[var(--c-accent)]">
               <input type="radio" name="market" value="tw" className="sr-only" />
               台股
             </label>

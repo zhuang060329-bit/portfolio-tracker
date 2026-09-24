@@ -219,7 +219,7 @@ function Field({
   return (
     <label className="block text-[13px] font-medium">
       {label}{required && <span className="ml-1 text-[var(--c-down)]">*</span>}
-      {hint && <span className="mt-0.5 block text-[11.5px] font-normal text-[var(--c-muted)]">{hint}</span>}
+      {hint && <span className="mt-0.5 block text-xs font-normal text-[var(--c-muted)]">{hint}</span>}
       {children}
     </label>
   );

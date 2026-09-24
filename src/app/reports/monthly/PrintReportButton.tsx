@@ -14,11 +14,11 @@ export function PrintReportButton() {
         >
           列印／儲存 PDF
         </button>
-        <span className="text-[10.5px] text-[var(--c-muted)]">
+        <span className="text-xs text-[var(--c-muted)]">
           列印時金額：{privacy === "on" ? "已遮蔽" : "顯示"}
         </span>
       </div>
-      <p className="print-only text-[10px]">
+      <p className="print-only text-xs">
         金額遮罩狀態：{privacy === "on" ? "已遮蔽" : "顯示"}
       </p>
     </>

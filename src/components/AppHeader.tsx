@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ThemeToggle } from "./ThemeToggle";
 import { PrivacyToggle } from "./PrivacyToggle";
 import { MobileNavToggle } from "./MobileNavToggle";
+import { DesktopNavMore } from "./DesktopNavMore";
 
 type Active =
   | "portfolio"
@@ -36,9 +37,17 @@ export function AppHeader({
     { href: "/history", label: "歷史", key: "history" },
     { href: "/reports/monthly", label: "月報", key: "reports" },
     { href: "/alerts", label: "提醒", key: "alerts" },
-    { href: "/whatif", label: "推演", key: "whatif" },
+    { href: "/whatif", label: "情境", key: "whatif" },
     { href: "/settings", label: "設定", key: "settings" },
   ];
+  const primaryItems = navItems.filter((item) =>
+    ["portfolio", "accounts", "activity", "decisions", "whatif"].includes(
+      item.key ?? "",
+    ),
+  );
+  const moreItems = navItems.filter((item) =>
+    ["history", "reports", "alerts", "settings"].includes(item.key ?? ""),
+  );
 
   const initials = getInitials(userEmail);
 
@@ -57,7 +66,7 @@ export function AppHeader({
         </Link>
 
         <nav className="ml-2 hidden h-full items-center gap-1 md:flex" aria-label="主要導覽">
-          {navItems.map((item) => (
+          {primaryItems.map((item) => (
             <NavLink
               key={item.href}
               href={item.href}
@@ -65,6 +74,7 @@ export function AppHeader({
               label={item.label}
             />
           ))}
+          <DesktopNavMore items={moreItems} active={active} />
         </nav>
 
         <div className="ml-auto flex h-full items-center gap-1 sm:gap-1.5">
@@ -73,11 +83,11 @@ export function AppHeader({
               href="/notifications"
               aria-label={`通知${unreadCount > 0 ? `，${unreadCount} 則未讀` : ""}`}
               title="通知"
-              className="relative inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-control)] text-[var(--c-muted)] hover:bg-[var(--c-surface-soft)] hover:text-[var(--c-text)]"
+              className="touch-target relative inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-control)] text-[var(--c-muted)] hover:bg-[var(--c-surface-soft)] hover:text-[var(--c-text)]"
             >
               <BellIcon />
               {unreadCount > 0 && (
-                <span className="absolute right-1 top-1 flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-[var(--c-accent)] px-1 text-[8px] font-bold text-[var(--c-btn-strong-text)] tnum">
+                <span className="absolute right-0 top-0 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--c-accent)] px-1 text-xs font-bold text-[var(--c-btn-strong-text)] tnum">
                   {unreadCount > 99 ? "99+" : unreadCount}
                 </span>
               )}
@@ -101,14 +111,14 @@ export function AppHeader({
               href="/settings"
               title={userEmail}
               aria-label="帳號設定"
-              className="hidden h-8 w-8 items-center justify-center rounded-full border border-[var(--c-border)] bg-[var(--c-surface)] text-[11px] font-semibold text-[var(--c-muted)] sm:inline-flex"
+              className="touch-target hidden h-8 w-8 items-center justify-center rounded-full border border-[var(--c-border)] bg-[var(--c-surface)] text-xs font-semibold text-[var(--c-muted)] sm:inline-flex"
             >
               {initials}
             </Link>
           ) : authPending ? (
             <span
               aria-hidden="true"
-              className="hidden h-8 w-8 items-center justify-center rounded-full border border-[var(--c-border)] bg-[var(--c-surface)] text-[11px] font-semibold text-[var(--c-faint)] sm:inline-flex"
+              className="hidden h-8 w-8 items-center justify-center rounded-full border border-[var(--c-border)] bg-[var(--c-surface)] text-xs font-semibold text-[var(--c-faint)] sm:inline-flex"
             >
               {initials}
             </span>

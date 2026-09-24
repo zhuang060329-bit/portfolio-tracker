@@ -221,7 +221,7 @@ export default async function MonthlyReportPage({
       <main id="main" tabIndex={-1} className="report-page mx-auto max-w-[1040px] px-4 pb-28 pt-9 sm:px-6">
         <header className="report-block flex flex-wrap items-start justify-between gap-5 border-b border-[var(--c-line-strong)] pb-6">
           <div>
-            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--c-accent)]">StackWorth Monthly Report</div>
+            <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--c-accent)]">StackWorth Monthly Report</div>
             <h1 className="mt-2 font-serif text-4xl font-medium tracking-tight">{bounds.month} 月度投資報告</h1>
             <p className="mt-2 text-[12px] text-[var(--c-muted)]">
               資料區間 {bounds.startDate} 至 {bounds.endDate} · 產生時間 {generatedAt}（Asia/Taipei）
@@ -229,7 +229,7 @@ export default async function MonthlyReportPage({
           </div>
           <div className="flex flex-wrap items-end gap-3">
             <form method="GET" className="no-print">
-              <label className="text-[11px] text-[var(--c-muted)]">
+              <label className="text-xs text-[var(--c-muted)]">
                 報告月份
                 <input type="month" name="month" defaultValue={bounds.month} max={currentMonth} className="mt-1 block h-10 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface)] px-3 text-[13px]" />
               </label>
@@ -254,7 +254,7 @@ export default async function MonthlyReportPage({
             <ReportMetric label="股息與利息" value={report.attribution.incomeTwd} />
             <ReportMetric label="未解釋差額" value={report.attribution.residualTwd} warning={!report.attribution.reconciled} />
           </dl>
-          <p className="mt-4 text-[11.5px] text-[var(--c-muted)]">
+          <p className="mt-4 text-xs text-[var(--c-muted)]">
             對帳狀態：{report.attribution.reconciled ? "相對容差內" : "超出相對容差"} · 容差 NT$ {fmtNum(report.attribution.toleranceTwd, 2)} · 已實現損益 NT$ {fmtFull(report.attribution.realizedPnlMemoTwd)}
           </p>
         </ReportSection>
@@ -262,7 +262,7 @@ export default async function MonthlyReportPage({
         <div className="report-block mt-5 grid gap-5 lg:grid-cols-2">
           <ReportSection title="資產配置變化" nested>
             <table className="w-full text-[12.5px]">
-              <thead className="text-left text-[11px] text-[var(--c-muted)]"><tr><th className="pb-2 font-medium">類別</th><th className="pb-2 text-right font-medium">期初</th><th className="pb-2 text-right font-medium">期末</th><th className="pb-2 text-right font-medium">變動</th></tr></thead>
+              <thead className="text-left text-xs text-[var(--c-muted)]"><tr><th className="pb-2 font-medium">類別</th><th className="pb-2 text-right font-medium">期初</th><th className="pb-2 text-right font-medium">期末</th><th className="pb-2 text-right font-medium">變動</th></tr></thead>
               <tbody>
                 {allocationRows(report.openingAllocation, report.endingAllocation).map((row) => (
                   <tr key={row.key} className="border-t border-[var(--c-border)]">
@@ -297,10 +297,10 @@ export default async function MonthlyReportPage({
             </span>
             <span className="text-[var(--c-muted)]">期末持倉 {report.ending.holdings.length} · 快照資料 {snapshots.length} 筆</span>
           </div>
-          {report.dataGaps.length > 0 && <ul className="mt-3 list-disc space-y-1.5 pl-5 text-[11.5px] leading-5 text-[var(--c-muted)]">{report.dataGaps.map((gap) => <li key={gap}>{gap}</li>)}</ul>}
+          {report.dataGaps.length > 0 && <ul className="mt-3 list-disc space-y-1.5 pl-5 text-xs leading-5 text-[var(--c-muted)]">{report.dataGaps.map((gap) => <li key={gap}>{gap}</li>)}</ul>}
         </ReportSection>
 
-        <footer className="report-block mt-7 border-t border-[var(--c-border)] pt-4 text-[10.5px] leading-5 text-[var(--c-faint)]">
+        <footer className="report-block mt-7 border-t border-[var(--c-border)] pt-4 text-xs leading-5 text-[var(--c-faint)]">
           本報告依 StackWorth 中已記錄的帳戶、交易與快照計算，可能受缺失價格、缺失現金流、報價延遲與歷史欄位不足影響。內容僅供個人紀錄與檢討，不構成投資、稅務或法律建議。過去績效不代表未來結果。
         </footer>
       </main>
@@ -309,7 +309,7 @@ export default async function MonthlyReportPage({
 }
 
 function Kpi({ label, value, mask = false }: { label: string; value: string; mask?: boolean }) {
-  return <div className="report-card rounded-xl border border-[var(--c-border)] bg-[var(--c-surface)] px-4 py-3"><div className="text-[10.5px] text-[var(--c-muted)]">{label}</div><div className={`mt-1 text-[16px] font-semibold tnum ${mask ? "amt" : ""}`}>{value}</div></div>;
+  return <div className="report-card rounded-xl border border-[var(--c-border)] bg-[var(--c-surface)] px-4 py-3"><div className="text-xs text-[var(--c-muted)]">{label}</div><div className={`mt-1 text-[16px] font-semibold tnum ${mask ? "amt" : ""}`}>{value}</div></div>;
 }
 
 function ReportSection({ title, children, nested = false }: { title: string; children: React.ReactNode; nested?: boolean }) {
@@ -317,15 +317,15 @@ function ReportSection({ title, children, nested = false }: { title: string; chi
 }
 
 function ReportMetric({ label, value, warning = false }: { label: string; value: number; warning?: boolean }) {
-  return <div><dt className="text-[11px] text-[var(--c-muted)]">{label}</dt><dd className={`amt mt-1 text-[15px] font-semibold tnum ${warning ? "text-[var(--c-down)]" : value > 0 ? "text-[var(--c-up)]" : value < 0 ? "text-[var(--c-down)]" : ""}`}>{value > 0 ? "+" : ""}NT$ {fmtFull(value)}</dd></div>;
+  return <div><dt className="text-xs text-[var(--c-muted)]">{label}</dt><dd className={`amt mt-1 text-[15px] font-semibold tnum ${warning ? "text-[var(--c-down)]" : value > 0 ? "text-[var(--c-up)]" : value < 0 ? "text-[var(--c-down)]" : ""}`}>{value > 0 ? "+" : ""}NT$ {fmtFull(value)}</dd></div>;
 }
 
 function TextMetric({ label, value, mask = false }: { label: string; value: string; mask?: boolean }) {
-  return <div><dt className="text-[11px] text-[var(--c-muted)]">{label}</dt><dd className={`mt-1 text-[13px] font-semibold ${mask ? "amt" : ""}`}>{value}</dd></div>;
+  return <div><dt className="text-xs text-[var(--c-muted)]">{label}</dt><dd className={`mt-1 text-[13px] font-semibold ${mask ? "amt" : ""}`}>{value}</dd></div>;
 }
 
 function DecisionList({ title, rows }: { title: string; rows: { id: string; text: string }[] }) {
-  return <div><h3 className="text-[12px] font-semibold">{title}</h3>{rows.length === 0 ? <p className="mt-2 text-[11.5px] text-[var(--c-faint)]">無紀錄</p> : <ul className="mt-2 space-y-2 text-[11.5px] leading-5 text-[var(--c-muted)]">{rows.map((row) => <li key={row.id} className="line-clamp-3">{row.text}</li>)}</ul>}</div>;
+  return <div><h3 className="text-[12px] font-semibold">{title}</h3>{rows.length === 0 ? <p className="mt-2 text-xs text-[var(--c-faint)]">無紀錄</p> : <ul className="mt-2 space-y-2 text-xs leading-5 text-[var(--c-muted)]">{rows.map((row) => <li key={row.id} className="line-clamp-3">{row.text}</li>)}</ul>}</div>;
 }
 
 function allocationRows(opening: Record<string, number>, ending: Record<string, number>) {

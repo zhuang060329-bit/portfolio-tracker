@@ -146,7 +146,7 @@ export default async function AlertsPage() {
             <span className="font-serif text-3xl font-medium text-[var(--c-accent)] tnum">
               {activeCount}
             </span>
-            <span className="block text-[11px] tracking-wide text-[var(--c-muted)]">
+            <span className="block text-xs tracking-wide text-[var(--c-muted)]">
               啟用中
             </span>
           </div>

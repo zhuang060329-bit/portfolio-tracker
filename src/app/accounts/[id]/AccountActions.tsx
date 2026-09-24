@@ -201,7 +201,7 @@ export function AccountActions({
                 placeholder="例：50000"
                 className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
               />
-              <span className="mt-1 text-[10px] text-[var(--c-faint)]">
+              <span className="mt-1 text-xs text-[var(--c-faint)]">
                 實際從戶頭扣掉的總金額，含手續費。
               </span>
             </label>
@@ -218,7 +218,7 @@ export function AccountActions({
                 placeholder="例：500"
                 className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
               />
-              <span className="mt-1 text-[10px] text-[var(--c-faint)]">
+              <span className="mt-1 text-xs text-[var(--c-faint)]">
                 從投入金額中扣除後才換算股數；成本基礎仍記全額。留空 = 不記錄。
               </span>
             </label>
@@ -237,7 +237,7 @@ export function AccountActions({
                   className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
                 />
                 {isBackdating && !priceOverride && (
-                  <span className="mt-1 text-[10px] text-[var(--c-accent)]">
+                  <span className="mt-1 text-xs text-[var(--c-accent)]">
                     回填歷史記錄建議填寫當時成交價，否則快照將使用今日價格。
                   </span>
                 )}
@@ -358,7 +358,7 @@ export function AccountActions({
                 placeholder={defaultProceeds > 0 ? String(Math.round(defaultProceeds)) : ""}
                 className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
               />
-              <span className="mt-1 text-[10px] text-[var(--c-faint)]">
+              <span className="mt-1 text-xs text-[var(--c-faint)]">
                 券商實際匯入帳戶金額（扣完手續費）。留空就用市場估算。
               </span>
             </label>
@@ -375,7 +375,7 @@ export function AccountActions({
                 placeholder="例：500"
                 className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
               />
-              <span className="mt-1 text-[10px] text-[var(--c-faint)]">
+              <span className="mt-1 text-xs text-[var(--c-faint)]">
                 只在「實收金額」留空時從估算值扣除；自行填實收金額時視為已扣過，僅記錄。
               </span>
             </label>
@@ -610,7 +610,7 @@ export function AccountActions({
                 defaultValue={currentQty}
                 className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
               />
-              <span className="mt-1 text-[10px] text-[var(--c-faint)]">
+              <span className="mt-1 text-xs text-[var(--c-faint)]">
                 注意：這只是「校正持有數」，不算真實買賣交易。要精準損益請走「賣出」。
               </span>
             </label>
@@ -682,7 +682,7 @@ export function AccountActions({
         <button
           type="submit"
           disabled={archPending}
-          className="text-xs text-[var(--c-muted)] underline hover:text-[var(--c-text)] disabled:opacity-50"
+          className="btn btn-ghost btn-sm btn-fit underline disabled:opacity-50"
         >
           {archPending
             ? "處理中…"
@@ -702,7 +702,7 @@ export function AccountActions({
           <button
             type="button"
             onClick={() => setConfirmDelete(true)}
-            className="text-xs text-[var(--c-muted)] underline hover:text-[var(--c-text)]"
+            className="btn btn-ghost btn-ghost-danger btn-sm btn-fit underline"
           >
             刪除帳戶
           </button>

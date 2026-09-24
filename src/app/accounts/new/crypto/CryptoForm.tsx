@@ -36,7 +36,7 @@ export function CryptoForm() {
             placeholder="bitcoin / ethereum / solana"
             className="h-[42px] rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3.5 text-sm text-[var(--c-text)] outline-none placeholder:text-[var(--c-faint)] focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
           />
-          <span className="text-[11px] text-[var(--c-faint)]">
+          <span className="text-xs text-[var(--c-faint)]">
             到 coingecko.com 搜尋幣種頁面，網址 /coins/ 後面那個 id。
           </span>
         </label>

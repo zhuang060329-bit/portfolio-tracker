@@ -42,7 +42,7 @@ function DeleteButton({
 
   if (isSelf) {
     return (
-      <span className="text-[10px] text-[var(--c-faint)]">（你自己）</span>
+      <span className="text-xs text-[var(--c-faint)]">（你自己）</span>
     );
   }
 
@@ -51,7 +51,7 @@ function DeleteButton({
       <button
         type="button"
         onClick={() => setConfirm(true)}
-        className="text-xs text-[var(--c-muted)] underline hover:text-[var(--c-down)]"
+        className="btn btn-ghost btn-ghost-danger btn-sm btn-fit underline"
       >
         踢出
       </button>
@@ -119,7 +119,7 @@ export function UsersManager({
                     {r.email}
                   </span>
                   {!r.confirmed && (
-                    <span className="rounded bg-[color-mix(in_srgb,var(--c-down)_12%,transparent)] border border-[color-mix(in_srgb,var(--c-down)_25%,transparent)] px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-[var(--c-down)]">
+                    <span className="rounded bg-[color-mix(in_srgb,var(--c-down)_12%,transparent)] border border-[color-mix(in_srgb,var(--c-down)_25%,transparent)] px-1.5 py-0.5 text-xs uppercase tracking-wider text-[var(--c-down)]">
                       未驗證
                     </span>
                   )}

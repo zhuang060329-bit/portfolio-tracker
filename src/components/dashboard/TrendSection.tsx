@@ -96,7 +96,7 @@ export function TrendSection({
                 type="button"
                 aria-pressed={mode === item}
                 onClick={() => setMode(item)}
-                className={`min-h-9 whitespace-nowrap rounded-[5px] px-3 text-[length:var(--fs-sm)] ${
+                className={`tap-row min-h-9 whitespace-nowrap rounded-[5px] px-3 text-[length:var(--fs-sm)] ${
                   mode === item ? PICK_ON : PICK_OFF
                 }`}
               >
@@ -142,9 +142,8 @@ export function TrendSection({
               type="button"
               aria-pressed={range === item.key}
               onClick={() => setRange(item.key)}
-              /* 區間鈕是主圖表上最常按的控制項，拉到 44×44 過 WCAG 2.5.5（AAA）。
-                 同檔另外三處 min-h-9（模式切換、圖例鈕）不在本次範圍，仍是 36px，
-                 過 2.5.8（AA，24px）但未達 AAA。 */
+              /* 區間鈕是主圖表上最常按的控制項，固定拉到 44×44；模式與圖例
+                 則由 .tap-row 在粗指標裝置補到 44px，不擠壓滑鼠版密集版面。 */
               className={`min-h-11 min-w-11 shrink-0 rounded-[var(--r-control)] px-2.5 text-[length:var(--fs-micro)] ${
                 range === item.key ? PICK_ON : PICK_OFF
               }`}
@@ -210,7 +209,7 @@ function LegendButton({
       /* 開關語彙：邊框深淺 + 透明度，刻意不填色。填色是 PICK_ON 的專屬訊號，
          留給「互斥選擇」用；圖例是各自獨立的布林，兩者不該長得像。
          原本開與關只差透明度一個訊號，關掉的那條與「還沒 hover 過」難分。 */
-      className={`inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-[var(--r-control)] border px-2.5 text-[length:var(--fs-micro)] font-medium text-[var(--c-text)] hover:bg-[var(--c-surface-soft)] ${
+      className={`tap-row inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-[var(--r-control)] border px-2.5 text-[length:var(--fs-micro)] font-medium text-[var(--c-text)] hover:bg-[var(--c-surface-soft)] ${
         on
           ? "border-[var(--c-line-strong)]"
           : "border-[var(--c-border)] opacity-45"

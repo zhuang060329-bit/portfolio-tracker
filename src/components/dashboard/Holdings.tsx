@@ -152,7 +152,7 @@ export function Holdings({
                 type="button"
                 aria-pressed={sortKey === key}
                 onClick={() => setSort(key)}
-                className={`min-h-9 shrink-0 rounded-[var(--r-control)] border px-3 text-[length:var(--fs-sm)] ${
+                className={`tap-row min-h-9 shrink-0 rounded-[var(--r-control)] border px-3 text-[length:var(--fs-sm)] ${
                   sortKey === key
                     ? `border-[var(--c-line-strong)] ${PICK_ON}`
                     : `border-[var(--c-border)] ${PICK_OFF}`

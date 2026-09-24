@@ -76,7 +76,7 @@
      --fs-2xl    圓環中心、一級 primary 數字
      --fs-display  hero 總淨資產 */
   --fs-axis: 10px;
-  --fs-micro: 11px;
+  --fs-micro: 12px;
   --fs-sm: 13px;
   --fs-md: 15px;
   --fs-lg: 18px;
@@ -207,8 +207,185 @@ main:focus {
   display: none;
 }
 
+/* 水平資料表在窄螢幕上不能只靠「內容被切掉」暗示可滑動。提示文字負責可發現性，
+   focusable 的捲動容器則讓鍵盤使用者可以直接用方向鍵查看完整欄位。 */
+.scroll-cue {
+  display: none;
+  margin-bottom: 0.375rem;
+  color: var(--c-faint);
+  font-size: var(--fs-micro);
+  text-align: right;
+}
+
+@media (max-width: 767px) {
+  .scroll-cue {
+    display: block;
+  }
+}
+
+.scroll-region {
+  overscroll-behavior-inline: contain;
+  scrollbar-color: var(--c-line-strong) transparent;
+}
+
 .safe-bottom {
   padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+/* 動作結果的可見回饋。螢幕閱讀器仍讀上方常駐 live regions；這顆 toast
+   aria-hidden，避免同一句被播報兩次。 */
+.action-toast {
+  position: fixed;
+  top: calc(var(--header-h) + 0.75rem);
+  right: 1rem;
+  z-index: 70;
+  display: flex;
+  max-width: min(24rem, calc(100vw - 2rem));
+  align-items: center;
+  gap: 0.625rem;
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-card);
+  background: var(--c-surface);
+  padding: 0.75rem 0.875rem;
+  color: var(--c-text);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  box-shadow: var(--c-shadow);
+  pointer-events: none;
+  animation: action-toast-life 4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.action-toast-mark {
+  display: grid;
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  font-size: var(--fs-micro);
+  font-weight: 700;
+}
+
+.action-toast-success .action-toast-mark {
+  background: color-mix(in srgb, var(--c-up) 16%, transparent);
+  color: var(--c-up);
+}
+
+.action-toast-error .action-toast-mark {
+  background: color-mix(in srgb, var(--c-down) 16%, transparent);
+  color: var(--c-down);
+}
+
+@keyframes action-toast-life {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  8%,
+  86% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-3px) scale(0.99);
+  }
+}
+
+/* Bencho Create menu 的核心原則是「觸發鈕本身展開成選單」，而不是從別處跳出
+   一張面板。這裡保留同一錨點、短促按壓回饋與緊接出現的選項，但沿用本專案
+   tokens 與 inline SVG，不引入原元件需要的 Framer Motion / Lucide。 */
+.create-menu-panel {
+  transform-origin: bottom right;
+  animation: create-menu-in 180ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.create-menu-trigger[aria-expanded="true"] svg {
+  transform: rotate(45deg);
+}
+
+.create-menu-trigger svg {
+  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.create-menu-item {
+  animation: create-menu-item-in 160ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.create-menu-item:nth-child(2) {
+  animation-delay: 28ms;
+}
+
+.create-menu-item:nth-child(3) {
+  animation-delay: 56ms;
+}
+
+@keyframes create-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes create-menu-item-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Bencho Inline confirm：破壞性按鈕直接在原位置展開確認，不把注意力搬去 modal。
+   StackWorth 不提供假 undo；資料真正刪除前一定先出現取消與確認兩個選項。 */
+.inline-confirm-shell {
+  display: inline-flex;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: flex-end;
+  overflow: hidden;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-control);
+  background: var(--c-surface);
+  transition: width 220ms cubic-bezier(0.2, 0.8, 0.2, 1), border-color 140ms ease;
+}
+
+.inline-confirm-shell[data-phase="idle"] {
+  width: 44px;
+}
+
+.inline-confirm-shell[data-phase="asking"] {
+  width: 176px;
+  border-color: color-mix(in srgb, var(--c-down) 35%, transparent);
+}
+
+.inline-confirm-shell.mfa-inline-confirm[data-phase="idle"] {
+  width: 102px;
+  border-color: transparent;
+}
+
+.inline-confirm-shell.mfa-inline-confirm[data-phase="asking"] {
+  width: 190px;
+}
+
+.mfa-reveal {
+  animation: detailsReveal 180ms ease-out;
+}
+
+.motion-progress {
+  transition-duration: 300ms;
+}
+
+.chart-reveal {
+  transition-duration: 340ms !important;
+  transition-delay: 0ms !important;
 }
 
 details[open] > *:not(summary) {
@@ -271,7 +448,9 @@ details[open] > summary::before {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 5px;
+  height: 44px;
+  padding-block: 19.5px;
+  background-clip: content-box;
   border-radius: 3px;
   cursor: pointer;
 }
@@ -508,6 +687,16 @@ textarea:disabled {
     align-items: center;
     min-height: 44px;
   }
+
+  .touch-target {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select {
+    min-height: 44px;
+  }
 }
 
 /* 高度交給呼叫端：用在與同一列輸入框對齊的按鈕。
@@ -666,6 +855,40 @@ textarea:disabled {
   .sk::after {
     animation: none;
     background: var(--c-shimmer);
+  }
+
+  .animate-spin,
+  .animate-pulse,
+  .action-toast,
+  .create-menu-panel,
+  .create-menu-item,
+  .mfa-reveal {
+    animation: none !important;
+  }
+
+  .action-toast {
+    animation: action-toast-fade 4s ease forwards !important;
+  }
+
+  .create-menu-trigger svg,
+  .inline-confirm-shell,
+  .switch-thumb,
+  .motion-progress,
+  .chart-reveal {
+    transition: none !important;
+  }
+}
+
+@keyframes action-toast-fade {
+  0% {
+    opacity: 0;
+  }
+  8%,
+  86% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
   }
 }
 

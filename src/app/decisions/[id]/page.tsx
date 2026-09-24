@@ -137,7 +137,7 @@ export default async function DecisionDetailPage({ params }: { params: Promise<{
         <header className="mt-4 flex flex-wrap items-start gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-md bg-[var(--c-accent-soft)] px-2 py-1 text-[11.5px] font-semibold text-[var(--c-accent)]">
+              <span className="rounded-md bg-[var(--c-accent-soft)] px-2 py-1 text-xs font-semibold text-[var(--c-accent)]">
                 {typeLabels[decision.decision_type] ?? decision.decision_type}
               </span>
               <span className="text-[12px] text-[var(--c-muted)] tnum">{decision.decision_date}</span>
@@ -180,7 +180,7 @@ export default async function DecisionDetailPage({ params }: { params: Promise<{
           {decision.tags.length > 0 && (
             <div className="mt-4 flex flex-wrap gap-2">
               {decision.tags.map((tag) => (
-                <span key={tag} className="rounded-full bg-[var(--c-surface-soft)] px-2.5 py-1 text-[11.5px] text-[var(--c-muted)]">{tag}</span>
+                <span key={tag} className="rounded-full bg-[var(--c-surface-soft)] px-2.5 py-1 text-xs text-[var(--c-muted)]">{tag}</span>
               ))}
             </div>
           )}
@@ -218,7 +218,7 @@ function TextCard({ title, text, tone }: { title: string; text: string; tone?: "
 function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-[11.5px] text-[var(--c-muted)]">{label}</dt>
+      <dt className="text-xs text-[var(--c-muted)]">{label}</dt>
       <dd className="mt-1 text-[14px] font-semibold tnum">{value}</dd>
     </div>
   );
@@ -231,7 +231,7 @@ function SnapshotCard({ snapshot, transactionId }: { snapshot: DecisionSnapshot;
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="font-serif text-xl font-medium">建立時情境</h2>
-          <p className="mt-1 text-[11.5px] text-[var(--c-muted)]">
+          <p className="mt-1 text-xs text-[var(--c-muted)]">
             不可變快照 · {snapshot.captured_at ? new Date(snapshot.captured_at).toLocaleString("zh-TW", { timeZone: "Asia/Taipei" }) : "時間缺失"}
           </p>
         </div>

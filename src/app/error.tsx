@@ -38,7 +38,7 @@ export default function GlobalError({
           : "暫時無法載入，請稍後再試。"}
       </p>
       {error.digest && (
-        <p className="text-[10px] font-mono text-[var(--c-faint)]">
+        <p className="text-xs font-mono text-[var(--c-faint)]">
           digest: {error.digest}
         </p>
       )}

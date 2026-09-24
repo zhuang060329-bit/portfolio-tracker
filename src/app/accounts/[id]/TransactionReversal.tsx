@@ -69,11 +69,11 @@ export function TransactionReversal({
       <p className="text-left text-xs font-semibold text-[var(--c-text)]">
         {copy.title}
       </p>
-      <p className="w-[248px] text-left text-[11px] leading-relaxed text-[var(--c-muted)]">
+      <p className="w-[248px] text-left text-xs leading-relaxed text-[var(--c-muted)]">
         {copy.body}
       </p>
       {state?.error && (
-        <p className="w-[248px] rounded-[var(--r-control)] bg-[color-mix(in_srgb,var(--c-down)_14%,transparent)] px-2 py-1.5 text-left text-[11px] leading-relaxed text-[var(--c-down)]">
+        <p className="w-[248px] rounded-[var(--r-control)] bg-[color-mix(in_srgb,var(--c-down)_14%,transparent)] px-2 py-1.5 text-left text-xs leading-relaxed text-[var(--c-down)]">
           {state.error}
         </p>
       )}

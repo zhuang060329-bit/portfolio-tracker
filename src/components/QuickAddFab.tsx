@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useActionState, useEffect, useId, useRef, useState } from "react";
 import { addByAmount, type FormState } from "@/app/accounts/[id]/actions";
 import { useActionAnnounce } from "@/components/a11y/use-action-announce";
 
@@ -20,7 +21,8 @@ const fmtShares = (value: number) =>
   value.toLocaleString("en-US", { maximumFractionDigits: 6 });
 
 export function QuickAddFab({ accounts }: { accounts: Account[] }) {
-  const [open, setOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [accountId, setAccountId] = useState(accounts[0]?.id ?? "");
   const [twd, setTwd] = useState("");
   const [state, action, pending] = useActionState<FormState, FormData>(
@@ -30,19 +32,22 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
   // 成功時對話框會關閉，畫面上沒有任何成功訊息可讀，所以補一句。
   useActionAnnounce(state, pending, "加碼已記錄");
   const dialogRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const restoreRef = useRef<HTMLElement | null>(null);
   const previousPending = useRef(false);
+  const menuId = `quick-create-${useId().replace(/:/g, "")}`;
 
   useEffect(() => {
     if (previousPending.current && !pending && !state?.error) {
-      setOpen(false);
+      setQuickAddOpen(false);
       setTwd("");
     }
     previousPending.current = pending;
   }, [pending, state]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!quickAddOpen) return;
 
     restoreRef.current = document.activeElement as HTMLElement | null;
     const previousOverflow = document.body.style.overflow;
@@ -57,7 +62,7 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
 
     function onKey(event: KeyboardEvent) {
       if (event.key === "Escape") {
-        setOpen(false);
+        setQuickAddOpen(false);
         return;
       }
       if (event.key !== "Tab") return;
@@ -80,7 +85,52 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
       window.removeEventListener("keydown", onKey);
       restoreRef.current?.focus();
     };
-  }, [open]);
+  }, [quickAddOpen]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const focusables = () =>
+      Array.from(
+        menuRef.current?.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
+        ) ?? [],
+      );
+    focusables()[0]?.focus();
+
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setMenuOpen(false);
+        triggerRef.current?.focus();
+        return;
+      }
+      if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+      const items = focusables();
+      if (items.length === 0) return;
+      event.preventDefault();
+      const current = items.indexOf(document.activeElement as HTMLElement);
+      const delta = event.key === "ArrowDown" ? 1 : -1;
+      items[(current + delta + items.length) % items.length]?.focus();
+    }
+
+    function onPointerDown(event: PointerEvent) {
+      const target = event.target as Node;
+      if (
+        !menuRef.current?.contains(target) &&
+        !triggerRef.current?.contains(target)
+      ) {
+        setMenuOpen(false);
+      }
+    }
+
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("pointerdown", onPointerDown);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("pointerdown", onPointerDown);
+    };
+  }, [menuOpen]);
 
   const account = accounts.find((item) => item.id === accountId);
   const twdNumber = Number(twd);
@@ -94,18 +144,65 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
       : 0;
   const accountMissingPrice = Boolean(account) && !(perShare > 0);
 
-  if (accounts.length === 0) return null;
-
   const fieldClass =
     "mt-1 h-11 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]";
 
   return (
     <>
+      {menuOpen && (
+        <div
+          ref={menuRef}
+          id={menuId}
+          role="group"
+          aria-label="快速建立"
+          className="create-menu-panel fixed bottom-[calc(max(1rem,env(safe-area-inset-bottom))+64px)] right-4 z-40 w-[220px] overflow-hidden rounded-[14px] border border-[var(--c-line-strong)] bg-[var(--c-surface)] p-1.5 shadow-[var(--c-shadow)] sm:hidden"
+        >
+          <button
+            type="button"
+            disabled={accounts.length === 0}
+            onClick={() => {
+              setMenuOpen(false);
+              setQuickAddOpen(true);
+            }}
+            className="create-menu-item flex min-h-11 w-full items-center gap-3 rounded-[var(--r-control)] px-3 text-left text-sm font-medium hover:bg-[var(--c-surface-soft)] disabled:cursor-not-allowed disabled:opacity-45"
+          >
+            <MenuIcon type="add" />
+            <span>
+              快速加碼
+              {accounts.length === 0 && (
+                <span className="block text-xs font-normal text-[var(--c-faint)]">
+                  先建立可報價帳戶
+                </span>
+              )}
+            </span>
+          </button>
+          <Link
+            href="/accounts/new"
+            onClick={() => setMenuOpen(false)}
+            className="create-menu-item flex min-h-11 items-center gap-3 rounded-[var(--r-control)] px-3 text-sm font-medium hover:bg-[var(--c-surface-soft)]"
+          >
+            <MenuIcon type="account" />
+            建立帳戶
+          </Link>
+          <Link
+            href="/activity#csv-import"
+            onClick={() => setMenuOpen(false)}
+            className="create-menu-item flex min-h-11 items-center gap-3 rounded-[var(--r-control)] px-3 text-sm font-medium hover:bg-[var(--c-surface-soft)]"
+          >
+            <MenuIcon type="import" />
+            匯入 CSV
+          </Link>
+        </div>
+      )}
+
       <button
+        ref={triggerRef}
         type="button"
-        onClick={() => setOpen(true)}
-        aria-label="快速加碼"
-        className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-40 grid h-[52px] w-[52px] place-items-center rounded-[14px] bg-[var(--c-accent)] text-[var(--c-btn-strong-text)] shadow-[0_8px_22px_rgba(0,0,0,0.28)] hover:-translate-y-0.5 sm:hidden"
+        onClick={() => setMenuOpen((value) => !value)}
+        aria-label={menuOpen ? "關閉快速建立選單" : "開啟快速建立選單"}
+        aria-expanded={menuOpen}
+        aria-controls={menuId}
+        className="create-menu-trigger fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-40 grid h-[52px] w-[52px] place-items-center rounded-[14px] bg-[var(--c-accent)] text-[var(--c-btn-strong-text)] shadow-[0_8px_22px_rgba(0,0,0,0.28)] hover:brightness-105 sm:hidden"
       >
         <svg
           viewBox="0 0 24 24"
@@ -121,11 +218,11 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
         </svg>
       </button>
 
-      {open && (
+      {quickAddOpen && (
         <div
           className="fixed inset-0 z-50 flex items-end justify-center bg-black/55 backdrop-blur-[2px] sm:items-center sm:p-5"
           onClick={(event) => {
-            if (event.target === event.currentTarget) setOpen(false);
+            if (event.target === event.currentTarget) setQuickAddOpen(false);
           }}
         >
           <div
@@ -141,7 +238,7 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
               </h2>
               <button
                 type="button"
-                onClick={() => setOpen(false)}
+                onClick={() => setQuickAddOpen(false)}
                 aria-label="關閉"
                 className="btn btn-ghost btn-icon"
               >
@@ -224,7 +321,7 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
                     </span>
                   </div>
                   {twdNumber > 0 && (
-                    <div className="mt-1.5 flex justify-between gap-4 text-[10px]">
+                    <div className="mt-1.5 flex justify-between gap-4 text-xs">
                       <span>投入</span>
                       <span className="amt tnum">NT$ {fmtTwd(twdNumber)}</span>
                     </div>
@@ -255,7 +352,7 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
                 {pending ? "記錄中…" : "確認加碼"}
               </button>
 
-              <p className="text-[10px] leading-relaxed text-[var(--c-faint)]">
+              <p className="text-xs leading-relaxed text-[var(--c-faint)]">
                 依目前報價估算，不記手續費；要記手續費或自訂成交價、匯率、時間請進入帳戶詳情頁。
               </p>
             </form>
@@ -263,5 +360,30 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
         </div>
       )}
     </>
+  );
+}
+
+function MenuIcon({ type }: { type: "add" | "account" | "import" }) {
+  const path =
+    type === "add"
+      ? "M12 5v14M5 12h14"
+      : type === "account"
+        ? "M4 20v-2a4 4 0 0 1 4-4h4M10 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M18 8v6M15 11h6"
+        : "M12 3v12M7 10l5 5 5-5M5 21h14";
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={18}
+      height={18}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className="shrink-0 text-[var(--c-accent)]"
+    >
+      <path d={path} />
+    </svg>
   );
 }

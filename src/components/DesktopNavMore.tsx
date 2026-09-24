@@ -1,0 +1,116 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useId, useRef, useState } from "react";
+
+type NavItem = {
+  href: string;
+  label: string;
+  key: string | null;
+};
+
+export function DesktopNavMore({
+  items,
+  active,
+}: {
+  items: NavItem[];
+  active: string | null;
+}) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const panelId = `desktop-more-${useId().replace(/:/g, "")}`;
+  const groupActive = items.some((item) => item.key === active);
+
+  useEffect(() => {
+    if (!open) return;
+    const links = () =>
+      Array.from(panelRef.current?.querySelectorAll<HTMLAnchorElement>("a[href]") ?? []);
+    links()[0]?.focus();
+
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setOpen(false);
+        buttonRef.current?.focus();
+        return;
+      }
+      if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+      const choices = links();
+      if (choices.length === 0) return;
+      event.preventDefault();
+      const current = choices.indexOf(document.activeElement as HTMLAnchorElement);
+      const delta = event.key === "ArrowDown" ? 1 : -1;
+      choices[(current + delta + choices.length) % choices.length]?.focus();
+    }
+
+    function onPointerDown(event: PointerEvent) {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+    }
+
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("pointerdown", onPointerDown);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("pointerdown", onPointerDown);
+    };
+  }, [open]);
+
+  return (
+    <div ref={rootRef} className="relative flex h-full items-center">
+      <button
+        ref={buttonRef}
+        type="button"
+        aria-expanded={open}
+        aria-controls={panelId}
+        onClick={() => setOpen((value) => !value)}
+        className={`relative flex h-full items-center gap-1 px-2.5 text-[13px] font-medium ${
+          groupActive
+            ? "text-[var(--c-text)] after:absolute after:inset-x-2.5 after:bottom-0 after:h-[2px] after:bg-[var(--c-accent)]"
+            : "text-[var(--c-muted)] hover:text-[var(--c-text)]"
+        }`}
+      >
+        更多
+        <svg
+          viewBox="0 0 16 16"
+          width={12}
+          height={12}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.6}
+          strokeLinecap="round"
+          aria-hidden="true"
+          className={open ? "rotate-180" : ""}
+        >
+          <path d="m4 6 4 4 4-4" />
+        </svg>
+      </button>
+
+      {open && (
+        <nav
+          ref={panelRef}
+          id={panelId}
+          aria-label="更多功能"
+          className="absolute right-0 top-[calc(100%+8px)] z-50 w-44 rounded-[var(--r-card)] border border-[var(--c-line-strong)] bg-[var(--c-surface)] p-1.5 shadow-[var(--c-shadow)]"
+        >
+          {items.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={active === item.key ? "page" : undefined}
+              onClick={() => setOpen(false)}
+              className={`touch-target flex min-h-10 items-center rounded-[var(--r-control)] px-3 text-[13px] font-medium ${
+                active === item.key
+                  ? "bg-[var(--c-accent-soft)] text-[var(--c-accent)]"
+                  : "text-[var(--c-muted)] hover:bg-[var(--c-surface-soft)] hover:text-[var(--c-text)]"
+              }`}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+      )}
+    </div>
+  );
+}

@@ -215,7 +215,7 @@ export default async function WhatIfPage() {
         </div>
         <header className="mb-5">
           <h1 className="font-serif text-3xl font-medium tracking-tight">
-            What-if 試算
+            情境推演
           </h1>
           <p className="mt-1.5 text-[13.5px] text-[var(--c-muted)]">
             推算未來淨值、回看 ETF 對照，並測試價格與匯率衝擊下的買後配置。

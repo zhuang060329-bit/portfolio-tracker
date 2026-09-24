@@ -55,7 +55,7 @@ export default async function NewAccountIndex() {
             <Link
               key={it.href}
               href={it.href}
-              className="group flex items-center gap-4 rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] px-5 py-4 shadow-[var(--c-shadow)] transition-all hover:-translate-y-[1px] hover:border-[var(--c-line-strong)]"
+              className="group flex items-center gap-4 rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] px-5 py-4 shadow-[var(--c-shadow)] transition-[border-color,box-shadow] hover:border-[var(--c-line-strong)] hover:shadow-lg"
             >
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--c-accent-soft)] text-base font-semibold text-[var(--c-accent)]">
                 {it.icon}

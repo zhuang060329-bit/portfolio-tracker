@@ -82,6 +82,7 @@ export function MfaVerifyForm() {
       {factorId && (
         <form onSubmit={submit} className="mt-6 flex flex-col gap-3">
           <input
+            aria-label="6 位數 MFA 驗證碼"
             value={code}
             onChange={(e) =>
               setCode(e.target.value.replace(/\D/g, "").slice(0, 6))

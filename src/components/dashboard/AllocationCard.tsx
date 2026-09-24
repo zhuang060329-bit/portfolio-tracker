@@ -139,7 +139,7 @@ export function AllocationCard({
                 </span>
                 <span className="relative h-[5px] bg-[var(--c-border)]">
                   <span
-                    className="absolute inset-y-0 left-0 transition-[width] duration-700 ease-out"
+                    className="motion-progress absolute inset-y-0 left-0 transition-[width] duration-300 ease-out"
                     style={{
                       width: `${Math.min(100, item.actual)}%`,
                       background: allocColor(item.cls),

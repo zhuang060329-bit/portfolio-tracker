@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { useActionState } from "react";
+import { useActionState, useId, useState } from "react";
 import { importTransactionsCsv, type ImportResult } from "./actions";
 import { useActionAnnounce } from "@/components/a11y/use-action-announce";
 
 // StackWorth 風格的可收合匯入面板，沿用真實的 importTransactionsCsv server action。
 export function ImportCsv() {
   const [open, setOpen] = useState(false);
+  const panelId = `csv-import-panel-${useId().replace(/:/g, "")}`;
   const [fileName, setFileName] = useState<string | null>(null);
   const [state, action, pending] = useActionState<ImportResult, FormData>(
     importTransactionsCsv,
@@ -21,32 +21,36 @@ export function ImportCsv() {
   );
 
   return (
-    <div className="w-full overflow-hidden rounded-[11px] border border-[var(--c-border)] bg-[var(--c-surface)]">
+    <div id="csv-import" className="w-full scroll-mt-20 overflow-hidden rounded-[11px] border border-[var(--c-border)] bg-[var(--c-surface)]">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-controls={panelId}
         className="flex h-11 w-full items-center gap-2 px-4 text-[13.5px] font-medium text-[var(--c-text)]"
       >
         <span
-          className={`text-[10px] text-[var(--c-muted)] transition-transform ${
+          aria-hidden="true"
+          className={`text-xs text-[var(--c-muted)] transition-transform ${
             open ? "rotate-90" : ""
           }`}
         >
           ▸
         </span>
         匯入 CSV
-        <span className="ml-auto truncate text-[11.5px] font-normal text-[var(--c-faint)]">
+        <span className="ml-auto truncate text-xs font-normal text-[var(--c-faint)]">
           交易紀錄 · 吃得下匯出檔與中英文欄位
         </span>
       </button>
 
       {open && (
         <form
+          id={panelId}
           action={action}
           encType="multipart/form-data"
           className="flex flex-col gap-3 border-t border-[var(--c-border)] p-4"
         >
-          <div className="rounded-[9px] bg-[var(--c-surface-soft)] px-3 py-2.5 text-[11.5px] text-[var(--c-muted)]">
+          <div className="rounded-[9px] bg-[var(--c-surface-soft)] px-3 py-2.5 text-xs text-[var(--c-muted)]">
             <p className="mb-1.5 font-semibold text-[var(--c-text)]">
               支援的欄位（任一即可）
             </p>
@@ -110,7 +114,7 @@ export function ImportCsv() {
                   匯入 {state.imported} 筆 · 跳過 {state.skipped} 筆
                 </div>
                 {state.errors.length > 0 && (
-                  <ul className="mt-1 list-disc pl-4 text-[10px] text-[var(--c-down)]">
+                  <ul className="mt-1 list-disc pl-4 text-xs text-[var(--c-down)]">
                     {state.errors.slice(0, 5).map((e, i) => (
                       <li key={i}>{e}</li>
                     ))}

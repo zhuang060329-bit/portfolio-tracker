@@ -34,7 +34,7 @@ export function ReviewForm({ decisionId, initial, suggested }: { decisionId: str
     <form action={action} className="mt-5 space-y-4">
       <input type="hidden" name="decisionId" value={decisionId} />
       {!initial && suggested.startSnapshotDate && suggested.endSnapshotDate && (
-        <p className="rounded-lg bg-[var(--c-surface-soft)] px-3 py-2 text-[11.5px] text-[var(--c-muted)]">
+        <p className="rounded-lg bg-[var(--c-surface-soft)] px-3 py-2 text-xs text-[var(--c-muted)]">
           已依 {suggested.startSnapshotDate} 至 {suggested.endSnapshotDate} 的單價與匯率快照預填報酬；請依實際情況確認。
         </p>
       )}

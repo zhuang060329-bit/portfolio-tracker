@@ -86,7 +86,7 @@ function TypeBadge({ type }: { type: string }) {
         } as React.CSSProperties
       }
     >
-      <span className="text-[11px]">{t.glyph}</span>
+      <span className="text-xs">{t.glyph}</span>
       {t.label}
     </span>
   );
@@ -106,12 +106,12 @@ function LedgerRow({
   return (
     <div
       className="ledger-row-in grid grid-cols-[40px_1fr] sm:grid-cols-[56px_1fr]"
-      style={{ animationDelay: `${Math.min(i * 28, 360)}ms` }}
+      style={{ animationDelay: `${Math.min(i * 16, 120)}ms` }}
     >
       <div className="relative flex justify-center">
         <span className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-[var(--c-border)]" />
         <span
-          className="relative z-[1] mt-3.5 grid h-6 w-6 place-items-center rounded-full text-[11px] font-bold text-white shadow-[0_0_0_4px_var(--c-page)] dark:text-[#14130E] sm:h-7 sm:w-7 sm:text-[13px]"
+          className="relative z-[1] mt-3.5 grid h-6 w-6 place-items-center rounded-full text-xs font-bold text-white shadow-[0_0_0_4px_var(--c-page)] dark:text-[#14130E] sm:h-7 sm:w-7 sm:text-[13px]"
           style={{ background: t.color }}
         >
           {t.glyph}
@@ -130,7 +130,7 @@ function LedgerRow({
               >
                 {r.accountName}
                 {r.symbol && (
-                  <span className="ml-[7px] text-[11.5px] font-medium text-[var(--c-muted)]">
+                  <span className="ml-[7px] text-xs font-medium text-[var(--c-muted)]">
                     {r.symbol}
                   </span>
                 )}
@@ -289,18 +289,19 @@ export function ActivityClient({
   return (
     <>
       {/* 類型 chips（兼統計，可篩選）*/}
-      <div className="mt-6 flex flex-wrap gap-2">
+      <div className="mt-6 flex flex-wrap gap-2" role="group" aria-label="活動類型篩選">
         <button
           type="button"
           onClick={() => setActive(new Set())}
-          className={`inline-flex items-center gap-[7px] whitespace-nowrap rounded-full border px-3 py-[7px] text-[13px] font-medium transition-colors ${
+          aria-pressed={active.size === 0}
+          className={`tap-row inline-flex items-center gap-[7px] whitespace-nowrap rounded-full border px-3 py-[7px] text-[13px] font-medium transition-colors ${
             active.size === 0
               ? "border-[color-mix(in_srgb,var(--c-accent)_55%,transparent)] bg-[color-mix(in_srgb,var(--c-accent)_12%,var(--c-surface))] text-[var(--c-text)]"
               : "border-[var(--c-border)] bg-[var(--c-surface)] text-[var(--c-muted)] hover:border-[var(--c-line-strong)] hover:text-[var(--c-text)]"
           }`}
         >
           全部
-          <span className="rounded-full bg-[var(--c-surface-soft)] px-[7px] py-px text-[11.5px] text-[var(--c-faint)] tnum">
+          <span className="rounded-full bg-[var(--c-surface-soft)] px-[7px] py-px text-xs text-[var(--c-faint)] tnum">
             {rows.length}
           </span>
         </button>
@@ -312,8 +313,9 @@ export function ActivityClient({
               key={t}
               type="button"
               onClick={() => toggle(t)}
+              aria-pressed={on}
               style={{ "--tc": meta.color } as React.CSSProperties}
-              className={`inline-flex items-center gap-[7px] whitespace-nowrap rounded-full border px-3 py-[7px] text-[13px] font-medium transition-colors ${
+              className={`tap-row inline-flex items-center gap-[7px] whitespace-nowrap rounded-full border px-3 py-[7px] text-[13px] font-medium transition-colors ${
                 on
                   ? "border-[color-mix(in_srgb,var(--tc)_55%,transparent)] bg-[color-mix(in_srgb,var(--tc)_12%,var(--c-surface))] text-[var(--c-text)]"
                   : "border-[var(--c-border)] bg-[var(--c-surface)] text-[var(--c-muted)] hover:border-[var(--c-line-strong)] hover:text-[var(--c-text)]"
@@ -325,7 +327,7 @@ export function ActivityClient({
               />
               {meta.label}
               <span
-                className={`rounded-full px-[7px] py-px text-[11.5px] tnum ${
+                className={`rounded-full px-[7px] py-px text-xs tnum ${
                   on
                     ? "bg-[color-mix(in_srgb,var(--tc)_22%,transparent)] text-[var(--c-text)]"
                     : "bg-[var(--c-surface-soft)] text-[var(--c-faint)]"
@@ -347,6 +349,7 @@ export function ActivityClient({
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
+            aria-label="搜尋活動紀錄"
             placeholder="搜尋帳戶、類型或備註…"
             className="h-11 w-full rounded-[11px] border border-[var(--c-border)] bg-[var(--c-surface)] pl-10 pr-9 text-sm text-[var(--c-text)] outline-none placeholder:text-[var(--c-faint)] focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
           />
@@ -355,7 +358,7 @@ export function ActivityClient({
               type="button"
               onClick={() => setQ("")}
               aria-label="清除搜尋"
-              className="absolute right-2.5 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-base text-[var(--c-muted)] hover:bg-[var(--c-surface-soft)] hover:text-[var(--c-text)]"
+              className="touch-target absolute right-0 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full text-base text-[var(--c-muted)] hover:bg-[var(--c-surface-soft)] hover:text-[var(--c-text)]"
             >
               ×
             </button>
@@ -379,7 +382,7 @@ export function ActivityClient({
                 setActive(new Set());
                 setQ("");
               }}
-              className="ml-2 text-[var(--c-accent)] underline"
+              className="tap-row ml-2 text-[var(--c-accent)] underline"
             >
               清除篩選
             </button>
@@ -462,7 +465,7 @@ function SummaryRail({
   return (
     <aside className="min-[920px]:sticky min-[920px]:top-[84px]">
       <div className="overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)]">
-        <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--c-muted)]">
+        <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--c-muted)]">
           顯示中摘要
         </h3>
         <dl className="mt-3 flex flex-col">
@@ -490,7 +493,7 @@ function SummaryRail({
           />
           <RailRow k="期間" v={period} small />
         </dl>
-        <p className="mt-3 text-[10.5px] text-[var(--c-faint)]">
+        <p className="mt-3 text-xs text-[var(--c-faint)]">
           依目前篩選即時計算
         </p>
       </div>
@@ -513,7 +516,7 @@ function RailRow({
     <div className="flex items-baseline justify-between gap-3 border-b border-[var(--c-border)] py-2 last:border-b-0">
       <dt className="text-xs text-[var(--c-muted)]">{k}</dt>
       <dd
-        className={`tnum font-medium ${small ? "text-[11px]" : "text-[13px]"} ${vClass}`}
+        className={`tnum font-medium ${small ? "text-xs" : "text-[13px]"} ${vClass}`}
       >
         {v}
       </dd>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAnnounceValue } from "@/components/a11y/use-action-announce";
 
@@ -32,7 +32,13 @@ export function MfaSetupCard() {
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [confirmFactorId, setConfirmFactorId] = useState<string | null>(null);
+  const confirmActionRef = useRef<HTMLButtonElement>(null);
+  const confirmTriggerRef = useRef<HTMLButtonElement>(null);
+  const previousConfirmFactorId = useRef<string | null>(null);
   useAnnounceValue(error, "assertive");
+  useAnnounceValue(message, "polite");
 
   const supabase = createClient();
 
@@ -50,8 +56,16 @@ export function MfaSetupCard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (confirmFactorId) confirmActionRef.current?.focus();
+    else if (previousConfirmFactorId.current) confirmTriggerRef.current?.focus();
+    previousConfirmFactorId.current = confirmFactorId;
+  }, [confirmFactorId]);
+
   async function startEnroll() {
     setError(null);
+    setMessage(null);
+    setConfirmFactorId(null);
     setBusy(true);
     const { data, error: e } = await supabase.auth.mfa.enroll({
       factorType: "totp",
@@ -97,6 +111,7 @@ export function MfaSetupCard() {
     }
     setEnrollment(null);
     setCode("");
+    setMessage("MFA 已啟用");
     await load();
   }
 
@@ -105,18 +120,21 @@ export function MfaSetupCard() {
     await supabase.auth.mfa.unenroll({ factorId: enrollment.factorId });
     setEnrollment(null);
     setCode("");
+    setMessage("已取消 MFA 設定");
   }
 
   async function disable(factorId: string) {
-    if (!confirm("確定關閉 MFA？關閉後登入只需密碼或 Google 帳號。")) return;
     setBusy(true);
     setError(null);
+    setMessage(null);
     const { error: e } = await supabase.auth.mfa.unenroll({ factorId });
     setBusy(false);
     if (e) {
       setError(e.message);
       return;
     }
+    setConfirmFactorId(null);
+    setMessage("MFA 已停用");
     await load();
   }
 
@@ -130,7 +148,7 @@ export function MfaSetupCard() {
 
   if (loading) {
     return (
-      <p className="text-sm text-[var(--c-muted)]">讀取中…</p>
+      <p className="text-sm text-[var(--c-muted)]" role="status">讀取中…</p>
     );
   }
 
@@ -166,20 +184,20 @@ export function MfaSetupCard() {
 
       {/* Enrollment panel */}
       {enrollment && (
-        <div className="animate-[reveal_.25s_ease] rounded-xl border border-[var(--c-border)] bg-[var(--c-surface-soft)] p-5">
+        <div className="mfa-reveal rounded-xl border border-[var(--c-border)] bg-[var(--c-surface-soft)] p-5">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
             <div className="flex flex-col items-center gap-2">
               <div className="rounded-lg border border-[var(--c-line-strong)] bg-[var(--c-surface)] p-2">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={enrollment.qr}
-                  alt="MFA QR code"
+                  alt="MFA 驗證器設定 QR code"
                   width={120}
                   height={120}
                   className="block h-[120px] w-[120px]"
                 />
               </div>
-              <span className="text-[11.5px] text-[var(--c-muted)]">
+              <span className="text-xs text-[var(--c-muted)]">
                 用 Authenticator 掃描
               </span>
             </div>
@@ -196,6 +214,7 @@ export function MfaSetupCard() {
               </p>
               <div className="flex flex-wrap items-center gap-2.5">
                 <input
+                  aria-label="6 位數驗證碼"
                   value={code}
                   onChange={(e) =>
                     setCode(e.target.value.replace(/\D/g, "").slice(0, 6))
@@ -234,29 +253,82 @@ export function MfaSetupCard() {
           <span className="text-[13px] text-[var(--c-text)]">
             MFA 已啟用，下次登入會要求驗證碼。
           </span>
-          <button
-            type="button"
-            onClick={() => disable(verified.id)}
-            disabled={busy}
-            className="btn btn-outline-danger whitespace-nowrap"
+          <div
+            className="inline-confirm-shell mfa-inline-confirm"
+            data-phase={confirmFactorId === verified.id ? "asking" : "idle"}
+            role={confirmFactorId === verified.id ? "group" : undefined}
+            aria-label={confirmFactorId === verified.id ? "確認停用 MFA" : undefined}
           >
-            停用 MFA
-          </button>
+            {confirmFactorId === verified.id ? (
+              <div className="flex w-full items-center justify-end gap-1 px-1">
+                <button
+                  type="button"
+                  onClick={() => setConfirmFactorId(null)}
+                  disabled={busy}
+                  className="btn btn-ghost btn-sm"
+                >
+                  取消
+                </button>
+                <button
+                  ref={confirmActionRef}
+                  type="button"
+                  onClick={() => disable(verified.id)}
+                  disabled={busy}
+                  className="btn btn-danger btn-sm whitespace-nowrap"
+                >
+                  {busy ? "停用中…" : "確認停用"}
+                </button>
+              </div>
+            ) : (
+              <button
+                ref={confirmTriggerRef}
+                type="button"
+                onClick={() => setConfirmFactorId(verified.id)}
+                disabled={busy}
+                className="btn btn-outline-danger whitespace-nowrap"
+              >
+                停用 MFA
+              </button>
+            )}
+          </div>
         </div>
       )}
 
       {/* 卡住的 unverified factor */}
       {unverified && !enrollment && step !== "on" && (
-        <p className="text-[12px] text-[var(--c-down)]">
-          偵測到上次未完成的 enrollment，
-          <button
-            type="button"
-            onClick={() => disable(unverified.id)}
-            className="ml-1 underline"
-          >
-            清除
-          </button>
-        </p>
+        <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--c-down)]">
+          <span>偵測到上次未完成的 enrollment。</span>
+          {confirmFactorId === unverified.id ? (
+            <span role="group" aria-label="確認清除未完成的 MFA 設定" className="inline-flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setConfirmFactorId(null)}
+                disabled={busy}
+                className="btn btn-ghost btn-sm"
+              >
+                取消
+              </button>
+              <button
+                ref={confirmActionRef}
+                type="button"
+                onClick={() => disable(unverified.id)}
+                disabled={busy}
+                className="btn btn-danger btn-sm"
+              >
+                {busy ? "清除中…" : "確認清除"}
+              </button>
+            </span>
+          ) : (
+            <button
+              ref={confirmTriggerRef}
+              type="button"
+              onClick={() => setConfirmFactorId(unverified.id)}
+              className="btn btn-outline-danger btn-sm"
+            >
+              清除
+            </button>
+          )}
+        </div>
       )}
 
       {error && (
@@ -265,22 +337,10 @@ export function MfaSetupCard() {
         </p>
       )}
 
-      <p className="text-[11px] text-[var(--c-faint)]">
+      <p className="text-xs text-[var(--c-faint)]">
         本 app 在登入時會強制 AAL2 升級；啟用後若無法登入，可請 admin 至 Supabase 後台移除 factor。
       </p>
 
-      <style jsx>{`
-        @keyframes reveal {
-          from {
-            opacity: 0;
-            transform: translateY(-5px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style>
     </div>
   );
 }
@@ -299,19 +359,26 @@ function Toggle({
       type="button"
       role="switch"
       aria-checked={on}
+      aria-label={on ? "取消 MFA 設定" : "開始設定 MFA"}
+      aria-busy={busy}
       onClick={onClick}
       disabled={busy}
-      className={`relative h-6 w-[42px] rounded-full border transition-colors disabled:opacity-50 ${
-        on
-          ? "border-[var(--c-up)] bg-[var(--c-up)]"
-          : "border-[var(--c-line-strong)] bg-[var(--c-surface-soft)]"
-      }`}
+      className="touch-target grid h-11 w-11 place-items-center rounded-[var(--r-control)] disabled:cursor-wait disabled:opacity-50"
     >
       <span
-        className={`absolute top-[2px] block h-[18px] w-[18px] rounded-full shadow-[0_1px_2px_rgba(0,0,0,.3)] transition-transform ${
-          on ? "translate-x-[20px] bg-white" : "translate-x-[2px] bg-[var(--c-text)]"
+        aria-hidden="true"
+        className={`relative h-6 w-[42px] rounded-full border transition-colors ${
+          on
+            ? "border-[var(--c-up)] bg-[var(--c-up)]"
+            : "border-[var(--c-line-strong)] bg-[var(--c-surface-soft)]"
         }`}
-      />
+      >
+        <span
+          className={`switch-thumb absolute top-[2px] block h-[18px] w-[18px] rounded-full shadow-[0_1px_2px_rgba(0,0,0,.3)] transition-transform ${
+            on ? "translate-x-[20px] bg-white" : "translate-x-[2px] bg-[var(--c-text)]"
+          }`}
+        />
+      </span>
     </button>
   );
 }

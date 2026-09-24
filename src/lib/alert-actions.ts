@@ -46,63 +46,102 @@ export async function createAlert(
   return { ok: true };
 }
 
-export async function deleteAlert(fd: FormData) {
+export async function deleteAlert(
+  _prev: FormState,
+  fd: FormData,
+): Promise<FormState> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return;
+  if (!user) return { error: "未登入" };
   const id = String(fd.get("id") ?? "");
-  if (!id) return;
-  await supabase.from("alerts").delete().eq("id", id).eq("user_id", user.id);
+  if (!id) return { error: "缺少提醒識別碼" };
+  const { error } = await supabase
+    .from("alerts")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", user.id);
+  if (error) {
+    console.error(`[deleteAlert] 刪除失敗 code=${error.code ?? "unknown"}`);
+    return { error: "刪除提醒失敗，請稍後再試" };
+  }
   revalidatePath("/alerts");
+  return { ok: true };
 }
 
-export async function toggleAlert(fd: FormData) {
+export async function toggleAlert(
+  _prev: FormState,
+  fd: FormData,
+): Promise<FormState> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return;
+  if (!user) return { error: "未登入" };
   const id = String(fd.get("id") ?? "");
   const active = fd.get("active") === "1";
-  if (!id) return;
-  await supabase
+  if (!id) return { error: "缺少提醒識別碼" };
+  const { error } = await supabase
     .from("alerts")
     .update({ active })
     .eq("id", id)
     .eq("user_id", user.id);
+  if (error) {
+    console.error(`[toggleAlert] 更新失敗 code=${error.code ?? "unknown"}`);
+    return { error: "更新提醒失敗，請稍後再試" };
+  }
   revalidatePath("/alerts");
+  return { ok: true };
 }
 
-export async function markNotificationRead(fd: FormData) {
+export async function markNotificationRead(
+  _prev: FormState,
+  fd: FormData,
+): Promise<FormState> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return;
+  if (!user) return { error: "未登入" };
   const id = String(fd.get("id") ?? "");
-  if (!id) return;
-  await supabase
+  if (!id) return { error: "缺少通知識別碼" };
+  const { error } = await supabase
     .from("notifications")
     .update({ read_at: new Date().toISOString() })
     .eq("id", id)
     .eq("user_id", user.id);
+  if (error) {
+    console.error(`[markNotificationRead] 更新失敗 code=${error.code ?? "unknown"}`);
+    return { error: "更新通知失敗，請稍後再試" };
+  }
   revalidatePath("/notifications");
   revalidatePath("/");
+  return { ok: true };
 }
 
-export async function markAllNotificationsRead() {
+export async function markAllNotificationsRead(
+  prev: FormState,
+  fd: FormData,
+): Promise<FormState> {
+  // useActionState 會固定傳入前一狀態與 FormData；此動作不需要其中內容。
+  void prev;
+  void fd;
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return;
-  await supabase
+  if (!user) return { error: "未登入" };
+  const { error } = await supabase
     .from("notifications")
     .update({ read_at: new Date().toISOString() })
     .eq("user_id", user.id)
     .is("read_at", null);
+  if (error) {
+    console.error(`[markAllNotificationsRead] 更新失敗 code=${error.code ?? "unknown"}`);
+    return { error: "更新通知失敗，請稍後再試" };
+  }
   revalidatePath("/notifications");
   revalidatePath("/");
+  return { ok: true };
 }

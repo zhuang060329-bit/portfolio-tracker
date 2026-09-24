@@ -74,7 +74,7 @@ export default async function AccountsPage() {
             <AccountList rows={active} />
             {archived.length > 0 && (
               <details className="mt-6">
-                <summary className="cursor-pointer select-none text-[12.5px] text-[var(--c-muted)] hover:text-[var(--c-text)]">
+                <summary className="tap-row cursor-pointer select-none text-[12.5px] text-[var(--c-muted)] hover:text-[var(--c-text)]">
                   已封存（{archived.length}）
                 </summary>
                 <div className="mt-3 opacity-70">
@@ -102,7 +102,7 @@ function AccountList({ rows }: { rows: AccountRow[] }) {
         >
           <div className="min-w-0 flex-1">
             <div className="truncate text-[14.5px] font-medium">{a.name}</div>
-            <div className="mt-0.5 text-[11.5px] text-[var(--c-muted)]">
+            <div className="mt-0.5 text-xs text-[var(--c-muted)]">
               {ASSET_CLASS_LABEL[a.asset_class] ?? a.asset_class}
               <span className="mx-1.5 text-[var(--c-faint)]">·</span>
               {MARKET_LABEL[a.price_market] ?? a.price_market}

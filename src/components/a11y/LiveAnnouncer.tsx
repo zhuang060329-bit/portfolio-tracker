@@ -18,6 +18,20 @@ export function LiveAnnouncer() {
   const s = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   return (
     <>
+      {s.latest && (
+        <div
+          key={s.latest.id}
+          aria-hidden="true"
+          className={`action-toast ${
+            s.latest.tone === "assertive" ? "action-toast-error" : "action-toast-success"
+          }`}
+        >
+          <span className="action-toast-mark">
+            {s.latest.tone === "assertive" ? "!" : "✓"}
+          </span>
+          <span>{s.latest.text}</span>
+        </div>
+      )}
       <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
         {s.politeA}
       </div>

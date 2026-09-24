@@ -16,6 +16,11 @@ describe("live-announcer", () => {
     announce("配置目標已儲存");
     const s = getSnapshot();
     expect([s.politeA, s.politeB]).toContain("配置目標已儲存");
+    expect(s.latest).toEqual({
+      id: 1,
+      text: "配置目標已儲存",
+      tone: "polite",
+    });
     // assertive 不受影響
     expect(s.assertiveA).toBe("");
     expect(s.assertiveB).toBe("");
@@ -82,6 +87,7 @@ describe("live-announcer", () => {
       politeB: "",
       assertiveA: "",
       assertiveB: "",
+      latest: null,
     });
   });
 });

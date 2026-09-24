@@ -196,14 +196,14 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => switchMode("signUp")}
-                className="underline hover:text-[var(--c-text)]"
+                className="tap-row underline hover:text-[var(--c-text)]"
               >
                 首次使用？建立帳號
               </button>
               <button
                 type="button"
                 onClick={() => switchMode("reset")}
-                className="underline hover:text-[var(--c-text)]"
+                className="tap-row underline hover:text-[var(--c-text)]"
               >
                 忘記密碼？
               </button>
@@ -213,7 +213,7 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => switchMode("signIn")}
-              className="underline hover:text-[var(--c-text)]"
+              className="tap-row underline hover:text-[var(--c-text)]"
             >
               已有帳號？登入
             </button>
@@ -222,14 +222,14 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => switchMode("signIn")}
-              className="underline hover:text-[var(--c-text)]"
+              className="tap-row underline hover:text-[var(--c-text)]"
             >
               ← 返回登入
             </button>
           )}
         </div>
 
-        <p className="mt-4 text-[10px] text-[var(--c-faint)]">
+        <p className="mt-4 text-xs text-[var(--c-faint)]">
           首次註冊需點擊驗證信中的連結才能登入。
         </p>
       </div>

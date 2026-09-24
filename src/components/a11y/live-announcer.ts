@@ -20,6 +20,7 @@ export type AnnouncerSnapshot = {
   politeB: string;
   assertiveA: string;
   assertiveB: string;
+  latest: { id: number; text: string; tone: Tone } | null;
 };
 
 const EMPTY: AnnouncerSnapshot = {
@@ -27,11 +28,13 @@ const EMPTY: AnnouncerSnapshot = {
   politeB: "",
   assertiveA: "",
   assertiveB: "",
+  latest: null,
 };
 
 let snapshot: AnnouncerSnapshot = EMPTY;
 let politeFlip = false;
 let assertiveFlip = false;
+let announcementId = 0;
 const listeners = new Set<() => void>();
 
 /**
@@ -44,12 +47,14 @@ const listeners = new Set<() => void>();
 export function announce(text: string, tone: Tone = "polite"): void {
   const t = text.trim();
   if (!t) return;
+  announcementId += 1;
   if (tone === "assertive") {
     assertiveFlip = !assertiveFlip;
     snapshot = {
       ...snapshot,
       assertiveA: assertiveFlip ? t : "",
       assertiveB: assertiveFlip ? "" : t,
+      latest: { id: announcementId, text: t, tone },
     };
   } else {
     politeFlip = !politeFlip;
@@ -57,6 +62,7 @@ export function announce(text: string, tone: Tone = "polite"): void {
       ...snapshot,
       politeA: politeFlip ? t : "",
       politeB: politeFlip ? "" : t,
+      latest: { id: announcementId, text: t, tone },
     };
   }
   for (const l of listeners) l();
@@ -83,5 +89,6 @@ export function resetAnnouncer(): void {
   snapshot = EMPTY;
   politeFlip = false;
   assertiveFlip = false;
+  announcementId = 0;
   listeners.clear();
 }

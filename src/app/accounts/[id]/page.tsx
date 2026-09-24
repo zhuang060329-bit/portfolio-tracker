@@ -259,7 +259,7 @@ export default async function AccountDetail({
                 </span>
               )}
               {!accountXirrShowable && accountXirr !== null && (
-                <span className="text-[10px] text-[var(--c-faint)]">
+                <span className="text-xs text-[var(--c-faint)]">
                   年化暫不顯示（資料未滿 30 天）
                 </span>
               )}
@@ -279,7 +279,7 @@ export default async function AccountDetail({
                 {fmtTwd(Math.abs(fxPnl))}
               </span>
               <span className="ml-1">匯率</span>
-              <span className="ml-2 text-[10px] text-[var(--c-faint)]">
+              <span className="ml-2 text-xs text-[var(--c-faint)]">
                 (avg cost FX {avgCostFx.toFixed(4)} → 現在 {curFx.toFixed(4)})
               </span>
             </p>
@@ -359,7 +359,12 @@ export default async function AccountDetail({
         {/* === 變動記錄 === */}
         <section className="mt-8">
           <h2 className="text-lg font-semibold tracking-tight">變動記錄</h2>
-          <div className="mt-3 overflow-x-auto rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] shadow-[var(--c-shadow)]">
+          <p className="scroll-cue mt-3">左右滑動查看完整欄位</p>
+          <div
+            className="scroll-region mt-3 overflow-x-auto rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] shadow-[var(--c-shadow)] max-md:mt-0"
+            tabIndex={0}
+            aria-label="帳戶變動記錄，可水平捲動"
+          >
             <table className="w-full min-w-[680px] text-sm">
               <thead className="border-b border-[var(--c-border)] bg-[var(--c-surface-soft)] text-xs tracking-wider text-[var(--c-muted)]">
                 <tr>

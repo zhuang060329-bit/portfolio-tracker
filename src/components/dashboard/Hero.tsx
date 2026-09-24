@@ -5,7 +5,6 @@ import { fmtUpdatedAt } from "@/lib/format";
 import { RefreshPricesButton } from "@/components/RefreshPricesButton";
 import type { DashSummary } from "./types";
 import { sign, TONE_TEXT, type Tone } from "./shared";
-import { useCountUp } from "./useCountUp";
 
 export function Hero({
   s,
@@ -16,7 +15,6 @@ export function Hero({
   series: SeriesPoint[];
   demo?: boolean;
 }) {
-  const total = useCountUp(s.total);
   const recent = series.slice(-30);
   const hasDay = s.dayChange != null && s.dayChangePct != null;
   const change30 =
@@ -49,7 +47,7 @@ export function Hero({
               truncate 原本要防的水平溢出實測用不到：375px 下可用寬度 305px，
               連 NT$9,999,999,999 都只要 265px。 */}
           <span className="amt min-w-0 whitespace-nowrap text-[length:var(--fs-display)] font-medium leading-[0.92] tracking-[-0.045em] tnum">
-            {Math.round(total).toLocaleString("en-US")}
+            {Math.round(s.total).toLocaleString("en-US")}
           </span>
         </div>
 

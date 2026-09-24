@@ -60,7 +60,7 @@ export function NetWorthPanel({
             key={r}
             type="button"
             onClick={() => setRange(r)}
-            className={`rounded px-2.5 py-1 transition-colors ${
+            className={`tap-row rounded px-2.5 py-1 transition-colors ${
               range === r
                 ? "bg-[var(--c-accent)] text-[var(--c-btn-strong-text)]"
                 : "text-[var(--c-muted)] hover:text-[var(--c-text)]"

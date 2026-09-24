@@ -100,7 +100,7 @@ export default async function DecisionsPage() {
                   }`}
                 >
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-md bg-[var(--c-accent-soft)] px-2 py-1 text-[11.5px] font-semibold text-[var(--c-accent)]">
+                    <span className="rounded-md bg-[var(--c-accent-soft)] px-2 py-1 text-xs font-semibold text-[var(--c-accent)]">
                       {typeLabels[decision.decision_type] ?? decision.decision_type}
                     </span>
                     <span className="text-[15px] font-semibold">{decision.asset_name}</span>
@@ -114,7 +114,7 @@ export default async function DecisionsPage() {
                   <p className="mt-2 line-clamp-2 text-[13px] leading-6 text-[var(--c-muted)]">
                     {decision.thesis}
                   </p>
-                  <div className="mt-2.5 flex flex-wrap items-center gap-2 text-[11.5px] text-[var(--c-faint)]">
+                  <div className="mt-2.5 flex flex-wrap items-center gap-2 text-xs text-[var(--c-faint)]">
                     <span>信心 {decision.confidence}/3</span>
                     {decision.accounts?.name && <span>· {decision.accounts.name}</span>}
                     <span>· 檢討 {decision.review_date}</span>
@@ -147,7 +147,7 @@ export default async function DecisionsPage() {
 function Summary({ label, value, alert = false }: { label: string; value: number; alert?: boolean }) {
   return (
     <div className="rounded-xl border border-[var(--c-border)] bg-[var(--c-surface)] px-4 py-3">
-      <div className="text-[11.5px] text-[var(--c-muted)]">{label}</div>
+      <div className="text-xs text-[var(--c-muted)]">{label}</div>
       <div className={`mt-1 text-2xl font-semibold tnum ${alert ? "text-[var(--c-down)]" : ""}`}>
         {value}
       </div>

@@ -205,7 +205,8 @@ export function TrendChart({
       className="relative w-full rounded-[6px]"
       style={{ touchAction: "pan-y" }}
       tabIndex={0}
-      role="application"
+      role="group"
+      aria-roledescription="互動圖表"
       aria-label="淨資產趨勢圖。左右方向鍵逐日檢視，Home/End 跳至頭尾。"
       onMouseMove={onMove}
       onMouseLeave={() => setHover(null)}
@@ -269,13 +270,15 @@ export function TrendChart({
             ),
           )}
         <path
+          className="chart-reveal"
           d={area}
           fill="url(#trendFill)"
           opacity={drawn ? 1 : 0}
-          style={{ transition: "opacity .6s ease .3s" }}
+          style={{ transition: "opacity .34s ease" }}
         />
         <path
           ref={pathRef}
+          className="chart-reveal"
           d={line}
           fill="none"
           stroke="var(--c-accent)"
@@ -285,7 +288,7 @@ export function TrendChart({
           style={{
             strokeDasharray: len,
             strokeDashoffset: drawn ? 0 : len,
-            transition: "stroke-dashoffset 1.1s cubic-bezier(.4,0,.2,1)",
+            transition: "stroke-dashoffset .34s cubic-bezier(.4,0,.2,1)",
           }}
         />
         {hi_ && (
@@ -312,6 +315,7 @@ export function TrendChart({
         )}
         {!hi_ && (
           <circle
+            className="chart-reveal"
             cx={nx(data.length - 1)}
             cy={ny(data[data.length - 1].value)}
             r="3.5"
@@ -319,7 +323,7 @@ export function TrendChart({
             stroke="var(--c-surface)"
             strokeWidth="2"
             opacity={drawn ? 1 : 0}
-            style={{ transition: "opacity .6s ease 1s" }}
+            style={{ transition: "opacity .34s ease" }}
           />
         )}
       </svg>
@@ -336,6 +340,9 @@ export function TrendChart({
           </div>
         </div>
       )}
+      <span className="sr-only" aria-live="polite">
+        {hi_ ? `${hi_.date}，淨資產 ${fmtTwd(hi_.value)} 元` : ""}
+      </span>
     </div>
   );
 }
@@ -475,7 +482,8 @@ export function BenchChart({
       className="relative w-full rounded-[6px]"
       style={{ touchAction: "pan-y" }}
       tabIndex={0}
-      role="application"
+      role="group"
+      aria-roledescription="互動圖表"
       aria-label="組合與大盤對照圖。左右方向鍵逐日檢視，Home/End 跳至頭尾。"
       onMouseMove={onMove}
       onMouseLeave={() => setHover(null)}
@@ -552,6 +560,7 @@ export function BenchChart({
         {keys.map((k) => (
           <path
             key={k}
+            className="chart-reveal"
             d={solidPathOf(k)}
             fill="none"
             stroke={colorOf(k)}
@@ -560,7 +569,7 @@ export function BenchChart({
             strokeLinecap="round"
             strokeLinejoin="round"
             opacity={drawn ? (k === "portfolio" ? 1 : 0.72) : 0}
-            style={{ transition: "opacity .7s ease" }}
+            style={{ transition: "opacity .34s ease" }}
           />
         ))}
         {keys.map((k) => {
@@ -569,6 +578,7 @@ export function BenchChart({
           return (
             <path
               key={`gap-${k}`}
+              className="chart-reveal"
               d={gd}
               fill="none"
               stroke={colorOf(k)}
@@ -576,7 +586,7 @@ export function BenchChart({
               strokeDasharray="2 5"
               strokeLinecap="round"
               opacity={drawn ? 0.35 : 0}
-              style={{ transition: "opacity .7s ease" }}
+              style={{ transition: "opacity .34s ease" }}
             />
           );
         })}
@@ -646,6 +656,22 @@ export function BenchChart({
           })}
         </div>
       )}
+      <span className="sr-only" aria-live="polite">
+        {hover != null && hover < data.length
+          ? `${data[hover].date}，${keys
+              .map((key) => {
+                const value = norm[key][hover];
+                if (value == null) return null;
+                const label =
+                  key === "portfolio"
+                    ? "我的組合"
+                    : (series.find((item) => item.key === key)?.label ?? key);
+                return `${label} ${value >= 100 ? "上漲" : "下跌"} ${Math.abs(value - 100).toFixed(1)}%`;
+              })
+              .filter(Boolean)
+              .join("，")}`
+          : ""}
+      </span>
     </div>
   );
 }
@@ -674,9 +700,12 @@ export function Donut({
     return { ...d, start, end: start + angles[i] };
   });
   const arc = (a0: number, a1: number) => {
+    // 三角函數的最後幾位在 Node 與瀏覽器可能不同；固定精度可避免 SVG path
+    // 在 hydration 時只因浮點尾數產生 mismatch，同時保留遠高於像素所需的精度。
+    const stable = (value: number) => Number(value.toFixed(6));
     const p = (a: number, rr: number): [number, number] => [
-      cx + rr * Math.cos((a * Math.PI) / 180),
-      cy + rr * Math.sin((a * Math.PI) / 180),
+      stable(cx + rr * Math.cos((a * Math.PI) / 180)),
+      stable(cy + rr * Math.sin((a * Math.PI) / 180)),
     ];
     const large = a1 - a0 > 180 ? 1 : 0;
     const [x0, y0] = p(a0, rad);

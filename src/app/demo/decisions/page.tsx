@@ -23,12 +23,12 @@ export default function DemoDecisionsPage() {
             return (
               <article key={decision.id} className={`p-5 ${index > 0 ? "border-t border-[var(--c-border)]" : ""}`}>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-md bg-[var(--c-accent-soft)] px-2 py-1 text-[11px] font-semibold text-[var(--c-accent)]">{typeLabel[decision.decisionType] ?? decision.decisionType}</span>
+                  <span className="rounded-md bg-[var(--c-accent-soft)] px-2 py-1 text-xs font-semibold text-[var(--c-accent)]">{typeLabel[decision.decisionType] ?? decision.decisionType}</span>
                   <h2 className="text-[15px] font-semibold">{decision.assetName}</h2>
-                  <span className="ml-auto text-[11.5px] text-[var(--c-faint)] tnum">{decision.decisionDate}</span>
+                  <span className="ml-auto text-xs text-[var(--c-faint)] tnum">{decision.decisionDate}</span>
                 </div>
                 <p className="mt-2 text-[13px] leading-6 text-[var(--c-muted)]">{decision.thesis}</p>
-                <div className="mt-3 flex flex-wrap items-center gap-2 text-[11.5px]">
+                <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
                   <span>檢討日 {decision.reviewDate}</span>
                   <span className={`rounded-full px-2 py-0.5 font-semibold ${decision.status === "reviewed" ? "bg-[color-mix(in_srgb,var(--c-up)_12%,transparent)] text-[var(--c-up)]" : due ? "bg-[color-mix(in_srgb,var(--c-down)_12%,transparent)] text-[var(--c-down)]" : "bg-[var(--c-surface-soft)] text-[var(--c-muted)]"}`}>
                     {decision.status === "reviewed" ? `已檢討 · 品質 ${decision.quality}/3` : due ? "檢討到期" : "追蹤中"}

@@ -123,14 +123,14 @@ export function ScenarioTab({ data }: { data: ScenarioData }) {
               key={template.label}
               type="button"
               onClick={() => setShocks(template.shocks.map((shock) => ({ ...shock })))}
-              className="rounded-full border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3 py-1.5 text-[12.5px] hover:border-[var(--c-accent)] hover:text-[var(--c-accent)]"
+              className="tap-row rounded-full border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3 py-1.5 text-[12.5px] hover:border-[var(--c-accent)] hover:text-[var(--c-accent)]"
             >
               {template.label}
             </button>
           ))}
         </div>
         <div className="mt-4 grid gap-3 rounded-xl bg-[var(--c-surface-soft)] p-4 sm:grid-cols-[1.4fr_0.7fr_0.7fr_auto] sm:items-end">
-          <label className="text-[11.5px] text-[var(--c-muted)]">
+          <label className="text-xs text-[var(--c-muted)]">
             套用範圍
             <select value={scopeValue} onChange={(event) => setScopeValue(event.target.value)} className="mt-1.5 h-10 w-full rounded-lg border border-[var(--c-border)] bg-[var(--c-surface)] px-3 text-[13px] text-[var(--c-text)]">
               <option value="all::">全部持倉</option>
@@ -156,7 +156,7 @@ export function ScenarioTab({ data }: { data: ScenarioData }) {
                 type="button"
                 onClick={() => setShocks((current) => current.filter((item) => item.id !== shock.id))}
                 aria-label={`移除 ${shockLabel(shock, data.holdings)}`}
-                className="rounded-lg border border-[var(--c-border)] px-2.5 py-1.5 text-[11.5px] text-[var(--c-muted)] hover:border-[var(--c-down)] hover:text-[var(--c-down)]"
+                className="tap-row rounded-lg border border-[var(--c-border)] px-2.5 py-1.5 text-xs text-[var(--c-muted)] hover:border-[var(--c-down)] hover:text-[var(--c-down)]"
               >
                 {shockLabel(shock, data.holdings)} ×
               </button>
@@ -170,7 +170,7 @@ export function ScenarioTab({ data }: { data: ScenarioData }) {
         <ResultCard label="壓力後估值" value={result.stressedTotalTwd} />
         <ResultCard label="壓力損益" value={result.stressChangeTwd} signed tone />
         <div className="rounded-xl border border-[var(--c-border)] bg-[var(--c-surface)] px-4 py-3">
-          <div className="text-[11px] text-[var(--c-muted)]">壓力變動率</div>
+          <div className="text-xs text-[var(--c-muted)]">壓力變動率</div>
           <div className={`mt-1 text-[18px] font-semibold tnum ${result.stressChangePct < 0 ? "text-[var(--c-down)]" : "text-[var(--c-up)]"}`}>
             {result.stressChangePct > 0 ? "+" : ""}{(result.stressChangePct * 100).toFixed(2)}%
           </div>
@@ -181,7 +181,7 @@ export function ScenarioTab({ data }: { data: ScenarioData }) {
         <h2 className="text-[19px] font-medium">買前 anti-FOMO 檢核</h2>
         <p className="mt-1 text-[12.5px] text-[var(--c-muted)]">試買只改變本頁試算，不會寫回帳戶或交易。</p>
         <div className="mt-4 grid gap-3 sm:grid-cols-[1.2fr_1fr_auto] sm:items-end">
-          <label className="text-[11.5px] text-[var(--c-muted)]">
+          <label className="text-xs text-[var(--c-muted)]">
             試買帳戶
             <select value={buyAccountId} onChange={(event) => setBuyAccountId(event.target.value)} className="mt-1.5 h-10 w-full rounded-lg border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3 text-[13px] text-[var(--c-text)]">
               {data.holdings.map((holding) => <option key={holding.id} value={holding.id}>{holding.name}{holding.symbol ? ` · ${holding.symbol}` : ""}</option>)}
@@ -217,9 +217,10 @@ export function ScenarioTab({ data }: { data: ScenarioData }) {
         <div className="border-b border-[var(--c-border)] px-5 py-4">
           <h2 className="text-[17px] font-medium">持倉前後權重</h2>
         </div>
-        <div className="overflow-x-auto">
+        <p className="scroll-cue px-5 pt-2">左右滑動查看完整欄位</p>
+        <div className="scroll-region overflow-x-auto" tabIndex={0} aria-label="持倉前後權重表，可水平捲動">
           <table className="w-full min-w-[660px] text-left text-[13px]">
-            <thead className="bg-[var(--c-surface-soft)] text-[11.5px] text-[var(--c-muted)]">
+            <thead className="bg-[var(--c-surface-soft)] text-xs text-[var(--c-muted)]">
               <tr><th className="px-5 py-3 font-medium">持倉</th><th className="px-3 py-3 text-right font-medium">目前估值</th><th className="px-3 py-3 text-right font-medium">壓力後</th><th className="px-3 py-3 text-right font-medium">目前權重</th><th className="px-5 py-3 text-right font-medium">買後權重</th></tr>
             </thead>
             <tbody>
@@ -237,7 +238,7 @@ export function ScenarioTab({ data }: { data: ScenarioData }) {
         </div>
       </section>
 
-      <aside className="rounded-xl bg-[var(--c-surface-soft)] px-4 py-3 text-[11.5px] leading-5 text-[var(--c-muted)]">
+      <aside className="rounded-xl bg-[var(--c-surface-soft)] px-4 py-3 text-xs leading-5 text-[var(--c-muted)]">
         假設：{result.assumptions.join(" ")} 本工具只呈現數學結果與設定門檻，不構成投資建議。
       </aside>
     </div>
@@ -246,7 +247,7 @@ export function ScenarioTab({ data }: { data: ScenarioData }) {
 
 function NumberInput({ label, value, onChange, min, max, step = 1 }: { label: string; value: number; onChange: (value: number) => void; min: number; max: number; step?: number }) {
   return (
-    <label className="text-[11.5px] text-[var(--c-muted)]">
+    <label className="text-xs text-[var(--c-muted)]">
       {label}
       <input type="number" value={value} min={min} max={max} step={step} onChange={(event) => onChange(clampNumber(event.target.value, min, max))} className="mt-1.5 h-10 w-full rounded-lg border border-[var(--c-border)] bg-[var(--c-surface)] px-3 text-right text-[13px] text-[var(--c-text)] tnum" />
     </label>
@@ -256,7 +257,7 @@ function NumberInput({ label, value, onChange, min, max, step = 1 }: { label: st
 function ResultCard({ label, value, signed = false, tone = false }: { label: string; value: number; signed?: boolean; tone?: boolean }) {
   return (
     <div className="rounded-xl border border-[var(--c-border)] bg-[var(--c-surface)] px-4 py-3">
-      <div className="text-[11px] text-[var(--c-muted)]">{label}</div>
+      <div className="text-xs text-[var(--c-muted)]">{label}</div>
       <div className={`amt mt-1 text-[18px] font-semibold tnum ${tone ? value < 0 ? "text-[var(--c-down)]" : "text-[var(--c-up)]" : ""}`}>
         {signed && value > 0 ? "+" : ""}NT$ {fmtFull(value)}
       </div>
@@ -267,7 +268,7 @@ function ResultCard({ label, value, signed = false, tone = false }: { label: str
 function GuardFact({ label, value, warning }: { label: string; value: string; warning: boolean }) {
   return (
     <div className={`rounded-xl border px-3.5 py-3 ${warning ? "border-[color-mix(in_srgb,var(--c-down)_35%,var(--c-border))] bg-[color-mix(in_srgb,var(--c-down)_7%,transparent)]" : "border-[var(--c-border)] bg-[var(--c-surface-soft)]"}`}>
-      <div className="text-[10.5px] text-[var(--c-muted)]">{label}</div>
+      <div className="text-xs text-[var(--c-muted)]">{label}</div>
       <div className={`mt-1 text-[12.5px] font-semibold ${warning ? "text-[var(--c-down)]" : ""}`}>{value}</div>
     </div>
   );

@@ -92,7 +92,7 @@ function PlanRow({ plan }: { plan: Plan }) {
               </>
             )}
             {!plan.active && (
-              <span className="ml-2 rounded-[var(--r-pill)] bg-[var(--c-border)] px-2 py-0.5 text-[10px] uppercase tracking-wider text-[var(--c-muted)]">
+              <span className="ml-2 rounded-[var(--r-pill)] bg-[var(--c-border)] px-2 py-0.5 text-xs uppercase tracking-wider text-[var(--c-muted)]">
                 Paused
               </span>
             )}
@@ -115,7 +115,7 @@ function PlanRow({ plan }: { plan: Plan }) {
             <div className="relative flex-1 sm:flex-none">
               <span
                 aria-hidden="true"
-                className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-[11px] text-[var(--c-faint)]"
+                className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-xs text-[var(--c-faint)]"
               >
                 NT$
               </span>
@@ -142,7 +142,7 @@ function PlanRow({ plan }: { plan: Plan }) {
             <div className="relative flex-1 sm:flex-none">
               <span
                 aria-hidden="true"
-                className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-[11px] text-[var(--c-faint)]"
+                className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-xs text-[var(--c-faint)]"
               >
                 費
               </span>
@@ -249,7 +249,7 @@ function AddPlanForm({ accountId }: { accountId: string }) {
               placeholder="例：500"
               className={`mt-1 ${controlFieldH} rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]`}
             />
-            <span className="text-[10px] text-[var(--c-faint)]">
+            <span className="text-xs text-[var(--c-faint)]">
               內含於每次金額，扣掉後才換算股數。
             </span>
           </label>

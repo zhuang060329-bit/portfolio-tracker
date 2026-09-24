@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import {
   createAlert,
   deleteAlert,
@@ -66,29 +66,110 @@ const fmtPrice = (n: number, ccy: string) =>
   });
 
 /* ---------- 開關（持久化用 server action）---------- */
-function Toggle({ id, active }: { id: string; active: boolean }) {
+function Toggle({
+  id,
+  active,
+  label,
+}: {
+  id: string;
+  active: boolean;
+  label: string;
+}) {
+  const [state, action, pending] = useActionState<FormState, FormData>(
+    toggleAlert,
+    undefined,
+  );
+  useActionAnnounce(state, pending, active ? "提醒已停用" : "提醒已啟用");
+
   return (
-    <form action={toggleAlert}>
+    <form action={action}>
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="active" value={active ? "0" : "1"} />
       <button
         type="submit"
         role="switch"
         aria-checked={active}
-        aria-label={active ? "停用" : "啟用"}
-        className={`relative h-6 w-[42px] rounded-full border transition-colors ${
-          active
-            ? "border-[var(--c-up)] bg-[var(--c-up)]"
-            : "border-[var(--c-line-strong)] bg-[var(--c-surface-soft)]"
-        }`}
+        aria-label={`${active ? "停用" : "啟用"}${label}提醒`}
+        aria-busy={pending}
+        disabled={pending}
+        className="touch-target grid h-11 w-11 place-items-center rounded-[var(--r-control)] disabled:cursor-wait disabled:opacity-60"
       >
         <span
-          className={`absolute left-0.5 top-0.5 h-[18px] w-[18px] rounded-full shadow transition-transform ${
-            active ? "translate-x-[18px] bg-white" : "bg-[var(--c-text)]"
+          aria-hidden="true"
+          className={`relative h-6 w-[42px] rounded-full border transition-colors ${
+            active
+              ? "border-[var(--c-up)] bg-[var(--c-up)]"
+              : "border-[var(--c-line-strong)] bg-[var(--c-surface-soft)]"
           }`}
-        />
+        >
+          <span
+            className={`switch-thumb absolute left-0.5 top-0.5 h-[18px] w-[18px] rounded-full shadow transition-transform ${
+              active ? "translate-x-[18px] bg-white" : "bg-[var(--c-text)]"
+            }`}
+          />
+        </span>
       </button>
     </form>
+  );
+}
+
+function DeleteAlertControl({ id, label }: { id: string; label: string }) {
+  const [asking, setAsking] = useState(false);
+  const confirmRef = useRef<HTMLButtonElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const previousAsking = useRef(false);
+  const [state, action, pending] = useActionState<FormState, FormData>(
+    deleteAlert,
+    undefined,
+  );
+  useActionAnnounce(state, pending, "提醒已刪除");
+
+  useEffect(() => {
+    if (asking) confirmRef.current?.focus();
+    else if (previousAsking.current) triggerRef.current?.focus();
+    previousAsking.current = asking;
+  }, [asking]);
+
+  return (
+    <div
+      className="inline-confirm-shell"
+      data-phase={asking ? "asking" : "idle"}
+      role={asking ? "group" : undefined}
+      aria-label={asking ? `確認刪除${label}提醒` : undefined}
+    >
+      {asking ? (
+        <form action={action} className="flex w-full items-center justify-end gap-1 px-1">
+          <input type="hidden" name="id" value={id} />
+          <button
+            type="button"
+            onClick={() => setAsking(false)}
+            disabled={pending}
+            className="btn btn-ghost btn-sm"
+          >
+            取消
+          </button>
+          <button
+            ref={confirmRef}
+            type="submit"
+            disabled={pending}
+            className="btn btn-danger btn-sm whitespace-nowrap"
+          >
+            {pending ? "刪除中…" : "確認刪除"}
+          </button>
+        </form>
+      ) : (
+        <button
+          ref={triggerRef}
+          type="button"
+          title="刪除"
+          aria-label={`刪除${label}提醒`}
+          onClick={() => setAsking(true)}
+          className="btn btn-ghost btn-ghost-danger btn-icon btn-lg shrink-0"
+        >
+          <TrashIcon />
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -222,10 +303,10 @@ function CreatePanel({ accounts }: { accounts: AlertAccount[] }) {
               onClick={() => setType(k)}
               aria-pressed={on}
               style={{ "--tc": t.color } as React.CSSProperties}
-              className={`flex flex-col items-start gap-[3px] rounded-xl border p-[14px] text-left transition-all duration-150 ${
+              className={`flex flex-col items-start gap-[3px] rounded-xl border p-[14px] text-left transition-[border-color,background-color,box-shadow] duration-150 ${
                 on
                   ? "border-[color-mix(in_srgb,var(--tc)_60%,transparent)] bg-[color-mix(in_srgb,var(--tc)_11%,var(--c-surface))] shadow-[0_0_0_2px_color-mix(in_srgb,var(--tc)_20%,transparent),0_4px_14px_rgba(0,0,0,0.18)]"
-                  : "border-[var(--c-border)] bg-[var(--c-surface-soft)] hover:-translate-y-[1px] hover:border-[var(--c-line-strong)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.14)]"
+                  : "border-[var(--c-border)] bg-[var(--c-surface-soft)] hover:border-[var(--c-line-strong)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.14)]"
               }`}
             >
               <span
@@ -238,7 +319,7 @@ function CreatePanel({ accounts }: { accounts: AlertAccount[] }) {
                 {t.glyph}
               </span>
               <span className="text-sm font-semibold">{t.label}</span>
-              <span className="text-[11.5px] leading-[1.35] text-[var(--c-muted)]">
+              <span className="text-xs leading-[1.35] text-[var(--c-muted)]">
                 {t.desc}
               </span>
             </button>
@@ -270,7 +351,7 @@ function CreatePanel({ accounts }: { accounts: AlertAccount[] }) {
           <span className="flex items-baseline gap-2 text-xs font-medium text-[var(--c-muted)]">
             {needAccount ? "目標價格" : "偏離門檻（%）"}
             {needAccount && acc?.price != null && (
-              <span className="text-[11px] text-[var(--c-accent)] tnum">
+              <span className="text-xs text-[var(--c-accent)] tnum">
                 現價 {fmtPrice(acc.price, acc.ccy)}
               </span>
             )}
@@ -306,7 +387,7 @@ function CreatePanel({ accounts }: { accounts: AlertAccount[] }) {
 
       {/* 即時白話預覽 */}
       <div className="mt-4 flex items-center gap-2.5 rounded-[11px] border border-dashed border-[var(--c-line-strong)] bg-[var(--c-surface-soft)] px-4 py-3 text-sm text-[var(--c-muted)]">
-        <span className="text-[11px]" style={{ color: TYPES[type].color }}>
+        <span className="text-xs" style={{ color: TYPES[type].color }}>
           ◆
         </span>
         <ConditionText type={type} acc={acc} threshold={threshold} />
@@ -328,7 +409,7 @@ function CreatePanel({ accounts }: { accounts: AlertAccount[] }) {
         {state?.error && (
           <span className="text-[13px] text-[var(--c-down)]">{state.error}</span>
         )}
-        <span className="ml-auto text-[11px] text-[var(--c-faint)]">
+        <span className="ml-auto text-xs text-[var(--c-faint)]">
           每日抓價後檢查（台北 14:00）· 價格提醒觸發一次後自動停用
         </span>
       </div>
@@ -395,7 +476,7 @@ function AlertCard({
             )}
           </span>
           <span
-            className="whitespace-nowrap text-[11.5px] font-semibold"
+            className="whitespace-nowrap text-xs font-semibold"
             style={{ color: t.color }}
           >
             {t.long}
@@ -406,7 +487,7 @@ function AlertCard({
         <div className="mt-2.5 flex items-center gap-[11px]">
           <div className="h-1.5 flex-1 overflow-hidden rounded-[3px] bg-[var(--c-surface-soft)]">
             <span
-              className="block h-full rounded-[3px] transition-[width] duration-700 ease-out"
+              className="motion-progress block h-full rounded-[3px] transition-[width] duration-300 ease-out"
               style={{
                 width: `${(info.closeness * 100).toFixed(1)}%`,
                 background: info.reached ? t.color : "var(--c-line-strong)",
@@ -439,22 +520,12 @@ function AlertCard({
 
       <div className="col-start-2 flex items-center justify-end gap-2 sm:col-start-3">
         {!a.active && (
-          <span className="rounded-full border border-[var(--c-border)] px-2 py-px text-[11px] text-[var(--c-faint)]">
+          <span className="rounded-full border border-[var(--c-border)] px-2 py-px text-xs text-[var(--c-faint)]">
             已停用
           </span>
         )}
-        <Toggle id={a.id} active={a.active} />
-        <form action={deleteAlert}>
-          <input type="hidden" name="id" value={a.id} />
-          <button
-            type="submit"
-            title="刪除"
-            aria-label="刪除提醒"
-            className="btn btn-ghost btn-ghost-danger btn-icon btn-lg"
-          >
-            <TrashIcon />
-          </button>
-        </form>
+        <Toggle id={a.id} active={a.active} label={accLabel} />
+        <DeleteAlertControl id={a.id} label={accLabel} />
       </div>
     </div>
   );
@@ -509,7 +580,7 @@ function ListHead({
         }`}
       />
       {label}
-      <span className="rounded-full bg-[var(--c-surface-soft)] px-2 py-px text-[11.5px] text-[var(--c-faint)] tnum">
+      <span className="rounded-full bg-[var(--c-surface-soft)] px-2 py-px text-xs text-[var(--c-faint)] tnum">
         {count}
       </span>
     </div>

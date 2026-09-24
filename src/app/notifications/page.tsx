@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { AppHeader } from "@/components/AppHeader";
-import {
-  markNotificationRead,
-  markAllNotificationsRead,
-} from "@/lib/alert-actions";
 import { getUnreadCount } from "@/lib/notifications";
+import {
+  MarkAllNotificationsReadButton,
+  MarkNotificationReadButton,
+} from "./NotificationActions";
 
 type Row = {
   id: string;
@@ -87,14 +87,7 @@ export default async function NotificationsPage() {
             </p>
           </div>
           {unreadInList > 0 && (
-            <form action={markAllNotificationsRead}>
-              <button
-                type="submit"
-                className="btn btn-outline btn-sm"
-              >
-                全部標為已讀
-              </button>
-            </form>
+            <MarkAllNotificationsReadButton />
           )}
         </header>
 
@@ -124,7 +117,7 @@ export default async function NotificationsPage() {
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span
-                        className={`inline-flex rounded px-2 py-0.5 text-[10px] ${
+                        className={`inline-flex rounded px-2 py-0.5 text-xs ${
                           TYPE_TONE[r.type] ?? TYPE_TONE.system
                         }`}
                       >
@@ -140,20 +133,12 @@ export default async function NotificationsPage() {
                         {r.body}
                       </p>
                     )}
-                    <p className="mt-1 text-[10px] text-[var(--c-faint)]">
+                    <p className="mt-1 text-xs text-[var(--c-faint)]">
                       {fmtTime(r.created_at)}
                     </p>
                   </div>
                   {!r.read_at && (
-                    <form action={markNotificationRead} className="contents">
-                      <input type="hidden" name="id" value={r.id} />
-                      <button
-                        type="submit"
-                        className="btn btn-outline btn-sm shrink-0"
-                      >
-                        標為已讀
-                      </button>
-                    </form>
+                    <MarkNotificationReadButton id={r.id} />
                   )}
                 </div>
               </li>

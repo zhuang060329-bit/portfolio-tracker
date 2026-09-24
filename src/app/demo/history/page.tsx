@@ -25,22 +25,22 @@ export default async function DemoHistoryPage({ searchParams }: { searchParams: 
       <main id="main" tabIndex={-1} className="mx-auto max-w-[980px] px-4 pb-24 pt-8 sm:px-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div><h1 className="font-serif text-3xl font-medium">歷史回放 Demo</h1><p className="mt-1.5 text-[13px] text-[var(--c-muted)]">日期改變只會選用該日以前的固定快照。</p></div>
-          <form method="GET" className="flex items-end gap-2"><label className="text-[11px] text-[var(--c-muted)]">回放日<input type="date" name="date" min={openingDate} max={today} defaultValue={targetDate} className="mt-1 block h-11 rounded-lg border border-[var(--c-border)] px-3 text-[13px] sm:h-10" /></label><button className="h-11 btn btn-primary btn-fit sm:h-10">回放</button></form>
+          <form method="GET" className="flex items-end gap-2"><label className="text-xs text-[var(--c-muted)]">回放日<input type="date" name="date" min={openingDate} max={today} defaultValue={targetDate} className="mt-1 block h-11 rounded-lg border border-[var(--c-border)] px-3 text-[13px] sm:h-10" /></label><button className="h-11 btn btn-primary btn-fit sm:h-10">回放</button></form>
         </div>
         <section className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Card label="期初淨值" value={opening.totalValueTwd} /><Card label="回放淨值" value={ending.totalValueTwd} /><Card label="市價效果" value={attribution.marketPriceEffectTwd} /><Card label="匯率效果" value={attribution.fxEffectTwd} />
         </section>
         <section className="mt-5 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)]">
-          {ending.holdings.map((holding, index) => <div key={holding.accountId} className={`flex items-center gap-3 px-5 py-4 ${index > 0 ? "border-t border-[var(--c-border)]" : ""}`}><div className="min-w-0 flex-1"><div className="font-medium">{holding.name}{holding.symbol ? ` · ${holding.symbol}` : ""}</div><div className="mt-1 text-[10.5px] text-[var(--c-faint)]">快照 {holding.snapshotDate}{holding.carriedForward ? " · carry-forward" : ""}</div></div><div className="amt font-semibold tnum">NT$ {fmtFull(holding.valueTwd)}</div><div className="w-16 text-right text-[11.5px] text-[var(--c-muted)] tnum">{ending.totalValueTwd > 0 ? fmtNum((holding.valueTwd / ending.totalValueTwd) * 100, 1) : "0"}%</div></div>)}
+          {ending.holdings.map((holding, index) => <div key={holding.accountId} className={`flex items-center gap-3 px-5 py-4 ${index > 0 ? "border-t border-[var(--c-border)]" : ""}`}><div className="min-w-0 flex-1"><div className="font-medium">{holding.name}{holding.symbol ? ` · ${holding.symbol}` : ""}</div><div className="mt-1 text-xs text-[var(--c-faint)]">快照 {holding.snapshotDate}{holding.carriedForward ? " · carry-forward" : ""}</div></div><div className="amt font-semibold tnum">NT$ {fmtFull(holding.valueTwd)}</div><div className="w-16 text-right text-xs text-[var(--c-muted)] tnum">{ending.totalValueTwd > 0 ? fmtNum((holding.valueTwd / ending.totalValueTwd) * 100, 1) : "0"}%</div></div>)}
         </section>
-        {attribution.gaps.length > 0 && <p className="mt-4 text-[11.5px] text-[var(--c-muted)]">資料說明：{attribution.gaps.join("；")}</p>}
+        {attribution.gaps.length > 0 && <p className="mt-4 text-xs text-[var(--c-muted)]">資料說明：{attribution.gaps.join("；")}</p>}
       </main>
     </div>
   );
 }
 
 function Card({ label, value }: { label: string; value: number }) {
-  return <div className="rounded-xl border border-[var(--c-border)] bg-[var(--c-surface)] px-4 py-3"><div className="text-[10.5px] text-[var(--c-muted)]">{label}</div><div className="amt mt-1 text-[17px] font-semibold tnum">NT$ {fmtFull(value)}</div></div>;
+  return <div className="rounded-xl border border-[var(--c-border)] bg-[var(--c-surface)] px-4 py-3"><div className="text-xs text-[var(--c-muted)]">{label}</div><div className="amt mt-1 text-[17px] font-semibold tnum">NT$ {fmtFull(value)}</div></div>;
 }
 
 function validDate(value: string): boolean {

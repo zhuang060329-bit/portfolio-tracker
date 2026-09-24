@@ -92,10 +92,11 @@ export function RebalanceTab({ data }: { data: RebalanceData }) {
       </section>
 
       <section className="overflow-hidden rounded-2xl border border-[var(--c-border)] bg-[var(--c-surface)]">
-        <div className="overflow-x-auto">
+        <p className="scroll-cue px-4 pt-2">左右滑動查看完整欄位</p>
+        <div className="scroll-region overflow-x-auto" tabIndex={0} aria-label="再平衡配置表，可水平捲動">
           <table className="w-full min-w-[640px] text-[13px]">
             <thead>
-              <tr className="border-b border-[var(--c-border)] text-left text-[11px] uppercase tracking-wider text-[var(--c-faint)]">
+              <tr className="border-b border-[var(--c-border)] text-left text-xs uppercase tracking-wider text-[var(--c-faint)]">
                 <th scope="col" className="px-4 py-3 font-medium">類別</th>
                 <th scope="col" className="px-4 py-3 text-right font-medium">目標</th>
                 <th scope="col" className="px-4 py-3 text-right font-medium">實際</th>
@@ -114,7 +115,7 @@ export function RebalanceTab({ data }: { data: RebalanceData }) {
                   <th scope="row" className="px-4 py-3 text-left font-medium">
                     {ASSET_CLASS_LABEL[r.assetClass] ?? r.assetClass}
                     {r.untargeted && (
-                      <span className="ml-2 rounded-full border border-[var(--c-border)] px-1.5 py-px text-[10px] font-normal text-[var(--c-faint)]">
+                      <span className="ml-2 rounded-full border border-[var(--c-border)] px-1.5 py-px text-xs font-normal text-[var(--c-faint)]">
                         未設目標
                       </span>
                     )}
@@ -181,11 +182,11 @@ function Stat({
 }) {
   return (
     <div>
-      <dt className="text-[11px] uppercase tracking-wider text-[var(--c-faint)]">
+      <dt className="text-xs uppercase tracking-wider text-[var(--c-faint)]">
         {label}
       </dt>
       <dd className="amt tnum mt-1 text-[17px] font-semibold">{fmtFull(value)}</dd>
-      {hint && <p className="mt-0.5 text-[11px] text-[var(--c-warn)]">{hint}</p>}
+      {hint && <p className="mt-0.5 text-xs text-[var(--c-warn)]">{hint}</p>}
     </div>
   );
 }

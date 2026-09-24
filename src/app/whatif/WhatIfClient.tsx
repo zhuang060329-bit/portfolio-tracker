@@ -1,12 +1,22 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { project, crossMonth, type ProjPoint } from "@/lib/whatif-project";
 import { fmtFull as fmtTwd, fmtCompact } from "@/lib/format";
 import { ScenarioTab, type ScenarioData } from "./ScenarioTab";
 import { RebalanceTab } from "./RebalanceTab";
 
 const sign = (n: number) => (n > 0 ? "+" : n < 0 ? "−" : "");
+
+const WHATIF_TABS = ["proj", "cf", "scenario", "rebalance"] as const;
+type WhatIfTab = (typeof WHATIF_TABS)[number];
+
+const WHATIF_TAB_LABEL: Record<WhatIfTab, string> = {
+  proj: "未來推算",
+  cf: "回測對照",
+  scenario: "壓力與買前檢核",
+  rebalance: "再平衡",
+};
 
 export type CfRow = {
   label: string;
@@ -44,31 +54,36 @@ function Slider({
   fmt?: (v: number) => string;
   hint?: string;
 }) {
+  const inputId = `projection-${useId().replace(/:/g, "")}`;
+  const hintId = hint ? `${inputId}-hint` : undefined;
   const pct = ((value - min) / (max - min)) * 100;
   return (
     <div className="mt-4">
       <div className="mb-2.5 flex items-baseline justify-between gap-2.5">
-        <span className="text-[13px] font-medium text-[var(--c-text)]">
+        <label htmlFor={inputId} className="text-[13px] font-medium text-[var(--c-text)]">
           {label}
-        </span>
-        <span className="whitespace-nowrap text-sm font-semibold text-[var(--c-accent)] tnum">
+        </label>
+        <output htmlFor={inputId} className="whitespace-nowrap text-sm font-semibold text-[var(--c-accent)] tnum">
           {fmt ? fmt(value) : value}
-        </span>
+        </output>
       </div>
       <input
+        id={inputId}
         type="range"
         className="proj-range"
         min={min}
         max={max}
         step={step}
         value={value}
+        aria-valuetext={fmt ? fmt(value) : String(value)}
+        aria-describedby={hintId}
         onChange={(e) => onChange(Number(e.target.value))}
         style={{
           background: `linear-gradient(to right, var(--c-accent) ${pct}%, var(--c-surface-soft) ${pct}%)`,
         }}
       />
       {hint && (
-        <span className="mt-[7px] block text-[11px] text-[var(--c-faint)]">
+        <span id={hintId} className="mt-[7px] block text-xs text-[var(--c-faint)]">
           {hint}
         </span>
       )}
@@ -95,6 +110,7 @@ function ProjectionChart({
   height?: number;
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
+  const instructionsId = `projection-chart-${useId().replace(/:/g, "")}`;
   const [w, setW] = useState(640);
   const [hover, setHover] = useState<number | null>(null);
 
@@ -138,12 +154,30 @@ function ProjectionChart({
     (_, i) => (i + 1) * step,
   ).filter((y) => y <= years + 0.01);
 
-  const onMove = (e: React.MouseEvent) => {
+  const setFromClientX = (clientX: number) => {
     if (!wrapRef.current) return;
     const rect = wrapRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
+    const x = clientX - rect.left;
     const idx = Math.round((x / (w - padR)) * (n - 1));
     setHover(Math.max(0, Math.min(n - 1, idx)));
+  };
+  const onMove = (e: React.MouseEvent) => setFromClientX(e.clientX);
+  const onTouch = (e: React.TouchEvent) => setFromClientX(e.touches[0].clientX);
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    const current = hover ?? n - 1;
+    let next: number | null = null;
+    if (e.key === "ArrowLeft") next = Math.max(0, current - 1);
+    else if (e.key === "ArrowRight") next = Math.min(n - 1, current + 1);
+    else if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = n - 1;
+    else if (e.key === "Escape") {
+      setHover(null);
+      return;
+    }
+    if (next !== null) {
+      e.preventDefault();
+      setHover(next);
+    }
   };
   const hp = hover != null ? pts[hover] : null;
 
@@ -151,9 +185,21 @@ function ProjectionChart({
     <div
       ref={wrapRef}
       className="relative w-full"
+      tabIndex={0}
+      role="group"
+      aria-roledescription="互動圖表"
+      aria-label="未來淨值推算圖"
+      aria-describedby={instructionsId}
+      style={{ touchAction: "pan-y" }}
       onMouseMove={onMove}
       onMouseLeave={() => setHover(null)}
+      onTouchStart={onTouch}
+      onTouchMove={onTouch}
+      onKeyDown={onKeyDown}
     >
+      <span id={instructionsId} className="sr-only">
+        左右方向鍵逐月檢視，Home 與 End 跳至頭尾，Escape 清除目前選取。
+      </span>
       <svg
         width={w}
         height={H}
@@ -257,7 +303,7 @@ function ProjectionChart({
           className="pointer-events-none absolute top-1.5 z-[5] -translate-x-1/2 whitespace-nowrap rounded-[10px] border border-[var(--c-line-strong)] bg-[var(--c-surface-soft)] px-[11px] py-2 shadow-[var(--c-shadow)]"
           style={{ left: Math.min(Math.max(nx(hp.m), 80), w - padR - 80) }}
         >
-          <div className="text-[11px] text-[var(--c-muted)]">
+          <div className="text-xs text-[var(--c-muted)]">
             第 {Math.floor(hp.m / 12)} 年 {hp.m % 12} 月
           </div>
           <div className="mt-1 flex items-center gap-[7px] text-xs">
@@ -276,6 +322,11 @@ function ProjectionChart({
           </div>
         </div>
       )}
+      <span className="sr-only" aria-live="polite">
+        {hp
+          ? `第 ${Math.floor(hp.m / 12)} 年 ${hp.m % 12} 月，預估淨值 ${fmtTwd(hp.value)} 元，累積投入 ${fmtTwd(hp.contributed)} 元`
+          : ""}
+      </span>
     </div>
   );
 }
@@ -341,7 +392,7 @@ function ProjectionTab({ netWorth }: { netWorth: number }) {
               type="button"
               onClick={() => setRet(p.r)}
               aria-pressed={ret === p.r}
-              className={`whitespace-nowrap rounded-lg border px-2.5 py-[5px] text-[12.5px] font-medium transition-all ${
+              className={`tap-row whitespace-nowrap rounded-lg border px-2.5 py-[5px] text-[12.5px] font-medium transition-colors ${
                 ret === p.r
                   ? "border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] bg-[var(--c-accent-soft)] text-[var(--c-accent)]"
                   : "border-[var(--c-border)] bg-[var(--c-surface-soft)] text-[var(--c-muted)]"
@@ -351,7 +402,7 @@ function ProjectionTab({ netWorth }: { netWorth: number }) {
             </button>
           ))}
           <label
-            className={`inline-flex cursor-text items-center gap-1 whitespace-nowrap rounded-lg border py-1 pl-2.5 pr-2 text-[12.5px] font-medium transition-all ${
+            className={`tap-row inline-flex cursor-text items-center gap-1 whitespace-nowrap rounded-lg border py-1 pl-2.5 pr-2 text-[12.5px] font-medium transition-colors ${
               !isPreset
                 ? "border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] bg-[var(--c-accent-soft)] text-[var(--c-accent)]"
                 : "border-[var(--c-border)] bg-[var(--c-surface-soft)] text-[var(--c-muted)]"
@@ -419,7 +470,7 @@ function ProjectionTab({ netWorth }: { netWorth: number }) {
       {/* 結果（去盒裝；手機上與控制以頂線分隔）*/}
       <section className="border-t border-[var(--c-border)] p-6 sm:p-7 min-[880px]:border-t-0">
         <div className="mb-4 border-b border-[var(--c-border)] pb-[18px]">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--c-muted)]">
+          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--c-muted)]">
             {years} 年後預估淨值
           </span>
           <span className="amt mt-2 block font-serif text-[clamp(32px,5vw,46px)] font-medium leading-none tracking-[-0.02em] tnum">
@@ -511,7 +562,7 @@ function Rstat({
 }) {
   return (
     <div className="bg-[var(--c-surface)] px-4 py-3.5">
-      <span className="block text-[11.5px] text-[var(--c-muted)]">{label}</span>
+      <span className="block text-xs text-[var(--c-muted)]">{label}</span>
       <span
         className={`mt-1.5 block whitespace-nowrap font-serif text-xl font-medium tnum ${up ? "text-[var(--c-up)]" : ""} ${mask ? "amt" : ""}`}
       >
@@ -531,16 +582,16 @@ function CounterfactualTab({ cf }: { cf: CounterfactualData }) {
     <div>
       <div className="mb-7 grid grid-cols-1 gap-px overflow-hidden rounded-[var(--r-card)] border border-[var(--c-line-strong)] bg-[var(--c-border)] shadow-[var(--c-shadow)] sm:grid-cols-2">
         <div className="bg-[var(--c-surface)] px-5 py-[18px]">
-          <span className="text-[11.5px] text-[var(--c-muted)]">累積投入</span>
+          <span className="text-xs text-[var(--c-muted)]">累積投入</span>
           <span className="amt mt-1.5 block font-serif text-[26px] font-medium tnum">
             NT$ {fmtTwd(cf.invested)}
           </span>
-          <span className="mt-1 block text-[11.5px] text-[var(--c-faint)]">
+          <span className="mt-1 block text-xs text-[var(--c-faint)]">
             從 {cf.firstDate} 起 · {cf.contributions} 筆投入
           </span>
         </div>
         <div className="bg-[var(--c-surface)] px-5 py-[18px]">
-          <span className="text-[11.5px] text-[var(--c-muted)]">目前實際組合</span>
+          <span className="text-xs text-[var(--c-muted)]">目前實際組合</span>
           <span
             className={`amt mt-1.5 block font-serif text-[26px] font-medium tnum ${
               (actual?.returnPct ?? 0) >= 0
@@ -550,7 +601,7 @@ function CounterfactualTab({ cf }: { cf: CounterfactualData }) {
           >
             NT$ {fmtTwd(actualValue)}
           </span>
-          <span className="mt-1 block text-[11.5px] text-[var(--c-faint)]">
+          <span className="mt-1 block text-xs text-[var(--c-faint)]">
             報酬 {sign(actual?.returnPct ?? 0)}
             {Math.abs((actual?.returnPct ?? 0) * 100).toFixed(1)}%
           </span>
@@ -588,13 +639,13 @@ function CounterfactualTab({ cf }: { cf: CounterfactualData }) {
                     <span className="whitespace-nowrap text-[14.5px] font-semibold">
                       {r.label}
                       {r.sym && (
-                        <span className="ml-1.5 text-[11.5px] font-medium text-[var(--c-muted)]">
+                        <span className="ml-1.5 text-xs font-medium text-[var(--c-muted)]">
                           {r.sym}
                         </span>
                       )}
                     </span>
                     {r.actual && (
-                      <span className="rounded-[5px] bg-[color-mix(in_srgb,var(--c-accent)_16%,transparent)] px-[7px] py-0.5 text-[10px] font-semibold text-[var(--c-accent)]">
+                      <span className="rounded-[5px] bg-[color-mix(in_srgb,var(--c-accent)_16%,transparent)] px-[7px] py-0.5 text-xs font-semibold text-[var(--c-accent)]">
                         實際
                       </span>
                     )}
@@ -604,7 +655,7 @@ function CounterfactualTab({ cf }: { cf: CounterfactualData }) {
                   </div>
                   <div className="mt-[9px] h-[7px] overflow-hidden rounded bg-[var(--c-surface-soft)]">
                     <span
-                      className="block h-full rounded transition-[width] duration-700 ease-out"
+                      className="motion-progress block h-full rounded transition-[width] duration-300 ease-out"
                       style={{
                         width: `${(r.finalValue / maxVal) * 100}%`,
                         background: r.color,
@@ -642,7 +693,7 @@ function CounterfactualTab({ cf }: { cf: CounterfactualData }) {
             );
           })}
         </div>
-        <p className="mt-4 text-[11px] leading-relaxed text-[var(--c-faint)]">
+        <p className="mt-4 text-xs leading-relaxed text-[var(--c-faint)]">
           假設：投入 = 現金流為負的紀錄；配息/賣出視為未發生（buy-and-hold）；SPY/QQQ
           用當日收盤×匯率；未計交易成本與再投資。過去績效不代表未來。
         </p>
@@ -661,54 +712,85 @@ export function WhatIfClient({
   counterfactual: CounterfactualData | null;
   scenario: ScenarioData;
 }) {
-  const [tab, setTab] = useState<"proj" | "cf" | "scenario" | "rebalance">(
-    "proj",
-  );
+  const [tab, setTab] = useState<WhatIfTab>("proj");
+  const tabBase = `whatif-${useId().replace(/:/g, "")}`;
+
+  function onTabKeyDown(
+    event: React.KeyboardEvent<HTMLButtonElement>,
+    current: WhatIfTab,
+  ) {
+    const currentIndex = WHATIF_TABS.indexOf(current);
+    let nextIndex: number | null = null;
+    if (event.key === "ArrowRight") {
+      nextIndex = (currentIndex + 1) % WHATIF_TABS.length;
+    } else if (event.key === "ArrowLeft") {
+      nextIndex = (currentIndex - 1 + WHATIF_TABS.length) % WHATIF_TABS.length;
+    } else if (event.key === "Home") {
+      nextIndex = 0;
+    } else if (event.key === "End") {
+      nextIndex = WHATIF_TABS.length - 1;
+    }
+    if (nextIndex === null) return;
+    event.preventDefault();
+    const next = WHATIF_TABS[nextIndex];
+    setTab(next);
+    document.getElementById(`${tabBase}-tab-${next}`)?.focus();
+  }
 
   return (
     <div>
-      <div className="mb-6 inline-flex flex-wrap rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] p-[3px]">
-        {(["proj", "cf", "scenario", "rebalance"] as const).map((t) => (
+      <div
+        role="tablist"
+        aria-label="情境推演工具"
+        className="mb-6 inline-flex flex-wrap rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] p-[3px]"
+      >
+        {WHATIF_TABS.map((t) => (
           <button
             key={t}
+            id={`${tabBase}-tab-${t}`}
             type="button"
+            role="tab"
             onClick={() => setTab(t)}
-            aria-pressed={tab === t}
-            className={`whitespace-nowrap rounded-md px-[18px] py-2 text-[13.5px] font-semibold transition-all ${
+            onKeyDown={(event) => onTabKeyDown(event, t)}
+            aria-selected={tab === t}
+            aria-controls={tab === t ? `${tabBase}-panel-${t}` : undefined}
+            tabIndex={tab === t ? 0 : -1}
+            className={`tap-row whitespace-nowrap rounded-md px-[18px] py-2 text-[13.5px] font-semibold transition-colors ${
               tab === t
                 ? "bg-[var(--c-surface)] text-[var(--c-text)] shadow-sm"
                 : "text-[var(--c-muted)]"
             }`}
           >
-            {t === "proj"
-              ? "未來推算"
-              : t === "cf"
-                ? "回測對照"
-                : t === "scenario"
-                  ? "壓力與買前檢核"
-                  : "再平衡"}
+            {WHATIF_TAB_LABEL[t]}
           </button>
         ))}
       </div>
 
-      {tab === "proj" ? (
-        <ProjectionTab netWorth={netWorth} />
-      ) : tab === "scenario" ? (
-        <ScenarioTab data={scenario} />
-      ) : tab === "rebalance" ? (
-        <RebalanceTab
-          data={{
-            holdings: scenario.holdings,
-            allocationTargets: scenario.allocationTargets,
-          }}
-        />
-      ) : counterfactual ? (
-        <CounterfactualTab cf={counterfactual} />
-      ) : (
-        <div className="rounded-2xl border border-dashed border-[var(--c-border)] bg-[var(--c-surface)] px-6 py-12 text-center text-sm text-[var(--c-muted)]">
-          還沒有任何投入紀錄，先到帳戶頁建立帳戶並加碼後再回來看回測對照。
-        </div>
-      )}
+      <div
+        id={`${tabBase}-panel-${tab}`}
+        role="tabpanel"
+        aria-labelledby={`${tabBase}-tab-${tab}`}
+        tabIndex={0}
+      >
+        {tab === "proj" ? (
+          <ProjectionTab netWorth={netWorth} />
+        ) : tab === "scenario" ? (
+          <ScenarioTab data={scenario} />
+        ) : tab === "rebalance" ? (
+          <RebalanceTab
+            data={{
+              holdings: scenario.holdings,
+              allocationTargets: scenario.allocationTargets,
+            }}
+          />
+        ) : counterfactual ? (
+          <CounterfactualTab cf={counterfactual} />
+        ) : (
+          <div className="rounded-2xl border border-dashed border-[var(--c-border)] bg-[var(--c-surface)] px-6 py-12 text-center text-sm text-[var(--c-muted)]">
+            還沒有任何投入紀錄，先到帳戶頁建立帳戶並加碼後再回來看回測對照。
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -96,21 +96,29 @@ export function SettingsApp({
 
   const jump = useCallback((id: NavId) => {
     const el = elsRef.current[id];
-    if (el) window.scrollTo({ top: el.offsetTop - 84, behavior: "smooth" });
+    if (el) {
+      const reduceMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+      window.scrollTo({
+        top: el.offsetTop - 84,
+        behavior: reduceMotion ? "auto" : "smooth",
+      });
+    }
   }, []);
 
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-[180px_1fr] md:gap-7">
       {/* 側欄 nav */}
       <aside className="md:sticky md:top-20 md:self-start">
-        <nav className="flex flex-row flex-wrap gap-1.5 md:flex-col md:gap-0.5">
+        <nav aria-label="設定區段" className="flex flex-row flex-wrap gap-1.5 md:flex-col md:gap-0.5">
           {NAV.map((n) => (
             <button
               key={n.id}
               type="button"
               onClick={() => jump(n.id)}
               aria-current={active === n.id ? "location" : undefined}
-              className={`rounded-lg px-3 py-2 text-left text-[13.5px] font-medium transition-colors ${
+              className={`tap-row rounded-lg px-3 py-2 text-left text-[13.5px] font-medium transition-colors ${
                 active === n.id
                   ? "bg-[var(--c-accent-soft)] text-[var(--c-accent)]"
                   : "border border-[var(--c-border)] text-[var(--c-muted)] hover:bg-[var(--c-surface-soft)] hover:text-[var(--c-text)] md:border-0"
@@ -303,7 +311,7 @@ function Segmented<T extends string>({
           type="button"
           onClick={() => onChange(o.v)}
           aria-pressed={value === o.v}
-          className={`whitespace-nowrap rounded-md px-3 py-1.5 text-[12.5px] font-semibold transition-colors ${
+          className={`tap-row whitespace-nowrap rounded-md px-3 py-1.5 text-[12.5px] font-semibold transition-colors ${
             value === o.v
               ? "bg-[var(--c-surface)] text-[var(--c-text)]"
               : "text-[var(--c-muted)] hover:text-[var(--c-text)]"
@@ -483,7 +491,7 @@ function AllocInner({
           <span className="text-[13.5px] text-[var(--c-text)]">{def.label}</span>
           <span className="hidden h-[7px] overflow-hidden rounded bg-[var(--c-surface-soft)] sm:block">
             <span
-              className="block h-full rounded transition-[width] duration-400"
+              className="motion-progress block h-full rounded transition-[width] duration-300"
               style={{
                 width: `${Math.min(100, targets[def.cls] ?? 0)}%`,
                 background: def.color,
@@ -493,6 +501,7 @@ function AllocInner({
           <span className="inline-flex items-center gap-1 text-[13px] text-[var(--c-muted)]">
             <input
               type="number"
+              aria-label={`${def.label}目標配置百分比`}
               min={0}
               max={100}
               value={targets[def.cls] ?? 0}
@@ -567,7 +576,7 @@ function ConcentrationLimitForm({ initialValue }: { initialValue: number }) {
     >
       <label className="text-[13px] font-medium">
         單一持倉集中度上限
-        <span className="mt-0.5 block text-[11.5px] font-normal text-[var(--c-muted)]">
+        <span className="mt-0.5 block text-xs font-normal text-[var(--c-muted)]">
           anti-FOMO 檢核會以此門檻標示買後權重。
         </span>
         <span className="mt-2 inline-flex items-center gap-1 text-[13px] text-[var(--c-muted)]">
@@ -654,6 +663,7 @@ function DataInner({ email }: { email: string | null }) {
         >
           <select
             name="year"
+            aria-label="稅務報表年度"
             defaultValue={yr}
             className="h-[38px] rounded-lg border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3 text-[13.5px] text-[var(--c-text)]"
           >
