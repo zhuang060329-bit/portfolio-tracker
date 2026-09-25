@@ -27,11 +27,11 @@ export default function AlertsLoading() {
             ))}
           </div>
           <div className="mt-[18px] grid grid-cols-1 gap-3.5 sm:grid-cols-2">
-            <div className={`h-[42px] rounded-[10px] ${sk}`} />
-            <div className={`h-[42px] rounded-[10px] ${sk}`} />
+            <div className={`h-[42px] rounded-[var(--r-card)] ${sk}`} />
+            <div className={`h-[42px] rounded-[var(--r-card)] ${sk}`} />
           </div>
-          <div className={`mt-4 h-12 rounded-[11px] ${sk} opacity-60`} />
-          <div className={`mt-[18px] h-10 w-28 rounded-[10px] ${sk}`} />
+          <div className={`mt-4 h-12 rounded-[var(--r-card)] ${sk} opacity-60`} />
+          <div className={`mt-[18px] h-10 w-28 rounded-[var(--r-card)] ${sk}`} />
         </section>
 
         {/* 列表 */}
@@ -40,9 +40,9 @@ export default function AlertsLoading() {
           {[0, 1, 2].map((i) => (
             <div
               key={i}
-              className="grid grid-cols-[auto_1fr_auto] items-center gap-[15px] rounded-[14px] border border-[var(--c-border)] bg-[var(--c-surface)] p-4 shadow-[var(--c-shadow)] sm:px-[18px]"
+              className="grid grid-cols-[auto_1fr_auto] items-center gap-[15px] rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-4 shadow-[var(--c-shadow)] sm:px-[18px]"
             >
-              <div className={`h-10 w-10 rounded-[11px] ${sk}`} />
+              <div className={`h-10 w-10 rounded-[var(--r-card)] ${sk}`} />
               <div>
                 <div className={`h-4 w-44 ${sk}`} />
                 <div className={`mt-2.5 h-1.5 w-full ${sk}`} />
@@ -50,7 +50,7 @@ export default function AlertsLoading() {
               </div>
               <div className="flex items-center gap-2">
                 <div className={`h-6 w-[42px] rounded-full ${sk}`} />
-                <div className={`h-[34px] w-[34px] rounded-[9px] ${sk}`} />
+                <div className={`h-[34px] w-[34px] rounded-[var(--r-card)] ${sk}`} />
               </div>
             </div>
           ))}

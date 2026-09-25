@@ -57,8 +57,8 @@ const fontTc = localFont({
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#0D0F12" },
-    { media: "(prefers-color-scheme: light)", color: "#F1F0EC" },
+    { media: "(prefers-color-scheme: dark)", color: "#0E151B" },
+    { media: "(prefers-color-scheme: light)", color: "#E7EEF0" },
   ],
 };
 

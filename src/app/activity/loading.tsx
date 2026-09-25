@@ -12,7 +12,7 @@ export default function ActivityLoading() {
             <div className={`h-8 w-32 ${sk}`} />
             <div className={`mt-2 h-3 w-64 ${sk}`} />
           </div>
-          <div className={`h-10 w-28 rounded-[9px] ${sk}`} />
+          <div className={`h-10 w-28 rounded-[var(--r-card)] ${sk}`} />
         </div>
 
         {/* chips */}
@@ -28,8 +28,8 @@ export default function ActivityLoading() {
 
         {/* toolbar */}
         <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-          <div className={`h-11 flex-1 rounded-[11px] ${sk}`} />
-          <div className={`h-11 rounded-[11px] sm:w-80 ${sk}`} />
+          <div className={`h-11 flex-1 rounded-[var(--r-card)] ${sk}`} />
+          <div className={`h-11 rounded-[var(--r-card)] sm:w-80 ${sk}`} />
         </div>
 
         {/* ledger */}

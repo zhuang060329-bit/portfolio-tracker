@@ -232,7 +232,7 @@ export function Holdings({
                       <td className="max-w-[280px] px-6 py-4 text-left">
                         <div className="flex min-w-0 items-center gap-3">
                           <span
-                            className="h-2 w-2 shrink-0 rounded-[2px]"
+                            className="h-2 w-2 shrink-0 rounded-[var(--r-control)]"
                             style={{ background: allocColor(holding.cls) }}
                           />
                           <div className="min-w-0">
@@ -345,7 +345,7 @@ export function Holdings({
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex min-w-0 items-start gap-2.5">
                       <span
-                        className="mt-1.5 h-2 w-2 shrink-0 rounded-[2px]"
+                        className="mt-1.5 h-2 w-2 shrink-0 rounded-[var(--r-control)]"
                         style={{ background: allocColor(holding.cls) }}
                       />
                       <div className="min-w-0">

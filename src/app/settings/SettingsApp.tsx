@@ -194,7 +194,7 @@ function PriceHealthInner({ health }: { health: PriceHealth }) {
   const none = health.tracked === 0;
   return (
     <div
-      className={`mb-5 rounded-[10px] border px-4 py-3.5 text-[13px] ${
+      className={`mb-5 rounded-[var(--r-card)] border px-4 py-3.5 text-[13px] ${
         none || ok
           ? "border-[var(--c-border)] bg-[var(--c-surface-soft)]"
           : "border-[color-mix(in_srgb,var(--c-down)_45%,transparent)] bg-[color-mix(in_srgb,var(--c-down)_8%,transparent)]"
@@ -485,7 +485,7 @@ function AllocInner({
           className="grid grid-cols-[auto_1fr_auto] items-center gap-3 sm:grid-cols-[auto_80px_1fr_auto]"
         >
           <span
-            className="h-2.5 w-2.5 rounded-[3px]"
+            className="h-2.5 w-2.5 rounded-[var(--r-control)]"
             style={{ background: def.color }}
           />
           <span className="text-[13.5px] text-[var(--c-text)]">{def.label}</span>

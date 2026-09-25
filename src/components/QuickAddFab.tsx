@@ -155,7 +155,7 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
           id={menuId}
           role="group"
           aria-label="快速建立"
-          className="create-menu-panel fixed bottom-[calc(max(1rem,env(safe-area-inset-bottom))+64px)] right-4 z-40 w-[220px] overflow-hidden rounded-[14px] border border-[var(--c-line-strong)] bg-[var(--c-surface)] p-1.5 shadow-[var(--c-shadow)] sm:hidden"
+          className="create-menu-panel fixed bottom-[calc(max(1rem,env(safe-area-inset-bottom))+64px)] right-4 z-40 w-[220px] overflow-hidden rounded-[var(--r-card)] border border-[var(--c-line-strong)] bg-[var(--c-surface)] p-1.5 shadow-[var(--c-shadow)] sm:hidden"
         >
           <button
             type="button"
@@ -202,7 +202,7 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
         aria-label={menuOpen ? "關閉快速建立選單" : "開啟快速建立選單"}
         aria-expanded={menuOpen}
         aria-controls={menuId}
-        className="create-menu-trigger fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-40 grid h-[52px] w-[52px] place-items-center rounded-[14px] bg-[var(--c-accent)] text-[var(--c-btn-strong-text)] shadow-[0_8px_22px_rgba(0,0,0,0.28)] hover:brightness-105 sm:hidden"
+        className="create-menu-trigger fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-40 grid h-[52px] w-[52px] place-items-center rounded-[var(--r-card)] bg-[var(--c-accent)] text-[var(--c-btn-strong-text)] shadow-[0_8px_22px_rgba(0,0,0,0.28)] hover:brightness-105 sm:hidden"
       >
         <svg
           viewBox="0 0 24 24"
@@ -230,7 +230,7 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
             role="dialog"
             aria-modal="true"
             aria-label="快速加碼"
-            className="safe-bottom max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-t-[14px] border border-[var(--c-line-strong)] bg-[var(--c-surface)] p-4 shadow-[var(--c-shadow)] sm:rounded-[var(--r-card)] sm:p-6"
+            className="safe-bottom max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-t-[var(--r-card)] border border-[var(--c-line-strong)] bg-[var(--c-surface)] p-4 shadow-[var(--c-shadow)] sm:rounded-[var(--r-card)] sm:p-6"
           >
             <div className="flex items-center justify-between">
               <h2 className="text-[18px] font-semibold tracking-[-0.02em]">

@@ -121,7 +121,7 @@ export function AllocationCard({
                 onClick={() => onPin(item.cls)}
               >
                 <span
-                  className="h-2 w-2 rounded-[2px]"
+                  className="h-2 w-2 rounded-[var(--r-control)]"
                   style={{ background: allocColor(item.cls) }}
                 />
                 {/* 釘住的那一類用 PICK 語彙的文字訊號標出來，讓「滑過」與

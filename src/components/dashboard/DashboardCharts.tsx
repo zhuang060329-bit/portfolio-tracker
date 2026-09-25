@@ -202,7 +202,7 @@ export function TrendChart({
   return (
     <div
       ref={wrapRef}
-      className="relative w-full rounded-[6px]"
+      className="relative w-full rounded-[var(--r-control)]"
       style={{ touchAction: "pan-y" }}
       tabIndex={0}
       role="group"
@@ -329,7 +329,7 @@ export function TrendChart({
       </svg>
       {hi_ && (
         <div
-          className="tooltip-pop pointer-events-none absolute top-1.5 z-[5] -translate-x-1/2 whitespace-nowrap rounded-[10px] border border-[var(--c-line-strong)] bg-[var(--c-surface-soft)] px-[11px] py-2 shadow-[var(--c-shadow)]"
+          className="tooltip-pop pointer-events-none absolute top-1.5 z-[5] -translate-x-1/2 whitespace-nowrap rounded-[var(--r-card)] border border-[var(--c-line-strong)] bg-[var(--c-surface-soft)] px-[11px] py-2 shadow-[var(--c-shadow)]"
           style={{ left: Math.min(Math.max(nx(hover!), 70), w - 70) }}
         >
           <div className="amt font-mono text-base font-semibold">
@@ -479,7 +479,7 @@ export function BenchChart({
   return (
     <div
       ref={wrapRef}
-      className="relative w-full rounded-[6px]"
+      className="relative w-full rounded-[var(--r-control)]"
       style={{ touchAction: "pan-y" }}
       tabIndex={0}
       role="group"
@@ -621,7 +621,7 @@ export function BenchChart({
       </svg>
       {hover != null && hover < data.length && (
         <div
-          className="tooltip-pop pointer-events-none absolute top-1.5 z-[5] -translate-x-1/2 whitespace-nowrap rounded-[10px] border border-[var(--c-line-strong)] bg-[var(--c-surface-soft)] px-[11px] py-2 shadow-[var(--c-shadow)]"
+          className="tooltip-pop pointer-events-none absolute top-1.5 z-[5] -translate-x-1/2 whitespace-nowrap rounded-[var(--r-card)] border border-[var(--c-line-strong)] bg-[var(--c-surface-soft)] px-[11px] py-2 shadow-[var(--c-shadow)]"
           style={{ left: Math.min(Math.max(nx(hover), 90), w - 90) }}
         >
           <div className="mb-1 text-[length:var(--fs-micro)] text-[var(--c-muted)]">

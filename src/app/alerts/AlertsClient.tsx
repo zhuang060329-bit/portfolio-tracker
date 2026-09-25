@@ -310,7 +310,7 @@ function CreatePanel({ accounts }: { accounts: AlertAccount[] }) {
               }`}
             >
               <span
-                className="mb-[5px] grid h-8 w-8 place-items-center rounded-[9px] text-lg"
+                className="mb-[5px] grid h-8 w-8 place-items-center rounded-[var(--r-card)] text-lg"
                 style={{
                   color: "var(--tc)",
                   background: "color-mix(in srgb, var(--tc) 14%, transparent)",
@@ -336,7 +336,7 @@ function CreatePanel({ accounts }: { accounts: AlertAccount[] }) {
               name="accountId"
               value={accountId}
               onChange={(e) => setAccountId(e.target.value)}
-              className="h-[42px] rounded-[10px] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+              className="h-[42px] rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
             >
               {accounts.map((a) => (
                 <option key={a.id} value={a.id}>
@@ -365,7 +365,7 @@ function CreatePanel({ accounts }: { accounts: AlertAccount[] }) {
             min="0.01"
             step="any"
             required
-            className="h-[42px] rounded-[10px] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3.5 text-sm text-[var(--c-text)] outline-none placeholder:text-[var(--c-faint)] focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+            className="h-[42px] rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3.5 text-sm text-[var(--c-text)] outline-none placeholder:text-[var(--c-faint)] focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
           />
         </label>
         <label
@@ -380,13 +380,13 @@ function CreatePanel({ accounts }: { accounts: AlertAccount[] }) {
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="例：等回檔加碼"
-            className="h-[42px] rounded-[10px] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3.5 text-sm text-[var(--c-text)] outline-none placeholder:text-[var(--c-faint)] focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+            className="h-[42px] rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3.5 text-sm text-[var(--c-text)] outline-none placeholder:text-[var(--c-faint)] focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
           />
         </label>
       </div>
 
       {/* 即時白話預覽 */}
-      <div className="mt-4 flex items-center gap-2.5 rounded-[11px] border border-dashed border-[var(--c-line-strong)] bg-[var(--c-surface-soft)] px-4 py-3 text-sm text-[var(--c-muted)]">
+      <div className="mt-4 flex items-center gap-2.5 rounded-[var(--r-card)] border border-dashed border-[var(--c-line-strong)] bg-[var(--c-surface-soft)] px-4 py-3 text-sm text-[var(--c-muted)]">
         <span className="text-xs" style={{ color: TYPES[type].color }}>
           ◆
         </span>
@@ -445,7 +445,7 @@ function AlertCard({
       }`}
     >
       <span
-        className="grid h-10 w-10 place-items-center rounded-[11px] text-[19px]"
+        className="grid h-10 w-10 place-items-center rounded-[var(--r-card)] text-[19px]"
         style={
           {
             "--tc": t.color,
@@ -485,9 +485,9 @@ function AlertCard({
 
         {/* 距觸發進度條 */}
         <div className="mt-2.5 flex items-center gap-[11px]">
-          <div className="h-1.5 flex-1 overflow-hidden rounded-[3px] bg-[var(--c-surface-soft)]">
+          <div className="h-1.5 flex-1 overflow-hidden rounded-[var(--r-control)] bg-[var(--c-surface-soft)]">
             <span
-              className="motion-progress block h-full rounded-[3px] transition-[width] duration-300 ease-out"
+              className="motion-progress block h-full rounded-[var(--r-control)] transition-[width] duration-300 ease-out"
               style={{
                 width: `${(info.closeness * 100).toFixed(1)}%`,
                 background: info.reached ? t.color : "var(--c-line-strong)",
@@ -609,7 +609,7 @@ export function AlertsClient({
       <div className="mt-5 flex flex-col pt-1">
         <ListHead on label="啟用中" count={active.length} />
         {active.length === 0 ? (
-          <div className="rounded-[14px] border border-dashed border-[var(--c-border)] px-5 py-[22px] text-center text-[13.5px] text-[var(--c-muted)]">
+          <div className="rounded-[var(--r-card)] border border-dashed border-[var(--c-border)] px-5 py-[22px] text-center text-[13.5px] text-[var(--c-muted)]">
             目前沒有啟用中的提醒。
           </div>
         ) : (

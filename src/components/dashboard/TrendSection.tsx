@@ -96,7 +96,7 @@ export function TrendSection({
                 type="button"
                 aria-pressed={mode === item}
                 onClick={() => setMode(item)}
-                className={`tap-row min-h-9 whitespace-nowrap rounded-[5px] px-3 text-[length:var(--fs-sm)] ${
+                className={`tap-row min-h-9 whitespace-nowrap rounded-[var(--r-control)] px-3 text-[length:var(--fs-sm)] ${
                   mode === item ? PICK_ON : PICK_OFF
                 }`}
               >

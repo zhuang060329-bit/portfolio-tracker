@@ -1,6 +1,6 @@
 import { DemoV1Header } from "@/components/DemoV1Header";
 
-const skeleton = "sk rounded-[4px]";
+const skeleton = "sk rounded-[var(--r-control)]";
 const panel =
   "overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 sm:p-6";
 

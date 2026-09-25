@@ -351,7 +351,7 @@ export function ActivityClient({
             onChange={(e) => setQ(e.target.value)}
             aria-label="搜尋活動紀錄"
             placeholder="搜尋帳戶、類型或備註…"
-            className="h-11 w-full rounded-[11px] border border-[var(--c-border)] bg-[var(--c-surface)] pl-10 pr-9 text-sm text-[var(--c-text)] outline-none placeholder:text-[var(--c-faint)] focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+            className="h-11 w-full rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] pl-10 pr-9 text-sm text-[var(--c-text)] outline-none placeholder:text-[var(--c-faint)] focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
           />
           {q && (
             <button

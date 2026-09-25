@@ -21,7 +21,7 @@ export function ImportCsv() {
   );
 
   return (
-    <div id="csv-import" className="w-full scroll-mt-20 overflow-hidden rounded-[11px] border border-[var(--c-border)] bg-[var(--c-surface)]">
+    <div id="csv-import" className="w-full scroll-mt-20 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)]">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -50,7 +50,7 @@ export function ImportCsv() {
           encType="multipart/form-data"
           className="flex flex-col gap-3 border-t border-[var(--c-border)] p-4"
         >
-          <div className="rounded-[9px] bg-[var(--c-surface-soft)] px-3 py-2.5 text-xs text-[var(--c-muted)]">
+          <div className="rounded-[var(--r-card)] bg-[var(--c-surface-soft)] px-3 py-2.5 text-xs text-[var(--c-muted)]">
             <p className="mb-1.5 font-semibold text-[var(--c-text)]">
               支援的欄位（任一即可）
             </p>
@@ -82,7 +82,7 @@ export function ImportCsv() {
             </ul>
           </div>
 
-          <label className="flex cursor-pointer flex-col items-center gap-2 rounded-[10px] border border-dashed border-[var(--c-line-strong)] bg-[var(--c-surface-soft)] px-4 py-5 text-center text-[12.5px] text-[var(--c-muted)] hover:border-[var(--c-accent)]">
+          <label className="flex cursor-pointer flex-col items-center gap-2 rounded-[var(--r-card)] border border-dashed border-[var(--c-line-strong)] bg-[var(--c-surface-soft)] px-4 py-5 text-center text-[12.5px] text-[var(--c-muted)] hover:border-[var(--c-accent)]">
             <span className="text-lg text-[var(--c-faint)]">⬆</span>
             <span>
               {fileName ? (

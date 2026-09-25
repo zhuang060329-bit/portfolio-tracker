@@ -300,7 +300,7 @@ function ProjectionChart({
       </svg>
       {hp && (
         <div
-          className="pointer-events-none absolute top-1.5 z-[5] -translate-x-1/2 whitespace-nowrap rounded-[10px] border border-[var(--c-line-strong)] bg-[var(--c-surface-soft)] px-[11px] py-2 shadow-[var(--c-shadow)]"
+          className="pointer-events-none absolute top-1.5 z-[5] -translate-x-1/2 whitespace-nowrap rounded-[var(--r-card)] border border-[var(--c-line-strong)] bg-[var(--c-surface-soft)] px-[11px] py-2 shadow-[var(--c-shadow)]"
           style={{ left: Math.min(Math.max(nx(hp.m), 80), w - padR - 80) }}
         >
           <div className="text-xs text-[var(--c-muted)]">
@@ -633,7 +633,7 @@ function CounterfactualTab({ cf }: { cf: CounterfactualData }) {
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-[9px]">
                     <span
-                      className="h-2.5 w-2.5 shrink-0 rounded-[3px]"
+                      className="h-2.5 w-2.5 shrink-0 rounded-[var(--r-control)]"
                       style={{ background: r.color }}
                     />
                     <span className="whitespace-nowrap text-[14.5px] font-semibold">
@@ -645,7 +645,7 @@ function CounterfactualTab({ cf }: { cf: CounterfactualData }) {
                       )}
                     </span>
                     {r.actual && (
-                      <span className="rounded-[5px] bg-[color-mix(in_srgb,var(--c-accent)_16%,transparent)] px-[7px] py-0.5 text-xs font-semibold text-[var(--c-accent)]">
+                      <span className="rounded-[var(--r-control)] bg-[color-mix(in_srgb,var(--c-accent)_16%,transparent)] px-[7px] py-0.5 text-xs font-semibold text-[var(--c-accent)]">
                         實際
                       </span>
                     )}

@@ -14,7 +14,7 @@ export default function WhatIfLoading() {
         <div className={`mt-2 h-3 w-80 max-w-full ${sk}`} />
 
         {/* tabs */}
-        <div className={`mt-5 h-11 w-56 rounded-[11px] ${sk}`} />
+        <div className={`mt-5 h-11 w-56 rounded-[var(--r-card)] ${sk}`} />
 
         {/* 雙欄：控制 + 結果 */}
         <div className="mt-5 grid grid-cols-1 items-start gap-[18px] min-[880px]:grid-cols-[350px_1fr]">
