@@ -61,7 +61,7 @@ export default async function DecisionsPage() {
       <main id="main" tabIndex={-1} className="mx-auto max-w-[920px] px-4 pb-28 pt-9 sm:px-6 lg:px-7">
         <header className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="font-serif text-3xl font-medium tracking-tight">決策日誌</h1>
+            <h1 className="font-display text-3xl font-medium tracking-tight">決策日誌</h1>
             <p className="mt-1.5 text-[13.5px] text-[var(--c-muted)]">
               保存當下論點、風險與失效條件，再以同一份原始情境檢討。
             </p>

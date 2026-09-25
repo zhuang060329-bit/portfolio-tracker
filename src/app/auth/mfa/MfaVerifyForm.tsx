@@ -68,7 +68,7 @@ export function MfaVerifyForm() {
   return (
     <div className="w-full max-w-sm rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-8 shadow-[var(--c-shadow)]">
       <div className="flex flex-col gap-2">
-        <h1 className="font-serif text-2xl font-semibold tracking-tight text-[var(--c-text)]">
+        <h1 className="font-display text-2xl font-semibold tracking-tight text-[var(--c-text)]">
           驗證碼
         </h1>
         <p className="text-sm text-[var(--c-muted)]">

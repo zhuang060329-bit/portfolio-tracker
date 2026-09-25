@@ -26,7 +26,7 @@ export default function GlobalError({
 
   return (
     <main id="main" tabIndex={-1} className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-[var(--c-page)] p-6 text-center">
-      <p className="font-serif text-3xl font-semibold tracking-tight text-[var(--c-text)]">
+      <p className="font-display text-3xl font-semibold tracking-tight text-[var(--c-text)]">
         出了點問題
       </p>
       <p className="max-w-md text-sm text-[var(--c-muted)]">

@@ -89,7 +89,7 @@ export default async function EditDecisionPage({ params }: { params: Promise<{ i
     <div className="min-h-dvh bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active="decisions" userEmail={user?.email} unreadCount={unreadCount} />
       <main id="main" tabIndex={-1} className="mx-auto max-w-[820px] px-4 pb-28 pt-9 sm:px-6">
-        <h1 className="font-serif text-3xl font-medium">編輯投資決策</h1>
+        <h1 className="font-display text-3xl font-medium">編輯投資決策</h1>
         <p className="mt-1.5 text-[13px] text-[var(--c-muted)]">可修改論點、風險與檢討設定；建立時情境快照不會重新擷取或改寫。</p>
         <DecisionForm
           accounts={(accountData ?? []) as { id: string; name: string; symbol: string | null; status: string }[]}

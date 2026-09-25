@@ -10,6 +10,16 @@
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
+/* 字體角色（2026-09-26 測繪桌）。兩個 utility：
+   font-display：標題，Plex Sans 加粗，取代原本的 Newsreader 襯線；
+   font-mono：數字、註記、軸標與代碼，Plex Mono。
+   Mono 只收 ASCII，中文一律掉到 Noto Sans TC；inline 讓 utility 直接吃
+   next/font 掛在 <html> 上的變數，不在建置期展開。 */
+@theme inline {
+  --font-display: var(--font-sans), var(--font-tc), "Noto Sans TC", system-ui, sans-serif;
+  --font-mono: var(--font-figures), var(--font-tc), ui-monospace, SFMono-Regular, monospace;
+}
+
 :root {
   --c-page: #0d0f12;
   --c-surface: #14171b;
@@ -178,25 +188,16 @@ main:focus {
   filter: blur(5px);
 }
 
+/* 全站數字一律 Plex Mono（2026-09-26 起；之前只限首頁 .ledger）。
+   這條在 layer 之外，權重贏過 Tailwind utility：掛了 .tnum 的元素
+   就算外層是 font-display 也會是等寬，這是刻意的——數字不跟著標題換字。
+   數字本身兩支字體同寬（0.6em，fontTools 實測）；變寬的是標點：
+   千分位逗號與小數點在 Sans 是 0.272em、Mono 是 0.6em，
+   「1,234,567.89」因此寬約 1 個字，窄欄位要在各頁實測。 */
 .tnum {
+  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums lining-nums;
   font-feature-settings: "tnum" 1;
-}
-
-/* 首頁帳本的數字改等寬（IBM Plex Mono）。
-   範圍限制在 .ledger 之內——那個 class 掛在 DashboardClient 的根節點上。
-   不直接寫進 .tnum 有兩個原因：
-   一是本輪範圍只有首頁，全站 .tnum 有上百處；
-   二是 .tnum 定義在 layer 之外，權重會贏過 Tailwind 的 font-serif utility，
-   直接寫下去會把 hero 大數字與 /whatif 那五處刻意的襯線數字一起吃掉。 */
-.ledger .tnum {
-  font-family: var(--font-figures), ui-monospace, SFMono-Regular, monospace;
-}
-
-/* hero 的大數字是 font-serif 掛在外層、tnum 掛在內層的數字上。
-   襯線是刻意的視覺主角，不讓等寬蓋過去。 */
-.ledger .font-serif .tnum {
-  font-family: var(--font-serif), Georgia, serif;
 }
 
 .hide-scrollbar {

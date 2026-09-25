@@ -208,10 +208,10 @@ export default async function AccountDetail({
             {MARKET_LABEL[account.price_market] ?? account.price_market}
             {account.symbol ? ` · ${account.symbol}` : ""}
           </p>
-          <h1 className="mt-2 font-serif text-3xl font-semibold tracking-tight">
+          <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight">
             {account.name}
           </h1>
-          <p className="mt-4 flex items-baseline gap-2 font-serif">
+          <p className="mt-4 flex items-baseline gap-2 font-mono">
             <span className="text-2xl font-medium text-[var(--c-muted)]">NT$</span>
             <span className="amt text-4xl font-semibold tracking-tight tabular-nums [font-variant-numeric:lining-nums_tabular-nums]">
               {fmtTwd(valueBase)}

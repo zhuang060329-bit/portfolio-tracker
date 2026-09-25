@@ -26,7 +26,7 @@ export default async function NewStockPage() {
           </Link>
         </div>
         <header>
-          <h1 className="font-serif text-3xl font-semibold tracking-tight">
+          <h1 className="font-display text-3xl font-semibold tracking-tight">
             新增股票帳戶
           </h1>
           <p className="mt-2 text-sm text-[var(--c-muted)]">

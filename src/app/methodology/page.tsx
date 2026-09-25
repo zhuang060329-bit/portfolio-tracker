@@ -48,7 +48,7 @@ export default function MethodologyPage() {
 
       <main id="main" tabIndex={-1} className="mx-auto max-w-[760px] px-4 pb-32 pt-8 sm:px-6 sm:pt-12">
         <header className="mb-10">
-          <h1 className="font-serif text-[32px] font-medium tracking-tight sm:text-[38px]">
+          <h1 className="font-display text-[32px] font-medium tracking-tight sm:text-[38px]">
             指標怎麼算
           </h1>
           <p className="mt-3 text-[15px] leading-relaxed text-[var(--c-muted)]">
@@ -164,7 +164,7 @@ function Section({
 }) {
   return (
     <section>
-      <h2 className="font-serif text-[22px] font-medium tracking-tight">
+      <h2 className="font-display text-[22px] font-medium tracking-tight">
         {term}
       </h2>
       <p className="mt-1 text-[13px] font-medium text-[var(--c-muted)]">

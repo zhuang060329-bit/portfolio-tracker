@@ -97,7 +97,7 @@ export function UsersManager({
   return (
     <div className="rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] shadow-[var(--c-shadow)]">
       <div className="flex items-center justify-between border-b border-[var(--c-border)] px-5 py-3">
-        <h2 className="font-serif text-lg font-semibold tracking-tight">
+        <h2 className="font-display text-lg font-semibold tracking-tight">
           已註冊使用者
         </h2>
         <span className="text-xs text-[var(--c-muted)]">共 {rows.length} 人</span>

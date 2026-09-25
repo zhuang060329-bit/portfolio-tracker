@@ -222,7 +222,7 @@ export default async function MonthlyReportPage({
         <header className="report-block flex flex-wrap items-start justify-between gap-5 border-b border-[var(--c-line-strong)] pb-6">
           <div>
             <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--c-accent)]">StackWorth Monthly Report</div>
-            <h1 className="mt-2 font-serif text-4xl font-medium tracking-tight">{bounds.month} 月度投資報告</h1>
+            <h1 className="mt-2 font-display text-4xl font-medium tracking-tight">{bounds.month} 月度投資報告</h1>
             <p className="mt-2 text-[12px] text-[var(--c-muted)]">
               資料區間 {bounds.startDate} 至 {bounds.endDate} · 產生時間 {generatedAt}（Asia/Taipei）
             </p>
@@ -313,7 +313,7 @@ function Kpi({ label, value, mask = false }: { label: string; value: string; mas
 }
 
 function ReportSection({ title, children, nested = false }: { title: string; children: React.ReactNode; nested?: boolean }) {
-  return <section className={`report-block ${nested ? "" : "mt-5"} rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 sm:p-6`}><h2 className="mb-4 font-serif text-xl font-medium">{title}</h2>{children}</section>;
+  return <section className={`report-block ${nested ? "" : "mt-5"} rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 sm:p-6`}><h2 className="mb-4 font-display text-xl font-medium">{title}</h2>{children}</section>;
 }
 
 function ReportMetric({ label, value, warning = false }: { label: string; value: number; warning?: boolean }) {

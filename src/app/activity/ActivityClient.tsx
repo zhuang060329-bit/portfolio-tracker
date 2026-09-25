@@ -398,7 +398,7 @@ export function ActivityClient({
               <section key={g.date} className="mb-2">
                 <div className="flex items-baseline justify-between gap-3 py-3 pl-0 sm:pl-14">
                   <div className="flex items-baseline gap-2.5 whitespace-nowrap">
-                    <span className="font-serif text-[17px] font-medium">
+                    <span className="font-display text-[17px] font-medium">
                       {lab.big}
                     </span>
                     {lab.sub && (

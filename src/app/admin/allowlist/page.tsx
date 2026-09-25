@@ -44,7 +44,7 @@ export default async function AdminUsers() {
           </Link>
         </div>
         <header>
-          <h1 className="font-serif text-3xl font-semibold tracking-tight">
+          <h1 className="font-display text-3xl font-semibold tracking-tight">
             使用者管理
           </h1>
           <p className="mt-2 text-sm text-[var(--c-muted)]">

@@ -24,7 +24,7 @@ export default async function DemoHistoryPage({ searchParams }: { searchParams: 
       <DemoV1Header active="history" />
       <main id="main" tabIndex={-1} className="mx-auto max-w-[980px] px-4 pb-24 pt-8 sm:px-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
-          <div><h1 className="font-serif text-3xl font-medium">歷史回放 Demo</h1><p className="mt-1.5 text-[13px] text-[var(--c-muted)]">日期改變只會選用該日以前的固定快照。</p></div>
+          <div><h1 className="font-display text-3xl font-medium">歷史回放 Demo</h1><p className="mt-1.5 text-[13px] text-[var(--c-muted)]">日期改變只會選用該日以前的固定快照。</p></div>
           <form method="GET" className="flex items-end gap-2"><label className="text-xs text-[var(--c-muted)]">回放日<input type="date" name="date" min={openingDate} max={today} defaultValue={targetDate} className="mt-1 block h-11 rounded-lg border border-[var(--c-border)] px-3 text-[13px] sm:h-10" /></label><button className="h-11 btn btn-primary btn-fit sm:h-10">回放</button></form>
         </div>
         <section className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">

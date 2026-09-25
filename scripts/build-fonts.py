@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""產生 src/app/fonts/ 底下的三個自架字體檔。
+"""產生 src/app/fonts/ 底下的自架字體檔（Plex Sans、Plex Mono 三字重、Noto Sans TC）。
 
 這支腳本**不在建置流程裡**。產出的 .woff2 直接 commit 進 repo，
 Vercel 建置不需要 Python，也不需要對外抓字體。
@@ -34,20 +34,28 @@ CACHE = ROOT / ".font-src"
 UPSTREAM = {
     "NotoSansTC[wght].ttf": "ofl/notosanstc/NotoSansTC%5Bwght%5D.ttf",
     "IBMPlexSans[wdth,wght].ttf": "ofl/ibmplexsans/IBMPlexSans%5Bwdth%2Cwght%5D.ttf",
-    "Newsreader[opsz,wght].ttf": "ofl/newsreader/Newsreader%5Bopsz%2Cwght%5D.ttf",
     # IBM Plex Mono 上游只有靜態字重，沒有變數檔（google/fonts 的 ofl/ibmplexmono
-    # 底下是 14 個 static ttf）。所以這支破例，只收首頁數字實際用到的三個字重。
+    # 底下是 14 個 static ttf）。所以這支破例，只收實際用到的三個字重。
     "IBMPlexMono-Regular.ttf": "ofl/ibmplexmono/IBMPlexMono-Regular.ttf",
     "IBMPlexMono-Medium.ttf": "ofl/ibmplexmono/IBMPlexMono-Medium.ttf",
     "IBMPlexMono-SemiBold.ttf": "ofl/ibmplexmono/IBMPlexMono-SemiBold.ttf",
 }
 
-# 等寬只服務數字與貨幣符號，不需要整個拉丁範圍。
-# 少了 LATIN 那一大包附加符號，三個字重加起來才不會比原本的 sans 還大。
-DIGITS = "U+0020,U+0024,U+0025,U+002B,U+002C,U+002D,U+002E,U+002F,U+0030-0039,U+003A,U+0041-005A,U+0061-007A,U+2212"
+# 等寬字集。2026-09-26 測繪桌翻新前只收數字與英數（DIGITS），因為當時 Mono
+# 只服務首頁帳本的數字。翻新後 Mono 也負責測量註記、軸標、代號與 hero 大數字，
+# 會出現括號、#、@、< > 之類的字元，所以擴到完整可列印 ASCII，
+# 再加上註記用的幾個符號：
+#   U+00A0 不斷行空白   U+00B1 ±   U+00B7 ·   U+00D7 ×
+#   U+2013–2014 – —    U+2026 …   U+2190–2193 ← ↑ → ↓   U+2212 −   U+2248 ≈
+# 仍然不收整個 LATIN：附加符號（重音字母等）在註記與數字裡用不到。
+# Δ（U+0394）上游 Plex Mono 沒有這個字，列了也收不到，要用就掉到 Plex Sans。
+MONO = (
+    "U+0020-007E,U+00A0,U+00B1,U+00B7,U+00D7,U+2013-2014,U+2026,"
+    "U+2190-2193,U+2212,U+2248"
+)
 
 # Google Fonts 的 "latin" 切片範圍，逐字抄自 css2 API 的輸出。
-# 兩支拉丁字體沿用這個範圍，跟改動前的涵蓋範圍一致。
+# Plex Sans 沿用這個範圍，跟改動前的涵蓋範圍一致。
 LATIN = (
     "U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,"
     "U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,"
@@ -148,14 +156,13 @@ def main() -> None:
         OUT / "IBMPlexSans-latin.woff2",
         unicodes=LATIN,
     )
-    run(srcs["Newsreader[opsz,wght].ttf"], OUT / "Newsreader-latin.woff2", unicodes=LATIN)
 
-    print("等寬數字（靜態三字重：400 / 500 / 600）")
+    print("等寬（靜態三字重：400 / 500 / 600，可列印 ASCII + 註記符號）")
     for weight, name in ((400, "Regular"), (500, "Medium"), (600, "SemiBold")):
         run(
             srcs[f"IBMPlexMono-{name}.ttf"],
-            OUT / f"IBMPlexMono-{weight}-digits.woff2",
-            unicodes=DIGITS,
+            OUT / f"IBMPlexMono-{weight}-ascii.woff2",
+            unicodes=MONO,
         )
 
     print("繁中字體（Big5 符號區 + 常用字 + UI 額外符號）")

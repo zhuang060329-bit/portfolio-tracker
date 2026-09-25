@@ -74,7 +74,7 @@ export default async function NotificationsPage() {
         </div>
         <header className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="font-serif text-3xl font-semibold tracking-tight">
+            <h1 className="font-display text-3xl font-semibold tracking-tight">
               通知
             </h1>
             <p className="mt-2 text-sm text-[var(--c-muted)]">

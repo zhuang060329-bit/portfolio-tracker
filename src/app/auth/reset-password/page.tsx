@@ -61,7 +61,7 @@ export default function ResetPasswordPage() {
   return (
     <main id="main" tabIndex={-1} className="flex min-h-dvh flex-col items-center justify-center bg-[var(--c-page)] p-6">
       <div className="w-full max-w-sm rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-8 shadow-[var(--c-shadow)]">
-        <h1 className="font-serif text-2xl font-semibold tracking-tight text-[var(--c-text)]">
+        <h1 className="font-display text-2xl font-semibold tracking-tight text-[var(--c-text)]">
           重設密碼
         </h1>
         {!ready ? (

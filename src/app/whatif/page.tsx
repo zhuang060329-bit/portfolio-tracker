@@ -214,7 +214,7 @@ export default async function WhatIfPage() {
           </Link>
         </div>
         <header className="mb-5">
-          <h1 className="font-serif text-3xl font-medium tracking-tight">
+          <h1 className="font-display text-3xl font-medium tracking-tight">
             情境推演
           </h1>
           <p className="mt-1.5 text-[13.5px] text-[var(--c-muted)]">

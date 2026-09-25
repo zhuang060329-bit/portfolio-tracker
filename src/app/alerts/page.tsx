@@ -135,7 +135,7 @@ export default async function AlertsPage() {
         </div>
         <header className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="font-serif text-3xl font-medium tracking-tight">
+            <h1 className="font-display text-3xl font-medium tracking-tight">
               提醒
             </h1>
             <p className="mt-1.5 text-[13.5px] text-[var(--c-muted)]">
@@ -143,7 +143,7 @@ export default async function AlertsPage() {
             </p>
           </div>
           <div className="whitespace-nowrap text-right">
-            <span className="font-serif text-3xl font-medium text-[var(--c-accent)] tnum">
+            <span className="font-mono text-3xl font-medium text-[var(--c-accent)] tnum">
               {activeCount}
             </span>
             <span className="block text-xs tracking-wide text-[var(--c-muted)]">

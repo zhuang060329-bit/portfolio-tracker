@@ -256,7 +256,7 @@ function Section({
       className="mt-9 border-t border-[var(--c-border)] pt-7 first:mt-0 first:border-t-0 first:pt-1"
     >
       <div className="mb-4">
-        <h2 className="font-serif text-[19px] font-medium tracking-tight text-[var(--c-text)]">
+        <h2 className="font-display text-[19px] font-medium tracking-tight text-[var(--c-text)]">
           {title}
         </h2>
         {desc && (

@@ -142,7 +142,7 @@ export default async function DecisionDetailPage({ params }: { params: Promise<{
               </span>
               <span className="text-[12px] text-[var(--c-muted)] tnum">{decision.decision_date}</span>
             </div>
-            <h1 className="mt-2 font-serif text-3xl font-medium tracking-tight">
+            <h1 className="mt-2 font-display text-3xl font-medium tracking-tight">
               {decision.asset_name}{decision.symbol ? ` · ${decision.symbol}` : ""}
             </h1>
             <p className="mt-1 text-[12.5px] text-[var(--c-muted)]">
@@ -170,7 +170,7 @@ export default async function DecisionDetailPage({ params }: { params: Promise<{
         </section>
 
         <section className="mt-4 rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 sm:p-6">
-          <h2 className="font-serif text-xl font-medium">事前預期</h2>
+          <h2 className="font-display text-xl font-medium">事前預期</h2>
           <dl className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
             <Metric label="持有期間" value={`${decision.expected_holding_months} 個月`} />
             <Metric label="目標報酬" value={returnRange(decision.target_return_min_pct, decision.target_return_max_pct)} />
@@ -190,7 +190,7 @@ export default async function DecisionDetailPage({ params }: { params: Promise<{
 
         <section className="mt-5 rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 sm:p-6">
           <div>
-            <h2 className="font-serif text-xl font-medium">事後檢討</h2>
+            <h2 className="font-display text-xl font-medium">事後檢討</h2>
             <p className="mt-1 text-[12.5px] text-[var(--c-muted)]">
               評估決策流程與證據，不以單次盈虧替代判斷品質。
             </p>
@@ -230,7 +230,7 @@ function SnapshotCard({ snapshot, transactionId }: { snapshot: DecisionSnapshot;
     <section className="mt-5 rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="font-serif text-xl font-medium">建立時情境</h2>
+          <h2 className="font-display text-xl font-medium">建立時情境</h2>
           <p className="mt-1 text-xs text-[var(--c-muted)]">
             不可變快照 · {snapshot.captured_at ? new Date(snapshot.captured_at).toLocaleString("zh-TW", { timeZone: "Asia/Taipei" }) : "時間缺失"}
           </p>

@@ -66,7 +66,7 @@ export default async function NewDecisionPage({
       <AppHeader active="decisions" userEmail={user?.email} unreadCount={unreadCount} />
       <main id="main" tabIndex={-1} className="mx-auto max-w-[820px] px-4 pb-28 pt-9 sm:px-6">
         <header>
-          <h1 className="font-serif text-3xl font-medium tracking-tight">記錄投資決策</h1>
+          <h1 className="font-display text-3xl font-medium tracking-tight">記錄投資決策</h1>
           <p className="mt-1.5 text-[13.5px] text-[var(--c-muted)]">
             儲存時會由伺服器擷取當下持倉、配置、成本與資料缺口；情境快照之後不能改寫。
           </p>

@@ -199,7 +199,7 @@ export function DecisionForm({
 function FormSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] sm:p-6">
-      <h2 className="mb-4 font-serif text-xl font-medium">{title}</h2>
+      <h2 className="mb-4 font-display text-xl font-medium">{title}</h2>
       {children}
     </section>
   );

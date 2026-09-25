@@ -84,7 +84,7 @@ export default async function ActivityPage() {
       <main id="main" tabIndex={-1} className="mx-auto max-w-[1200px] px-4 py-9 pb-28 sm:px-6 lg:px-7">
         <header className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="font-serif text-3xl font-medium tracking-tight">
+            <h1 className="font-display text-3xl font-medium tracking-tight">
               活動紀錄
             </h1>
             <p className="mt-1.5 text-[13.5px] text-[var(--c-muted)]">

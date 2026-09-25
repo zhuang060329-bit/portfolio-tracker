@@ -42,7 +42,7 @@ export default async function AccountsPage() {
       <main id="main" tabIndex={-1} className="mx-auto max-w-[880px] px-4 py-9 pb-24 sm:px-6 lg:px-7">
         <div className="mb-5 flex items-center justify-between gap-3">
           <div>
-            <h1 className="font-serif text-[26px] font-medium tracking-tight">帳戶</h1>
+            <h1 className="font-display text-[26px] font-medium tracking-tight">帳戶</h1>
             <p className="mt-0.5 text-[12.5px] text-[var(--c-muted)]">
               {active.length} 個使用中
               {archived.length > 0 && ` · ${archived.length} 個已封存`}

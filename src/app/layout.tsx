@@ -10,16 +10,8 @@ import "./globals.css";
    建置流程不需要 Python，也不對外抓字體——建置期抓 Noto Sans TC 失敗
    是這次改動要解決的問題。
 
-   三支都是變數字體，一個檔涵蓋整個字重範圍，取代原本各三到四個靜態字重。 */
-
-const fontSerif = localFont({
-  src: "./fonts/Newsreader-latin.woff2",
-  variable: "--font-serif",
-  weight: "200 800",
-  display: "swap",
-  adjustFontFallback: "Times New Roman",
-  fallback: ["Georgia", "serif"],
-});
+   2026-09-26 測繪桌翻新拿掉了 Newsreader：襯線是舊版「帳本」語言的主角，
+   新的語言是製圖桌，標題改用 Plex Sans、數字與註記用 Plex Mono。 */
 
 /* 2026-08-18：Space Grotesk → IBM Plex Sans。Space Grotesk 的數字是幾何造型
    （單層 a、無襯線的 1），放在滿頁市值與損益的帳本裡辨識負擔偏高。
@@ -34,15 +26,14 @@ const fontSans = localFont({
   fallback: ["system-ui", "sans-serif"],
 });
 
-/* 數字專用等寬，只服務首頁帳本（globals.css 的 .ledger .tnum）。
-   IBM Plex Mono 上游沒有變數檔，所以破例收三個靜態字重——就是首頁
-   實際用到的 400 / 500 / 600，三個檔加起來 26.5 KB。
-   字集也只留數字、貨幣符號與英數，不是整個拉丁範圍。 */
+/* 等寬：全站 .tnum 數字、測量註記、軸標與 hero 大數字（Mono 600）。
+   IBM Plex Mono 上游沒有變數檔，所以破例收三個靜態字重 400 / 500 / 600，
+   三個檔加起來 31.8 KB。字集是可列印 ASCII 加幾個註記符號，不是整個拉丁範圍。 */
 const fontFigures = localFont({
   src: [
-    { path: "./fonts/IBMPlexMono-400-digits.woff2", weight: "400", style: "normal" },
-    { path: "./fonts/IBMPlexMono-500-digits.woff2", weight: "500", style: "normal" },
-    { path: "./fonts/IBMPlexMono-600-digits.woff2", weight: "600", style: "normal" },
+    { path: "./fonts/IBMPlexMono-400-ascii.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/IBMPlexMono-500-ascii.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/IBMPlexMono-600-ascii.woff2", weight: "600", style: "normal" },
   ],
   variable: "--font-figures",
   display: "swap",
@@ -117,7 +108,7 @@ export default async function RootLayout({
     <html
       lang="zh-Hant"
       suppressHydrationWarning
-      className={`${fontSerif.variable} ${fontSans.variable} ${fontFigures.variable} ${fontTc.variable} h-full antialiased`}
+      className={`${fontSans.variable} ${fontFigures.variable} ${fontTc.variable} h-full antialiased`}
     >
       <head>
         <script nonce={nonce} dangerouslySetInnerHTML={{ __html: themeInit }} />

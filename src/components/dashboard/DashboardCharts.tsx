@@ -332,7 +332,7 @@ export function TrendChart({
           className="tooltip-pop pointer-events-none absolute top-1.5 z-[5] -translate-x-1/2 whitespace-nowrap rounded-[10px] border border-[var(--c-line-strong)] bg-[var(--c-surface-soft)] px-[11px] py-2 shadow-[var(--c-shadow)]"
           style={{ left: Math.min(Math.max(nx(hover!), 70), w - 70) }}
         >
-          <div className="amt font-serif text-base font-semibold">
+          <div className="amt font-mono text-base font-semibold">
             NT$ {fmtTwd(hi_.value)}
           </div>
           <div className="mt-px text-[length:var(--fs-micro)] text-[var(--c-muted)]">

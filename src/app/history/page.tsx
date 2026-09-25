@@ -202,7 +202,7 @@ export default async function HistoryPage({
       <main id="main" tabIndex={-1} className="mx-auto max-w-[1080px] px-4 pb-28 pt-9 sm:px-6 lg:px-7">
         <header className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="font-serif text-3xl font-medium tracking-tight">歷史回放</h1>
+            <h1 className="font-display text-3xl font-medium tracking-tight">歷史回放</h1>
             <p className="mt-1.5 text-[13.5px] text-[var(--c-muted)]">
               只使用指定日期以前已存在的快照；缺資料時保留缺口，不借用今天價格。
             </p>
@@ -226,7 +226,7 @@ export default async function HistoryPage({
         <section className="mt-5 rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h2 className="font-serif text-xl font-medium">報酬歸因與對帳</h2>
+              <h2 className="font-display text-xl font-medium">報酬歸因與對帳</h2>
               <p className="mt-1 text-[12px] text-[var(--c-muted)]">
                 期初 + 投入 + 範圍加入 + 市價 + 匯率 + 收入 + 未解釋 = 期末 + 提領 + 範圍移出。配息與利息同時列為收入及已提領現金。
               </p>
@@ -248,7 +248,7 @@ export default async function HistoryPage({
 
         <section className="mt-5 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)]">
           <div className="border-b border-[var(--c-border)] px-5 py-4">
-            <h2 className="font-serif text-xl font-medium">{endDate} 持倉</h2>
+            <h2 className="font-display text-xl font-medium">{endDate} 持倉</h2>
             <p className="mt-1 text-[12px] text-[var(--c-muted)]">{ending.holdings.length} 個回放帳戶 · 依當日 TWD 估值排序</p>
           </div>
           {ending.holdings.length === 0 ? (

@@ -473,7 +473,7 @@ function ProjectionTab({ netWorth }: { netWorth: number }) {
           <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--c-muted)]">
             {years} 年後預估淨值
           </span>
-          <span className="amt mt-2 block font-serif text-[clamp(32px,5vw,46px)] font-medium leading-none tracking-[-0.02em] tnum">
+          <span className="amt mt-2 block font-mono text-[clamp(32px,5vw,46px)] font-medium leading-none tracking-[-0.02em] tnum">
             NT$ {fmtTwd(final)}
           </span>
           <span className="mt-3 block text-[13px] text-[var(--c-muted)]">
@@ -564,7 +564,7 @@ function Rstat({
     <div className="bg-[var(--c-surface)] px-4 py-3.5">
       <span className="block text-xs text-[var(--c-muted)]">{label}</span>
       <span
-        className={`mt-1.5 block whitespace-nowrap font-serif text-xl font-medium tnum ${up ? "text-[var(--c-up)]" : ""} ${mask ? "amt" : ""}`}
+        className={`mt-1.5 block whitespace-nowrap font-mono text-xl font-medium tnum ${up ? "text-[var(--c-up)]" : ""} ${mask ? "amt" : ""}`}
       >
         {value}
       </span>
@@ -583,7 +583,7 @@ function CounterfactualTab({ cf }: { cf: CounterfactualData }) {
       <div className="mb-7 grid grid-cols-1 gap-px overflow-hidden rounded-[var(--r-card)] border border-[var(--c-line-strong)] bg-[var(--c-border)] shadow-[var(--c-shadow)] sm:grid-cols-2">
         <div className="bg-[var(--c-surface)] px-5 py-[18px]">
           <span className="text-xs text-[var(--c-muted)]">累積投入</span>
-          <span className="amt mt-1.5 block font-serif text-[26px] font-medium tnum">
+          <span className="amt mt-1.5 block font-mono text-[26px] font-medium tnum">
             NT$ {fmtTwd(cf.invested)}
           </span>
           <span className="mt-1 block text-xs text-[var(--c-faint)]">
@@ -593,7 +593,7 @@ function CounterfactualTab({ cf }: { cf: CounterfactualData }) {
         <div className="bg-[var(--c-surface)] px-5 py-[18px]">
           <span className="text-xs text-[var(--c-muted)]">目前實際組合</span>
           <span
-            className={`amt mt-1.5 block font-serif text-[26px] font-medium tnum ${
+            className={`amt mt-1.5 block font-mono text-[26px] font-medium tnum ${
               (actual?.returnPct ?? 0) >= 0
                 ? "text-[var(--c-up)]"
                 : "text-[var(--c-down)]"

@@ -177,8 +177,14 @@ npm run dev   # Mac 也可用工作區根的 start-dev-portfolio.command（不�
   首次進首頁下載 1,137 KB / 17 個請求，逛完全站累計 1,641 KB / 28 個請求；
   `next/font/local` 沒辦法逐檔宣告 unicode-range，改成一包 Big5 常用字
   （5,907 字、1,683 KB、1 個請求），首頁多 546 KB，但之後不再有任何字體請求。
-  三支都用變數字體，一個檔涵蓋全字重（原本各 3–4 個靜態字重）。
-  字集是 Big5 符號區 + 常用字 + 17 個 UI 專用符號（`▸ ✓ ← ↑` 等，其中
+  2026-09-26 起是三支：IBM Plex Sans（變數，拉丁，46.6 KB / 248 字）、
+  IBM Plex Mono（上游沒有變數檔，收 400 / 500 / 600 三個靜態字重，
+  字集是可列印 ASCII 加 ± · × – — … ← ↑ → ↓ − ≈，各 10.2 / 10.5 / 11.1 KB、108 字）、
+  Noto Sans TC（變數，1,683.5 KB / 5,907 字）。Newsreader 襯線已移除。
+  Δ（U+0394）上游 Plex Mono 沒有，會掉到 Plex Sans。
+  字體角色在 `globals.css` 的 `@theme inline`：`font-display` 是標題、`font-mono` 是數字與註記；
+  全站 `.tnum` 一律走 Mono。
+  Noto Sans TC 的字集是 Big5 符號區 + 常用字 + 17 個 UI 專用符號（`▸ ✓ ← ↑` 等，其中
   6 個上游 Noto Sans TC 本來就沒有，維持掉到系統字體，與改動前一致）。
   改動 UI 文案後跑 `python scripts/build-fonts.py --audit` 檢查有沒有掉字。
   subset 保留全部 layout features，`tnum` / `lnum` 在，金額欄位對齊不受影響。
