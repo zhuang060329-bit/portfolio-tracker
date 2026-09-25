@@ -111,33 +111,47 @@ export function MobileNavToggle({
             type="button"
             aria-label="關閉導覽"
             onClick={() => setOpen(false)}
-            className="fixed inset-0 top-[var(--header-h)] z-30 bg-black/45 backdrop-blur-[2px] md:hidden"
+            className="fixed inset-0 top-[var(--header-h)] z-30 bg-[var(--c-scrim)] md:hidden"
           />
           <nav
             ref={panelRef}
             id={panelId}
-            className="safe-bottom fixed left-0 right-0 top-[var(--header-h)] z-40 flex max-h-[calc(100dvh-var(--header-h))] flex-col overflow-y-auto border-b border-[var(--c-border)] bg-[var(--c-page)] px-4 pb-4 pt-3 shadow-[var(--c-shadow)] md:hidden"
+            className="safe-bottom fixed left-0 right-0 top-[var(--header-h)] z-40 flex max-h-[calc(100dvh-var(--header-h))] flex-col overflow-y-auto border-b border-[var(--c-line-strong)] bg-[var(--c-page)] px-4 pb-4 pt-1 md:hidden"
             aria-label="主要導覽"
           >
-            <div className="grid grid-cols-2 gap-1.5">
-              {items.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-current={active === item.key ? "page" : undefined}
-                  onClick={() => setOpen(false)}
-                  className={`flex min-h-12 items-center rounded-[var(--r-control)] px-3.5 text-[14px] font-medium ${
-                    active === item.key
-                      ? "bg-[var(--c-accent-soft)] text-[var(--c-accent)]"
-                      : "border border-[var(--c-border)] bg-[var(--c-surface)] text-[var(--c-muted)] hover:text-[var(--c-text)]"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </div>
+            {/* 圖面索引表：一列一項，左邊等寬編號 01–09，列與列之間一條髮絲線。
+                編號是位置提示，不是資料，所以用 faint 色、不加粗。 */}
+            <ol className="border-b border-[var(--c-border)]">
+              {items.map((item, index) => {
+                const isActive = active === item.key;
+                return (
+                  <li key={item.href} className="border-t border-[var(--c-border)] first:border-t-0">
+                    <Link
+                      href={item.href}
+                      aria-current={isActive ? "page" : undefined}
+                      onClick={() => setOpen(false)}
+                      className={`flex min-h-12 items-center gap-4 border-l-2 pl-3 pr-2 text-[15px] ${
+                        isActive
+                          ? "border-l-[var(--c-accent)] bg-[var(--c-accent-soft)] font-semibold text-[var(--c-text)]"
+                          : "border-l-transparent font-medium text-[var(--c-muted)] hover:bg-[var(--c-row-hover)] hover:text-[var(--c-text)]"
+                      }`}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={`w-5 font-mono text-[length:var(--fs-micro)] ${
+                          isActive ? "text-[var(--c-accent)]" : "text-[var(--c-faint)]"
+                        }`}
+                      >
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+                      {item.label}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ol>
 
-            <div className="mt-4 flex items-center justify-between border-t border-[var(--c-border)] pt-3">
+            <div className="mt-3 flex items-center justify-between">
               <span className="text-[12px] text-[var(--c-muted)]">顯示模式</span>
               <ThemeToggle />
             </div>

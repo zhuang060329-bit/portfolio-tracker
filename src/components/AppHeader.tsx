@@ -3,6 +3,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { PrivacyToggle } from "./PrivacyToggle";
 import { MobileNavToggle } from "./MobileNavToggle";
 import { DesktopNavMore } from "./DesktopNavMore";
+import { SurveyNav } from "./SurveyNav";
 
 type Active =
   | "portfolio"
@@ -52,32 +53,35 @@ export function AppHeader({
   const initials = getInitials(userEmail);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--c-border)] bg-[color-mix(in_srgb,var(--c-page)_90%,transparent)] backdrop-blur-xl">
+    // 實心桌面色，不半透明、不模糊：導覽列是壓在圖面上方的標題欄，不是毛玻璃。
+    <header className="sticky top-0 z-40 border-b border-[var(--c-line-strong)] bg-[var(--c-page)]">
       <div className="mx-auto flex h-[var(--header-h)] max-w-[1200px] items-center gap-4 px-4 sm:px-6 lg:px-7">
         <Link
           href="/"
           className="flex shrink-0 items-center gap-2 text-[var(--c-text)]"
           aria-label="StackWorth 首頁"
         >
-          <DiamondMark className="text-[var(--c-accent)]" />
+          <RegistrationMark className="text-[var(--c-accent)]" />
           <span className="text-[17px] font-semibold tracking-[-0.025em] sm:text-[18px]">
             StackWorth
           </span>
         </Link>
 
-        <nav className="ml-2 hidden h-full items-center gap-1 md:flex" aria-label="主要導覽">
-          {primaryItems.map((item) => (
-            <NavLink
-              key={item.href}
-              href={item.href}
-              active={active === item.key}
-              label={item.label}
-            />
-          ))}
+        <SurveyNav
+          label="主要導覽"
+          items={primaryItems}
+          active={active}
+          className="ml-2 hidden h-full items-center gap-1 md:flex"
+          itemClassName="h-full"
+        >
           <DesktopNavMore items={moreItems} active={active} />
-        </nav>
+        </SurveyNav>
 
         <div className="ml-auto flex h-full items-center gap-1 sm:gap-1.5">
+          {/* 圖面角落的比例尺註記：所有金額以台幣計。 */}
+          <span className="mr-2 hidden font-mono text-[length:var(--fs-micro)] tracking-[0.06em] text-[var(--c-faint)] lg:inline">
+            基準 TWD
+          </span>
           {userEmail ? (
             <Link
               href="/notifications"
@@ -87,7 +91,7 @@ export function AppHeader({
             >
               <BellIcon />
               {unreadCount > 0 && (
-                <span className="absolute right-0 top-0 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--c-accent)] px-1 text-xs font-bold text-[var(--c-btn-strong-text)] tnum">
+                <span className="absolute right-0.5 top-0.5 flex h-[18px] min-w-[18px] items-center justify-center bg-[var(--c-accent)] px-1 font-mono text-[11px] font-semibold leading-none text-[var(--c-btn-strong-text)] tnum">
                   {unreadCount > 99 ? "99+" : unreadCount}
                 </span>
               )}
@@ -111,14 +115,14 @@ export function AppHeader({
               href="/settings"
               title={userEmail}
               aria-label="帳號設定"
-              className="touch-target hidden h-8 w-8 items-center justify-center rounded-full border border-[var(--c-border)] bg-[var(--c-surface)] text-xs font-semibold text-[var(--c-muted)] sm:inline-flex"
+              className="touch-target hidden h-8 w-8 items-center justify-center border border-[var(--c-line-strong)] bg-[var(--c-surface)] font-mono text-xs font-medium text-[var(--c-muted)] hover:border-[var(--c-accent)] hover:text-[var(--c-text)] sm:inline-flex"
             >
               {initials}
             </Link>
           ) : authPending ? (
             <span
               aria-hidden="true"
-              className="hidden h-8 w-8 items-center justify-center rounded-full border border-[var(--c-border)] bg-[var(--c-surface)] text-xs font-semibold text-[var(--c-faint)] sm:inline-flex"
+              className="hidden h-8 w-8 items-center justify-center border border-[var(--c-line-strong)] bg-[var(--c-surface)] font-mono text-xs font-medium text-[var(--c-faint)] sm:inline-flex"
             >
               {initials}
             </span>
@@ -146,41 +150,21 @@ export function AppHeader({
   );
 }
 
-function NavLink({
-  href,
-  active,
-  label,
-}: {
-  href: string;
-  active: boolean;
-  label: string;
-}) {
-  return (
-    <Link
-      href={href}
-      aria-current={active ? "page" : undefined}
-      className={`relative flex h-full items-center px-2.5 text-[13px] font-medium ${
-        active
-          ? "text-[var(--c-text)] after:absolute after:inset-x-2.5 after:bottom-0 after:h-[2px] after:bg-[var(--c-accent)]"
-          : "text-[var(--c-muted)] hover:text-[var(--c-text)]"
-      }`}
-    >
-      {label}
-    </Link>
-  );
-}
-
-function DiamondMark({ className = "" }: { className?: string }) {
+/* 套準記號：印刷與製圖用來對位的十字圓標，當品牌記號用。 */
+function RegistrationMark({ className = "" }: { className?: string }) {
   return (
     <svg
-      width="12"
-      height="12"
+      width="16"
+      height="16"
       viewBox="0 0 16 16"
-      fill="currentColor"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.25"
       className={className}
       aria-hidden="true"
     >
-      <path d="M8 1 L15 8 L8 15 L1 8 Z" />
+      <circle cx="8" cy="8" r="4.5" />
+      <path d="M8 0.5v15M0.5 8h15" />
     </svg>
   );
 }

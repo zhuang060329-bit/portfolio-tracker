@@ -96,15 +96,15 @@ function Toggle({
       >
         <span
           aria-hidden="true"
-          className={`relative h-6 w-[42px] rounded-full border transition-colors ${
+          className={`relative h-6 w-[42px] border transition-colors ${
             active
               ? "border-[var(--c-up)] bg-[var(--c-up)]"
               : "border-[var(--c-line-strong)] bg-[var(--c-surface-soft)]"
           }`}
         >
           <span
-            className={`switch-thumb absolute left-0.5 top-0.5 h-[18px] w-[18px] rounded-full shadow transition-transform ${
-              active ? "translate-x-[18px] bg-white" : "bg-[var(--c-text)]"
+            className={`switch-thumb absolute left-0.5 top-0.5 h-[18px] w-[18px] transition-transform ${
+              active ? "translate-x-[18px] bg-[var(--c-btn-strong-text)]" : "bg-[var(--c-text)]"
             }`}
           />
         </span>

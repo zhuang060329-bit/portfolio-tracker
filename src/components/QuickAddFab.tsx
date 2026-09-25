@@ -220,7 +220,7 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
 
       {quickAddOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/55 backdrop-blur-[2px] sm:items-center sm:p-5"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-[var(--c-scrim)] sm:items-center sm:p-5"
           onClick={(event) => {
             if (event.target === event.currentTarget) setQuickAddOpen(false);
           }}

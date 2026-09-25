@@ -77,6 +77,8 @@
   /* 深色的層次：1px 頂緣高光 + 一層淡的落影。 */
   --c-shadow: inset 0 1px 0 rgba(220, 230, 233, 0.06), 0 10px 28px rgba(0, 0, 0, 0.32);
   --c-shimmer: rgba(220, 230, 233, 0.05);
+  /* 抽屜打開時蓋住桌面的遮罩。實心半透明，不模糊：模糊是毛玻璃，不是製圖桌。 */
+  --c-scrim: rgba(4, 8, 11, 0.62);
   /* 資產類別色票。地籍圖的地塊與圖例是判讀所需的圖形物件，依 WCAG 1.4.11
      需對底色達 3:1；地塊另有斜線填紋，不單靠顏色區分。
      深色對 page 7.23–8.71。stock 與 liability 沿用 --c-accent / --c-down。 */
@@ -161,6 +163,8 @@
      藍灰 55% 疊在 page 上約 1.45:1，看得出是另一張紙壓在桌上。 */
   --c-shadow: 3px 3px 0 0 rgba(145, 168, 168, 0.55);
   --c-shimmer: rgba(16, 24, 32, 0.05);
+  /* 石墨色的遮罩，淺色底下 38% 就足以把桌面壓成背景。 */
+  --c-scrim: rgba(16, 24, 32, 0.38);
   /* 對 page 4.24–5.11。 */
   --c-alloc-fund: #3e6e9c;
   --c-alloc-crypto: #96661c;
@@ -294,6 +298,8 @@ main:focus {
   align-items: center;
   gap: 0.625rem;
   border: 1px solid var(--c-line-strong);
+  /* 左緣 3px 狀態色的尺規線：成功綠、失敗紅，旁邊的方形記號帶 ✓／! 字元，不單靠顏色。 */
+  border-left-width: 3px;
   border-radius: var(--r-card);
   background: var(--c-surface);
   padding: 0.75rem 0.875rem;
@@ -311,9 +317,18 @@ main:focus {
   height: 1.5rem;
   flex: 0 0 auto;
   place-items: center;
-  border-radius: 50%;
+  border: 1px solid currentColor;
+  font-family: var(--font-figures), var(--font-tc), ui-monospace, monospace;
   font-size: var(--fs-micro);
-  font-weight: 700;
+  font-weight: 600;
+}
+
+.action-toast-success {
+  border-left-color: var(--c-up);
+}
+
+.action-toast-error {
+  border-left-color: var(--c-down);
 }
 
 .action-toast-success .action-toast-mark {
@@ -463,19 +478,22 @@ details > summary::-webkit-details-marker {
   display: none;
 }
 
+/* 展開記號用等寬的 + / −，像圖面上的加註符號；不做旋轉，狀態就是字本身。 */
 details > summary::before {
-  content: "▸";
+  content: "+";
   position: absolute;
-  left: 0.25rem;
+  left: 0.125rem;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 0.625rem;
-  color: var(--c-muted);
-  transition: transform 160ms ease-out;
+  font-family: var(--font-figures), ui-monospace, monospace;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--c-accent);
 }
 
 details[open] > summary::before {
-  transform: translateY(-50%) rotate(90deg);
+  content: "\2212";
 }
 
 @keyframes ledgerRowIn {
@@ -501,28 +519,30 @@ details[open] > summary::before {
   height: 44px;
   padding-block: 19.5px;
   background-clip: content-box;
-  border-radius: 3px;
+  border-radius: 0;
   cursor: pointer;
 }
 
 .proj-range::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
+  /* 直立的方形游標，像比例尺上的讀數標記。外圈 1px 描邊代替落影。 */
+  width: 12px;
+  height: 22px;
+  border-radius: 0;
   background: var(--c-accent);
-  border: 3px solid var(--c-surface);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  border: 2px solid var(--c-surface);
+  box-shadow: 0 0 0 1px var(--c-accent);
   cursor: pointer;
 }
 
 .proj-range::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
+  width: 8px;
+  height: 18px;
+  border-radius: 0;
   background: var(--c-accent);
-  border: 3px solid var(--c-surface);
+  border: 2px solid var(--c-surface);
+  box-shadow: 0 0 0 1px var(--c-accent);
   cursor: pointer;
 }
 
@@ -628,6 +648,18 @@ textarea:disabled {
 .btn-primary {
   background-color: var(--c-accent);
   color: var(--c-btn-strong-text);
+  /* 斜角：左上、右下各切 7px，像製圖版上裁過角的標籤。全站只有這顆有斜角，
+     所以它在頁面上一眼就是「主動作」，不必靠陰影或漸層。 */
+  clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px);
+}
+
+/* clip-path 會把 outline 一起裁掉，焦點環改畫在裡面：
+   2px 按鈕字色的內框，對 accent 底 5 倍以上，再留 2px accent 當間隙。 */
+.btn-primary:focus-visible {
+  outline: none;
+  box-shadow:
+    inset 0 0 0 2px var(--c-accent),
+    inset 0 0 0 4px var(--c-btn-strong-text);
 }
 
 /* 中性實心：某一區塊自己的動作（帳戶頁的各段送出），不跟頁面主 CTA 搶。 */
@@ -782,10 +814,16 @@ textarea:disabled {
   }
 }
 
+/* 骨架：斜線填紋的空地塊，意思是「這塊還沒量」。與地籍圖的斜線填色是同一個語彙。 */
 .sk {
   position: relative;
   overflow: hidden;
-  background: var(--c-surface-soft);
+  background-color: var(--c-surface-soft);
+  background-image: repeating-linear-gradient(
+    135deg,
+    var(--c-drafting-major) 0 1px,
+    transparent 1px 7px
+  );
 }
 
 .sk::after {
@@ -873,6 +911,30 @@ textarea:disabled {
     outline: 2px solid var(--c-accent);
     outline-offset: 2px;
   }
+
+  /* 文字欄位的焦點改成「套準記號」：外框貼齊 1px，四個角各一個 7×2px 的直角刻度，
+     像印刷版四角的對位記號——表示這一格正在填。
+     刻度畫在 background-image，欄位自己的 bg-[…] utility 只設 background-color，不會蓋掉。
+     select 不套：有些瀏覽器的下拉箭頭本身就是 background-image。 */
+  :where(
+    input:not([type="checkbox"], [type="radio"], [type="range"], [type="hidden"], [type="file"], [type="color"], [type="submit"], [type="button"], [type="reset"], [type="image"]),
+    textarea
+  ):focus-visible {
+    outline-width: 1px;
+    outline-offset: 0;
+    background-image:
+      linear-gradient(var(--c-accent), var(--c-accent)),
+      linear-gradient(var(--c-accent), var(--c-accent)),
+      linear-gradient(var(--c-accent), var(--c-accent)),
+      linear-gradient(var(--c-accent), var(--c-accent)),
+      linear-gradient(var(--c-accent), var(--c-accent)),
+      linear-gradient(var(--c-accent), var(--c-accent)),
+      linear-gradient(var(--c-accent), var(--c-accent)),
+      linear-gradient(var(--c-accent), var(--c-accent));
+    background-repeat: no-repeat;
+    background-size: 7px 2px, 2px 7px, 7px 2px, 2px 7px, 7px 2px, 2px 7px, 7px 2px, 2px 7px;
+    background-position: 0 0, 0 0, 100% 0, 100% 0, 0 100%, 0 100%, 100% 100%, 100% 100%;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -895,7 +957,7 @@ textarea:disabled {
     transform: none;
   }
 
-  /* 三角形旋轉、skip-link 滑入：終點狀態要留，過程不要。 */
+  /* skip-link 滑入：終點狀態要留，過程不要。展開記號已改成 +／− 字元，本來就沒有過程。 */
   details > summary::before,
   .skip-link {
     transition: none;

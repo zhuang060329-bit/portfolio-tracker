@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PrivacyToggle } from "./PrivacyToggle";
+import { SurveyNav } from "./SurveyNav";
 import { ThemeToggle } from "./ThemeToggle";
 
 type DemoActive = "overview" | "decisions" | "history" | "scenario" | "report";
@@ -13,12 +14,23 @@ export function DemoV1Header({ active }: { active: DemoActive }) {
     { href: "/demo/report", label: "月報", key: "report" },
   ];
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--c-border)] bg-[color-mix(in_srgb,var(--c-page)_92%,transparent)] backdrop-blur-xl">
-      <div className="mx-auto flex min-h-[var(--header-h)] max-w-[1200px] flex-wrap items-center gap-2 px-4 py-2 sm:px-6">
-        <Link href="/demo" className="font-semibold">StackWorth <span className="ml-1 rounded border border-[var(--c-accent)] px-1.5 py-0.5 text-xs text-[var(--c-accent)]">DEMO</span></Link>
-        <nav aria-label="Demo 功能" className="order-3 flex w-full gap-1 overflow-x-auto sm:order-none sm:ml-4 sm:w-auto">
-          {items.map((item) => <Link key={item.href} href={item.href} aria-current={active === item.key ? "page" : undefined} className={`tap-row whitespace-nowrap rounded-lg px-2.5 py-1.5 text-[12px] ${active === item.key ? "bg-[var(--c-accent-soft)] font-semibold text-[var(--c-accent)]" : "text-[var(--c-muted)] hover:text-[var(--c-text)]"}`}>{item.label}</Link>)}
-        </nav>
+    <header className="sticky top-0 z-40 border-b border-[var(--c-line-strong)] bg-[var(--c-page)]">
+      <div className="mx-auto flex min-h-[var(--header-h)] max-w-[1200px] flex-wrap items-center gap-x-2 px-4 sm:flex-nowrap sm:px-6">
+        <Link href="/demo" className="flex min-h-11 items-center gap-2 font-semibold tracking-[-0.02em]">
+          StackWorth
+          {/* 朱砂框的「樣張」戳記：提醒這一頁的數字是示範資料。框是朱砂、字用內文色，
+              淺色主題下朱砂對底只有 3.75:1，不能拿來當字色。 */}
+          <span className="border border-dashed border-[var(--c-annot)] px-1.5 py-px font-mono text-[11px] font-medium tracking-[0.14em] text-[var(--c-text)]">
+            DEMO
+          </span>
+        </Link>
+        <SurveyNav
+          label="Demo 功能"
+          items={items}
+          active={active}
+          className="scroll-region order-3 -mx-1 flex w-full gap-1 self-stretch overflow-x-auto border-t border-[var(--c-border)] sm:order-none sm:mx-0 sm:ml-4 sm:w-auto sm:border-t-0"
+          itemClassName="min-h-11 sm:min-h-[var(--header-h)]"
+        />
         <div className="ml-auto flex items-center"><PrivacyToggle /><ThemeToggle /></div>
       </div>
     </header>

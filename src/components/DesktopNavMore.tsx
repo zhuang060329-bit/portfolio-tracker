@@ -92,7 +92,7 @@ export function DesktopNavMore({
           ref={panelRef}
           id={panelId}
           aria-label="更多功能"
-          className="absolute right-0 top-[calc(100%+8px)] z-50 w-44 rounded-[var(--r-card)] border border-[var(--c-line-strong)] bg-[var(--c-surface)] p-1.5 shadow-[var(--c-shadow)]"
+          className="absolute right-0 top-[calc(100%+1px)] z-50 w-44 border border-[var(--c-line-strong)] bg-[var(--c-surface)] shadow-[var(--c-shadow)]"
         >
           {items.map((item) => (
             <Link
@@ -100,10 +100,11 @@ export function DesktopNavMore({
               href={item.href}
               aria-current={active === item.key ? "page" : undefined}
               onClick={() => setOpen(false)}
-              className={`touch-target flex min-h-10 items-center rounded-[var(--r-control)] px-3 text-[13px] font-medium ${
+              // 每列一條髮絲線分隔，像圖面的圖例欄；目前頁在左緣加 2px 測量藍刻度。
+              className={`touch-target flex min-h-10 items-center border-b border-l-2 border-b-[var(--c-border)] px-3 text-[13px] last:border-b-0 ${
                 active === item.key
-                  ? "bg-[var(--c-accent-soft)] text-[var(--c-accent)]"
-                  : "text-[var(--c-muted)] hover:bg-[var(--c-surface-soft)] hover:text-[var(--c-text)]"
+                  ? "border-l-[var(--c-accent)] bg-[var(--c-accent-soft)] font-semibold text-[var(--c-text)]"
+                  : "border-l-transparent font-medium text-[var(--c-muted)] hover:bg-[var(--c-row-hover)] hover:text-[var(--c-text)]"
               }`}
             >
               {item.label}

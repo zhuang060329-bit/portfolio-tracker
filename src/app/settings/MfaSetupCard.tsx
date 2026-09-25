@@ -367,15 +367,15 @@ function Toggle({
     >
       <span
         aria-hidden="true"
-        className={`relative h-6 w-[42px] rounded-full border transition-colors ${
+        className={`relative h-6 w-[42px] border transition-colors ${
           on
             ? "border-[var(--c-up)] bg-[var(--c-up)]"
             : "border-[var(--c-line-strong)] bg-[var(--c-surface-soft)]"
         }`}
       >
         <span
-          className={`switch-thumb absolute top-[2px] block h-[18px] w-[18px] rounded-full shadow-[0_1px_2px_rgba(0,0,0,.3)] transition-transform ${
-            on ? "translate-x-[20px] bg-white" : "translate-x-[2px] bg-[var(--c-text)]"
+          className={`switch-thumb absolute top-[2px] block h-[18px] w-[18px] transition-transform ${
+            on ? "translate-x-[20px] bg-[var(--c-btn-strong-text)]" : "translate-x-[2px] bg-[var(--c-text)]"
           }`}
         />
       </span>
