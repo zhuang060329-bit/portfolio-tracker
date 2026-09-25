@@ -25,7 +25,8 @@ This version has breaking changes — APIs, conventions, and file structure may 
 | 前端框架 | Next.js 16.3.4（Turbopack；Proxy 取代 Middleware；async cookies、async params） |
 | React | 19（useActionState、useSyncExternalStore、Suspense for useSearchParams） |
 | 樣式 | Tailwind v4，`@custom-variant dark` 對應 `[data-theme="dark"]` |
-| 圖表 | Recharts |
+| 圖表 | Recharts；首頁儀表板為手刻 SVG |
+| 動畫 | CSS keyframes 為主；`motion`、`gsap` 只用在隔離的 client 葉節點（規則見 `.claude/rules/design.md`） |
 | 後端 | Supabase（Auth + Postgres + RLS + service-role for cron） |
 | 認證 | Email/密碼 + Google OAuth + MFA TOTP（AAL2 強制） |
 | 部署 | Vercel Hobby + GitHub auto-deploy |
@@ -163,7 +164,10 @@ npm run dev   # Mac 也可用工作區根的 start-dev-portfolio.command（不�
 - **TWR vs XIRR**：TWR 剔除現金流時機，反映策略；XIRR 是現金流加權，反映實際投入回報
 - **What-if 模擬**：只算「投入」（負現金流），buy-and-hold，不考慮配息再投資/交易成本
 - **AppHeader unreadCount**：每個 server page 自己 fetch 傳入（保持 sync 元件，避免 client pages 不能 render async server component 的問題）
-- **CSS 變數系統**：避免硬編碼顏色，深色模式靠 `[data-theme="dark"]` 自動翻轉
+- **CSS 變數系統**：避免硬編碼顏色，`:root` 是深色、`[data-theme="light"]` 覆寫
+- **視覺語言是「測繪桌 Survey Table」**（2026-09-26 起翻新，分支 `redesign/survey-table`）：
+  冷紙底、製圖格線、圓角 0、髮絲線、Plex Mono 等寬數字。跌色（磚紅）與朱砂註記
+  刻意分成兩個色，朱砂只用在帶文字與虛線引線的「注意」註記。細節見 `.claude/rules/design.md`
 - **字體自架**：三支字體改 `next/font/local`，檔案 commit 在 `src/app/fonts/`，
   由 `scripts/build-fonts.py` 產生（需要 Python + fonttools，**不在建置流程內**，
   Vercel 不需要 Python）。動機是 `next/font/google` 建置時抓 Noto Sans TC 會失敗。
@@ -250,7 +254,6 @@ npm run dev   # Mac 也可用工作區根的 start-dev-portfolio.command（不�
 |---|---|
 | ~~4 種按鈕風格散在各頁~~ | **2026-09-03 已解決**：`globals.css` 收斂成一套 `.btn` class（`.btn-primary` / `.btn-neutral` / `.btn-danger` / `.btn-outline` / `.btn-outline-danger` / `.btn-ghost`，加 `.btn-sm` / `.btn-lg` / `.btn-icon` / `.btn-fit` 修飾）。行動版列表的整列可點區塊統一為 `.tap-row`。走 CSS class 而不是 React component，是因為按鈕散在 server 與 client component 兩邊，class 兩邊都能用，不必為了樣式把 server component 改成 client |
 | AppHeader unreadCount 每頁 fetch | DRY 違規但只是一個 COUNT query，成本低 |
-| serif 標題 + sans-serif 內文 | 設計取向決定，等使用者明說再改 |
 | CSV 匯入的交易寫入與帳戶更新不是原子的 | insert 成功、update 失敗時流水在但餘額沒跟上，且重試會被「帳戶已有交易」擋住。錯誤訊息已提示去看變動紀錄。要做成原子需要新 RPC 與 migration |
 
 ## 九、使用者操作（程式碼無法代勞）
@@ -286,7 +289,6 @@ npm run dev   # Mac 也可用工作區根的 start-dev-portfolio.command（不�
 | 低 | 券商 CSV 格式自動辨識（富邦/永豐/Binance/MAX） | 大（需真實 sample） |
 | 低 | 自動同步券商持倉（Binance/Coinbase API key） | 大 |
 | 低 | 匯率歷史 snapshot（修 cost basis 累積誤差） | 中 |
-| 低 | 字體換掉 serif（IBM Plex / Inter） | 小（設計決定） |
 
 ## 十一、開發約定
 
