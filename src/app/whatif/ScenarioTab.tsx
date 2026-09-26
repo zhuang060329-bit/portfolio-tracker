@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { PICK_OFF, PICK_ON, TONE_TEXT, sign, toneCls } from "@/components/dashboard/shared";
-import { Stat, StatStrip, SurveyLabel } from "@/components/survey";
+import { Panel, Stat, StatStrip, SurveyLabel } from "@/components/survey";
 import { ASSET_CLASS_LABEL, MARKET_LABEL } from "@/lib/dashboard-data";
 import { fmtFull, fmtNum } from "@/lib/format";
 import {
@@ -291,23 +291,6 @@ export function ScenarioTab({ data }: { data: ScenarioData }) {
         假設：{result.assumptions.join(" ")} 本工具只呈現數學結果與設定門檻，不構成投資建議。
       </aside>
     </div>
-  );
-}
-
-// 本頁的一個段落：方框、標題列底下一條髮絲線，跟月報的 Block 同一個結構。
-// flush 給表格用：內容貼齊框線，不加內距。
-function Panel({ title, sub, action, flush = false, children }: { title: string; sub?: string; action?: React.ReactNode; flush?: boolean; children: React.ReactNode }) {
-  return (
-    <section className="border border-[var(--c-border)] bg-[var(--c-surface)]">
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-[var(--c-border-soft)] px-5 py-3">
-        <div className="min-w-0">
-          <h2 className="text-[length:var(--fs-lg)] font-semibold">{title}</h2>
-          {sub && <p className="mt-0.5 text-[length:var(--fs-micro)] text-[var(--c-faint)]">{sub}</p>}
-        </div>
-        {action}
-      </div>
-      <div className={flush ? "" : "p-5"}>{children}</div>
-    </section>
   );
 }
 

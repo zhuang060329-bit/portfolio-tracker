@@ -2,6 +2,7 @@ import Link from "next/link";
 import { fetchAllPages } from "@/lib/supabase/paginate";
 import { createClient } from "@/lib/supabase/server";
 import { AppHeader } from "@/components/AppHeader";
+import { PageHead } from "@/components/survey";
 import { getUnreadCount } from "@/lib/notifications";
 import { todayTaipei } from "@/lib/dates";
 import type { ScenarioHolding } from "@/lib/scenario";
@@ -164,21 +165,21 @@ export default async function WhatIfPage() {
       {
         label: "S&P 500",
         sym: "SPY",
-        color: "#7FA8C9",
+        color: "var(--c-alloc-fund)",
         ...resultOf(simulateBuyAndHold(cashflows, spyTwd)),
         actual: false,
       },
       {
         label: "Nasdaq 100",
         sym: "QQQ",
-        color: "#C58BD6",
+        color: "var(--c-alloc-other)",
         ...resultOf(simulateBuyAndHold(cashflows, qqqTwd)),
         actual: false,
       },
       {
         label: "台股 0050",
         sym: "0050",
-        color: "#7FBFA3",
+        color: "var(--c-alloc-cash)",
         ...resultOf(simulateBuyAndHold(cashflows, tw0050Prices)),
         actual: false,
       },
@@ -207,20 +208,19 @@ export default async function WhatIfPage() {
   return (
     <div className="min-h-dvh bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active="whatif" userEmail={user?.email} unreadCount={unreadCount} />
-      <main id="main" tabIndex={-1} className="mx-auto max-w-[1200px] px-4 py-9 pb-28 sm:px-6 lg:px-7">
-        <div className="mb-4 text-sm">
-          <Link href="/" className="text-[var(--c-muted)] hover:text-[var(--c-text)]">
-            ← 回總覽
-          </Link>
-        </div>
-        <header className="mb-5">
-          <h1 className="font-display text-3xl font-medium tracking-tight">
-            情境推演
-          </h1>
-          <p className="mt-1.5 text-[13.5px] text-[var(--c-muted)]">
-            推算未來淨值、回看 ETF 對照，並測試價格與匯率衝擊下的買後配置。
-          </p>
-        </header>
+      <main id="main" tabIndex={-1} className="mx-auto max-w-[1200px] px-4 py-8 pb-28 sm:px-6 sm:py-10 lg:px-7">
+        <Link
+          href="/"
+          className="text-[length:var(--fs-sm)] text-[var(--c-muted)] transition-colors hover:text-[var(--c-accent)]"
+        >
+          ← 回總覽
+        </Link>
+        <PageHead
+          className="mt-4 mb-6"
+          label="推算 · 對照 · 壓力測試"
+          title="情境推演"
+          sub="推算未來淨值、回看 ETF 對照，並測試價格與匯率衝擊下的買後配置。"
+        />
 
         <WhatIfClient
           netWorth={actualValue}

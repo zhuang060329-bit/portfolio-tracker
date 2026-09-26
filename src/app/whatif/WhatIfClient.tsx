@@ -3,6 +3,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { project, crossMonth, type ProjPoint } from "@/lib/whatif-project";
 import { fmtFull as fmtTwd, fmtCompact } from "@/lib/format";
+import { Stat, StatStrip, SurveyLabel, Tag } from "@/components/survey";
 import { ScenarioTab, type ScenarioData } from "./ScenarioTab";
 import { RebalanceTab } from "./RebalanceTab";
 
@@ -60,10 +61,10 @@ function Slider({
   return (
     <div className="mt-4">
       <div className="mb-2.5 flex items-baseline justify-between gap-2.5">
-        <label htmlFor={inputId} className="text-[13px] font-medium text-[var(--c-text)]">
+        <label htmlFor={inputId} className="text-[length:var(--fs-sm)] font-medium text-[var(--c-text)]">
           {label}
         </label>
-        <output htmlFor={inputId} className="whitespace-nowrap text-sm font-semibold text-[var(--c-accent)] tnum">
+        <output htmlFor={inputId} className="whitespace-nowrap text-[length:var(--fs-sm)] font-semibold text-[var(--c-accent)] tnum">
           {fmt ? fmt(value) : value}
         </output>
       </div>
@@ -83,7 +84,7 @@ function Slider({
         }}
       />
       {hint && (
-        <span id={hintId} className="mt-[7px] block text-xs text-[var(--c-faint)]">
+        <span id={hintId} className="mt-1.5 block text-[length:var(--fs-micro)] text-[var(--c-faint)]">
           {hint}
         </span>
       )}
@@ -206,13 +207,6 @@ function ProjectionChart({
         viewBox={`0 0 ${w} ${H}`}
         style={{ display: "block", overflow: "visible" }}
       >
-        <defs>
-          <linearGradient id="projFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="var(--c-accent)" stopOpacity="0.28" />
-            <stop offset="0.65" stopColor="var(--c-accent)" stopOpacity="0.07" />
-            <stop offset="1" stopColor="var(--c-accent)" stopOpacity="0" />
-          </linearGradient>
-        </defs>
         {milestones.map(
           (m, i) =>
             m.reached && (
@@ -238,7 +232,8 @@ function ProjectionChart({
               </g>
             ),
         )}
-        <path d={area} fill="url(#projFill)" />
+        {/* 平塗淡底，跟首頁淨值圖同一個作法，不做漸層 */}
+        <path d={area} fill="var(--c-accent)" fillOpacity="0.07" />
         <path
           d={contribLine}
           fill="none"
@@ -251,9 +246,16 @@ function ProjectionChart({
           d={valLine}
           fill="none"
           stroke="var(--c-accent)"
-          strokeWidth="2.4"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          strokeWidth="2"
+          strokeLinejoin="miter"
+        />
+        <line
+          x1="0"
+          x2={w - padR}
+          y1={H - padB}
+          y2={H - padB}
+          stroke="var(--c-line-strong)"
+          strokeWidth="1"
         />
         {yearTicks.map((y) => (
           <text
@@ -261,7 +263,8 @@ function ProjectionChart({
             x={nx(y * 12)}
             y={H - 6}
             fontSize={10}
-            fill="var(--c-faint)"
+            fontFamily="var(--font-mono)"
+            fill="var(--c-muted)"
             textAnchor="middle"
           >
             {y} 年
@@ -274,10 +277,8 @@ function ProjectionChart({
               x2={nx(hp.m)}
               y1={padT}
               y2={H - padB}
-              stroke="var(--c-accent)"
+              stroke="var(--c-line-strong)"
               strokeWidth="1"
-              strokeDasharray="3 3"
-              opacity="0.5"
             />
             <circle
               cx={nx(hp.m)}
@@ -300,21 +301,21 @@ function ProjectionChart({
       </svg>
       {hp && (
         <div
-          className="pointer-events-none absolute top-1.5 z-[5] -translate-x-1/2 whitespace-nowrap rounded-[var(--r-card)] border border-[var(--c-line-strong)] bg-[var(--c-surface-soft)] px-[11px] py-2 shadow-[var(--c-shadow)]"
+          className="pointer-events-none absolute top-1.5 z-[5] -translate-x-1/2 whitespace-nowrap border border-[var(--c-line-strong)] bg-[var(--c-surface)] px-3 py-2"
           style={{ left: Math.min(Math.max(nx(hp.m), 80), w - padR - 80) }}
         >
-          <div className="text-xs text-[var(--c-muted)]">
+          <div className="text-[length:var(--fs-micro)] text-[var(--c-muted)] tnum">
             第 {Math.floor(hp.m / 12)} 年 {hp.m % 12} 月
           </div>
-          <div className="mt-1 flex items-center gap-[7px] text-xs">
-            <span className="h-[7px] w-[7px] rounded-full bg-[var(--c-accent)]" />
+          <div className="mt-1 flex items-center gap-2 text-[length:var(--fs-micro)]">
+            <span className="h-2 w-2 rounded-full bg-[var(--c-accent)]" />
             <span className="text-[var(--c-muted)]">淨值</span>
             <span className="amt ml-auto font-semibold tnum">
               NT$ {fmtCompact(hp.value)}
             </span>
           </div>
-          <div className="mt-[3px] flex items-center gap-[7px] text-xs">
-            <span className="h-[7px] w-[7px] rounded-full bg-[var(--c-muted)]" />
+          <div className="mt-0.5 flex items-center gap-2 text-[length:var(--fs-micro)]">
+            <span className="h-2 w-2 rounded-full bg-[var(--c-muted)]" />
             <span className="text-[var(--c-muted)]">累積投入</span>
             <span className="amt ml-auto font-semibold text-[var(--c-muted)] tnum">
               NT$ {fmtCompact(hp.contributed)}
@@ -356,8 +357,8 @@ function ProjectionTab({ netWorth }: { netWorth: number }) {
 
   const milestones: Milestone[] = useMemo(() => {
     const list = [
-      { target: 1e7, label: "1000 萬", color: "#7FA8C9" },
-      { target: 2e7, label: "2000 萬", color: "#7FBFA3" },
+      { target: 1e7, label: "1000 萬", color: "var(--c-alloc-fund)" },
+      { target: 2e7, label: "2000 萬", color: "var(--c-alloc-cash)" },
       { target: fireTarget, label: "FIRE", color: "var(--c-accent)" },
     ];
     return list
@@ -373,58 +374,53 @@ function ProjectionTab({ netWorth }: { netWorth: number }) {
   const isPreset = PRESETS.some((p) => p.r === ret);
 
   return (
-    <div className="rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] shadow-[var(--c-shadow)]">
+    <div className="border border-[var(--c-border)] bg-[var(--c-surface)]">
     <div className="grid grid-cols-1 items-start min-[880px]:grid-cols-[340px_1fr]">
-      {/* 控制（去盒裝，桌機用右側垂直分隔線）*/}
-      <section className="p-6 sm:p-7 min-[880px]:sticky min-[880px]:top-[var(--header-h)] min-[880px]:border-r min-[880px]:border-[var(--c-border)]">
-        <h2 className="text-[19px] font-medium tracking-tight">
-          情境設定
-        </h2>
-        <p className="mt-1 text-[12.5px] text-[var(--c-muted)]">
-          從目前淨值 <span className="amt">NT$ {fmtCompact(netWorth)}</span> 開始推算
+      {/* 控制欄：桌機用右側髮絲線跟結果分開，手機疊在上面 */}
+      <section className="p-5 sm:p-6 min-[880px]:sticky min-[880px]:top-[var(--header-h)] min-[880px]:border-r min-[880px]:border-[var(--c-border)]">
+        <h2 className="text-[length:var(--fs-lg)] font-semibold">情境設定</h2>
+        <p className="mt-1 text-[length:var(--fs-micro)] text-[var(--c-muted)]">
+          從目前淨值 <span className="amt tnum">NT$ {fmtCompact(netWorth)}</span> 開始推算
         </p>
 
-        <div className="my-4 flex flex-wrap items-center gap-1.5">
-          <span className="mr-0.5 text-xs text-[var(--c-muted)]">報酬假設</span>
-          {PRESETS.map((p) => (
-            <button
-              key={p.label}
-              type="button"
-              onClick={() => setRet(p.r)}
-              aria-pressed={ret === p.r}
-              className={`tap-row whitespace-nowrap rounded-lg border px-2.5 py-[5px] text-[12.5px] font-medium transition-colors ${
-                ret === p.r
-                  ? "border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] bg-[var(--c-accent-soft)] text-[var(--c-accent)]"
-                  : "border-[var(--c-border)] bg-[var(--c-surface-soft)] text-[var(--c-muted)]"
+        <div className="mt-5">
+          <SurveyLabel>報酬假設</SurveyLabel>
+          {/* 分段鈕：選中那格測量藍淡底加底邊 2px，跟設定頁的分段鈕同一套 */}
+          <div className="mt-2 flex flex-wrap border border-[var(--c-border)] bg-[var(--c-surface-soft)]">
+            {PRESETS.map((p) => (
+              <button
+                key={p.label}
+                type="button"
+                onClick={() => setRet(p.r)}
+                aria-pressed={ret === p.r}
+                className={`tap-row min-h-[40px] flex-1 whitespace-nowrap border-r border-[var(--c-border)] px-2.5 text-[length:var(--fs-sm)] font-semibold transition-colors ${
+                  ret === p.r ? SEG_ON : SEG_OFF
+                }`}
+              >
+                {p.label} <span className="tnum">{p.r}%</span>
+              </button>
+            ))}
+            <label
+              className={`tap-row inline-flex min-h-[40px] flex-1 cursor-text items-center justify-center gap-1 whitespace-nowrap px-2.5 text-[length:var(--fs-sm)] font-semibold transition-colors ${
+                !isPreset ? SEG_ON : SEG_OFF
               }`}
             >
-              {p.label} {p.r}%
-            </button>
-          ))}
-          <label
-            className={`tap-row inline-flex cursor-text items-center gap-1 whitespace-nowrap rounded-lg border py-1 pl-2.5 pr-2 text-[12.5px] font-medium transition-colors ${
-              !isPreset
-                ? "border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] bg-[var(--c-accent-soft)] text-[var(--c-accent)]"
-                : "border-[var(--c-border)] bg-[var(--c-surface-soft)] text-[var(--c-muted)]"
-            }`}
-          >
-            自訂
-            <input
-              type="number"
-              value={ret}
-              min={-5}
-              max={20}
-              step={0.5}
-              onChange={(e) => {
-                const v = e.target.value === "" ? 0 : Number(e.target.value);
-                setRet(Math.max(-5, Math.min(20, v)));
-              }}
-              className={`w-[42px] border-none bg-transparent text-right text-[13px] font-semibold ${
-                !isPreset ? "text-[var(--c-accent)]" : "text-[var(--c-text)]"
-              }`}
-            />
-            <span className="font-semibold text-[var(--c-muted)]">%</span>
-          </label>
+              自訂
+              <input
+                type="number"
+                value={ret}
+                min={-5}
+                max={20}
+                step={0.5}
+                onChange={(e) => {
+                  const v = e.target.value === "" ? 0 : Number(e.target.value);
+                  setRet(Math.max(-5, Math.min(20, v)));
+                }}
+                className="w-[42px] border-none bg-transparent text-right font-semibold text-inherit tnum"
+              />
+              <span aria-hidden="true">%</span>
+            </label>
+          </div>
         </div>
 
         <Slider
@@ -467,74 +463,78 @@ function ProjectionTab({ netWorth }: { netWorth: number }) {
         />
       </section>
 
-      {/* 結果（去盒裝；手機上與控制以頂線分隔）*/}
-      <section className="border-t border-[var(--c-border)] p-6 sm:p-7 min-[880px]:border-t-0">
-        <div className="mb-4 border-b border-[var(--c-border)] pb-[18px]">
-          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--c-muted)]">
-            {years} 年後預估淨值
-          </span>
-          <span className="amt mt-2 block font-mono text-[clamp(32px,5vw,46px)] font-medium leading-none tracking-[-0.02em] tnum">
+      {/* 結果欄 */}
+      <section className="border-t border-[var(--c-border)] p-5 sm:p-6 min-[880px]:border-t-0">
+        <div className="mb-5 border-b border-[var(--c-line-strong)] pb-5">
+          <SurveyLabel>{years} 年後預估淨值</SurveyLabel>
+          <span className="amt mt-2 block text-[length:var(--fs-display)] font-medium leading-none tracking-[-0.02em] tnum">
             NT$ {fmtTwd(final)}
           </span>
-          <span className="mt-3 block text-[13px] text-[var(--c-muted)]">
+          <span className="mt-3 block text-[length:var(--fs-sm)] text-[var(--c-muted)]">
             投資獲利{" "}
             <b
-              className={`amt font-semibold ${gain >= 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]"}`}
+              className={`amt font-semibold tnum ${gain >= 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]"}`}
             >
               {sign(gain)}NT$ {fmtCompact(Math.abs(gain))}
             </b>{" "}
-            · 累積投入 <span className="amt">NT$ {fmtCompact(contributed)}</span>
+            · 累積投入 <span className="amt tnum">NT$ {fmtCompact(contributed)}</span>
           </span>
         </div>
 
         <ProjectionChart pts={pts} milestones={milestones} height={280} />
-        <div className="mt-2.5 flex gap-[18px] text-xs text-[var(--c-muted)]">
-          <span className="inline-flex items-center gap-[7px]">
-            <span className="inline-block h-0 w-4 border-t-[2.4px] border-[var(--c-accent)]" />
+        <div className="mt-2.5 flex flex-wrap gap-x-5 gap-y-1 text-[length:var(--fs-micro)] text-[var(--c-muted)]">
+          <span className="inline-flex items-center gap-2">
+            <span aria-hidden="true" className="inline-block h-0 w-4 border-t-2 border-[var(--c-accent)]" />
             預估淨值
           </span>
-          <span className="inline-flex items-center gap-[7px]">
-            <span className="inline-block h-0 w-4 border-t-[1.6px] border-dashed border-[var(--c-muted)]" />
+          <span className="inline-flex items-center gap-2">
+            <span aria-hidden="true" className="inline-block h-0 w-4 border-t-2 border-dashed border-[var(--c-muted)]" />
             累積投入（本金）
           </span>
         </div>
 
-        <div className="mt-5 grid grid-cols-2 gap-px overflow-hidden rounded-[var(--r-card)] border border-[var(--c-line-strong)] bg-[var(--c-border)] shadow-[var(--c-shadow)] sm:grid-cols-4">
-          <Rstat label="4% 法則年提領" value={`NT$ ${fmtCompact(annualWithdraw)}`} mask />
-          <Rstat
+        <StatStrip cols={4} className="mt-5">
+          <Stat label="4% 法則年提領" mask value={`NT$ ${fmtCompact(annualWithdraw)}`} />
+          <Stat
             label="換算月被動收入"
-            value={`NT$ ${fmtTwd(annualWithdraw / 12)}`}
-            up
             mask
+            value={
+              <span className="text-[var(--c-up)]">NT$ {fmtTwd(annualWithdraw / 12)}</span>
+            }
           />
-          <Rstat label="總投入本金" value={`NT$ ${fmtCompact(contributed)}`} mask />
-          <Rstat
+          <Stat label="總投入本金" mask value={`NT$ ${fmtCompact(contributed)}`} />
+          <Stat
             label="獲利倍數"
             value={`${contributed > 0 ? (final / contributed).toFixed(2) : "—"}×`}
           />
-        </div>
+        </StatStrip>
 
-        <div className="mt-[22px]">
-          <span className="text-[13px] font-semibold">里程碑</span>
+        <div className="mt-6">
+          <h3 className="border-b border-[var(--c-line-strong)] pb-2 text-[length:var(--fs-md)] font-semibold">
+            里程碑
+          </h3>
+          {/* 未達成的列不降透明度，改用淡字與空心方塊；「未達成」三個字本身就是訊號 */}
           {milestones.map((m) => (
             <div
               key={m.label}
-              className={`grid grid-cols-[auto_auto_1fr_auto] items-center gap-3 border-b border-[var(--c-border)] px-0.5 py-[11px] last:border-b-0 ${
-                m.reached ? "" : "opacity-50"
-              }`}
+              className="grid grid-cols-[auto_auto_1fr_auto] items-center gap-3 border-b border-[var(--c-border-soft)] py-3 last:border-b-0"
             >
               <span
-                className="h-[9px] w-[9px] rounded-full"
-                style={{ background: m.reached ? m.color : "var(--c-faint)" }}
+                aria-hidden="true"
+                className="h-2.5 w-2.5 border"
+                style={{
+                  borderColor: m.reached ? m.color : "var(--c-faint)",
+                  background: m.reached ? m.color : "transparent",
+                }}
               />
-              <span className="whitespace-nowrap text-[13.5px] font-semibold">
+              <span className="whitespace-nowrap text-[length:var(--fs-sm)] font-semibold">
                 {m.label}
               </span>
-              <span className="amt text-[12.5px] text-[var(--c-muted)] tnum">
+              <span className="amt text-[length:var(--fs-micro)] text-[var(--c-muted)] tnum">
                 NT$ {fmtCompact(m.target)}
               </span>
               <span
-                className={`whitespace-nowrap text-right text-[12.5px] ${
+                className={`whitespace-nowrap text-right text-[length:var(--fs-micro)] tnum ${
                   m.reached ? "text-[var(--c-text)]" : "text-[var(--c-faint)]"
                 }`}
               >
@@ -549,28 +549,10 @@ function ProjectionTab({ netWorth }: { netWorth: number }) {
   );
 }
 
-function Rstat({
-  label,
-  value,
-  up,
-  mask,
-}: {
-  label: string;
-  value: string;
-  up?: boolean;
-  mask?: boolean; // 金額才遮；倍數 / 年數不遮
-}) {
-  return (
-    <div className="bg-[var(--c-surface)] px-4 py-3.5">
-      <span className="block text-xs text-[var(--c-muted)]">{label}</span>
-      <span
-        className={`mt-1.5 block whitespace-nowrap font-mono text-xl font-medium tnum ${up ? "text-[var(--c-up)]" : ""} ${mask ? "amt" : ""}`}
-      >
-        {value}
-      </span>
-    </div>
-  );
-}
+const SEG_ON =
+  "bg-[var(--c-accent-soft)] text-[var(--c-accent)] shadow-[inset_0_-2px_0_var(--c-accent)]";
+const SEG_OFF =
+  "text-[var(--c-muted)] hover:bg-[var(--c-surface)] hover:text-[var(--c-text)]";
 
 /* ---------- 回測對照分頁 ---------- */
 function CounterfactualTab({ cf }: { cf: CounterfactualData }) {
@@ -580,20 +562,20 @@ function CounterfactualTab({ cf }: { cf: CounterfactualData }) {
 
   return (
     <div>
-      <div className="mb-7 grid grid-cols-1 gap-px overflow-hidden rounded-[var(--r-card)] border border-[var(--c-line-strong)] bg-[var(--c-border)] shadow-[var(--c-shadow)] sm:grid-cols-2">
-        <div className="bg-[var(--c-surface)] px-5 py-[18px]">
-          <span className="text-xs text-[var(--c-muted)]">累積投入</span>
-          <span className="amt mt-1.5 block font-mono text-[26px] font-medium tnum">
+      <section className="mb-7 grid grid-cols-1 gap-px border border-[var(--c-border)] bg-[var(--c-border)] sm:grid-cols-2">
+        <div className="bg-[var(--c-surface)] px-5 py-4">
+          <SurveyLabel>累積投入</SurveyLabel>
+          <span className="amt mt-1.5 block text-[length:var(--fs-xl)] font-medium tnum">
             NT$ {fmtTwd(cf.invested)}
           </span>
-          <span className="mt-1 block text-xs text-[var(--c-faint)]">
+          <span className="mt-1 block text-[length:var(--fs-micro)] text-[var(--c-faint)] tnum">
             從 {cf.firstDate} 起 · {cf.contributions} 筆投入
           </span>
         </div>
-        <div className="bg-[var(--c-surface)] px-5 py-[18px]">
-          <span className="text-xs text-[var(--c-muted)]">目前實際組合</span>
+        <div className="bg-[var(--c-surface)] px-5 py-4">
+          <SurveyLabel>目前實際組合</SurveyLabel>
           <span
-            className={`amt mt-1.5 block font-mono text-[26px] font-medium tnum ${
+            className={`amt mt-1.5 block text-[length:var(--fs-xl)] font-medium tnum ${
               (actual?.returnPct ?? 0) >= 0
                 ? "text-[var(--c-up)]"
                 : "text-[var(--c-down)]"
@@ -601,68 +583,66 @@ function CounterfactualTab({ cf }: { cf: CounterfactualData }) {
           >
             NT$ {fmtTwd(actualValue)}
           </span>
-          <span className="mt-1 block text-xs text-[var(--c-faint)]">
+          <span className="mt-1 block text-[length:var(--fs-micro)] text-[var(--c-faint)] tnum">
             報酬 {sign(actual?.returnPct ?? 0)}
             {Math.abs((actual?.returnPct ?? 0) * 100).toFixed(1)}%
           </span>
         </div>
-      </div>
+      </section>
 
-      <section className="border-t border-[var(--c-border)] pt-7">
-        <h2 className="text-[19px] font-medium tracking-tight">
-          如果當初全買 ETF 並 Buy &amp; Hold
-        </h2>
-        <p className="mt-1 text-[12.5px] text-[var(--c-muted)]">
-          用每次投入的當日收盤價買入，之後不賣出、不計成本 — 今天會值多少？
-        </p>
-        <div className="mt-[18px] flex flex-col gap-2">
+      <section>
+        <div className="border-b border-[var(--c-line-strong)] pb-2">
+          <h2 className="text-[length:var(--fs-lg)] font-semibold">
+            如果當初全買 ETF 並 Buy &amp; Hold
+          </h2>
+          <p className="mt-1 text-[length:var(--fs-micro)] text-[var(--c-muted)]">
+            用每次投入的當日收盤價買入，之後不賣出、不計成本 — 今天會值多少？
+          </p>
+        </div>
+        <ol className="mt-3 border border-[var(--c-border)] bg-[var(--c-surface)]">
           {cf.rows.map((r, i) => {
             const diff = r.finalValue - actualValue;
             return (
-              <div
+              <li
                 key={r.label}
-                className={`grid grid-cols-[auto_1fr] items-center gap-[13px] rounded-xl border p-[13px] ${
-                  r.actual
-                    ? "border-[color-mix(in_srgb,var(--c-accent)_45%,transparent)] bg-[var(--c-accent-soft)]"
-                    : "border-transparent"
+                className={`grid grid-cols-[auto_1fr] items-start gap-4 border-t border-[var(--c-border-soft)] px-5 py-4 first:border-t-0 ${
+                  r.actual ? "bg-[var(--c-accent-soft)] shadow-[inset_2px_0_0_var(--c-accent)]" : ""
                 }`}
               >
-                <div className="w-[18px] text-center text-[17px] text-[var(--c-faint)] tnum">
+                <div className="w-5 pt-0.5 text-center text-[length:var(--fs-sm)] text-[var(--c-faint)] tnum">
                   {i + 1}
                 </div>
                 <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-[9px]">
+                  <div className="flex flex-wrap items-center gap-2.5">
                     <span
-                      className="h-2.5 w-2.5 shrink-0 rounded-[var(--r-control)]"
+                      aria-hidden="true"
+                      className="h-2.5 w-2.5 shrink-0"
                       style={{ background: r.color }}
                     />
-                    <span className="whitespace-nowrap text-[14.5px] font-semibold">
+                    <span className="whitespace-nowrap text-[length:var(--fs-md)] font-semibold">
                       {r.label}
                       {r.sym && (
-                        <span className="ml-1.5 text-xs font-medium text-[var(--c-muted)]">
+                        <span className="ml-1.5 text-[length:var(--fs-micro)] font-medium text-[var(--c-muted)] tnum">
                           {r.sym}
                         </span>
                       )}
                     </span>
-                    {r.actual && (
-                      <span className="rounded-[var(--r-control)] bg-[color-mix(in_srgb,var(--c-accent)_16%,transparent)] px-[7px] py-0.5 text-xs font-semibold text-[var(--c-accent)]">
-                        實際
-                      </span>
-                    )}
-                    <span className="amt ml-auto whitespace-nowrap text-[15px] font-semibold tnum">
+                    {r.actual && <Tag tone="accent">實際</Tag>}
+                    <span className="amt ml-auto whitespace-nowrap text-[length:var(--fs-md)] font-semibold tnum">
                       NT$ {fmtTwd(r.finalValue)}
                     </span>
                   </div>
-                  <div className="mt-[9px] h-[7px] overflow-hidden rounded bg-[var(--c-surface-soft)]">
+                  {/* 長度條用 scaleX，不動 width */}
+                  <div className="mt-2.5 h-1.5 overflow-hidden bg-[var(--c-surface-soft)]">
                     <span
-                      className="motion-progress block h-full rounded transition-[width] duration-300 ease-out"
+                      className="motion-progress block h-full origin-left transition-transform duration-300 ease-out"
                       style={{
-                        width: `${(r.finalValue / maxVal) * 100}%`,
+                        transform: `scaleX(${r.finalValue / maxVal})`,
                         background: r.color,
                       }}
                     />
                   </div>
-                  <div className="mt-2 flex gap-4 text-xs tnum">
+                  <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[length:var(--fs-micro)] tnum">
                     <span
                       className={
                         r.returnPct >= 0
@@ -682,18 +662,15 @@ function CounterfactualTab({ cf }: { cf: CounterfactualData }) {
                         vs 實際 <span className="amt">{sign(diff)}NT$ {fmtCompact(Math.abs(diff))}</span>
                       </span>
                     )}
-                    {r.skipped > 0 && (
-                      <span className="text-[var(--c-down)]">
-                        {r.skipped} 筆投入無價格被跳過
-                      </span>
-                    )}
+                    {/* 資料缺口不是虧損，用朱砂註記而不是跌色 */}
+                    {r.skipped > 0 && <Tag tone="annot">{r.skipped} 筆投入無價格被跳過</Tag>}
                   </div>
                 </div>
-              </div>
+              </li>
             );
           })}
-        </div>
-        <p className="mt-4 text-xs leading-relaxed text-[var(--c-faint)]">
+        </ol>
+        <p className="mt-4 border-t border-[var(--c-border)] pt-3 text-[length:var(--fs-micro)] leading-relaxed text-[var(--c-faint)]">
           假設：投入 = 現金流為負的紀錄；配息/賣出視為未發生（buy-and-hold）；SPY/QQQ
           用當日收盤×匯率；未計交易成本與再投資。過去績效不代表未來。
         </p>
@@ -739,10 +716,11 @@ export function WhatIfClient({
 
   return (
     <div>
+      {/* 分頁列：方角分段鈕，選中那格淡底加底邊 2px */}
       <div
         role="tablist"
         aria-label="情境推演工具"
-        className="mb-6 inline-flex flex-wrap rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] p-[3px]"
+        className="mb-6 flex flex-wrap border border-[var(--c-border)] bg-[var(--c-surface-soft)] sm:inline-flex"
       >
         {WHATIF_TABS.map((t) => (
           <button
@@ -755,10 +733,8 @@ export function WhatIfClient({
             aria-selected={tab === t}
             aria-controls={tab === t ? `${tabBase}-panel-${t}` : undefined}
             tabIndex={tab === t ? 0 : -1}
-            className={`tap-row whitespace-nowrap rounded-md px-[18px] py-2 text-[13.5px] font-semibold transition-colors ${
-              tab === t
-                ? "bg-[var(--c-surface)] text-[var(--c-text)] shadow-sm"
-                : "text-[var(--c-muted)]"
+            className={`tap-row min-h-[44px] flex-1 whitespace-nowrap border-r border-[var(--c-border)] px-4 text-[length:var(--fs-sm)] font-semibold transition-colors last:border-r-0 sm:flex-none ${
+              tab === t ? SEG_ON : SEG_OFF
             }`}
           >
             {WHATIF_TAB_LABEL[t]}
@@ -786,7 +762,7 @@ export function WhatIfClient({
         ) : counterfactual ? (
           <CounterfactualTab cf={counterfactual} />
         ) : (
-          <div className="rounded-2xl border border-dashed border-[var(--c-border)] bg-[var(--c-surface)] px-6 py-12 text-center text-sm text-[var(--c-muted)]">
+          <div className="border border-dashed border-[var(--c-line-strong)] bg-[var(--c-surface)] px-6 py-12 text-center text-[length:var(--fs-sm)] text-[var(--c-muted)]">
             還沒有任何投入紀錄，先到帳戶頁建立帳戶並加碼後再回來看回測對照。
           </div>
         )}

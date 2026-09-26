@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Panel, SurveyLabel, Tag } from "@/components/survey";
 import { ASSET_CLASS_LABEL } from "@/lib/dashboard-data";
 import { fmtFull } from "@/lib/format";
 import { planRebalance } from "@/lib/rebalance";
@@ -28,7 +29,7 @@ export function RebalanceTab({ data }: { data: RebalanceData }) {
 
   if (plan.rows.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-[var(--c-border)] bg-[var(--c-surface)] px-6 py-12 text-center text-sm text-[var(--c-muted)]">
+      <div className="border border-dashed border-[var(--c-line-strong)] bg-[var(--c-surface)] px-6 py-12 text-center text-[length:var(--fs-sm)] text-[var(--c-muted)]">
         {plan.notes[0] ??
           "還沒有可估值的持倉，先到帳戶頁建立帳戶後再回來看再平衡建議。"}
       </div>
@@ -36,16 +37,15 @@ export function RebalanceTab({ data }: { data: RebalanceData }) {
   }
 
   return (
-    <div className="flex flex-col gap-5">
-      <section className="rounded-2xl border border-[var(--c-border)] bg-[var(--c-surface)] p-5">
-        <h2 className="text-[15px] font-semibold">這次要投入多少</h2>
-        <p className="mt-1 text-[12px] text-[var(--c-muted)]">
+    <div className="flex flex-col gap-6">
+      <Panel title="這次要投入多少">
+        <p className="text-[length:var(--fs-sm)] leading-relaxed text-[var(--c-muted)]">
           只買不賣。賣出會實現損益、計入海外所得，所以這裡算的是「新資金該怎麼分」，
           不是「該賣掉什麼」。
         </p>
 
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          <label className="flex items-center gap-2 text-[13px]">
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <label className="flex items-center gap-2 text-[length:var(--fs-sm)]">
             <span className="text-[var(--c-muted)]">NT$</span>
             <input
               type="number"
@@ -56,27 +56,30 @@ export function RebalanceTab({ data }: { data: RebalanceData }) {
                 setContribution(Math.max(0, Number(e.target.value) || 0))
               }
               placeholder="0"
-              className="tnum h-11 w-[140px] rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3 text-right text-[14px] font-semibold text-[var(--c-text)]"
+              className="field h-11 w-[140px] py-0 text-right font-semibold tnum"
             />
           </label>
-          {PRESETS.map((v) => (
-            <button
-              key={v}
-              type="button"
-              onClick={() => setContribution(v)}
-              aria-pressed={contribution === v}
-              className={`h-11 rounded-[var(--r-control)] border px-3 text-[12.5px] font-medium transition-colors ${
-                contribution === v
-                  ? "border-[var(--c-accent)] bg-[var(--c-accent-soft)] text-[var(--c-text)]"
-                  : "border-[var(--c-border)] text-[var(--c-muted)] hover:text-[var(--c-text)]"
-              }`}
-            >
-              {v === 0 ? "不投入" : `${(v / 10_000).toLocaleString("en-US")} 萬`}
-            </button>
-          ))}
+          {/* 快捷金額：方角分段鈕，跟推算分頁的報酬假設同一套 */}
+          <div className="flex flex-wrap border border-[var(--c-border)] bg-[var(--c-surface-soft)]">
+            {PRESETS.map((v) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setContribution(v)}
+                aria-pressed={contribution === v}
+                className={`tap-row min-h-[44px] border-r border-[var(--c-border)] px-3 text-[length:var(--fs-sm)] font-semibold transition-colors last:border-r-0 ${
+                  contribution === v
+                    ? "bg-[var(--c-accent-soft)] text-[var(--c-accent)] shadow-[inset_0_-2px_0_var(--c-accent)]"
+                    : "text-[var(--c-muted)] hover:bg-[var(--c-surface)] hover:text-[var(--c-text)]"
+                }`}
+              >
+                {v === 0 ? "不投入" : <span className="tnum">{(v / 10_000).toLocaleString("en-US")} 萬</span>}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <dl className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <dl className="mt-5 grid grid-cols-1 gap-px border border-[var(--c-border)] bg-[var(--c-border)] sm:grid-cols-3">
           <Stat label="目前總市值" value={plan.totalTwd} />
           <Stat
             label="補平全部低配需要"
@@ -89,57 +92,57 @@ export function RebalanceTab({ data }: { data: RebalanceData }) {
           />
           <Stat label="未分配餘額" value={plan.unallocatedTwd} />
         </dl>
-      </section>
+      </Panel>
 
-      <section className="overflow-hidden rounded-2xl border border-[var(--c-border)] bg-[var(--c-surface)]">
-        <p className="scroll-cue px-4 pt-2">左右滑動查看完整欄位</p>
+      <Panel title="各類別配置" flush>
+        <p className="scroll-cue px-5 pt-2">左右滑動查看完整欄位</p>
         <div className="scroll-region overflow-x-auto" tabIndex={0} aria-label="再平衡配置表，可水平捲動">
-          <table className="w-full min-w-[640px] text-[13px]">
-            <thead>
-              <tr className="border-b border-[var(--c-border)] text-left text-xs uppercase tracking-wider text-[var(--c-faint)]">
-                <th scope="col" className="px-4 py-3 font-medium">類別</th>
-                <th scope="col" className="px-4 py-3 text-right font-medium">目標</th>
-                <th scope="col" className="px-4 py-3 text-right font-medium">實際</th>
-                <th scope="col" className="px-4 py-3 text-right font-medium">偏離</th>
-                <th scope="col" className="px-4 py-3 text-right font-medium">差額</th>
-                <th scope="col" className="px-4 py-3 text-right font-medium">本次配置</th>
-                <th scope="col" className="px-4 py-3 text-right font-medium">投入後</th>
+          <table className="w-full min-w-[640px] text-[length:var(--fs-sm)]">
+            <thead className="border-b border-[var(--c-line-strong)] text-left text-[length:var(--fs-micro)] tracking-[0.06em] text-[var(--c-muted)]">
+              <tr>
+                <th scope="col" className="px-5 py-2.5 font-semibold">類別</th>
+                <th scope="col" className="px-3 py-2.5 text-right font-semibold">目標</th>
+                <th scope="col" className="px-3 py-2.5 text-right font-semibold">實際</th>
+                <th scope="col" className="px-3 py-2.5 text-right font-semibold">偏離</th>
+                <th scope="col" className="px-3 py-2.5 text-right font-semibold">差額</th>
+                <th scope="col" className="px-3 py-2.5 text-right font-semibold">本次配置</th>
+                <th scope="col" className="px-5 py-2.5 text-right font-semibold">投入後</th>
               </tr>
             </thead>
             <tbody>
               {plan.rows.map((r) => (
                 <tr
                   key={r.assetClass}
-                  className="border-b border-[var(--c-border-soft)] last:border-b-0"
+                  className="border-t border-[var(--c-border-soft)] first:border-t-0"
                 >
-                  <th scope="row" className="px-4 py-3 text-left font-medium">
+                  <th scope="row" className="px-5 py-3 text-left font-medium">
                     {ASSET_CLASS_LABEL[r.assetClass] ?? r.assetClass}
                     {r.untargeted && (
-                      <span className="ml-2 rounded-full border border-[var(--c-border)] px-1.5 py-px text-xs font-normal text-[var(--c-faint)]">
-                        未設目標
+                      <span className="ml-2">
+                        <Tag tone="quiet">未設目標</Tag>
                       </span>
                     )}
                   </th>
-                  <td className="tnum px-4 py-3 text-right text-[var(--c-muted)]">
+                  <td className="tnum px-3 py-3 text-right text-[var(--c-muted)]">
                     {r.targetPct.toFixed(0)}%
                   </td>
-                  <td className="tnum px-4 py-3 text-right">{r.actualPct.toFixed(1)}%</td>
+                  <td className="tnum px-3 py-3 text-right">{r.actualPct.toFixed(1)}%</td>
                   <td
-                    className="tnum px-4 py-3 text-right"
+                    className="tnum px-3 py-3 text-right"
                     style={{ color: driftColor(r.driftPp) }}
                   >
                     {signed(r.driftPp, 1)}pp
                   </td>
                   <td
-                    className="amt tnum px-4 py-3 text-right"
+                    className="amt tnum px-3 py-3 text-right"
                     style={{ color: driftColor(-r.gapTwd) }}
                   >
                     {signedTwd(r.gapTwd)}
                   </td>
-                  <td className="amt tnum px-4 py-3 text-right font-semibold">
+                  <td className="amt tnum px-3 py-3 text-right font-semibold">
                     {r.contributionTwd > 0 ? fmtFull(r.contributionTwd) : "—"}
                   </td>
-                  <td className="tnum px-4 py-3 text-right text-[var(--c-muted)]">
+                  <td className="tnum px-5 py-3 text-right text-[var(--c-muted)]">
                     {r.afterPct.toFixed(1)}%
                   </td>
                 </tr>
@@ -147,13 +150,13 @@ export function RebalanceTab({ data }: { data: RebalanceData }) {
             </tbody>
           </table>
         </div>
-      </section>
+      </Panel>
 
-      <section className="rounded-2xl border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-5 py-4">
-        <h3 className="text-[12px] font-semibold uppercase tracking-wider text-[var(--c-faint)]">
+      <aside className="border-t border-[var(--c-border)] pt-3">
+        <h3 className="text-[length:var(--fs-micro)] font-semibold tracking-[0.06em] text-[var(--c-muted)]">
           前提與限制
         </h3>
-        <ul className="mt-2 list-disc space-y-1 pl-5 text-[12px] leading-relaxed text-[var(--c-muted)]">
+        <ul className="mt-2 list-[square] space-y-1 pl-5 text-[length:var(--fs-micro)] leading-relaxed text-[var(--c-faint)]">
           {plan.notes.map((n) => (
             <li key={n}>{n}</li>
           ))}
@@ -166,11 +169,13 @@ export function RebalanceTab({ data }: { data: RebalanceData }) {
             以資產類別為單位計算，不細分到個別帳戶或標的。同類別內要買哪一檔由你決定。
           </li>
         </ul>
-      </section>
+      </aside>
     </div>
   );
 }
 
+/* 指標格。投入不夠補滿時不用跌色（這不是虧損），改用朱砂註記：
+   標籤列多一條虛線引線與提示字，跟情境分頁的檢核格同一個規則。 */
 function Stat({
   label,
   value,
@@ -181,12 +186,17 @@ function Stat({
   hint?: string;
 }) {
   return (
-    <div>
-      <dt className="text-xs uppercase tracking-wider text-[var(--c-faint)]">
-        {label}
+    <div className="bg-[var(--c-surface)] px-4 py-3.5">
+      <dt className="flex items-center gap-2">
+        <SurveyLabel className="shrink-0">{label}</SurveyLabel>
+        {hint && (
+          <span aria-hidden="true" className="h-0 min-w-3 flex-1 border-t border-dashed border-[var(--c-annot)]" />
+        )}
       </dt>
-      <dd className="amt tnum mt-1 text-[17px] font-semibold">{fmtFull(value)}</dd>
-      {hint && <p className="mt-0.5 text-xs text-[var(--c-warn)]">{hint}</p>}
+      <dd className="amt tnum mt-1.5 text-[length:var(--fs-md)] font-semibold">{fmtFull(value)}</dd>
+      {hint && (
+        <dd className="mt-1 text-[length:var(--fs-micro)] font-semibold text-[var(--c-annot-text)]">{hint}</dd>
+      )}
     </div>
   );
 }
