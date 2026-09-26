@@ -4,20 +4,39 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="dark light">
+<script>
+  // 同 src/app/layout.tsx 的 themeInit；只設主題，其餘旗標這頁用不到
+  (function () {
+    try {
+      var pref = localStorage.getItem('themePref') || localStorage.getItem('theme') || 'system';
+      if (pref !== 'light' && pref !== 'dark') pref = 'system';
+      var resolved = pref === 'system'
+        ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+        : pref;
+      document.documentElement.dataset.theme = resolved;
+    } catch (e) {}
+  })();
+</script>
 <title>StackWorth — 離線</title>
 <style>
   /* 純靜態頁：SW 斷線時才會出現，拿不到 globals.css 與自架字體，
      所以色值照抄 globals.css 兩個主題的 token，字體用系統字。
-     站內主題切換存在 localStorage，這裡讀不到，只跟隨系統設定。 */
-  :root {
+     跟站內同源，localStorage 讀得到：下方 script 照 layout.tsx 的 themeInit
+     設 data-theme。三層順序：script 設的 data-theme 優先；script 沒跑（或
+     localStorage 被封鎖）時退回系統設定；兩者都沒有時是深色。 */
+  :root, :root[data-theme="dark"] {
     --page: #0e151b; --text: #dce6e9; --muted: #9fb0b5;
     --accent: #6aaac6; --btn-text: #0e151b; --line: rgba(220, 230, 233, 0.24);
   }
   @media (prefers-color-scheme: light) {
-    :root {
+    :root:not([data-theme="dark"]) {
       --page: #e7eef0; --text: #101820; --muted: #46565f;
       --accent: #195f7a; --btn-text: #f4f8f9; --line: rgba(16, 24, 32, 0.32);
     }
+  }
+  :root[data-theme="light"] {
+    --page: #e7eef0; --text: #101820; --muted: #46565f;
+    --accent: #195f7a; --btn-text: #f4f8f9; --line: rgba(16, 24, 32, 0.32);
   }
   body { margin: 0; min-height: 100vh; min-height: 100dvh; display: flex; align-items: center; padding: 24px;
          box-sizing: border-box; background: var(--page); color: var(--text);
