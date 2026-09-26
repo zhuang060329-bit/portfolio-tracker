@@ -53,10 +53,12 @@ export function StickySummary({
   const hasDay = s.dayChange != null && s.dayChangePct != null;
 
   return (
+    /* 實心頁面底色，不用毛玻璃：測繪桌是紙面，浮層就是另一張紙，
+       透出底下的製圖格線與數字只會跟這列摘要搶讀。 */
     <div
       aria-hidden="true"
       style={{ top }}
-      className={`fixed inset-x-0 z-30 border-b border-[var(--c-border)] bg-[color-mix(in_srgb,var(--c-page)_92%,transparent)] backdrop-blur-xl transition-opacity duration-200 md:hidden ${
+      className={`fixed inset-x-0 z-30 border-b border-[var(--c-line-strong)] bg-[var(--c-page)] transition-opacity duration-200 md:hidden ${
         shown ? "opacity-100" : "pointer-events-none opacity-0"
       }`}
     >

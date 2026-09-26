@@ -4,7 +4,7 @@ import { Sparkline, type SeriesPoint } from "./DashboardCharts";
 import { fmtUpdatedAt } from "@/lib/format";
 import { RefreshPricesButton } from "@/components/RefreshPricesButton";
 import type { DashSummary } from "./types";
-import { sign, TONE_TEXT, type Tone } from "./shared";
+import { sign, SurveyLabel, TONE_TEXT, type Tone } from "./shared";
 
 export function Hero({
   s,
@@ -29,9 +29,7 @@ export function Hero({
             金額降級成 div，標題另外用 sr-only 給。sr-only 是 clip-path 不是
             display:none，元素仍留在無障礙樹裡，而 CardHead 用 h2，層級接得上。 */}
         <h1 className="sr-only">投資組合總覽</h1>
-        <p className="text-[length:var(--fs-micro)] font-semibold tracking-[0.08em] text-[var(--c-muted)]">
-          總淨資產
-        </p>
+        <SurveyLabel>總淨資產</SurveyLabel>
         <div className="mt-3 flex min-w-0 items-baseline gap-2 font-mono">
           <span className="shrink-0 text-[length:var(--fs-sm)] font-medium text-[var(--c-faint)] sm:text-[length:var(--fs-md)]">
             NT$
@@ -45,12 +43,20 @@ export function Hero({
               375px 下字級 40px、可用寬度約 305px：九位數 999,999,999 約 290px
               （含 NT$），十位數以上會溢出到右側——個人資產不太會到，先不處理。
               tracking 收到 -0.02em：等寬字再收緊就會黏在一起。 */}
-          <span className="amt min-w-0 whitespace-nowrap text-[length:var(--fs-display)] font-semibold leading-[0.92] tracking-[-0.02em] tnum">
-            {Math.round(s.total).toLocaleString("en-US")}
+          {/* 尺寸線：數字底下一條兩端帶刻度的髮絲線，量的就是這個數字的寬度。
+              用 border 畫而不是 SVG，寬度自動跟著數字走，不必量字。 */}
+          <span className="relative min-w-0">
+            <span className="amt whitespace-nowrap text-[length:var(--fs-display)] font-semibold leading-[0.92] tracking-[-0.02em] tnum">
+              {Math.round(s.total).toLocaleString("en-US")}
+            </span>
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute -bottom-3 left-0 right-0 h-[7px] border-x border-b border-[var(--c-line-strong)]"
+            />
           </span>
         </div>
 
-        <div className="mt-4 flex flex-col gap-2 text-[length:var(--fs-sm)] sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4 sm:gap-y-1">
+        <div className="mt-6 flex flex-col gap-2 text-[length:var(--fs-sm)] sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4 sm:gap-y-1">
           {hasDay && (
             <span className={`font-semibold tnum ${TONE_TEXT[s.dayChange! >= 0 ? "up" : "down"]}`}>
               <span className="amt">
@@ -76,9 +82,7 @@ export function Hero({
       {recent.length >= 2 && (
         <div className="border-t border-[var(--c-border)] pt-4 sm:border-l sm:border-t-0 sm:pl-6 sm:pt-0">
           <div className="mb-2 flex items-center justify-between gap-3">
-            <span className="text-[length:var(--fs-micro)] font-semibold tracking-[0.06em] text-[var(--c-muted)]">
-              近 30 日
-            </span>
+            <SurveyLabel>近 30 日</SurveyLabel>
             <span
               className={`amt text-[length:var(--fs-micro)] font-semibold tnum ${up30 ? "text-[var(--c-up)]" : "text-[var(--c-down)]"}`}
             >
@@ -112,7 +116,7 @@ export function HeroStat({
     /* 底色跟著頁面而不是卡片：這四格屬於一級摘要區，不再是卡片內容。
        仍需要明確的底色，因為父層用自身底色透出當分隔線。 */
     <div className="min-w-0 bg-[var(--c-page)] px-4 py-4 sm:px-5 sm:py-[18px]">
-      <div className="text-[length:var(--fs-micro)] font-medium text-[var(--c-muted)]">{label}</div>
+      <SurveyLabel>{label}</SurveyLabel>
       {/* 手機降一級。實測 390 寬時半格可用 163px，而「NT$ 1,075,921」在
           22px 等寬下要 164px——差 1px 就被 truncate 切成「NT$ 1,075...」。
           等寬數字比原本的 sans 寬，這是換字體帶進來的，改前 20px sans 沒事。

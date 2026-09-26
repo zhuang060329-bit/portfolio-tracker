@@ -146,7 +146,7 @@ export function DashboardClient({
             main 的內容寬是 min(vw,1200)−56。1180px 時內容 1124px 剛好
             760+20+344；再窄就會逼表格長出橫向捲軸，所以以下改成上下堆疊
             （堆疊時配置仍緊接在持倉之後，不再隔著整張趨勢圖）。 */}
-        <section className="mt-9 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] min-[1180px]:grid min-[1180px]:grid-cols-[minmax(760px,1fr)_344px]">
+        <section className="survey-frame mt-9 border border-[var(--c-border)] bg-[var(--c-surface)] min-[1180px]:grid min-[1180px]:grid-cols-[minmax(760px,1fr)_344px]">
           <div className="min-w-0">
             <Holdings
               demo={demo}

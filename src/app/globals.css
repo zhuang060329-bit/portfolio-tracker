@@ -848,6 +848,31 @@ textarea:disabled {
   animation: tooltip-in 0.12s ease both;
 }
 
+/* 套準記號框：在容器四角外側各畫一個 L 形角標，像製圖紙的裁切記號。
+   只給一頁裡的核心資料區（首頁的持倉與配置、趨勢圖），多了就變成花邊。
+   畫在 ::before 上，inset -5px 讓角標落在邊框外；容器本身不能 overflow:hidden，
+   否則角標會被裁掉。8 段 gradient 各負責一條短線，不需要額外 DOM。 */
+.survey-frame {
+  position: relative;
+}
+.survey-frame::before {
+  --m: var(--c-line-strong);
+  content: "";
+  position: absolute;
+  inset: -5px;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--m), var(--m)) left top / 9px 1px,
+    linear-gradient(var(--m), var(--m)) left top / 1px 9px,
+    linear-gradient(var(--m), var(--m)) right top / 9px 1px,
+    linear-gradient(var(--m), var(--m)) right top / 1px 9px,
+    linear-gradient(var(--m), var(--m)) left bottom / 9px 1px,
+    linear-gradient(var(--m), var(--m)) left bottom / 1px 9px,
+    linear-gradient(var(--m), var(--m)) right bottom / 9px 1px,
+    linear-gradient(var(--m), var(--m)) right bottom / 1px 9px;
+  background-repeat: no-repeat;
+}
+
 @keyframes fade-in-only {
   from {
     opacity: 0;

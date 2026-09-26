@@ -183,7 +183,7 @@ export function Holdings({
                 <col className="w-[17%]" />
               </colgroup>
               <thead>
-                <tr className="border-y border-[var(--c-border)] bg-[var(--c-surface-soft)] text-[length:var(--fs-micro)] font-semibold tracking-[0.06em] text-[var(--c-muted)]">
+                <tr className="border-b border-t border-b-[var(--c-border)] border-t-[var(--c-line-strong)] text-[length:var(--fs-micro)] font-semibold tracking-[0.06em] text-[var(--c-muted)]">
                   <TableHead
                     onClick={() => setSort("name")}
                     align="left"
@@ -251,7 +251,7 @@ export function Holdings({
                             <div className="mt-0.5 flex items-center gap-2 text-[length:var(--fs-micro)] text-[var(--c-faint)]">
                               {holding.symbol && <span>{holding.symbol}</span>}
                               {holding.status === "archived" && (
-                                <span className="rounded border border-[var(--c-border)] px-1.5 py-0.5">
+                                <span className="border border-dashed border-[var(--c-line-strong)] px-1.5 py-0.5">
                                   已封存
                                 </span>
                               )}
@@ -273,9 +273,15 @@ export function Holdings({
                           <span className="block text-right text-[var(--c-faint)]">—</span>
                         ) : (
                           <span className="flex items-center gap-3">
-                            <span className="h-1 min-w-0 flex-1 overflow-hidden bg-[var(--c-border)]">
+                            {/* 量尺：底線是 0–100% 的軌道，50% 處一根刻度，
+                                每一列的刻度上下對齊成一條讀數線，比長短時有個參照。 */}
+                            <span className="relative h-[7px] min-w-0 flex-1 border-b border-[var(--c-line-strong)]">
                               <span
-                                className="block h-full"
+                                aria-hidden="true"
+                                className="absolute bottom-0 left-1/2 h-[5px] w-px bg-[var(--c-line-strong)]"
+                              />
+                              <span
+                                className="absolute bottom-0 left-0 block h-1"
                                 style={{
                                   width: `${Math.min(100, share)}%`,
                                   background: allocColor(holding.cls),
@@ -361,7 +367,7 @@ export function Holdings({
                             </>
                           )}
                           {holding.status === "archived" && (
-                            <span className="rounded border border-[var(--c-border)] px-1.5 py-0.5">
+                            <span className="border border-dashed border-[var(--c-line-strong)] px-1.5 py-0.5">
                               已封存
                             </span>
                           )}
@@ -476,8 +482,8 @@ function TableHead({
     <th scope="col" aria-sort={sorted ?? "none"} className={alignClass}>
       {/* 正在排序的欄原本只有一個箭頭，欄名本身跟其他欄一模一樣。
           改用與手機藥丸、區間鈕同一套 PICK 語彙，三個地方講同一句話。
-          表頭列自身底色是 surface-soft，選中填色會與底色同色而看不出來，
-          所以這裡只取語彙裡的文字訊號（accent + 字重）。 */}
+          只取語彙裡的文字訊號（accent + 字重）：表頭是髮絲線夾住的一列，
+          不是一塊底色，選中時多一塊填色反而會變成表格裡唯一的色塊。 */}
       <button
         type="button"
         onClick={onClick}

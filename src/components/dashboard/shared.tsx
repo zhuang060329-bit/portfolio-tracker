@@ -58,3 +58,25 @@ export function CardHead({
     </div>
   );
 }
+
+/* 測量註記的標籤：前面一個 7px 的十字套準記號，後面是字。
+   十字只是記號，不帶意義，所以對輔助技術隱藏。
+   字仍用 Plex Sans：中文會落到 Noto Sans TC，Mono 只在數字上用。 */
+export function SurveyLabel({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 text-[length:var(--fs-micro)] font-semibold tracking-[0.06em] text-[var(--c-muted)] ${className}`}
+    >
+      <svg width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" className="shrink-0">
+        <path d="M3.5 0V7M0 3.5H7" stroke="var(--c-accent)" strokeWidth="1" />
+      </svg>
+      {children}
+    </span>
+  );
+}
