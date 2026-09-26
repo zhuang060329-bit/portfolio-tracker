@@ -423,7 +423,9 @@ main:focus {
 }
 
 /* Bencho Inline confirm：破壞性按鈕直接在原位置展開確認，不把注意力搬去 modal。
-   StackWorth 不提供假 undo；資料真正刪除前一定先出現取消與確認兩個選項。 */
+   StackWorth 不提供假 undo；資料真正刪除前一定先出現取消與確認兩個選項。
+   寬度在兩個階段之間瞬間切換，不做 width transition（會逐格觸發版面重排）；
+   動的是裡面的確認組，用 opacity + translateX 從觸發鈕的位置滑入。 */
 .inline-confirm-shell {
   display: inline-flex;
   min-width: 44px;
@@ -434,7 +436,22 @@ main:focus {
   border: 1px solid var(--c-border);
   border-radius: var(--r-control);
   background: var(--c-surface);
-  transition: width 220ms cubic-bezier(0.2, 0.8, 0.2, 1), border-color 140ms ease;
+  transition: border-color 140ms ease;
+}
+
+.inline-confirm-body {
+  animation: inline-confirm-in 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes inline-confirm-in {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .inline-confirm-shell[data-phase="idle"] {
@@ -1047,7 +1064,8 @@ textarea:disabled {
   .action-toast,
   .create-menu-panel,
   .create-menu-item,
-  .mfa-reveal {
+  .mfa-reveal,
+  .inline-confirm-body {
     animation: none !important;
   }
 

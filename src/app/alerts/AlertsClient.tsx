@@ -140,7 +140,7 @@ function DeleteAlertControl({ id, label }: { id: string; label: string }) {
       aria-label={asking ? `確認刪除${label}提醒` : undefined}
     >
       {asking ? (
-        <form action={action} className="flex w-full items-center justify-end gap-1 px-1">
+        <form action={action} className="inline-confirm-body flex w-full items-center justify-end gap-1 px-1">
           <input type="hidden" name="id" value={id} />
           <button
             type="button"

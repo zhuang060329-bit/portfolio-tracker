@@ -260,7 +260,7 @@ export function MfaSetupCard() {
             aria-label={confirmFactorId === verified.id ? "確認停用 MFA" : undefined}
           >
             {confirmFactorId === verified.id ? (
-              <div className="flex w-full items-center justify-end gap-1 px-1">
+              <div className="inline-confirm-body flex w-full items-center justify-end gap-1 px-1">
                 <button
                   type="button"
                   onClick={() => setConfirmFactorId(null)}
