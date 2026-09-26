@@ -1,4 +1,6 @@
 import { AppHeader } from "@/components/AppHeader";
+import { HistoryBridge, Signed } from "@/components/HistoryBridge";
+import { PageHead, Panel, Stat, StatStrip, Tag } from "@/components/survey";
 import { ASSET_CLASS_LABEL } from "@/lib/dashboard-data";
 import {
   fetchAllPages,
@@ -199,105 +201,109 @@ export default async function HistoryPage({
   return (
     <div className="min-h-dvh bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active="history" userEmail={user?.email} unreadCount={unreadCount} />
-      <main id="main" tabIndex={-1} className="mx-auto max-w-[1080px] px-4 pb-28 pt-9 sm:px-6 lg:px-7">
-        <header className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="font-display text-3xl font-medium tracking-tight">歷史回放</h1>
-            <p className="mt-1.5 text-[13.5px] text-[var(--c-muted)]">
-              只使用指定日期以前已存在的快照；缺資料時保留缺口，不借用今天價格。
-            </p>
-          </div>
-          <form method="GET" className="flex flex-wrap items-end gap-2 rounded-xl border border-[var(--c-border)] bg-[var(--c-surface)] p-3">
-            <DateInput name="from" label="期初日（不含）" value={startDate} max={previousDate(endDate)} />
-            <DateInput name="date" label="回放日" value={endDate} max={today} />
-            <button type="submit" className="btn btn-primary">
-              回放
-            </button>
-          </form>
-        </header>
+      <main id="main" tabIndex={-1} className="mx-auto max-w-[1080px] px-4 pb-28 pt-8 sm:px-6 lg:px-7">
+        <PageHead
+          label={
+            <>
+              回放區間 <span className="tnum">{startDate} → {endDate}</span>
+            </>
+          }
+          title="歷史回放"
+          sub="只使用指定日期以前已存在的快照；缺資料時保留缺口，不借用今天價格。"
+          action={
+            <form method="GET" className="flex flex-wrap items-end gap-2">
+              <DateInput name="from" label="期初日（不含）" value={startDate} max={previousDate(endDate)} />
+              <DateInput name="date" label="回放日" value={endDate} max={today} />
+              <button type="submit" className="btn btn-primary btn-fit h-11 sm:h-10">
+                回放
+              </button>
+            </form>
+          }
+        />
 
-        <section className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Summary label={`${startDate} 期初`} value={opening.totalValueTwd} />
-          <Summary label={`${endDate} 期末`} value={ending.totalValueTwd} />
-          <Summary label="期間投入" value={attribution.contributionsTwd} signed />
-          <Summary label="期間提領" value={attribution.withdrawalsTwd} signed />
-        </section>
+        <StatStrip cols={4} className="mt-6">
+          <Stat label="期初淨值" mask value={`NT$ ${fmtFull(opening.totalValueTwd)}`} sub={<span className="tnum">{startDate}</span>} />
+          <Stat label="回放淨值" mask value={`NT$ ${fmtFull(ending.totalValueTwd)}`} sub={<span className="tnum">{endDate}</span>} />
+          <Stat label="期間投入" mask value={<Signed value={attribution.contributionsTwd} />} />
+          <Stat label="期間提領" mask value={<Signed value={-attribution.withdrawalsTwd} />} sub="含配息與利息轉出" />
+        </StatStrip>
 
-        <section className="mt-5 rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] sm:p-6">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h2 className="font-display text-xl font-medium">報酬歸因與對帳</h2>
-              <p className="mt-1 text-[12px] text-[var(--c-muted)]">
-                期初 + 投入 + 範圍加入 + 市價 + 匯率 + 收入 + 未解釋 = 期末 + 提領 + 範圍移出。配息與利息同時列為收入及已提領現金。
-              </p>
-            </div>
-            <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${attribution.reconciled ? "bg-[color-mix(in_srgb,var(--c-up)_12%,transparent)] text-[var(--c-up)]" : "bg-[color-mix(in_srgb,var(--c-down)_12%,transparent)] text-[var(--c-down)]"}`}>
-              {attribution.reconciled ? "相對容差內" : "有待解釋差額"}
-            </span>
-          </div>
-          <dl className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <AttributionMetric label="市價效果" value={attribution.marketPriceEffectTwd} />
-            <AttributionMetric label="匯率效果" value={attribution.fxEffectTwd} />
-            <AttributionMetric label="股息／利息" value={attribution.incomeTwd} />
-            <AttributionMetric label="未解釋差額" value={attribution.residualTwd} alert={!attribution.reconciled} />
-          </dl>
-          <div className="mt-4 border-t border-[var(--c-border)] pt-3 text-xs text-[var(--c-muted)]">
-            組合範圍加入／移出：NT$ {fmtFull(attribution.scopeContributionTwd)} / NT$ {fmtFull(attribution.scopeWithdrawalTwd)} · 已實現損益（備忘、不重複加總）：NT$ {fmtFull(attribution.realizedPnlMemoTwd)} · 相對容差：NT$ {fmtNum(attribution.toleranceTwd, 2)}（對帳規模的 0.1%）
-          </div>
-        </section>
+        <HistoryBridge attribution={attribution} openingDate={startDate} targetDate={endDate} />
 
-        <section className="mt-5 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)]">
-          <div className="border-b border-[var(--c-border)] px-5 py-4">
-            <h2 className="font-display text-xl font-medium">{endDate} 持倉</h2>
-            <p className="mt-1 text-[12px] text-[var(--c-muted)]">{ending.holdings.length} 個回放帳戶 · 依當日 TWD 估值排序</p>
-          </div>
+        <Panel
+          className="mt-6"
+          title={
+            <>
+              <span className="tnum">{endDate}</span> 持倉
+            </>
+          }
+          sub={
+            <>
+              <span className="tnum">{ending.holdings.length}</span> 個回放帳戶 · 依當日 TWD 估值排序
+            </>
+          }
+          flush
+        >
           {ending.holdings.length === 0 ? (
-            <p className="px-5 py-10 text-center text-[13px] text-[var(--c-muted)]">該日期沒有可回放的持倉。</p>
+            <p className="px-5 py-10 text-center text-[length:var(--fs-sm)] text-[var(--c-muted)]">該日期沒有可回放的持倉。</p>
           ) : (
-            <div>
+            <>
               <p className="scroll-cue px-5 pt-2">左右滑動查看完整欄位</p>
               <div className="scroll-region overflow-x-auto" tabIndex={0} aria-label="歷史持倉表，可水平捲動">
-              <table className="w-full min-w-[720px] text-left text-[13px]">
-                <thead className="bg-[var(--c-surface-soft)] text-xs text-[var(--c-muted)]">
-                  <tr>
-                    <th className="px-5 py-3 font-medium">帳戶</th>
-                    <th className="px-3 py-3 font-medium">類別</th>
-                    <th className="px-3 py-3 text-right font-medium">數量</th>
-                    <th className="px-3 py-3 text-right font-medium">單價</th>
-                    <th className="px-3 py-3 text-right font-medium">匯率</th>
-                    <th className="px-5 py-3 text-right font-medium">TWD 估值</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ending.holdings.map((holding) => (
-                    <tr key={holding.accountId} className="border-t border-[var(--c-border)] first:border-t-0">
-                      <td className="px-5 py-3.5">
-                        <div className="font-medium">{holding.name}{holding.symbol ? ` · ${holding.symbol}` : ""}</div>
-                        <div className="mt-0.5 flex items-center gap-2 text-xs text-[var(--c-faint)] tnum">
-                          快照 {holding.snapshotDate}
-                          {holding.carriedForward && <span className="rounded bg-[var(--c-surface-soft)] px-1.5 py-0.5">carry-forward</span>}
-                          {!holding.statusKnown && <span>狀態歷程不完整</span>}
-                        </div>
-                      </td>
-                      <td className="px-3 py-3.5 text-[var(--c-muted)]">{ASSET_CLASS_LABEL[holding.assetClass] ?? holding.assetClass}</td>
-                      <td className="px-3 py-3.5 text-right tnum">{fmtNum(holding.quantity, 8)}</td>
-                      <td className="px-3 py-3.5 text-right tnum">{fmtNum(holding.unitPrice, 4)}</td>
-                      <td className="px-3 py-3.5 text-right tnum">{fmtNum(holding.fxRate, 4)}</td>
-                      <td className="px-5 py-3.5 text-right font-semibold tnum">NT$ {fmtFull(holding.valueTwd)}</td>
+                <table className="w-full min-w-[720px] text-left text-[length:var(--fs-sm)]">
+                  <thead className="border-b border-[var(--c-line-strong)] text-[length:var(--fs-micro)] tracking-[0.06em] text-[var(--c-muted)]">
+                    <tr>
+                      <th className="px-5 py-2.5 font-semibold">帳戶</th>
+                      <th className="px-3 py-2.5 font-semibold">類別</th>
+                      <th className="px-3 py-2.5 text-right font-semibold">數量</th>
+                      <th className="px-3 py-2.5 text-right font-semibold">單價</th>
+                      <th className="px-3 py-2.5 text-right font-semibold">匯率</th>
+                      <th className="px-5 py-2.5 text-right font-semibold">TWD 估值</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {ending.holdings.map((holding) => (
+                      <tr key={holding.accountId} className="border-t border-[var(--c-border-soft)] first:border-t-0">
+                        <td className="px-5 py-3">
+                          <div className="font-medium">
+                            {holding.name}
+                            {holding.symbol && <span className="ml-1.5 text-[var(--c-faint)] tnum">{holding.symbol}</span>}
+                          </div>
+                          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[length:var(--fs-micro)] text-[var(--c-faint)]">
+                            <span>
+                              快照 <span className="tnum">{holding.snapshotDate}</span>
+                            </span>
+                            {holding.carriedForward && <Tag>沿用前一筆快照</Tag>}
+                            {!holding.statusKnown && <Tag tone="annot">狀態歷程不完整</Tag>}
+                          </div>
+                        </td>
+                        <td className="px-3 py-3 text-[var(--c-muted)]">{ASSET_CLASS_LABEL[holding.assetClass] ?? holding.assetClass}</td>
+                        <td className="amt px-3 py-3 text-right tnum">{fmtNum(holding.quantity, 8)}</td>
+                        <td className="px-3 py-3 text-right tnum">{fmtNum(holding.unitPrice, 4)}</td>
+                        <td className="px-3 py-3 text-right tnum">{fmtNum(holding.fxRate, 4)}</td>
+                        <td className="amt px-5 py-3 text-right font-semibold tnum">NT$ {fmtFull(holding.valueTwd)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            </div>
+            </>
           )}
-        </section>
+        </Panel>
 
         {attribution.gaps.length > 0 && (
-          <section className="mt-5 rounded-[var(--r-card)] border border-[color-mix(in_srgb,var(--c-down)_25%,var(--c-border))] bg-[var(--c-surface)] p-5">
-            <h2 className="text-[13px] font-semibold text-[var(--c-down)]">資料缺口與限制</h2>
-            <ul className="mt-2 list-disc space-y-1.5 pl-5 text-[12px] leading-5 text-[var(--c-muted)]">
-              {attribution.gaps.map((gap) => <li key={gap}>{gap}</li>)}
+          // 資料缺口是「請注意」的註記，不是虧損：朱砂虛線框＋「注意」字樣，不用跌色
+          <section className="mt-6 border border-dashed border-[var(--c-annot)] bg-[var(--c-surface)] px-5 py-4">
+            <h2 className="flex items-center gap-2 text-[length:var(--fs-sm)] font-semibold">
+              <span className="text-[var(--c-annot-text)]">注意</span>
+              資料缺口與限制
+            </h2>
+            <ul className="mt-2 space-y-1.5 text-[length:var(--fs-micro)] leading-5 text-[var(--c-muted)]">
+              {attribution.gaps.map((gap) => (
+                <li key={gap} className="border-l border-dashed border-[var(--c-annot)] pl-2">
+                  {gap}
+                </li>
+              ))}
             </ul>
           </section>
         )}
@@ -308,30 +314,10 @@ export default async function HistoryPage({
 
 function DateInput({ name, label, value, max }: { name: string; label: string; value: string; max: string }) {
   return (
-    <label className="text-xs text-[var(--c-muted)]">
+    <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
       {label}
-      <input type="date" name={name} defaultValue={value} max={max} className="mt-1 block h-[38px] rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2.5 text-[12.5px] text-[var(--c-text)]" />
+      <input type="date" name={name} defaultValue={value} max={max} className="field h-11 w-auto py-0 tnum sm:h-10" />
     </label>
-  );
-}
-
-function Summary({ label, value, signed = false }: { label: string; value: number; signed?: boolean }) {
-  return (
-    <div className="rounded-xl border border-[var(--c-border)] bg-[var(--c-surface)] px-4 py-3">
-      <div className="text-xs text-[var(--c-muted)]">{label}</div>
-      <div className="mt-1 text-[18px] font-semibold tnum">{signed && value > 0 ? "+" : ""}NT$ {fmtFull(value)}</div>
-    </div>
-  );
-}
-
-function AttributionMetric({ label, value, alert = false }: { label: string; value: number; alert?: boolean }) {
-  return (
-    <div>
-      <dt className="text-xs text-[var(--c-muted)]">{label}</dt>
-      <dd className={`mt-1 text-[15px] font-semibold tnum ${alert ? "text-[var(--c-down)]" : value > 0 ? "text-[var(--c-up)]" : value < 0 ? "text-[var(--c-down)]" : ""}`}>
-        {value > 0 ? "+" : ""}NT$ {fmtFull(value)}
-      </dd>
-    </div>
   );
 }
 
