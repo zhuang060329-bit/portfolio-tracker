@@ -212,16 +212,22 @@ function LegendButton({
       type="button"
       aria-pressed={on}
       onClick={onClick}
-      /* 開關語彙：邊框深淺 + 透明度，刻意不填色。填色是 PICK_ON 的專屬訊號，
+      /* 開關語彙：實線／虛線邊框 + 文字深淺，刻意不填色。填色是 PICK_ON 的專屬訊號，
          留給「互斥選擇」用；圖例是各自獨立的布林，兩者不該長得像。
-         原本開與關只差透明度一個訊號，關掉的那條與「還沒 hover 過」難分。 */
-      className={`tap-row inline-flex min-h-9 shrink-0 items-center gap-1.5 border px-2.5 text-[length:var(--fs-micro)] font-medium text-[var(--c-text)] hover:bg-[var(--c-surface-soft)] ${
+         關閉時只把色線樣本調淡，文字改 muted 而不是整顆降透明度：
+         整顆 opacity-45 會讓字掉到 2.9:1（淺）／3.7:1（深），muted 在兩個主題都過 4.5:1。 */
+      className={`tap-row inline-flex min-h-9 shrink-0 items-center gap-1.5 border px-2.5 text-[length:var(--fs-micro)] font-medium hover:bg-[var(--c-surface-soft)] ${
         on
-          ? "border-[var(--c-line-strong)]"
-          : "border-[var(--c-border)] opacity-45"
+          ? "border-[var(--c-line-strong)] text-[var(--c-text)]"
+          : "border-dashed border-[var(--c-border)] text-[var(--c-muted)]"
       }`}
     >
-      <svg width="20" height="8" aria-hidden="true" className="shrink-0">
+      <svg
+        width="20"
+        height="8"
+        aria-hidden="true"
+        className={`shrink-0 ${on ? "" : "opacity-35"}`}
+      >
         <line
           x1="1"
           y1="4"
