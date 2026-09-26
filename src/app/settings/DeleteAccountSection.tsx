@@ -25,13 +25,14 @@ export function DeleteAccountSection({ email }: { email: string | null }) {
     email !== null && typed.trim().toLowerCase() === email.toLowerCase();
 
   return (
-    <div className="mt-4 rounded-xl border border-[color-mix(in_srgb,var(--c-down)_25%,transparent)] bg-[color-mix(in_srgb,var(--c-down)_6%,transparent)] p-4">
+    // 危險區：跌色實線框、不鋪底色，標題直接寫明後果
+    <div className="mt-4 border border-[var(--c-down)] p-4">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="min-w-0">
-          <span className="text-[13.5px] font-semibold text-[var(--c-down)]">
+          <span className="text-[length:var(--fs-md)] font-semibold text-[var(--c-down)]">
             刪除帳戶
           </span>
-          <span className="mt-0.5 block text-[12px] text-[var(--c-muted)]">
+          <span className="mt-0.5 block text-[length:var(--fs-micro)] text-[var(--c-muted)]">
             永久刪除所有資料，無法復原。
           </span>
         </div>
@@ -49,25 +50,25 @@ export function DeleteAccountSection({ email }: { email: string | null }) {
       {confirm && (
         <form
           action={action}
-          className="mt-4 border-t border-[color-mix(in_srgb,var(--c-down)_20%,transparent)] pt-4"
+          className="mt-4 border-t border-dashed border-[var(--c-down)] pt-4"
         >
-          <p className="text-[12.5px] leading-relaxed text-[var(--c-text)]">
+          <p className="text-[length:var(--fs-sm)] leading-relaxed text-[var(--c-text)]">
             送出後會立刻刪除下列全部資料，且沒有回收桶：
           </p>
-          <ul className="mt-2 space-y-1 text-[12px] leading-relaxed text-[var(--c-muted)]">
+          <ul className="mt-2 list-inside list-[square] space-y-1 text-[length:var(--fs-sm)] leading-relaxed text-[var(--c-muted)]">
             <li>帳戶與持倉、所有交易紀錄、每日淨值快照</li>
             <li>投資決策與覆盤紀錄</li>
             <li>定期定額計劃與執行紀錄</li>
             <li>警示規則與通知</li>
             <li>個人設定（配置目標、集中度上限）與登入身分</li>
           </ul>
-          <p className="mt-2 text-[12px] leading-relaxed text-[var(--c-muted)]">
+          <p className="mt-2 text-[length:var(--fs-sm)] leading-relaxed text-[var(--c-muted)]">
             想留底的話，先用上方的「匯出全部資料」下載一份 CSV。
           </p>
 
-          <label className="mt-4 block text-[12.5px] font-medium text-[var(--c-text)]">
+          <label className="mt-4 block text-[length:var(--fs-sm)] font-medium text-[var(--c-text)]">
             輸入
-            <span className="mx-1 font-semibold text-[var(--c-down)]">
+            <span className="mx-1 break-all font-mono font-semibold text-[var(--c-down)]">
               {email ?? "（此帳號沒有 email）"}
             </span>
             以確認
@@ -79,12 +80,12 @@ export function DeleteAccountSection({ email }: { email: string | null }) {
               spellCheck={false}
               value={typed}
               onChange={(event) => setTyped(event.target.value)}
-              className="mt-1.5 h-11 w-full max-w-sm rounded-lg border border-[var(--c-border)] bg-[var(--c-surface)] px-3 text-[13.5px] font-normal text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-down)_50%,transparent)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--c-down)_18%,transparent)]"
+              className="field mt-1.5 block h-11 max-w-sm py-0 font-normal"
             />
           </label>
 
           {state?.error && (
-            <p className="mt-3 rounded-lg bg-[color-mix(in_srgb,var(--c-down)_14%,transparent)] px-3 py-2 text-[12px] text-[var(--c-down)]">
+            <p className="mt-3 border border-[var(--c-down)] px-3.5 py-2.5 text-[length:var(--fs-sm)] text-[var(--c-down)]">
               {state.error}
             </p>
           )}

@@ -148,7 +148,7 @@ export function MfaSetupCard() {
 
   if (loading) {
     return (
-      <p className="text-sm text-[var(--c-muted)]" role="status">讀取中…</p>
+      <p className="text-[length:var(--fs-sm)] text-[var(--c-muted)]" role="status">讀取中…</p>
     );
   }
 
@@ -156,17 +156,17 @@ export function MfaSetupCard() {
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-4 py-3.5">
         <div className="min-w-0">
-          <span className="text-[14px] font-medium text-[var(--c-text)]">
+          <span className="text-[length:var(--fs-md)] font-medium text-[var(--c-text)]">
             雙因素驗證 (MFA)
           </span>
-          <span className="mt-0.5 block text-[12px] text-[var(--c-muted)]">
+          <span className="mt-0.5 block text-[length:var(--fs-micro)] text-[var(--c-muted)]">
             登入時額外要求 Authenticator 6 位數驗證碼
           </span>
         </div>
         <div className="flex-shrink-0">
           {step === "on" ? (
-            <span className="text-[12.5px] font-semibold text-[var(--c-up)]">
-              ● 已啟用
+            <span className="inline-flex items-center border border-[var(--c-up)] px-2 py-0.5 font-mono text-[length:var(--fs-micro)] font-semibold text-[var(--c-up)]">
+              已啟用
             </span>
           ) : (
             <Toggle
@@ -184,10 +184,10 @@ export function MfaSetupCard() {
 
       {/* Enrollment panel */}
       {enrollment && (
-        <div className="mfa-reveal rounded-xl border border-[var(--c-border)] bg-[var(--c-surface-soft)] p-5">
+        <div className="mfa-reveal border border-[var(--c-border)] bg-[var(--c-surface-soft)] p-5">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
             <div className="flex flex-col items-center gap-2">
-              <div className="rounded-lg border border-[var(--c-line-strong)] bg-[var(--c-surface)] p-2">
+              <div className="border border-[var(--c-line-strong)] bg-[var(--c-surface)] p-2">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={enrollment.qr}
@@ -197,20 +197,20 @@ export function MfaSetupCard() {
                   className="block h-[120px] w-[120px]"
                 />
               </div>
-              <span className="text-xs text-[var(--c-muted)]">
+              <span className="text-[length:var(--fs-micro)] text-[var(--c-muted)]">
                 用 Authenticator 掃描
               </span>
             </div>
 
             <div className="min-w-0 flex-1">
-              <p className="mb-2 text-[12.5px] text-[var(--c-muted)]">
-                1 · 掃描 QR，或手動輸入金鑰：
+              <p className="mb-2 text-[length:var(--fs-sm)] text-[var(--c-muted)]">
+                <span className="font-mono text-[var(--c-accent)]">01</span> 掃描 QR，或手動輸入金鑰：
               </p>
-              <code className="mb-4 block select-all rounded-lg border border-[var(--c-border)] bg-[var(--c-surface)] px-3 py-2.5 font-mono text-[14px] font-semibold tracking-[0.08em] text-[var(--c-accent)]">
+              <code className="mb-4 block select-all break-all border border-[var(--c-border)] bg-[var(--c-surface)] px-3 py-2.5 font-mono text-[length:var(--fs-md)] font-semibold tracking-[0.08em] text-[var(--c-accent)]">
                 {enrollment.secret}
               </code>
-              <p className="mb-2 text-[12.5px] text-[var(--c-muted)]">
-                2 · 輸入 App 顯示的 6 位數驗證碼：
+              <p className="mb-2 text-[length:var(--fs-sm)] text-[var(--c-muted)]">
+                <span className="font-mono text-[var(--c-accent)]">02</span> 輸入 App 顯示的 6 位數驗證碼：
               </p>
               <div className="flex flex-wrap items-center gap-2.5">
                 <input
@@ -223,13 +223,13 @@ export function MfaSetupCard() {
                   inputMode="numeric"
                   autoComplete="one-time-code"
                   maxLength={6}
-                  className="tnum h-10 w-[120px] rounded-lg border border-[var(--c-border)] bg-[var(--c-surface)] px-3.5 text-center text-[18px] font-semibold tracking-[0.3em] text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:ring-2 focus:ring-[var(--c-accent-soft)]"
+                  className="field tnum h-11 w-[140px] py-0 text-center font-mono text-[length:var(--fs-lg)] font-semibold tracking-[0.3em]"
                 />
                 <button
                   type="button"
                   onClick={verify}
                   disabled={busy || code.length !== 6}
-                  className="btn btn-primary whitespace-nowrap"
+                  className="btn btn-neutral whitespace-nowrap"
                 >
                   {busy ? "驗證中…" : "驗證並啟用"}
                 </button>
@@ -249,8 +249,8 @@ export function MfaSetupCard() {
 
       {/* 已啟用：顯示 done card */}
       {verified && (
-        <div className="flex flex-wrap items-center justify-between gap-3.5 rounded-xl border border-[color-mix(in_srgb,var(--c-up)_28%,transparent)] bg-[color-mix(in_srgb,var(--c-up)_10%,var(--c-surface-soft))] px-4 py-3.5">
-          <span className="text-[13px] text-[var(--c-text)]">
+        <div className="flex flex-wrap items-center justify-between gap-3.5 border border-[var(--c-up)] bg-[var(--c-surface-soft)] px-4 py-3.5">
+          <span className="text-[length:var(--fs-sm)] text-[var(--c-text)]">
             MFA 已啟用，下次登入會要求驗證碼。
           </span>
           <div
@@ -296,7 +296,7 @@ export function MfaSetupCard() {
 
       {/* 卡住的 unverified factor */}
       {unverified && !enrollment && step !== "on" && (
-        <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--c-down)]">
+        <div className="flex flex-wrap items-center gap-2 text-[length:var(--fs-micro)] text-[var(--c-down)]">
           <span>偵測到上次未完成的 enrollment。</span>
           {confirmFactorId === unverified.id ? (
             <span role="group" aria-label="確認清除未完成的 MFA 設定" className="inline-flex items-center gap-1">
@@ -332,12 +332,12 @@ export function MfaSetupCard() {
       )}
 
       {error && (
-        <p className="rounded-lg border border-[color-mix(in_srgb,var(--c-down)_35%,transparent)] bg-[color-mix(in_srgb,var(--c-down)_8%,transparent)] px-3 py-2 text-[12px] text-[var(--c-down)]">
+        <p role="alert" className="border border-[var(--c-down)] px-3.5 py-2.5 text-[length:var(--fs-sm)] text-[var(--c-down)]">
           {error}
         </p>
       )}
 
-      <p className="text-xs text-[var(--c-faint)]">
+      <p className="text-[length:var(--fs-micro)] text-[var(--c-muted)]">
         本 app 在登入時會強制 AAL2 升級；啟用後若無法登入，可請 admin 至 Supabase 後台移除 factor。
       </p>
 
@@ -363,7 +363,7 @@ function Toggle({
       aria-busy={busy}
       onClick={onClick}
       disabled={busy}
-      className="touch-target grid h-11 w-11 place-items-center rounded-[var(--r-control)] disabled:cursor-wait disabled:opacity-50"
+      className="touch-target grid h-11 w-11 place-items-center disabled:cursor-wait disabled:opacity-50"
     >
       <span
         aria-hidden="true"

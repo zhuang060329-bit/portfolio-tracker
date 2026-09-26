@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { deleteUser, type FormState } from "@/lib/allowlist-actions";
 import { useActionAnnounce } from "@/components/a11y/use-action-announce";
+import { Panel, Tag } from "@/components/survey";
 
 export type UserRow = {
   id: string;
@@ -42,7 +43,7 @@ function DeleteButton({
 
   if (isSelf) {
     return (
-      <span className="text-xs text-[var(--c-faint)]">（你自己）</span>
+      <Tag tone="accent">你自己</Tag>
     );
   }
 
@@ -61,7 +62,7 @@ function DeleteButton({
   return (
     <form action={action} className="flex flex-wrap items-center gap-2">
       <input type="hidden" name="userId" value={userId} />
-      <span className="text-xs text-[var(--c-muted)]">
+      <span className="text-[length:var(--fs-micro)] text-[var(--c-muted)]">
         確定踢出 <b>{email}</b> 並刪除所有資料？
       </span>
       <button
@@ -79,7 +80,7 @@ function DeleteButton({
         取消
       </button>
       {state?.error && (
-        <span className="text-xs text-[var(--c-down)]">
+        <span className="text-[length:var(--fs-micro)] text-[var(--c-down)]">
           {state.error}
         </span>
       )}
@@ -95,36 +96,26 @@ export function UsersManager({
   currentUserId: string;
 }) {
   return (
-    <div className="rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] shadow-[var(--c-shadow)]">
-      <div className="flex items-center justify-between border-b border-[var(--c-border)] px-5 py-3">
-        <h2 className="font-display text-lg font-semibold tracking-tight">
-          已註冊使用者
-        </h2>
-        <span className="text-xs text-[var(--c-muted)]">共 {rows.length} 人</span>
-      </div>
+    <Panel title="已註冊使用者" sub={<span className="tnum">共 {rows.length} 人</span>} flush>
       {rows.length === 0 ? (
-        <p className="px-5 py-8 text-center text-sm text-[var(--c-muted)]">
+        <p className="m-5 border border-dashed border-[var(--c-border)] px-5 py-8 text-center text-[length:var(--fs-sm)] text-[var(--c-muted)]">
           還沒有人註冊。
         </p>
       ) : (
-        <ul className="divide-y divide-[var(--c-border-soft)]">
+        <ul>
           {rows.map((r) => (
             <li
               key={r.id}
-              className="flex flex-wrap items-center justify-between gap-3 px-5 py-3"
+              className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--c-border-soft)] px-5 py-4 first:border-t-0"
             >
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="truncate text-sm font-medium text-[var(--c-text)]">
+                  <span className="truncate text-[length:var(--fs-md)] font-medium text-[var(--c-text)]">
                     {r.email}
                   </span>
-                  {!r.confirmed && (
-                    <span className="rounded bg-[color-mix(in_srgb,var(--c-down)_12%,transparent)] border border-[color-mix(in_srgb,var(--c-down)_25%,transparent)] px-1.5 py-0.5 text-xs uppercase tracking-wider text-[var(--c-down)]">
-                      未驗證
-                    </span>
-                  )}
+                  {!r.confirmed && <Tag tone="annot">未驗證</Tag>}
                 </div>
-                <div className="mt-0.5 text-xs text-[var(--c-muted)]">
+                <div className="tnum mt-1 text-[length:var(--fs-micro)] text-[var(--c-muted)]">
                   註冊 {fmtDate(r.created_at)}
                   <span className="mx-2 text-[var(--c-faint)]">·</span>
                   上次登入 {fmtDate(r.last_sign_in_at)}
@@ -139,6 +130,6 @@ export function UsersManager({
           ))}
         </ul>
       )}
-    </div>
+    </Panel>
   );
 }

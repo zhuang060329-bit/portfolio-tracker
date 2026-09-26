@@ -20,6 +20,7 @@ import {
   type FormState as AllocFormState,
 } from "@/lib/profile-actions";
 import { useActionAnnounce } from "@/components/a11y/use-action-announce";
+import { Tag } from "@/components/survey";
 import { MfaSetupCard } from "./MfaSetupCard";
 import { DeleteAccountSection } from "./DeleteAccountSection";
 import { fmtUpdatedAt } from "@/lib/format";
@@ -111,19 +112,24 @@ export function SettingsApp({
     <div className="grid grid-cols-1 gap-4 md:grid-cols-[180px_1fr] md:gap-7">
       {/* 側欄 nav */}
       <aside className="md:sticky md:top-20 md:self-start">
-        <nav aria-label="設定區段" className="flex flex-row flex-wrap gap-1.5 md:flex-col md:gap-0.5">
-          {NAV.map((n) => (
+        {/* 桌機是一條測站清單：左側 2px 測量藍指示目前所在區段；
+            手機收成可換行的方塊，改用外框表示。編號與主體的區段編號一致。 */}
+        <nav aria-label="設定區段" className="flex flex-row flex-wrap gap-1.5 md:flex-col md:gap-0 md:border-l md:border-[var(--c-border)]">
+          {NAV.map((n, i) => (
             <button
               key={n.id}
               type="button"
               onClick={() => jump(n.id)}
               aria-current={active === n.id ? "location" : undefined}
-              className={`tap-row rounded-lg px-3 py-2 text-left text-[13.5px] font-medium transition-colors ${
+              className={`tap-row flex min-h-11 items-center gap-2.5 border px-3 text-left text-[length:var(--fs-sm)] font-medium transition-colors md:border-transparent ${
                 active === n.id
-                  ? "bg-[var(--c-accent-soft)] text-[var(--c-accent)]"
-                  : "border border-[var(--c-border)] text-[var(--c-muted)] hover:bg-[var(--c-surface-soft)] hover:text-[var(--c-text)] md:border-0"
+                  ? "border-[var(--c-accent)] bg-[var(--c-accent-soft)] text-[var(--c-accent)] md:-ml-px md:shadow-[inset_2px_0_0_var(--c-accent)]"
+                  : "border-[var(--c-border)] text-[var(--c-muted)] hover:bg-[var(--c-surface-soft)] hover:text-[var(--c-text)]"
               }`}
             >
+              <span aria-hidden="true" className="font-mono text-[length:var(--fs-micro)]">
+                {String(i + 1).padStart(2, "0")}
+              </span>
               {n.label}
             </button>
           ))}
@@ -131,7 +137,7 @@ export function SettingsApp({
       </aside>
 
       {/* 主體 6 個 section */}
-      <div className="flex min-w-0 flex-col overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] sm:p-7">
+      <div className="flex min-w-0 flex-col border border-[var(--c-border)] bg-[var(--c-surface)] p-5 sm:p-7">
         <Section id="account" title="帳號" elRef={registerEl("account")}>
           <AccountInner user={user} />
         </Section>
@@ -179,7 +185,7 @@ export function SettingsApp({
           <PriceHealthInner health={priceHealth} />
           <DataInner email={user.email} />
         </Section>
-        <p className="mt-9 border-t border-[var(--c-border)] pt-6 text-center text-xs text-[var(--c-faint)]">
+        <p className="mt-10 border-t border-[var(--c-border-soft)] pt-5 text-[length:var(--fs-micro)] text-[var(--c-muted)]">
           StackWorth · 以 TWD 為基準幣別
         </p>
       </div>
@@ -194,24 +200,22 @@ function PriceHealthInner({ health }: { health: PriceHealth }) {
   const none = health.tracked === 0;
   return (
     <div
-      className={`mb-5 rounded-[var(--r-card)] border px-4 py-3.5 text-[13px] ${
+      className={`mb-5 border px-4 py-3.5 text-[length:var(--fs-sm)] ${
         none || ok
           ? "border-[var(--c-border)] bg-[var(--c-surface-soft)]"
-          : "border-[color-mix(in_srgb,var(--c-down)_45%,transparent)] bg-[color-mix(in_srgb,var(--c-down)_8%,transparent)]"
+          : "border-[var(--c-down)] bg-[var(--c-surface)]"
       }`}
     >
-      <div className="flex items-center gap-2 font-medium">
-        <span
-          aria-hidden="true"
-          className={`inline-block h-2 w-2 rounded-full ${
-            none
-              ? "bg-[var(--c-faint)]"
-              : ok
-                ? "bg-[var(--c-up)]"
-                : "bg-[var(--c-down)]"
-          }`}
-        />
+      {/* 狀態用字標出來，不只靠顏色 */}
+      <div className="flex flex-wrap items-center gap-2 font-semibold">
         報價更新狀態
+        {none ? (
+          <Tag>無追蹤帳戶</Tag>
+        ) : ok ? (
+          <Tag tone="up">正常</Tag>
+        ) : (
+          <Tag tone="down">有延遲</Tag>
+        )}
       </div>
       <p className="mt-1 text-[var(--c-muted)]">
         {none
@@ -253,14 +257,17 @@ function Section({
       ref={elRef}
       id={id}
       style={{ scrollMarginTop: 84 }}
-      className="mt-9 border-t border-[var(--c-border)] pt-7 first:mt-0 first:border-t-0 first:pt-1"
+      className="mt-10 border-t border-[var(--c-line-strong)] pt-6 first:mt-0 first:border-t-0 first:pt-0"
     >
       <div className="mb-4">
-        <h2 className="font-display text-[19px] font-medium tracking-tight text-[var(--c-text)]">
+        <h2 className="flex items-baseline gap-2.5 text-[length:var(--fs-lg)] font-semibold text-[var(--c-text)]">
+          <span aria-hidden="true" className="font-mono text-[length:var(--fs-micro)] font-medium text-[var(--c-accent)]">
+            {String(NAV.findIndex((n) => n.id === id) + 1).padStart(2, "0")}
+          </span>
           {title}
         </h2>
         {desc && (
-          <p className="mt-1 text-[12.5px] text-[var(--c-muted)]">{desc}</p>
+          <p className="mt-1 text-[length:var(--fs-sm)] text-[var(--c-muted)]">{desc}</p>
         )}
       </div>
       {children}
@@ -278,13 +285,13 @@ function Row({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-4 border-t border-[var(--c-border)] py-3.5 first-of-type:border-t-0">
+    <div className="flex flex-wrap items-center justify-between gap-4 border-t border-[var(--c-border-soft)] py-3.5 first-of-type:border-t-0">
       <div className="min-w-0">
-        <span className="text-[14px] font-medium text-[var(--c-text)]">
+        <span className="text-[length:var(--fs-md)] font-medium text-[var(--c-text)]">
           {label}
         </span>
         {hint && (
-          <span className="mt-0.5 block text-[12px] text-[var(--c-muted)]">
+          <span className="mt-0.5 block text-[length:var(--fs-micro)] text-[var(--c-muted)]">
             {hint}
           </span>
         )}
@@ -304,43 +311,24 @@ function Segmented<T extends string>({
   options: { v: T; label: string }[];
 }) {
   return (
-    <div className="inline-flex rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] p-1">
+    // 選中的那格：測量藍淡底加底邊 2px，不只靠底色分辨
+    <div className="inline-flex border border-[var(--c-border)] bg-[var(--c-surface-soft)]">
       {options.map((o) => (
         <button
           key={o.v}
           type="button"
           onClick={() => onChange(o.v)}
           aria-pressed={value === o.v}
-          className={`tap-row whitespace-nowrap rounded-md px-3 py-1.5 text-[12.5px] font-semibold transition-colors ${
+          className={`tap-row min-h-[38px] whitespace-nowrap border-l border-[var(--c-border)] px-3.5 text-[length:var(--fs-sm)] font-semibold transition-colors first:border-l-0 ${
             value === o.v
-              ? "bg-[var(--c-surface)] text-[var(--c-text)]"
-              : "text-[var(--c-muted)] hover:text-[var(--c-text)]"
+              ? "bg-[var(--c-accent-soft)] text-[var(--c-accent)] shadow-[inset_0_-2px_0_var(--c-accent)]"
+              : "text-[var(--c-muted)] hover:bg-[var(--c-surface)] hover:text-[var(--c-text)]"
           }`}
         >
           {o.label}
         </button>
       ))}
     </div>
-  );
-}
-
-function StatusBadge({
-  children,
-  active = false,
-}: {
-  children: React.ReactNode;
-  active?: boolean;
-}) {
-  return (
-    <span
-      className={`inline-flex min-h-8 items-center rounded-[var(--r-control)] border px-3 text-[12px] font-medium ${
-        active
-          ? "border-[color-mix(in_srgb,var(--c-up)_35%,transparent)] bg-[color-mix(in_srgb,var(--c-up)_10%,transparent)] text-[var(--c-up)]"
-          : "border-[var(--c-border)] bg-[var(--c-surface-soft)] text-[var(--c-muted)]"
-      }`}
-    >
-      {children}
-    </span>
   );
 }
 
@@ -353,24 +341,22 @@ function AccountInner({ user }: { user: SettingsAppProps["user"] }) {
   return (
     <>
       <div className="flex items-center gap-4 pb-4">
-        <div className="flex h-[52px] w-[52px] items-center justify-center rounded-full border border-[var(--c-line-strong)] bg-[var(--c-accent-soft)] text-[18px] font-bold text-[var(--c-accent)]">
+        <div className="flex h-[52px] w-[52px] shrink-0 items-center justify-center border border-[var(--c-line-strong)] bg-[var(--c-accent-soft)] font-mono text-[length:var(--fs-lg)] font-semibold text-[var(--c-accent)]">
           {initials}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-[16px] font-semibold">
+          <div className="truncate text-[length:var(--fs-md)] font-semibold">
             {user.email?.split("@")[0] ?? "—"}
           </div>
-          <div className="mt-0.5 truncate text-[13px] text-[var(--c-muted)]">
+          <div className="mt-0.5 truncate text-[length:var(--fs-sm)] text-[var(--c-muted)]">
             {user.email ?? "—"}
           </div>
         </div>
-        <span className="whitespace-nowrap rounded-full border border-[color-mix(in_srgb,var(--c-accent)_30%,transparent)] bg-[var(--c-accent-soft)] px-3 py-1 text-[12px] font-semibold text-[var(--c-accent)]">
-          個人版
-        </span>
+        <Tag tone="accent">個人版</Tag>
       </div>
       {user.createdAt && (
         <Row label="加入時間" hint="首次建立帳戶">
-          <span className="tnum text-[14px] text-[var(--c-muted)]">
+          <span className="tnum text-[length:var(--fs-sm)] text-[var(--c-muted)]">
             {user.createdAt.slice(0, 7)}
           </span>
         </Row>
@@ -413,13 +399,13 @@ function PrefsInner() {
         label="基準幣別"
         hint="目前所有估值、損益與匯出皆以新台幣計算"
       >
-        <StatusBadge>固定 TWD</StatusBadge>
+        <Tag>固定 TWD</Tag>
       </Row>
       <Row
         label="數字格式"
         hint="明細保留完整金額；圖表與小空間自動使用萬／億"
       >
-        <StatusBadge>依情境自動</StatusBadge>
+        <Tag>依情境自動</Tag>
       </Row>
     </>
   );
@@ -485,20 +471,22 @@ function AllocInner({
           className="grid grid-cols-[auto_1fr_auto] items-center gap-3 sm:grid-cols-[auto_80px_1fr_auto]"
         >
           <span
-            className="h-2.5 w-2.5 rounded-[var(--r-control)]"
+            aria-hidden="true"
+            className="h-2.5 w-2.5"
             style={{ background: def.color }}
           />
-          <span className="text-[13.5px] text-[var(--c-text)]">{def.label}</span>
-          <span className="hidden h-[7px] overflow-hidden rounded bg-[var(--c-surface-soft)] sm:block">
+          <span className="text-[length:var(--fs-sm)] text-[var(--c-text)]">{def.label}</span>
+          {/* 比例尺：外框是 100%，填色用 scaleX 伸縮（只動 transform） */}
+          <span aria-hidden="true" className="hidden h-2 overflow-hidden border border-[var(--c-border)] sm:block">
             <span
-              className="motion-progress block h-full rounded transition-[width] duration-300"
+              className="motion-progress block h-full w-full origin-left transition-transform"
               style={{
-                width: `${Math.min(100, targets[def.cls] ?? 0)}%`,
+                transform: `scaleX(${Math.min(100, targets[def.cls] ?? 0) / 100})`,
                 background: def.color,
               }}
             />
           </span>
-          <span className="inline-flex items-center gap-1 text-[13px] text-[var(--c-muted)]">
+          <span className="inline-flex items-center gap-1.5 text-[length:var(--fs-sm)] text-[var(--c-muted)]">
             <input
               type="number"
               aria-label={`${def.label}目標配置百分比`}
@@ -506,16 +494,16 @@ function AllocInner({
               max={100}
               value={targets[def.cls] ?? 0}
               onChange={(e) => update(def.cls, e.target.value)}
-              className="h-[34px] w-[52px] rounded-lg border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 text-right text-[13.5px] font-semibold text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:ring-2 focus:ring-[var(--c-accent-soft)]"
+              className="field tnum h-11 w-[72px] py-0 text-right font-semibold"
             />
             %
           </span>
         </div>
       ))}
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3.5 border-t border-[var(--c-border)] pt-4">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3.5 border-t border-[var(--c-border-soft)] pt-4">
         <span
-          className={`text-[13px] ${
+          className={`text-[length:var(--fs-sm)] ${
             ok ? "text-[var(--c-up)]" : "text-[var(--c-down)]"
           }`}
         >
@@ -542,12 +530,12 @@ function AllocInner({
             {pending ? "儲存中…" : "儲存目標"}
           </button>
           {savedTick && !pending && !state?.error && (
-            <span className="text-[13px] font-semibold text-[var(--c-up)]">
+            <span className="text-[length:var(--fs-sm)] font-semibold text-[var(--c-up)]">
               ✓ 已儲存
             </span>
           )}
           {state?.error && (
-            <span className="text-[12px] text-[var(--c-down)]">
+            <span className="text-[length:var(--fs-micro)] text-[var(--c-down)]">
               {state.error}
             </span>
           )}
@@ -572,14 +560,14 @@ function ConcentrationLimitForm({ initialValue }: { initialValue: number }) {
         setSaved(true);
         action(formData);
       }}
-      className="mt-6 flex flex-wrap items-end justify-between gap-4 border-t border-[var(--c-border)] pt-5"
+      className="mt-6 flex flex-wrap items-end justify-between gap-4 border-t border-[var(--c-border-soft)] pt-5"
     >
-      <label className="text-[13px] font-medium">
+      <label className="text-[length:var(--fs-md)] font-medium">
         單一持倉集中度上限
-        <span className="mt-0.5 block text-xs font-normal text-[var(--c-muted)]">
+        <span className="mt-0.5 block text-[length:var(--fs-micro)] font-normal text-[var(--c-muted)]">
           anti-FOMO 檢核會以此門檻標示買後權重。
         </span>
-        <span className="mt-2 inline-flex items-center gap-1 text-[13px] text-[var(--c-muted)]">
+        <span className="mt-2 inline-flex items-center gap-1.5 text-[length:var(--fs-sm)] text-[var(--c-muted)]">
           <input
             type="number"
             name="concentrationLimitPct"
@@ -587,14 +575,14 @@ function ConcentrationLimitForm({ initialValue }: { initialValue: number }) {
             max={100}
             step={0.1}
             defaultValue={initialValue}
-            className="h-[36px] w-[76px] rounded-lg border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 text-right text-[13.5px] font-semibold text-[var(--c-text)]"
+            className="field tnum h-11 w-[88px] py-0 text-right font-semibold"
           />
           %
         </span>
       </label>
       <div className="flex items-center gap-2">
-        {state?.error && <span className="text-[12px] text-[var(--c-down)]">{state.error}</span>}
-        {saved && !pending && !state?.error && <span className="text-[12px] text-[var(--c-up)]">✓ 已儲存</span>}
+        {state?.error && <span className="text-[length:var(--fs-micro)] text-[var(--c-down)]">{state.error}</span>}
+        {saved && !pending && !state?.error && <span className="text-[length:var(--fs-micro)] font-semibold text-[var(--c-up)]">✓ 已儲存</span>}
         <button type="submit" disabled={pending} className="btn btn-outline">
           {pending ? "儲存中…" : "儲存上限"}
         </button>
@@ -611,13 +599,13 @@ function NotifInner({ isAdmin }: { isAdmin: boolean }) {
   return (
     <>
       <Row label="站內通知" hint="警示觸發後寫入通知中心">
-        <StatusBadge active>已啟用</StatusBadge>
+        <Tag tone="up">已啟用</Tag>
       </Row>
       <Row label="Email 通知" hint="尚未串接寄信服務">
-        <StatusBadge>尚未開放</StatusBadge>
+        <Tag>尚未開放</Tag>
       </Row>
       <Row label="瀏覽器推播" hint="尚未串接推播服務">
-        <StatusBadge>尚未開放</StatusBadge>
+        <Tag>尚未開放</Tag>
       </Row>
       <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
         <LinkCard href="/alerts" label="警示設定" />
@@ -634,10 +622,10 @@ function LinkCard({ href, label }: { href: string; label: string }) {
   return (
     <Link
       href={href}
-      className="group flex items-center justify-between rounded-xl border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-4 py-3 text-[13.5px] font-medium text-[var(--c-text)] transition-colors hover:border-[var(--c-line-strong)] hover:text-[var(--c-accent)]"
+      className="group flex min-h-11 items-center justify-between border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-4 py-3 text-[length:var(--fs-sm)] font-medium text-[var(--c-text)] transition-colors hover:border-[var(--c-line-strong)] hover:text-[var(--c-accent)]"
     >
       <span>{label}</span>
-      <span className="text-[var(--c-muted)] group-hover:text-[var(--c-accent)]">
+      <span aria-hidden="true" className="text-[var(--c-muted)] group-hover:text-[var(--c-accent)]">
         →
       </span>
     </Link>
@@ -665,7 +653,7 @@ function DataInner({ email }: { email: string | null }) {
             name="year"
             aria-label="稅務報表年度"
             defaultValue={yr}
-            className="h-[38px] rounded-lg border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3 text-[13.5px] text-[var(--c-text)]"
+            className="field tnum h-11 w-auto py-0"
           >
             {Array.from({ length: 5 }, (_, i) => yr - i).map((y) => (
               <option key={y} value={y}>

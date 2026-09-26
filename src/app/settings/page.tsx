@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { AppHeader } from "@/components/AppHeader";
+import { PageHead } from "@/components/survey";
 import { isAdmin } from "@/lib/admin";
 import { getUnreadCount } from "@/lib/notifications";
 import { SettingsApp } from "./SettingsApp";
@@ -44,15 +45,13 @@ export default async function SettingsPage() {
         userEmail={user?.email}
         unreadCount={unreadCount}
       />
-      <main id="main" tabIndex={-1} className="mx-auto max-w-[1200px] px-4 pb-32 pt-8 sm:px-6 sm:pt-10">
-        <header className="mb-6">
-          <h1 className="font-display text-[32px] font-medium tracking-tight">
-            設定
-          </h1>
-          <p className="mt-1.5 text-[13.5px] text-[var(--c-muted)]">
-            帳號、偏好、安全與資料 · 登入身分 {user?.email ?? "—"}
-          </p>
-        </header>
+      <main id="main" tabIndex={-1} className="mx-auto max-w-[1200px] px-4 py-8 pb-32 sm:px-6 sm:py-10 lg:px-8">
+        <PageHead
+          label="帳號設定"
+          title="設定"
+          sub={`帳號、偏好、安全與資料 · 登入身分 ${user?.email ?? "—"}`}
+          className="mb-8"
+        />
         <SettingsApp
           user={{
             email: user?.email ?? null,
