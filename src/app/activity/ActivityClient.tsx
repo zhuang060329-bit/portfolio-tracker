@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { Panel } from "@/components/survey";
 import { ImportCsv } from "./ImportCsv";
 
 export type ActRow = {
@@ -22,17 +23,20 @@ export type ActRow = {
 };
 
 // 類型樣式：對應真實 DB 的 7 種 type（無 buy；加碼記為 adjust_quantity）。
+// 顏色只給帶現金流意義的類型：賣出用跌色、配息與利息用漲色、新建用測量藍；
+// 數量與餘額調整是中性操作，用內文色；價格更新最不重要，用 muted。
+// 類型之間靠符號與文字區分，不靠顏色——原本三個寫死的 hex 色在淺色主題下對比不足。
 const ACT_TYPES: Record<
   string,
   { label: string; color: string; glyph: string }
 > = {
   create: { label: "新建帳戶", color: "var(--c-accent)", glyph: "✦" },
-  adjust_quantity: { label: "調整數量", color: "#E0B15F", glyph: "±" },
-  adjust_balance: { label: "修改餘額", color: "#7FA8C9", glyph: "≈" },
+  adjust_quantity: { label: "調整數量", color: "var(--c-text)", glyph: "±" },
+  adjust_balance: { label: "修改餘額", color: "var(--c-text)", glyph: "≈" },
   price_update: { label: "更新價格", color: "var(--c-muted)", glyph: "↻" },
   sell: { label: "賣出", color: "var(--c-down)", glyph: "↘" },
   dividend: { label: "配息", color: "var(--c-up)", glyph: "＄" },
-  interest: { label: "利息", color: "#C58BD6", glyph: "％" },
+  interest: { label: "利息", color: "var(--c-up)", glyph: "％" },
 };
 const TYPE_ORDER = [
   "sell",
@@ -73,20 +77,15 @@ function dateLabel(
   return { big: base, sub: "" };
 }
 
+// 方角類型標記：只有外框與字，不填底色。
 function TypeBadge({ type }: { type: string }) {
   const t = typeMeta(type);
   return (
     <span
-      className="inline-flex items-center gap-[5px] whitespace-nowrap rounded-md border py-[3px] pl-[7px] pr-[9px] text-xs font-semibold"
-      style={
-        {
-          color: t.color,
-          background: `color-mix(in srgb, ${t.color} 13%, transparent)`,
-          borderColor: `color-mix(in srgb, ${t.color} 28%, transparent)`,
-        } as React.CSSProperties
-      }
+      className="inline-flex items-center gap-[5px] whitespace-nowrap border px-1.5 py-px text-[length:var(--fs-micro)] font-semibold leading-5"
+      style={{ color: t.color, borderColor: t.color }}
     >
-      <span className="text-xs">{t.glyph}</span>
+      <span aria-hidden="true">{t.glyph}</span>
       {t.label}
     </span>
   );
@@ -108,17 +107,19 @@ function LedgerRow({
       className="ledger-row-in grid grid-cols-[40px_1fr] sm:grid-cols-[56px_1fr]"
       style={{ animationDelay: `${Math.min(i * 16, 120)}ms` }}
     >
+      {/* 時間軸：一條髮絲線串起方形測站樁，樁框用類型色 */}
       <div className="relative flex justify-center">
         <span className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-[var(--c-border)]" />
         <span
-          className="relative z-[1] mt-3.5 grid h-6 w-6 place-items-center rounded-full text-xs font-bold text-white shadow-[0_0_0_4px_var(--c-page)] dark:text-[#14130E] sm:h-7 sm:w-7 sm:text-[13px]"
-          style={{ background: t.color }}
+          aria-hidden="true"
+          className="relative z-[1] mt-3.5 grid h-6 w-6 place-items-center border bg-[var(--c-page)] text-[length:var(--fs-micro)] font-bold sm:h-7 sm:w-7"
+          style={{ color: t.color, borderColor: t.color }}
         >
           {t.glyph}
         </span>
       </div>
       <div
-        className={`ml-1 py-3 ${isLast ? "" : "mb-2 border-b border-[var(--c-border)]"}`}
+        className={`ml-1 py-3 ${isLast ? "" : "border-b border-[var(--c-border-soft)]"}`}
       >
         <div className="flex flex-col items-start justify-between gap-1.5 sm:flex-row sm:items-center sm:gap-3">
           <div className="flex min-w-0 flex-wrap items-center gap-x-[11px] gap-y-1">
@@ -126,17 +127,17 @@ function LedgerRow({
             {r.accountId ? (
               <Link
                 href={`/accounts/${r.accountId}`}
-                className="text-[14.5px] font-semibold hover:text-[var(--c-accent)]"
+                className="text-[length:var(--fs-md)] font-semibold hover:text-[var(--c-accent)]"
               >
                 {r.accountName}
                 {r.symbol && (
-                  <span className="ml-[7px] text-xs font-medium text-[var(--c-muted)]">
+                  <span className="ml-[7px] font-mono text-[length:var(--fs-micro)] font-medium text-[var(--c-muted)]">
                     {r.symbol}
                   </span>
                 )}
               </Link>
             ) : (
-              <span className="text-[14.5px] font-semibold text-[var(--c-faint)]">
+              <span className="text-[length:var(--fs-md)] font-semibold text-[var(--c-faint)]">
                 已刪除帳戶
               </span>
             )}
@@ -144,14 +145,14 @@ function LedgerRow({
           <div className="flex w-full items-baseline justify-between gap-3.5 sm:w-auto sm:justify-end">
             {showAmt && (
               <span
-                className={`amt text-[14.5px] font-semibold tnum ${
+                className={`amt text-[length:var(--fs-md)] font-semibold tnum ${
                   r.amount! > 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]"
                 }`}
               >
                 {fmtAmt(r.amount!)}
               </span>
             )}
-            <span className="text-xs text-[var(--c-faint)] tnum">{r.time}</span>
+            <span className="text-[length:var(--fs-micro)] text-[var(--c-muted)] tnum">{r.time}</span>
           </div>
         </div>
 
@@ -170,13 +171,13 @@ function LedgerRow({
         </div>
 
         {r.note && (
-          <div className="mt-2 inline-block rounded-lg border border-[var(--c-border)] bg-[var(--c-surface)] px-[11px] py-[7px] text-[12.5px] text-[var(--c-muted)]">
+          <div className="mt-2 inline-block border-l-2 border-[var(--c-line-strong)] py-0.5 pl-2.5 text-[length:var(--fs-micro)] text-[var(--c-muted)]">
             {r.note}
           </div>
         )}
         <Link
           href={`/decisions/new?transaction=${encodeURIComponent(r.id)}`}
-          className="mt-2 inline-flex text-[12px] font-medium text-[var(--c-accent)] hover:underline"
+          className="mt-2 flex w-fit text-[length:var(--fs-micro)] font-medium text-[var(--c-accent)] hover:underline"
         >
           連結決策日誌 →
         </Link>
@@ -198,9 +199,9 @@ function Kv({
 }) {
   return (
     <span className="contents">
-      <i className="not-italic text-[12px] text-[var(--c-faint)]">{label}</i>
+      <i className="not-italic text-[length:var(--fs-micro)] text-[var(--c-muted)]">{label}</i>
       <b
-        className={`tnum text-[12.5px] ${mask ? "amt " : ""}${
+        className={`tnum text-[length:var(--fs-micro)] ${mask ? "amt " : ""}${
           strong
             ? "font-semibold text-[var(--c-text)]"
             : "font-medium text-[var(--c-muted)]"
@@ -211,6 +212,13 @@ function Kv({
     </span>
   );
 }
+
+// 篩選鈕：方角外框，按下時換成測量藍淡底 + 藍框。數字用 Mono。
+const chipBase =
+  "tap-row inline-flex min-h-9 items-center gap-[7px] whitespace-nowrap border px-3 py-1.5 text-[length:var(--fs-sm)] font-medium transition-colors";
+const chipOn = "border-[var(--c-accent)] bg-[var(--c-accent-soft)] text-[var(--c-text)]";
+const chipOff =
+  "border-[var(--c-border)] bg-[var(--c-surface)] text-[var(--c-muted)] hover:border-[var(--c-line-strong)] hover:text-[var(--c-text)]";
 
 export function ActivityClient({
   rows,
@@ -288,20 +296,16 @@ export function ActivityClient({
 
   return (
     <>
-      {/* 類型 chips（兼統計，可篩選）*/}
+      {/* 類型篩選（兼統計）*/}
       <div className="mt-6 flex flex-wrap gap-2" role="group" aria-label="活動類型篩選">
         <button
           type="button"
           onClick={() => setActive(new Set())}
           aria-pressed={active.size === 0}
-          className={`tap-row inline-flex items-center gap-[7px] whitespace-nowrap rounded-full border px-3 py-[7px] text-[13px] font-medium transition-colors ${
-            active.size === 0
-              ? "border-[color-mix(in_srgb,var(--c-accent)_55%,transparent)] bg-[color-mix(in_srgb,var(--c-accent)_12%,var(--c-surface))] text-[var(--c-text)]"
-              : "border-[var(--c-border)] bg-[var(--c-surface)] text-[var(--c-muted)] hover:border-[var(--c-line-strong)] hover:text-[var(--c-text)]"
-          }`}
+          className={`${chipBase} ${active.size === 0 ? chipOn : chipOff}`}
         >
           全部
-          <span className="rounded-full bg-[var(--c-surface-soft)] px-[7px] py-px text-xs text-[var(--c-faint)] tnum">
+          <span className="text-[length:var(--fs-micro)] text-[var(--c-muted)] tnum">
             {rows.length}
           </span>
         </button>
@@ -314,25 +318,13 @@ export function ActivityClient({
               type="button"
               onClick={() => toggle(t)}
               aria-pressed={on}
-              style={{ "--tc": meta.color } as React.CSSProperties}
-              className={`tap-row inline-flex items-center gap-[7px] whitespace-nowrap rounded-full border px-3 py-[7px] text-[13px] font-medium transition-colors ${
-                on
-                  ? "border-[color-mix(in_srgb,var(--tc)_55%,transparent)] bg-[color-mix(in_srgb,var(--tc)_12%,var(--c-surface))] text-[var(--c-text)]"
-                  : "border-[var(--c-border)] bg-[var(--c-surface)] text-[var(--c-muted)] hover:border-[var(--c-line-strong)] hover:text-[var(--c-text)]"
-              }`}
+              className={`${chipBase} ${on ? chipOn : chipOff}`}
             >
-              <span
-                className="h-2 w-2 rounded-full"
-                style={{ background: "var(--tc)" }}
-              />
+              <span aria-hidden="true" style={{ color: meta.color }}>
+                {meta.glyph}
+              </span>
               {meta.label}
-              <span
-                className={`rounded-full px-[7px] py-px text-xs tnum ${
-                  on
-                    ? "bg-[color-mix(in_srgb,var(--tc)_22%,transparent)] text-[var(--c-text)]"
-                    : "bg-[var(--c-surface-soft)] text-[var(--c-faint)]"
-                }`}
-              >
+              <span className="text-[length:var(--fs-micro)] text-[var(--c-muted)] tnum">
                 {counts[t]}
               </span>
             </button>
@@ -343,7 +335,10 @@ export function ActivityClient({
       {/* 工具列：搜尋 + 匯入 */}
       <div className="mt-4 flex flex-col items-stretch gap-3 sm:flex-row sm:items-start">
         <div className="relative min-w-0 flex-1">
-          <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-base text-[var(--c-faint)]">
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[length:var(--fs-md)] text-[var(--c-faint)]"
+          >
             ⌕
           </span>
           <input
@@ -351,14 +346,14 @@ export function ActivityClient({
             onChange={(e) => setQ(e.target.value)}
             aria-label="搜尋活動紀錄"
             placeholder="搜尋帳戶、類型或備註…"
-            className="h-11 w-full rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] pl-10 pr-9 text-sm text-[var(--c-text)] outline-none placeholder:text-[var(--c-faint)] focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+            className="field h-11 py-0 pl-10 pr-11 placeholder:text-[var(--c-faint)]"
           />
           {q && (
             <button
               type="button"
               onClick={() => setQ("")}
               aria-label="清除搜尋"
-              className="touch-target absolute right-0 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full text-base text-[var(--c-muted)] hover:bg-[var(--c-surface-soft)] hover:text-[var(--c-text)]"
+              className="touch-target absolute right-0 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center text-[length:var(--fs-md)] text-[var(--c-muted)] hover:bg-[var(--c-row-hover)] hover:text-[var(--c-text)]"
             >
               ×
             </button>
@@ -371,7 +366,7 @@ export function ActivityClient({
 
       {/* 時間軸帳本 */}
       {groups.length === 0 ? (
-        <div className="mt-10 text-center text-sm text-[var(--c-muted)]">
+        <div className="mt-8 border border-dashed border-[var(--c-line-strong)] px-4 py-10 text-center text-[length:var(--fs-sm)] text-[var(--c-muted)]">
           {rows.length === 0
             ? "還沒有任何變動。建立帳戶或執行操作後，這裡會出現記錄。"
             : "沒有符合條件的紀錄。"}
@@ -395,25 +390,26 @@ export function ActivityClient({
             const lab = dateLabel(g.date, today, yesterday);
             const dayNet = g.items.reduce((s, r) => s + (r.amount ?? 0), 0);
             return (
-              <section key={g.date} className="mb-2">
-                <div className="flex items-baseline justify-between gap-3 py-3 pl-0 sm:pl-14">
+              <section key={g.date} className="mb-4">
+                {/* 日期列：一條 line-strong 髮絲線收邊，當作這一天的基準線 */}
+                <div className="flex items-baseline justify-between gap-3 border-b border-[var(--c-line-strong)] pb-2 pt-3 sm:ml-14">
                   <div className="flex items-baseline gap-2.5 whitespace-nowrap">
-                    <span className="font-display text-[17px] font-medium">
+                    <h2 className="font-display text-[length:var(--fs-md)] font-semibold">
                       {lab.big}
-                    </span>
+                    </h2>
                     {lab.sub && (
-                      <span className="text-xs text-[var(--c-muted)]">
+                      <span className="text-[length:var(--fs-micro)] text-[var(--c-muted)] tnum">
                         {lab.sub}
                       </span>
                     )}
                   </div>
                   <div className="flex items-baseline gap-3.5 whitespace-nowrap">
-                    <span className="text-xs text-[var(--c-faint)]">
+                    <span className="text-[length:var(--fs-micro)] text-[var(--c-muted)] tnum">
                       {g.items.length} 筆
                     </span>
                     {dayNet !== 0 && (
                       <span
-                        className={`text-xs font-semibold tnum ${
+                        className={`amt text-[length:var(--fs-micro)] font-semibold tnum ${
                           dayNet > 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]"
                         }`}
                       >
@@ -464,15 +460,13 @@ function SummaryRail({
       : "—";
   return (
     <aside className="min-[920px]:sticky min-[920px]:top-[84px]">
-      <div className="overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)]">
-        <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--c-muted)]">
-          顯示中摘要
-        </h3>
-        <dl className="mt-3 flex flex-col">
+      <Panel title="顯示中摘要" sub="依目前篩選即時計算" flush>
+        <dl className="flex flex-col px-5 py-2">
           <RailRow k="筆數" v={`${s.count} 筆`} />
           <RailRow
             k="淨現金流"
             v={fmtAmt(s.net)}
+            mask
             vClass={
               s.net > 0
                 ? "text-[var(--c-up)]"
@@ -484,19 +478,18 @@ function SummaryRail({
           <RailRow
             k="流入"
             v={s.inflow > 0 ? fmtAmt(s.inflow) : "—"}
+            mask={s.inflow > 0}
             vClass={s.inflow > 0 ? "text-[var(--c-up)]" : "text-[var(--c-faint)]"}
           />
           <RailRow
             k="流出"
             v={s.outflow < 0 ? fmtAmt(s.outflow) : "—"}
+            mask={s.outflow < 0}
             vClass={s.outflow < 0 ? "text-[var(--c-down)]" : "text-[var(--c-faint)]"}
           />
           <RailRow k="期間" v={period} small />
         </dl>
-        <p className="mt-3 text-xs text-[var(--c-faint)]">
-          依目前篩選即時計算
-        </p>
-      </div>
+      </Panel>
     </aside>
   );
 }
@@ -506,17 +499,21 @@ function RailRow({
   v,
   vClass = "text-[var(--c-text)]",
   small,
+  mask,
 }: {
   k: string;
   v: string;
   vClass?: string;
   small?: boolean;
+  mask?: boolean;
 }) {
   return (
-    <div className="flex items-baseline justify-between gap-3 border-b border-[var(--c-border)] py-2 last:border-b-0">
-      <dt className="text-xs text-[var(--c-muted)]">{k}</dt>
+    <div className="flex items-baseline justify-between gap-3 border-b border-[var(--c-border-soft)] py-2 last:border-b-0">
+      <dt className="text-[length:var(--fs-micro)] text-[var(--c-muted)]">{k}</dt>
       <dd
-        className={`tnum font-medium ${small ? "text-xs" : "text-[13px]"} ${vClass}`}
+        className={`tnum font-medium ${mask ? "amt " : ""}${
+          small ? "text-[length:var(--fs-micro)]" : "text-[length:var(--fs-sm)]"
+        } ${vClass}`}
       >
         {v}
       </dd>

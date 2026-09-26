@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { AppHeader } from "@/components/AppHeader";
+import { PageHead } from "@/components/survey";
 import { getUnreadCount } from "@/lib/notifications";
 import { todayTaipei } from "@/lib/dates";
 import { ActivityClient, type ActRow } from "./ActivityClient";
@@ -81,24 +82,21 @@ export default async function ActivityPage() {
   return (
     <div className="min-h-dvh bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active="activity" userEmail={user?.email} unreadCount={unreadCount} />
-      <main id="main" tabIndex={-1} className="mx-auto max-w-[1200px] px-4 py-9 pb-28 sm:px-6 lg:px-7">
-        <header className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="font-display text-3xl font-medium tracking-tight">
-              活動紀錄
-            </h1>
-            <p className="mt-1.5 text-[13.5px] text-[var(--c-muted)]">
-              所有帳戶的變動，依時間倒序 · 最近 {rows.length} 筆
-            </p>
-          </div>
-          <a
-            href="/api/export/csv"
-            download
-            className="btn btn-outline shrink-0"
-          >
-            ⤓ 下載 CSV
-          </a>
-        </header>
+      <main id="main" tabIndex={-1} className="mx-auto max-w-[1200px] px-4 py-8 pb-28 sm:px-6 sm:py-10 lg:px-8">
+        <PageHead
+          label="變動帳本"
+          title="活動紀錄"
+          sub={
+            <>
+              所有帳戶的變動，依時間倒序 · 最近 <span className="tnum">{rows.length}</span> 筆
+            </>
+          }
+          action={
+            <a href="/api/export/csv" download className="btn btn-outline shrink-0">
+              ⤓ 下載 CSV
+            </a>
+          }
+        />
 
         <ActivityClient rows={rows} today={today} yesterday={yesterdayStr} />
       </main>

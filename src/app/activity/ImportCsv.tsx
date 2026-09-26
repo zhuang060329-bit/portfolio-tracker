@@ -4,7 +4,7 @@ import { useActionState, useId, useState } from "react";
 import { importTransactionsCsv, type ImportResult } from "./actions";
 import { useActionAnnounce } from "@/components/a11y/use-action-announce";
 
-// StackWorth 風格的可收合匯入面板，沿用真實的 importTransactionsCsv server action。
+// 測繪桌風格的可收合匯入面板，沿用真實的 importTransactionsCsv server action。
 export function ImportCsv() {
   const [open, setOpen] = useState(false);
   const panelId = `csv-import-panel-${useId().replace(/:/g, "")}`;
@@ -21,24 +21,24 @@ export function ImportCsv() {
   );
 
   return (
-    <div id="csv-import" className="w-full scroll-mt-20 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)]">
+    <div id="csv-import" className="w-full scroll-mt-20 border border-[var(--c-border)] bg-[var(--c-surface)]">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-controls={panelId}
-        className="flex h-11 w-full items-center gap-2 px-4 text-[13.5px] font-medium text-[var(--c-text)]"
+        className="flex h-11 w-full items-center gap-2 px-4 text-[length:var(--fs-sm)] font-medium text-[var(--c-text)] transition-colors hover:bg-[var(--c-row-hover)]"
       >
         <span
           aria-hidden="true"
-          className={`text-xs text-[var(--c-muted)] transition-transform ${
+          className={`text-[length:var(--fs-micro)] text-[var(--c-muted)] transition-transform ${
             open ? "rotate-90" : ""
           }`}
         >
           ▸
         </span>
         匯入 CSV
-        <span className="ml-auto truncate text-xs font-normal text-[var(--c-faint)]">
+        <span className="ml-auto truncate text-[length:var(--fs-micro)] font-normal text-[var(--c-muted)]">
           交易紀錄 · 吃得下匯出檔與中英文欄位
         </span>
       </button>
@@ -50,7 +50,7 @@ export function ImportCsv() {
           encType="multipart/form-data"
           className="flex flex-col gap-3 border-t border-[var(--c-border)] p-4"
         >
-          <div className="rounded-[var(--r-card)] bg-[var(--c-surface-soft)] px-3 py-2.5 text-xs text-[var(--c-muted)]">
+          <div className="border-l-2 border-[var(--c-line-strong)] bg-[var(--c-surface-soft)] px-3.5 py-2.5 text-[length:var(--fs-micro)] leading-relaxed text-[var(--c-muted)]">
             <p className="mb-1.5 font-semibold text-[var(--c-text)]">
               支援的欄位（任一即可）
             </p>
@@ -75,21 +75,21 @@ export function ImportCsv() {
                 <b className="font-semibold text-[var(--c-text)]">備註</b> note /
                 備註（選填）
               </li>
-              <li className="mt-1 text-[var(--c-faint)]">
+              <li className="mt-1.5 border-t border-[var(--c-border-soft)] pt-1.5">
                 買賣需要匯出檔才帶得回成本基礎，且只能匯進尚無交易的帳戶；
                 配息與利息任何帳戶都可以，同帳戶同時間的重複列會自動跳過。
               </li>
             </ul>
           </div>
 
-          <label className="flex cursor-pointer flex-col items-center gap-2 rounded-[var(--r-card)] border border-dashed border-[var(--c-line-strong)] bg-[var(--c-surface-soft)] px-4 py-5 text-center text-[12.5px] text-[var(--c-muted)] hover:border-[var(--c-accent)]">
-            <span className="text-lg text-[var(--c-faint)]">⬆</span>
+          <label className="flex cursor-pointer flex-col items-center gap-2 border border-dashed border-[var(--c-line-strong)] bg-[var(--c-surface-soft)] px-4 py-5 text-center text-[length:var(--fs-sm)] text-[var(--c-muted)] transition-colors hover:border-[var(--c-accent)] focus-within:border-[var(--c-accent)]">
+            <span aria-hidden="true" className="text-[length:var(--fs-lg)] text-[var(--c-muted)]">⬆</span>
             <span>
               {fileName ? (
                 <span className="text-[var(--c-text)]">{fileName}</span>
               ) : (
                 <>
-                  點擊選擇 CSV <span className="text-[var(--c-faint)]">檔案</span>
+                  點擊選擇 CSV 檔案
                 </>
               )}
             </span>
@@ -105,16 +105,16 @@ export function ImportCsv() {
 
           {state &&
             (state.ok === false ? (
-              <p className="rounded bg-[color-mix(in_srgb,var(--c-down)_14%,transparent)] px-2 py-1 text-xs text-[var(--c-down)]">
+              <p className="border border-[var(--c-down)] px-3.5 py-2.5 text-[length:var(--fs-sm)] text-[var(--c-down)]">
                 {state.error}
               </p>
             ) : state.ok === true ? (
-              <div className="rounded bg-[color-mix(in_srgb,var(--c-up)_14%,transparent)] px-2 py-1 text-xs text-[var(--c-up)]">
-                <div>
+              <div className="border border-[var(--c-up)] px-3.5 py-2.5 text-[length:var(--fs-sm)] text-[var(--c-up)]">
+                <div className="tnum">
                   匯入 {state.imported} 筆 · 跳過 {state.skipped} 筆
                 </div>
                 {state.errors.length > 0 && (
-                  <ul className="mt-1 list-disc pl-4 text-xs text-[var(--c-down)]">
+                  <ul className="mt-1.5 list-disc pl-4 text-[length:var(--fs-micro)] text-[var(--c-down)]">
                     {state.errors.slice(0, 5).map((e, i) => (
                       <li key={i}>{e}</li>
                     ))}
