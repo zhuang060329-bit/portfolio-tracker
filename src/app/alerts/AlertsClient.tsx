@@ -8,6 +8,7 @@ import {
   type FormState,
 } from "@/lib/alert-actions";
 import { useActionAnnounce } from "@/components/a11y/use-action-announce";
+import { Panel, Tag } from "@/components/survey";
 
 export type AlertAccount = {
   id: string;
@@ -54,7 +55,8 @@ const TYPES: Record<
     label: "配置偏離",
     long: "配置偏離目標",
     glyph: "⊘",
-    color: "#C58BD6",
+    // 配置偏離不是漲跌，用測量藍，不另開一個色
+    color: "var(--c-accent)",
     desc: "任一類別偏離目標過多時通知",
   },
 };
@@ -92,7 +94,7 @@ function Toggle({
         aria-label={`${active ? "停用" : "啟用"}${label}提醒`}
         aria-busy={pending}
         disabled={pending}
-        className="touch-target grid h-11 w-11 place-items-center rounded-[var(--r-control)] disabled:cursor-wait disabled:opacity-60"
+        className="touch-target grid h-11 w-11 place-items-center disabled:cursor-wait disabled:opacity-60"
       >
         <span
           aria-hidden="true"
@@ -285,14 +287,10 @@ function CreatePanel({ accounts }: { accounts: AlertAccount[] }) {
   }
 
   return (
-    <form action={action} className="pt-1">
-      <h2 className="text-[19px] font-medium tracking-tight">
-        新增提醒
-      </h2>
-
+    <form action={action}>
       {/* 三張類型卡 */}
       <input type="hidden" name="type" value={type} />
-      <div className="mt-[18px] grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
         {(Object.keys(TYPES) as AlertType[]).map((k) => {
           const t = TYPES[k];
           const on = type === k;
@@ -303,23 +301,23 @@ function CreatePanel({ accounts }: { accounts: AlertAccount[] }) {
               onClick={() => setType(k)}
               aria-pressed={on}
               style={{ "--tc": t.color } as React.CSSProperties}
-              className={`flex flex-col items-start gap-[3px] rounded-xl border p-[14px] text-left transition-[border-color,background-color,box-shadow] duration-150 ${
+              // 選中：框線換成類型色並加粗成 2px（inset 陰影補 1px，不推擠版面），
+              // 所以不只靠顏色分辨；底色維持 surface，不做色塊
+              className={`flex flex-col items-start gap-[3px] border p-3.5 text-left transition-[border-color,box-shadow] duration-150 ${
                 on
-                  ? "border-[color-mix(in_srgb,var(--tc)_60%,transparent)] bg-[color-mix(in_srgb,var(--tc)_11%,var(--c-surface))] shadow-[0_0_0_2px_color-mix(in_srgb,var(--tc)_20%,transparent),0_4px_14px_rgba(0,0,0,0.18)]"
-                  : "border-[var(--c-border)] bg-[var(--c-surface-soft)] hover:border-[var(--c-line-strong)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.14)]"
+                  ? "border-[var(--tc)] bg-[var(--c-surface)] shadow-[inset_0_0_0_1px_var(--tc)]"
+                  : "border-[var(--c-border)] bg-[var(--c-surface-soft)] hover:border-[var(--c-line-strong)]"
               }`}
             >
               <span
-                className="mb-[5px] grid h-8 w-8 place-items-center rounded-[var(--r-card)] text-lg"
-                style={{
-                  color: "var(--tc)",
-                  background: "color-mix(in srgb, var(--tc) 14%, transparent)",
-                }}
+                aria-hidden="true"
+                className="mb-[5px] grid h-8 w-8 place-items-center border border-current text-[length:var(--fs-lg)]"
+                style={{ color: "var(--tc)" }}
               >
                 {t.glyph}
               </span>
-              <span className="text-sm font-semibold">{t.label}</span>
-              <span className="text-xs leading-[1.35] text-[var(--c-muted)]">
+              <span className="text-[length:var(--fs-sm)] font-semibold">{t.label}</span>
+              <span className="text-[length:var(--fs-micro)] leading-[1.35] text-[var(--c-muted)]">
                 {t.desc}
               </span>
             </button>
@@ -328,15 +326,15 @@ function CreatePanel({ accounts }: { accounts: AlertAccount[] }) {
       </div>
 
       {/* 表單 */}
-      <div className="mt-[18px] grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+      <div className="mt-5 grid grid-cols-1 gap-3.5 sm:grid-cols-2">
         {needAccount && (
-          <label className="flex flex-col gap-[7px]">
-            <span className="text-xs font-medium text-[var(--c-muted)]">帳戶</span>
+          <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
+            <span>帳戶</span>
             <select
               name="accountId"
               value={accountId}
               onChange={(e) => setAccountId(e.target.value)}
-              className="h-[42px] rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+              className="field h-11 py-0"
             >
               {accounts.map((a) => (
                 <option key={a.id} value={a.id}>
@@ -347,11 +345,11 @@ function CreatePanel({ accounts }: { accounts: AlertAccount[] }) {
             </select>
           </label>
         )}
-        <label className="flex flex-col gap-[7px]">
-          <span className="flex items-baseline gap-2 text-xs font-medium text-[var(--c-muted)]">
+        <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
+          <span className="flex items-baseline gap-2">
             {needAccount ? "目標價格" : "偏離門檻（%）"}
             {needAccount && acc?.price != null && (
-              <span className="text-xs text-[var(--c-accent)] tnum">
+              <span className="font-normal text-[var(--c-accent)] tnum">
                 現價 {fmtPrice(acc.price, acc.ccy)}
               </span>
             )}
@@ -365,35 +363,33 @@ function CreatePanel({ accounts }: { accounts: AlertAccount[] }) {
             min="0.01"
             step="any"
             required
-            className="h-[42px] rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3.5 text-sm text-[var(--c-text)] outline-none placeholder:text-[var(--c-faint)] focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+            className="field h-11 py-0 tnum placeholder:text-[var(--c-faint)]"
           />
         </label>
         <label
-          className={`flex flex-col gap-[7px] ${needAccount ? "sm:col-span-2" : ""}`}
+          className={`flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)] ${needAccount ? "sm:col-span-2" : ""}`}
         >
-          <span className="text-xs font-medium text-[var(--c-muted)]">
-            備註（選填）
-          </span>
+          <span>備註（選填）</span>
           <input
             name="note"
             type="text"
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="例：等回檔加碼"
-            className="h-[42px] rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3.5 text-sm text-[var(--c-text)] outline-none placeholder:text-[var(--c-faint)] focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+            className="field h-11 py-0 placeholder:text-[var(--c-faint)]"
           />
         </label>
       </div>
 
       {/* 即時白話預覽 */}
-      <div className="mt-4 flex items-center gap-2.5 rounded-[var(--r-card)] border border-dashed border-[var(--c-line-strong)] bg-[var(--c-surface-soft)] px-4 py-3 text-sm text-[var(--c-muted)]">
-        <span className="text-xs" style={{ color: TYPES[type].color }}>
-          ◆
+      <div className="mt-4 flex items-center gap-2.5 border border-dashed border-[var(--c-line-strong)] bg-[var(--c-surface-soft)] px-4 py-3 text-[length:var(--fs-sm)] text-[var(--c-muted)]">
+        <span aria-hidden="true" style={{ color: TYPES[type].color }}>
+          {TYPES[type].glyph}
         </span>
         <ConditionText type={type} acc={acc} threshold={threshold} />
       </div>
 
-      <div className="mt-[18px] flex flex-wrap items-center gap-3.5">
+      <div className="mt-5 flex flex-wrap items-center gap-3.5">
         <button
           type="submit"
           disabled={pending || !threshold}
@@ -402,14 +398,14 @@ function CreatePanel({ accounts }: { accounts: AlertAccount[] }) {
           {pending ? "建立中…" : "＋ 建立提醒"}
         </button>
         {state?.ok && (
-          <span className="text-[13px] font-semibold text-[var(--c-up)]">
+          <span className="text-[length:var(--fs-sm)] font-semibold text-[var(--c-up)]">
             ✓ 已新增
           </span>
         )}
         {state?.error && (
-          <span className="text-[13px] text-[var(--c-down)]">{state.error}</span>
+          <span className="text-[length:var(--fs-sm)] text-[var(--c-down)]">{state.error}</span>
         )}
-        <span className="ml-auto text-xs text-[var(--c-faint)]">
+        <span className="ml-auto text-[length:var(--fs-micro)] text-[var(--c-muted)]">
           每日抓價後檢查（台北 14:00）· 價格提醒觸發一次後自動停用
         </span>
       </div>
@@ -438,28 +434,21 @@ function AlertCard({
     : a.accountSymbol || a.accountName || "—";
 
   return (
-    // 去卡片化：警示改帳本列（靠底線分隔），不再盒裝（D8）
-    <div
-      className={`grid grid-cols-[auto_1fr] items-center gap-3 border-b border-[var(--c-border)] py-4 sm:grid-cols-[auto_1fr_auto] sm:gap-[15px] ${
-        a.active ? "" : "opacity-[0.58]"
-      }`}
-    >
+    // 帳本列：列與列之間一條 border-soft，Panel 外框收邊。
+    // 停用列不再整列降透明度（降完內文對比掉到 4.5:1 以下），
+    // 改成圖示轉灰＋右側「已停用」標記
+    <div className="grid grid-cols-[auto_1fr] items-center gap-3 border-t border-[var(--c-border-soft)] px-5 py-4 first:border-t-0 sm:grid-cols-[auto_1fr_auto] sm:gap-4">
       <span
-        className="grid h-10 w-10 place-items-center rounded-[var(--r-card)] text-[19px]"
-        style={
-          {
-            "--tc": t.color,
-            color: "var(--tc)",
-            background: "color-mix(in srgb, var(--tc) 14%, transparent)",
-          } as React.CSSProperties
-        }
+        aria-hidden="true"
+        className="grid h-10 w-10 place-items-center border border-current text-[length:var(--fs-lg)]"
+        style={{ color: a.active ? t.color : "var(--c-faint)" }}
       >
         {t.glyph}
       </span>
 
       <div className="min-w-0">
         <div className="flex flex-col items-start justify-between gap-[3px] sm:flex-row sm:items-baseline sm:gap-3">
-          <span className="text-[15px] font-medium">
+          <span className="text-[length:var(--fs-md)] font-medium tnum">
             {a.type === "allocation_drift" ? (
               <>
                 任一類別偏離目標{" "}
@@ -476,8 +465,8 @@ function AlertCard({
             )}
           </span>
           <span
-            className="whitespace-nowrap text-xs font-semibold"
-            style={{ color: t.color }}
+            className="whitespace-nowrap text-[length:var(--fs-micro)] font-semibold"
+            style={{ color: a.active ? t.color : "var(--c-muted)" }}
           >
             {t.long}
           </span>
@@ -485,17 +474,18 @@ function AlertCard({
 
         {/* 距觸發進度條 */}
         <div className="mt-2.5 flex items-center gap-[11px]">
-          <div className="h-1.5 flex-1 overflow-hidden rounded-[var(--r-control)] bg-[var(--c-surface-soft)]">
+          {/* 刻度尺：底軌是髮絲框，填充用 scaleX 而不是 width，只動 transform */}
+          <div className="h-1.5 flex-1 overflow-hidden border border-[var(--c-border)] bg-[var(--c-surface-soft)]">
             <span
-              className="motion-progress block h-full rounded-[var(--r-control)] transition-[width] duration-300 ease-out"
+              className="motion-progress block h-full w-full origin-left transition-transform duration-300 ease-out"
               style={{
-                width: `${(info.closeness * 100).toFixed(1)}%`,
+                transform: `scaleX(${info.closeness.toFixed(3)})`,
                 background: info.reached ? t.color : "var(--c-line-strong)",
               }}
             />
           </div>
           <span
-            className={`whitespace-nowrap text-xs tnum ${
+            className={`whitespace-nowrap text-[length:var(--fs-micro)] tnum ${
               info.reached ? "font-semibold" : "text-[var(--c-muted)]"
             }`}
             style={info.reached ? { color: t.color } : {}}
@@ -504,11 +494,11 @@ function AlertCard({
           </span>
         </div>
 
-        <div className="mt-2 flex flex-wrap gap-x-2 gap-y-1 text-xs text-[var(--c-faint)]">
+        <div className="mt-2 flex flex-wrap gap-x-2 gap-y-1 text-[length:var(--fs-micro)] text-[var(--c-muted)]">
           {acc?.price != null && (
             <span className="tnum">現價 {fmtPrice(acc.price, acc.ccy)}</span>
           )}
-          {a.note && <span className="text-[var(--c-muted)]">· {a.note}</span>}
+          {a.note && <span>· {a.note}</span>}
           {a.lastTriggered && (
             <span>
               · 上次觸發{" "}
@@ -519,11 +509,7 @@ function AlertCard({
       </div>
 
       <div className="col-start-2 flex items-center justify-end gap-2 sm:col-start-3">
-        {!a.active && (
-          <span className="rounded-full border border-[var(--c-border)] px-2 py-px text-xs text-[var(--c-faint)]">
-            已停用
-          </span>
-        )}
+        {!a.active && <Tag>已停用</Tag>}
         <Toggle id={a.id} active={a.active} label={accLabel} />
         <DeleteAlertControl id={a.id} label={accLabel} />
       </div>
@@ -567,20 +553,13 @@ function ListHead({
   count: number;
 }) {
   return (
-    <div
-      className={`mb-0.5 mt-3.5 flex items-center gap-[9px] text-[13px] font-semibold ${
-        on ? "text-[var(--c-text)]" : "mt-[22px] text-[var(--c-muted)]"
-      }`}
-    >
+    <div className="flex items-center gap-2 border-b border-[var(--c-line-strong)] pb-2 text-[length:var(--fs-sm)] font-semibold">
       <span
-        className={`h-2 w-2 rounded-full ${
-          on
-            ? "bg-[var(--c-up)] shadow-[0_0_0_3px_color-mix(in_srgb,var(--c-up)_22%,transparent)]"
-            : "bg-[var(--c-faint)]"
-        }`}
+        aria-hidden="true"
+        className={`h-2 w-2 ${on ? "bg-[var(--c-up)]" : "border border-[var(--c-faint)]"}`}
       />
-      {label}
-      <span className="rounded-full bg-[var(--c-surface-soft)] px-2 py-px text-xs text-[var(--c-faint)] tnum">
+      <span className={on ? "" : "text-[var(--c-muted)]"}>{label}</span>
+      <span className="font-mono text-[length:var(--fs-micro)] font-normal text-[var(--c-muted)] tnum">
         {count}
       </span>
     </div>
@@ -601,31 +580,35 @@ export function AlertsClient({
   const paused = alerts.filter((a) => !a.active);
 
   return (
-    <div className="flex flex-col">
-      <div className="overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] sm:p-6">
+    <div className="flex flex-col gap-8">
+      <Panel title="新增提醒">
         <CreatePanel accounts={accounts} />
-      </div>
+      </Panel>
 
-      <div className="mt-5 flex flex-col pt-1">
+      <section>
         <ListHead on label="啟用中" count={active.length} />
         {active.length === 0 ? (
-          <div className="rounded-[var(--r-card)] border border-dashed border-[var(--c-border)] px-5 py-[22px] text-center text-[13.5px] text-[var(--c-muted)]">
-            目前沒有啟用中的提醒。
-          </div>
+          <p className="mt-3 border border-dashed border-[var(--c-border)] px-5 py-5 text-[length:var(--fs-sm)] text-[var(--c-muted)]">
+            目前沒有啟用中的提醒。上方選一種類型、填門檻就能建立。
+          </p>
         ) : (
-          active.map((a) => (
-            <AlertCard
-              key={a.id}
-              a={a}
-              accounts={accounts}
-              currentDrift={currentDrift}
-            />
-          ))
+          <div className="mt-3 border border-[var(--c-border)] bg-[var(--c-surface)]">
+            {active.map((a) => (
+              <AlertCard
+                key={a.id}
+                a={a}
+                accounts={accounts}
+                currentDrift={currentDrift}
+              />
+            ))}
+          </div>
         )}
+      </section>
 
-        {paused.length > 0 && (
-          <>
-            <ListHead on={false} label="已停用" count={paused.length} />
+      {paused.length > 0 && (
+        <section>
+          <ListHead on={false} label="已停用" count={paused.length} />
+          <div className="mt-3 border border-[var(--c-border)] bg-[var(--c-surface)]">
             {paused.map((a) => (
               <AlertCard
                 key={a.id}
@@ -634,9 +617,9 @@ export function AlertsClient({
                 currentDrift={currentDrift}
               />
             ))}
-          </>
-        )}
-      </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

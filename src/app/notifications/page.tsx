@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { AppHeader } from "@/components/AppHeader";
+import { PageHead, Tag, type TagTone } from "@/components/survey";
 import { getUnreadCount } from "@/lib/notifications";
 import {
   MarkAllNotificationsReadButton,
@@ -23,15 +24,11 @@ const TYPE_LABEL: Record<string, string> = {
   system: "系統",
 };
 
-const TYPE_TONE: Record<string, string> = {
-  price_above:
-    "bg-[color-mix(in_srgb,var(--c-up)_15%,transparent)] border border-[color-mix(in_srgb,var(--c-up)_30%,transparent)] text-[var(--c-up)]",
-  price_below:
-    "bg-[color-mix(in_srgb,var(--c-down)_15%,transparent)] border border-[color-mix(in_srgb,var(--c-down)_30%,transparent)] text-[var(--c-down)]",
-  allocation_drift:
-    "bg-[color-mix(in_srgb,var(--c-accent)_12%,transparent)] border border-[color-mix(in_srgb,var(--c-accent)_25%,transparent)] text-[var(--c-accent)]",
-  system:
-    "bg-[var(--c-surface-soft)] border border-[var(--c-border)] text-[var(--c-muted)]",
+const TYPE_TONE: Record<string, TagTone> = {
+  price_above: "up",
+  price_below: "down",
+  allocation_drift: "accent",
+  system: "quiet",
 };
 
 const fmtTime = (iso: string) =>
@@ -67,73 +64,76 @@ export default async function NotificationsPage() {
     <div className="min-h-dvh bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active={null} userEmail={user?.email} unreadCount={unreadCount} />
       <main id="main" tabIndex={-1} className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-        <div className="mb-4 text-sm">
-          <Link href="/" className="text-[var(--c-muted)] hover:text-[var(--c-text)]">
-            ← 回總覽
-          </Link>
-        </div>
-        <header className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="font-display text-3xl font-semibold tracking-tight">
-              通知
-            </h1>
-            <p className="mt-2 text-sm text-[var(--c-muted)]">
-              警示觸發紀錄，最近 200 筆。
+        <Link
+          href="/"
+          className="text-[length:var(--fs-sm)] text-[var(--c-muted)] transition-colors hover:text-[var(--c-accent)]"
+        >
+          ← 回總覽
+        </Link>
+        <PageHead
+          className="mt-4"
+          label="通知中心"
+          title="通知"
+          sub={
+            <>
+              提醒觸發紀錄，最近 200 筆
               {unreadInList > 0 && (
-                <span className="ml-2 text-[var(--c-text)]">
-                  · 未讀 {unreadInList}
+                <span className="text-[var(--c-text)]">
+                  {" "}· 未讀 <span className="tnum">{unreadInList}</span>
                 </span>
               )}
-            </p>
-          </div>
-          {unreadInList > 0 && (
-            <MarkAllNotificationsReadButton />
-          )}
-        </header>
+            </>
+          }
+          action={unreadInList > 0 ? <MarkAllNotificationsReadButton /> : undefined}
+        />
 
         {rows.length === 0 ? (
-          <div className="mt-6 rounded-[var(--r-card)] border border-dashed border-[var(--c-border)] bg-[var(--c-surface)] px-6 py-12 text-center">
-            <p className="text-sm text-[var(--c-muted)]">
-              還沒有任何通知。先到{" "}
-              <Link
-                href="/alerts"
-                className="text-[var(--c-accent)] underline"
-              >
-                警示設定
-              </Link>
-              {" "}建立警示。
-            </p>
-          </div>
+          <p className="mt-6 border border-dashed border-[var(--c-border)] px-5 py-8 text-[length:var(--fs-sm)] text-[var(--c-muted)]">
+            還沒有任何通知。先到{" "}
+            <Link
+              href="/alerts"
+              className="text-[var(--c-accent)] underline underline-offset-4"
+            >
+              提醒
+            </Link>
+            {" "}建立規則，每日抓價後觸發就會出現在這裡。
+          </p>
         ) : (
-          <ul className="mt-6 flex flex-col gap-2">
+          <ul className="mt-6 border border-[var(--c-border)] bg-[var(--c-surface)]">
             {rows.map((r) => (
+              // 已讀列不整列降透明度（會把內文壓到對比不足），改成標題轉灰、
+              // 未讀列左側一條測量藍實線＋「未讀」字樣
               <li
                 key={r.id}
-                className={`rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-4 ${
-                  r.read_at ? "opacity-60" : ""
+                className={`border-t border-[var(--c-border-soft)] px-5 py-4 first:border-t-0 ${
+                  r.read_at ? "" : "shadow-[inset_2px_0_0_var(--c-accent)]"
                 }`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
+                      <Tag tone={TYPE_TONE[r.type] ?? "quiet"}>
+                        {TYPE_LABEL[r.type] ?? r.type}
+                      </Tag>
                       <span
-                        className={`inline-flex rounded px-2 py-0.5 text-xs ${
-                          TYPE_TONE[r.type] ?? TYPE_TONE.system
+                        className={`text-[length:var(--fs-sm)] font-semibold ${
+                          r.read_at ? "text-[var(--c-muted)]" : ""
                         }`}
                       >
-                        {TYPE_LABEL[r.type] ?? r.type}
+                        {r.title}
                       </span>
-                      <span className="text-sm font-medium">{r.title}</span>
                       {!r.read_at && (
-                        <span className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--c-accent)]" />
+                        <span className="text-[length:var(--fs-micro)] font-semibold text-[var(--c-accent)]">
+                          未讀
+                        </span>
                       )}
                     </div>
                     {r.body && (
-                      <p className="mt-1 whitespace-pre-line text-xs text-[var(--c-muted)]">
+                      <p className="mt-1.5 whitespace-pre-line text-[length:var(--fs-sm)] text-[var(--c-muted)]">
                         {r.body}
                       </p>
                     )}
-                    <p className="mt-1 text-xs text-[var(--c-faint)]">
+                    <p className="mt-1.5 font-mono text-[length:var(--fs-micro)] text-[var(--c-muted)] tnum">
                       {fmtTime(r.created_at)}
                     </p>
                   </div>

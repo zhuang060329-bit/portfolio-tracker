@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { AppHeader } from "@/components/AppHeader";
+import { PageHead } from "@/components/survey";
 import { getUnreadCount } from "@/lib/notifications";
 import {
   AlertsClient,
@@ -127,30 +128,29 @@ export default async function AlertsPage() {
   return (
     <div className="min-h-dvh bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active="alerts" userEmail={user?.email} unreadCount={unreadCount} />
-      <main id="main" tabIndex={-1} className="mx-auto max-w-[900px] px-4 py-9 pb-28 sm:px-6 lg:px-7">
-        <div className="mb-4 text-sm">
-          <Link href="/" className="text-[var(--c-muted)] hover:text-[var(--c-text)]">
-            ← 回總覽
-          </Link>
-        </div>
-        <header className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="font-display text-3xl font-medium tracking-tight">
-              提醒
-            </h1>
-            <p className="mt-1.5 text-[13.5px] text-[var(--c-muted)]">
-              價格突破 / 跌破，或配置偏離目標時，在通知中心收到提醒。
-            </p>
-          </div>
-          <div className="whitespace-nowrap text-right">
-            <span className="font-mono text-3xl font-medium text-[var(--c-accent)] tnum">
-              {activeCount}
-            </span>
-            <span className="block text-xs tracking-wide text-[var(--c-muted)]">
-              啟用中
-            </span>
-          </div>
-        </header>
+      <main id="main" tabIndex={-1} className="mx-auto max-w-[900px] px-4 py-8 pb-28 sm:px-6 sm:py-10 lg:px-7">
+        <Link
+          href="/"
+          className="text-[length:var(--fs-sm)] text-[var(--c-muted)] transition-colors hover:text-[var(--c-accent)]"
+        >
+          ← 回總覽
+        </Link>
+        <PageHead
+          className="mt-4"
+          label="提醒規則"
+          title="提醒"
+          sub="價格突破 / 跌破，或配置偏離目標時，在通知中心收到提醒。"
+          action={
+            <div className="text-right">
+              <div className="font-mono text-[length:var(--fs-2xl)] font-semibold leading-none text-[var(--c-accent)] tnum">
+                {activeCount}
+              </div>
+              <div className="mt-1.5 text-[length:var(--fs-micro)] tracking-[0.06em] text-[var(--c-muted)]">
+                啟用中
+              </div>
+            </div>
+          }
+        />
 
         <div className="mt-6">
           <AlertsClient

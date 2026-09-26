@@ -65,14 +65,16 @@ export function PageHead({
 
 /* 方角狀態標記。不做膠囊、不做底色塊，靠外框與字表意：
    - up：已完成、正向結果，實線綠框
+   - down：跌破、負向結果，實線跌色框（與朱砂註記是兩個色，見 design.md）
    - annot：需要注意（例如檢討到期），朱砂虛線框。字用 --c-annot-text，
      因為淺色主題下朱砂本身對底不到 4.5:1，只能當框色
    - accent：分類（加碼、續抱），測量藍淡底
    - quiet：進行中、沒有要人做的事 */
-export type TagTone = "up" | "annot" | "accent" | "quiet";
+export type TagTone = "up" | "down" | "annot" | "accent" | "quiet";
 
 const TAG_TONE: Record<TagTone, string> = {
   up: "border-[var(--c-up)] text-[var(--c-up)]",
+  down: "border-[var(--c-down)] text-[var(--c-down)]",
   annot: "border-dashed border-[var(--c-annot)] text-[var(--c-annot-text)]",
   accent: "border-transparent bg-[var(--c-accent-soft)] text-[var(--c-accent)]",
   quiet: "border-[var(--c-border)] text-[var(--c-muted)]",

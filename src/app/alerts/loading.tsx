@@ -1,60 +1,64 @@
 import { AppHeader } from "@/components/AppHeader";
 
-const sk = "sk rounded";
-const card =
-  "rounded-2xl border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] sm:px-6";
-
+// 骨架照 page.tsx 的地塊排：返回連結、頁首、新增面板、啟用中帳本。
+// .sk 是斜線填紋的空地塊，已自帶掃光與 reduced-motion 處理。
 export default function AlertsLoading() {
   return (
     <div className="min-h-dvh bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active="alerts" authPending />
-      <main id="main" tabIndex={-1} className="mx-auto max-w-[820px] px-7 py-9 pb-28">
-        <div className={`mb-4 h-4 w-20 ${sk}`} />
-        <div className="flex items-start justify-between gap-4">
+      <main id="main" tabIndex={-1} className="mx-auto max-w-[900px] px-4 py-8 pb-28 sm:px-6 sm:py-10 lg:px-7">
+        <div className="sk h-4 w-20" />
+        <header className="mt-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-4 border-b border-[var(--c-line-strong)] pb-5">
           <div>
-            <div className={`h-8 w-20 ${sk}`} />
-            <div className={`mt-2 h-3 w-72 ${sk}`} />
+            <div className="sk h-3 w-20" />
+            <div className="sk mt-3 h-7 w-24" />
+            <div className="sk mt-2.5 h-3 w-72" />
           </div>
-          <div className={`h-10 w-12 ${sk}`} />
-        </div>
+          <div className="sk h-10 w-12" />
+        </header>
 
         {/* 新增面板 */}
-        <section className={`mt-6 ${card}`}>
-          <div className={`h-5 w-24 ${sk}`} />
-          <div className="mt-[18px] grid grid-cols-1 gap-2.5 sm:grid-cols-3">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className={`h-24 rounded-xl ${sk} opacity-60`} />
-            ))}
+        <section className="mt-8 border border-[var(--c-border)] bg-[var(--c-surface)]">
+          <div className="border-b border-[var(--c-border-soft)] px-5 py-3">
+            <div className="sk h-4 w-20" />
           </div>
-          <div className="mt-[18px] grid grid-cols-1 gap-3.5 sm:grid-cols-2">
-            <div className={`h-[42px] rounded-[var(--r-card)] ${sk}`} />
-            <div className={`h-[42px] rounded-[var(--r-card)] ${sk}`} />
+          <div className="p-5">
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="sk h-24" />
+              ))}
+            </div>
+            <div className="mt-5 grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+              <div className="sk h-11" />
+              <div className="sk h-11" />
+            </div>
+            <div className="sk mt-4 h-12" />
+            <div className="sk mt-5 h-11 w-28" />
           </div>
-          <div className={`mt-4 h-12 rounded-[var(--r-card)] ${sk} opacity-60`} />
-          <div className={`mt-[18px] h-10 w-28 rounded-[var(--r-card)] ${sk}`} />
         </section>
 
-        {/* 列表 */}
-        <div className="mt-6 flex flex-col gap-2.5">
-          <div className={`h-4 w-24 ${sk}`} />
-          {[0, 1, 2].map((i) => (
-            <div
-              key={i}
-              className="grid grid-cols-[auto_1fr_auto] items-center gap-[15px] rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-4 shadow-[var(--c-shadow)] sm:px-[18px]"
-            >
-              <div className={`h-10 w-10 rounded-[var(--r-card)] ${sk}`} />
-              <div>
-                <div className={`h-4 w-44 ${sk}`} />
-                <div className={`mt-2.5 h-1.5 w-full ${sk}`} />
-                <div className={`mt-2 h-3 w-32 ${sk}`} />
+        {/* 啟用中帳本 */}
+        <section className="mt-8">
+          <div className="border-b border-[var(--c-line-strong)] pb-2">
+            <div className="sk h-4 w-20" />
+          </div>
+          <div className="mt-3 border border-[var(--c-border)] bg-[var(--c-surface)]">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="flex items-center gap-3 border-t border-[var(--c-border-soft)] px-5 py-4 first:border-t-0"
+              >
+                <div className="sk h-10 w-10 shrink-0" />
+                <div className="flex-1">
+                  <div className="sk h-4 w-48" />
+                  <div className="sk mt-2.5 h-1.5 w-full" />
+                  <div className="sk mt-2 h-3 w-32" />
+                </div>
+                <div className="sk h-11 w-24 shrink-0" />
               </div>
-              <div className="flex items-center gap-2">
-                <div className={`h-6 w-[42px] rounded-full ${sk}`} />
-                <div className={`h-[34px] w-[34px] rounded-[var(--r-card)] ${sk}`} />
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </section>
       </main>
     </div>
   );
