@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useEffect, useId, useRef, useState } from "react";
 import { addByAmount, type FormState } from "@/app/accounts/[id]/actions";
 import { useActionAnnounce } from "@/components/a11y/use-action-announce";
+import { SurveyLabel } from "@/components/survey";
 
 type Account = {
   id: string;
@@ -144,8 +145,8 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
       : 0;
   const accountMissingPrice = Boolean(account) && !(perShare > 0);
 
-  const fieldClass =
-    "mt-1 h-11 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]";
+  // 外觀交給全站 .field（方角髮絲線、焦點走套準記號），這裡只補高度
+  const fieldClass = "field mt-1 h-11 py-0";
 
   return (
     <>
@@ -155,7 +156,7 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
           id={menuId}
           role="group"
           aria-label="快速建立"
-          className="create-menu-panel fixed bottom-[calc(max(1rem,env(safe-area-inset-bottom))+64px)] right-4 z-40 w-[220px] overflow-hidden rounded-[var(--r-card)] border border-[var(--c-line-strong)] bg-[var(--c-surface)] p-1.5 shadow-[var(--c-shadow)] sm:hidden"
+          className="create-menu-panel fixed bottom-[calc(max(1rem,env(safe-area-inset-bottom))+64px)] right-4 z-40 w-[220px] overflow-hidden border border-[var(--c-line-strong)] bg-[var(--c-surface)] shadow-[var(--c-shadow)] sm:hidden"
         >
           <button
             type="button"
@@ -164,13 +165,13 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
               setMenuOpen(false);
               setQuickAddOpen(true);
             }}
-            className="create-menu-item flex min-h-11 w-full items-center gap-3 rounded-[var(--r-control)] px-3 text-left text-sm font-medium hover:bg-[var(--c-surface-soft)] disabled:cursor-not-allowed disabled:opacity-45"
+            className="create-menu-item flex min-h-11 w-full items-center gap-3 border-t border-[var(--c-border-soft)] px-3 text-left text-[length:var(--fs-sm)] font-medium first:border-t-0 hover:bg-[var(--c-row-hover)] disabled:cursor-not-allowed disabled:text-[var(--c-faint)] disabled:hover:bg-transparent"
           >
             <MenuIcon type="add" />
             <span>
               快速加碼
               {accounts.length === 0 && (
-                <span className="block text-xs font-normal text-[var(--c-faint)]">
+                <span className="block text-[length:var(--fs-micro)] font-normal text-[var(--c-faint)]">
                   先建立可報價帳戶
                 </span>
               )}
@@ -179,7 +180,7 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
           <Link
             href="/accounts/new"
             onClick={() => setMenuOpen(false)}
-            className="create-menu-item flex min-h-11 items-center gap-3 rounded-[var(--r-control)] px-3 text-sm font-medium hover:bg-[var(--c-surface-soft)]"
+            className="create-menu-item flex min-h-11 items-center gap-3 border-t border-[var(--c-border-soft)] px-3 text-[length:var(--fs-sm)] font-medium first:border-t-0 hover:bg-[var(--c-row-hover)]"
           >
             <MenuIcon type="account" />
             建立帳戶
@@ -187,7 +188,7 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
           <Link
             href="/activity#csv-import"
             onClick={() => setMenuOpen(false)}
-            className="create-menu-item flex min-h-11 items-center gap-3 rounded-[var(--r-control)] px-3 text-sm font-medium hover:bg-[var(--c-surface-soft)]"
+            className="create-menu-item flex min-h-11 items-center gap-3 border-t border-[var(--c-border-soft)] px-3 text-[length:var(--fs-sm)] font-medium first:border-t-0 hover:bg-[var(--c-row-hover)]"
           >
             <MenuIcon type="import" />
             匯入 CSV
@@ -202,7 +203,7 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
         aria-label={menuOpen ? "關閉快速建立選單" : "開啟快速建立選單"}
         aria-expanded={menuOpen}
         aria-controls={menuId}
-        className="create-menu-trigger fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-40 grid h-[52px] w-[52px] place-items-center rounded-[var(--r-card)] bg-[var(--c-accent)] text-[var(--c-btn-strong-text)] shadow-[0_8px_22px_rgba(0,0,0,0.28)] hover:brightness-105 sm:hidden"
+        className="create-menu-trigger fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-40 grid h-[52px] w-[52px] place-items-center border border-[var(--c-accent)] bg-[var(--c-accent)] text-[var(--c-btn-strong-text)] shadow-[var(--c-shadow)] active:translate-y-px sm:hidden"
       >
         <svg
           viewBox="0 0 24 24"
@@ -230,12 +231,15 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
             role="dialog"
             aria-modal="true"
             aria-label="快速加碼"
-            className="safe-bottom max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-t-[var(--r-card)] border border-[var(--c-line-strong)] bg-[var(--c-surface)] p-4 shadow-[var(--c-shadow)] sm:rounded-[var(--r-card)] sm:p-6"
+            className="safe-bottom max-h-[92dvh] w-full max-w-md overflow-y-auto border border-[var(--c-line-strong)] bg-[var(--c-surface)] p-4 shadow-[var(--c-shadow)] sm:p-6"
           >
-            <div className="flex items-center justify-between">
-              <h2 className="text-[18px] font-semibold tracking-[-0.02em]">
-                快速加碼
-              </h2>
+            <div className="flex items-center justify-between border-b border-[var(--c-line-strong)] pb-3">
+              <div>
+                <SurveyLabel>快速建立</SurveyLabel>
+                <h2 className="mt-1 text-[length:var(--fs-lg)] font-semibold">
+                  快速加碼
+                </h2>
+              </div>
               <button
                 type="button"
                 onClick={() => setQuickAddOpen(false)}
@@ -257,10 +261,10 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
               </button>
             </div>
 
-            <form action={action} className="mt-4 flex flex-col gap-3.5">
+            <form action={action} className="mt-5 flex flex-col gap-3.5">
               <input type="hidden" name="accountId" value={accountId} />
 
-              <label className="flex flex-col gap-1 text-xs font-medium text-[var(--c-muted)]">
+              <label className="flex flex-col gap-1 text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
                 帳戶
                 <select
                   value={accountId}
@@ -277,7 +281,7 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
                 </select>
               </label>
 
-              <label className="flex flex-col gap-1 text-xs font-medium text-[var(--c-muted)]">
+              <label className="flex flex-col gap-1 text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
                 投入金額（TWD）
                 <input
                   name="twd"
@@ -290,12 +294,12 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
                   value={twd}
                   onChange={(event) => setTwd(event.target.value)}
                   placeholder="例：50000"
-                  className={`${fieldClass} text-base tnum`}
+                  className={`${fieldClass} font-semibold tnum`}
                 />
               </label>
 
               {account && (
-                <div className="rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3.5 py-3 text-xs text-[var(--c-muted)]">
+                <div className="border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3.5 py-3 text-[length:var(--fs-micro)] text-[var(--c-muted)]">
                   <div className="flex justify-between gap-4">
                     <span>現價</span>
                     <span className="text-[var(--c-text)] tnum">
@@ -312,7 +316,7 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
                       </span>
                     </div>
                   )}
-                  <div className="mt-2 flex justify-between gap-4 border-t border-[var(--c-border)] pt-2">
+                  <div className="mt-2 flex justify-between gap-4 border-t border-dashed border-[var(--c-line-strong)] pt-2">
                     <span>預計購入</span>
                     <span className="font-semibold text-[var(--c-text)] tnum">
                       {previewShares > 0
@@ -321,7 +325,7 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
                     </span>
                   </div>
                   {twdNumber > 0 && (
-                    <div className="mt-1.5 flex justify-between gap-4 text-xs">
+                    <div className="mt-1.5 flex justify-between gap-4">
                       <span>投入</span>
                       <span className="amt tnum">NT$ {fmtTwd(twdNumber)}</span>
                     </div>
@@ -329,15 +333,15 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
                 </div>
               )}
 
-              {/* 改用 --c-warn：原本寫死 #E0B15F 當字色，在淺色主題下對這塊
-                  14% 色底只有 1.75:1，等於看不見。結構與下方錯誤訊息一致。 */}
+              {/* 缺市價是「請注意」而不是錯誤：朱砂虛線框＋文字，字色用 --c-annot-text
+                  （淺色主題下朱砂本身對底不到 4.5:1，只當框色）。 */}
               {accountMissingPrice && (
-                <p className="rounded-[var(--r-control)] bg-[color-mix(in_srgb,var(--c-warn)_14%,transparent)] px-3 py-2 text-xs text-[var(--c-warn)]">
+                <p className="border border-dashed border-[var(--c-annot)] px-3 py-2 text-[length:var(--fs-micro)] font-semibold text-[var(--c-annot-text)]">
                   此帳戶目前沒有市價，請先到帳戶詳情頁更新價格。
                 </p>
               )}
               {state?.error && (
-                <p className="rounded-[var(--r-control)] bg-[color-mix(in_srgb,var(--c-down)_14%,transparent)] px-3 py-2 text-xs text-[var(--c-down)]">
+                <p className="border border-[var(--c-down)] px-3 py-2 text-[length:var(--fs-micro)] text-[var(--c-down)]">
                   {state.error}
                 </p>
               )}
@@ -352,7 +356,7 @@ export function QuickAddFab({ accounts }: { accounts: Account[] }) {
                 {pending ? "記錄中…" : "確認加碼"}
               </button>
 
-              <p className="text-xs leading-relaxed text-[var(--c-faint)]">
+              <p className="text-[length:var(--fs-micro)] leading-relaxed text-[var(--c-faint)]">
                 依目前報價估算，不記手續費；要記手續費或自訂成交價、匯率、時間請進入帳戶詳情頁。
               </p>
             </form>
