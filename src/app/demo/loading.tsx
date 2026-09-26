@@ -1,8 +1,8 @@
 import { DemoV1Header } from "@/components/DemoV1Header";
 
-const skeleton = "sk rounded-[var(--r-control)]";
+const skeleton = "sk";
 const panel =
-  "overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 sm:p-6";
+  "border border-[var(--c-border)] bg-[var(--c-surface)] p-5 sm:p-6";
 
 // Demo 區段的載入骨架。刻意渲染 DemoV1Header（而非根 loading.tsx 的已登入版
 // AppHeader），避免公開訪客在載入瞬間閃到「登入」導覽再跳成 DEMO 版。
@@ -22,7 +22,7 @@ export default function DemoLoading() {
             </div>
           </section>
 
-          <section className="overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-border)]">
+          <section className="border border-[var(--c-border)] bg-[var(--c-border)]">
             <div className="grid grid-cols-2 gap-px sm:grid-cols-4">
               {[0, 1, 2, 3].map((index) => (
                 <div

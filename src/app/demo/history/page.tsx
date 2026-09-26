@@ -1,4 +1,5 @@
 import { DemoV1Header } from "@/components/DemoV1Header";
+import { PageHead, Stat, StatStrip } from "@/components/survey";
 import { todayTaipei } from "@/lib/dates";
 import { buildDemoV1Data } from "@/lib/demo-v1-data";
 import { fmtFull, fmtNum } from "@/lib/format";
@@ -23,24 +24,62 @@ export default async function DemoHistoryPage({ searchParams }: { searchParams: 
     <div className="min-h-dvh bg-[var(--c-page)] text-[var(--c-text)]">
       <DemoV1Header active="history" />
       <main id="main" tabIndex={-1} className="mx-auto max-w-[980px] px-4 pb-24 pt-8 sm:px-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div><h1 className="font-display text-3xl font-medium">歷史回放 Demo</h1><p className="mt-1.5 text-[13px] text-[var(--c-muted)]">日期改變只會選用該日以前的固定快照。</p></div>
-          <form method="GET" className="flex items-end gap-2"><label className="text-xs text-[var(--c-muted)]">回放日<input type="date" name="date" min={openingDate} max={today} defaultValue={targetDate} className="mt-1 block h-11 rounded-lg border border-[var(--c-border)] px-3 text-[13px] sm:h-10" /></label><button className="h-11 btn btn-primary btn-fit sm:h-10">回放</button></form>
-        </div>
-        <section className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Card label="期初淨值" value={opening.totalValueTwd} /><Card label="回放淨值" value={ending.totalValueTwd} /><Card label="市價效果" value={attribution.marketPriceEffectTwd} /><Card label="匯率效果" value={attribution.fxEffectTwd} />
+        <PageHead
+          label={`回放區間 ${openingDate} → ${targetDate}`}
+          title="歷史回放"
+          sub="日期改變只會選用該日以前的固定快照。"
+          action={
+            <form method="GET" className="flex items-end gap-2">
+              <label className="text-[length:var(--fs-micro)] text-[var(--c-muted)]">
+                回放日
+                <input type="date" name="date" min={openingDate} max={today} defaultValue={targetDate} className="mt-1 block h-11 border border-[var(--c-line-strong)] px-3 text-[length:var(--fs-sm)] tnum sm:h-10" />
+              </label>
+              <button className="h-11 btn btn-primary btn-fit sm:h-10">回放</button>
+            </form>
+          }
+        />
+        <StatStrip cols={4} className="mt-6">
+          <Stat label="期初淨值" mask value={`NT$ ${fmtFull(opening.totalValueTwd)}`} />
+          <Stat label="回放淨值" mask value={`NT$ ${fmtFull(ending.totalValueTwd)}`} />
+          <Stat label="市價效果" mask value={<Signed value={attribution.marketPriceEffectTwd} />} />
+          <Stat label="匯率效果" mask value={<Signed value={attribution.fxEffectTwd} />} />
+        </StatStrip>
+        <section className="mt-6 border border-[var(--c-border)] bg-[var(--c-surface)]">
+          {ending.holdings.map((holding, index) => {
+            const pct = ending.totalValueTwd > 0 ? (holding.valueTwd / ending.totalValueTwd) * 100 : 0;
+            return (
+              <div key={holding.accountId} className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 px-5 py-3.5 sm:grid-cols-[minmax(0,1fr)_auto_7.5rem] ${index > 0 ? "border-t border-[var(--c-border-soft)]" : ""}`}>
+                <div className="min-w-0">
+                  <div className="truncate text-[length:var(--fs-sm)] font-medium">
+                    {holding.name}
+                    {holding.symbol && <span className="ml-1.5 text-[var(--c-faint)] tnum">{holding.symbol}</span>}
+                  </div>
+                  <div className="mt-0.5 text-[length:var(--fs-micro)] text-[var(--c-faint)]">
+                    快照 <span className="tnum">{holding.snapshotDate}</span>
+                    {holding.carriedForward && " · 沿用前一筆快照"}
+                  </div>
+                </div>
+                <div className="amt text-right text-[length:var(--fs-md)] font-semibold tnum">NT$ {fmtFull(holding.valueTwd)}</div>
+                {/* 配置量尺：跟首頁持倉帳本同一個讀法，細軌上一段實線長度＝佔比 */}
+                <div className="col-span-2 flex items-center gap-2 sm:col-span-1">
+                  <span aria-hidden="true" className="relative h-[3px] flex-1 bg-[var(--c-border-soft)]">
+                    <span className="absolute inset-y-0 left-0 bg-[var(--c-accent)]" style={{ width: `${Math.min(pct, 100)}%` }} />
+                  </span>
+                  <span className="w-12 text-right text-[length:var(--fs-micro)] text-[var(--c-muted)] tnum">{fmtNum(pct, 1)}%</span>
+                </div>
+              </div>
+            );
+          })}
         </section>
-        <section className="mt-5 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)]">
-          {ending.holdings.map((holding, index) => <div key={holding.accountId} className={`flex items-center gap-3 px-5 py-4 ${index > 0 ? "border-t border-[var(--c-border)]" : ""}`}><div className="min-w-0 flex-1"><div className="font-medium">{holding.name}{holding.symbol ? ` · ${holding.symbol}` : ""}</div><div className="mt-1 text-xs text-[var(--c-faint)]">快照 {holding.snapshotDate}{holding.carriedForward ? " · carry-forward" : ""}</div></div><div className="amt font-semibold tnum">NT$ {fmtFull(holding.valueTwd)}</div><div className="w-16 text-right text-xs text-[var(--c-muted)] tnum">{ending.totalValueTwd > 0 ? fmtNum((holding.valueTwd / ending.totalValueTwd) * 100, 1) : "0"}%</div></div>)}
-        </section>
-        {attribution.gaps.length > 0 && <p className="mt-4 text-xs text-[var(--c-muted)]">資料說明：{attribution.gaps.join("；")}</p>}
+        {attribution.gaps.length > 0 && <p className="mt-4 text-[length:var(--fs-micro)] leading-5 text-[var(--c-muted)]">資料說明：{attribution.gaps.join("；")}</p>}
       </main>
     </div>
   );
 }
 
-function Card({ label, value }: { label: string; value: number }) {
-  return <div className="rounded-xl border border-[var(--c-border)] bg-[var(--c-surface)] px-4 py-3"><div className="text-xs text-[var(--c-muted)]">{label}</div><div className="amt mt-1 text-[17px] font-semibold tnum">NT$ {fmtFull(value)}</div></div>;
+// 帶正負號的金額。只有號與數字，顏色由呼叫端決定——歸因效果是拆解不是損益，不上漲跌色。
+function Signed({ value }: { value: number }) {
+  return <>{value > 0 ? "+" : value < 0 ? "−" : ""}NT$ {fmtFull(Math.abs(value))}</>;
 }
 
 function validDate(value: string): boolean {
