@@ -2,7 +2,8 @@
 // 1) 讓 Android 端滿足 PWA 可安裝條件
 // 2) 導航請求斷線時給離線頁
 // 刻意不快取任何資產或資料：金融數字寧可載入失敗，不可顯示過期值。
-const CACHE = "sw-offline-v1";
+// 改 offline.html 就要升版號：install 才會重抓，activate 會刪掉舊版快取。
+const CACHE = "sw-offline-v2";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

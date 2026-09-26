@@ -1,6 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- StackWorth StackWorth 品牌 icon：石墨底 + 青綠菱形（與 AppHeader DiamondMark 同型）-->
-  <rect width="512" height="512" rx="96" fill="#0E1014"/>
-  <path d="M256 96 L416 256 L256 416 L96 256 Z" fill="#4FA6A0"/>
-  <path d="M256 176 L336 256 L256 336 L176 256 Z" fill="#0E1014"/>
+  <!-- StackWorth 品牌 icon：深色主題底 + 測量藍套準記號（與 AppHeader RegistrationMark 同型）。
+       滿版方底、不做圓角：maskable 由系統裁形；記號全在中心 80% 安全區內（半徑 ≤ 204）。
+       icon-192/512.png、src/app/apple-icon.png、favicon.ico 都由這支轉出，改這裡要一起重產。 -->
+  <rect width="512" height="512" fill="#0E151B"/>
+  <g fill="none" stroke="#6AAAC6" stroke-width="30">
+    <circle cx="256" cy="256" r="84"/>
+    <path d="M256 106V406M106 256H406"/>
+  </g>
 </svg>
