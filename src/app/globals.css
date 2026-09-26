@@ -1082,7 +1082,7 @@ textarea:disabled {
   .report-card,
   .report-block {
     background: #fff !important;
-    color: #171714 !important;
+    color: #101820 !important;
     box-shadow: none !important;
   }
 
@@ -1108,7 +1108,7 @@ textarea:disabled {
   }
 
   .report-block {
-    border-color: #d8d8d2 !important;
+    border-color: #c3cfd3 !important;
   }
 
   .report-page main,

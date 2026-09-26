@@ -1,4 +1,5 @@
 import { AppHeader } from "@/components/AppHeader";
+import { PageHead, Panel, Stat, StatStrip, SurveyLabel, Tag } from "@/components/survey";
 import { ASSET_CLASS_LABEL } from "@/lib/dashboard-data";
 import { todayTaipei } from "@/lib/dates";
 import { fmtFull, fmtNum } from "@/lib/format";
@@ -218,89 +219,107 @@ export default async function MonthlyReportPage({
   return (
     <div className="report-shell min-h-dvh bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active="reports" userEmail={user?.email} unreadCount={unreadCount} />
-      <main id="main" tabIndex={-1} className="report-page mx-auto max-w-[1040px] px-4 pb-28 pt-9 sm:px-6">
-        <header className="report-block flex flex-wrap items-start justify-between gap-5 border-b border-[var(--c-line-strong)] pb-6">
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--c-accent)]">StackWorth Monthly Report</div>
-            <h1 className="mt-2 font-display text-4xl font-medium tracking-tight">{bounds.month} 月度投資報告</h1>
-            <p className="mt-2 text-[12px] text-[var(--c-muted)]">
-              資料區間 {bounds.startDate} 至 {bounds.endDate} · 產生時間 {generatedAt}（Asia/Taipei）
-            </p>
-          </div>
-          <div className="flex flex-wrap items-end gap-3">
-            <form method="GET" className="no-print">
-              <label className="text-xs text-[var(--c-muted)]">
-                報告月份
-                <input type="month" name="month" defaultValue={bounds.month} max={currentMonth} className="mt-1 block h-10 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface)] px-3 text-[13px]" />
-              </label>
-              <button type="submit" className="btn btn-outline mt-2 w-full">產生月報</button>
-            </form>
-            <PrintReportButton />
-          </div>
-        </header>
+      <main id="main" tabIndex={-1} className="report-page mx-auto max-w-[1040px] px-4 py-8 pb-28 sm:px-6 sm:py-10 lg:px-7">
+        <PageHead
+          className="report-block"
+          label="月度報告"
+          title={`${bounds.month} 月度投資報告`}
+          sub={
+            <>
+              資料區間 <span className="tnum">{bounds.startDate}</span> 至 <span className="tnum">{bounds.endDate}</span>
+              {" · "}產生時間 <span className="tnum">{generatedAt}</span>（Asia/Taipei）
+            </>
+          }
+          action={
+            <div className="flex items-end gap-2">
+              <form method="GET" className="no-print flex items-end gap-2">
+                <label className="text-[length:var(--fs-micro)] text-[var(--c-muted)]">
+                  報告月份
+                  <input type="month" name="month" defaultValue={bounds.month} max={currentMonth} className="mt-1 block h-10 border border-[var(--c-line-strong)] px-3 text-[length:var(--fs-sm)] tnum" />
+                </label>
+                <button type="submit" className="btn btn-outline h-10">產生</button>
+              </form>
+              <PrintReportButton />
+            </div>
+          }
+        />
 
-        <section className="report-block mt-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
-          <Kpi label="期初淨值" value={`NT$ ${fmtFull(report.opening.totalValueTwd)}`} mask />
-          <Kpi label="期末淨值" value={`NT$ ${fmtFull(report.ending.totalValueTwd)}`} mask />
-          <Kpi label="淨投入" value={`${report.netContributionTwd > 0 ? "+" : ""}NT$ ${fmtFull(report.netContributionTwd)}`} mask />
-          <Kpi label="當月 TWR" value={formatPercent(report.twr)} />
-          <Kpi label="XIRR（年化）" value={formatPercent(report.xirrAnnualized)} />
-        </section>
+        {/* 格子各自帶 report-card：列印時整段不被分頁切開，底色也會被列印樣式換成白 */}
+        <StatStrip cols={5} className="mt-6">
+          <Stat className="report-card" label="期初淨值" mask value={`NT$ ${fmtFull(report.opening.totalValueTwd)}`} />
+          <Stat className="report-card" label="期末淨值" mask value={`NT$ ${fmtFull(report.ending.totalValueTwd)}`} />
+          <Stat className="report-card" label="淨投入" mask value={`${report.netContributionTwd > 0 ? "+" : ""}NT$ ${fmtFull(report.netContributionTwd)}`} />
+          <Stat className="report-card" label="當月 TWR" value={formatPercent(report.twr)} />
+          <Stat className="report-card col-span-2 sm:col-span-1" label="XIRR 年化" value={formatPercent(report.xirrAnnualized)} />
+        </StatStrip>
 
-        <ReportSection title="報酬歸因">
-          <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <Panel className="report-block mt-6" title="報酬歸因" sub="扣除資金進出後的淨值變動；前三項解釋不到的部分列為未解釋">
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
             <ReportMetric label="市價效果" value={report.attribution.marketPriceEffectTwd} />
             <ReportMetric label="匯率效果" value={report.attribution.fxEffectTwd} />
             <ReportMetric label="股息與利息" value={report.attribution.incomeTwd} />
-            <ReportMetric label="未解釋差額" value={report.attribution.residualTwd} warning={!report.attribution.reconciled} />
+            <ReportMetric label="未解釋差額" value={report.attribution.residualTwd} note={report.attribution.reconciled ? undefined : "超出容差"} />
           </dl>
-          <p className="mt-4 text-xs text-[var(--c-muted)]">
-            對帳狀態：{report.attribution.reconciled ? "相對容差內" : "超出相對容差"} · 容差 NT$ {fmtNum(report.attribution.toleranceTwd, 2)} · 已實現損益 NT$ {fmtFull(report.attribution.realizedPnlMemoTwd)}
+          <p className="mt-4 border-t border-[var(--c-border-soft)] pt-3 text-[length:var(--fs-micro)] leading-5 text-[var(--c-muted)]">
+            對帳狀態：{report.attribution.reconciled ? "相對容差內" : "超出相對容差"} · 容差 <span className="amt tnum">NT$ {fmtNum(report.attribution.toleranceTwd, 2)}</span> · 已實現損益 <span className="amt tnum">NT$ {fmtFull(report.attribution.realizedPnlMemoTwd)}</span>
           </p>
-        </ReportSection>
+        </Panel>
 
-        <div className="report-block mt-5 grid gap-5 lg:grid-cols-2">
-          <ReportSection title="資產配置變化" nested>
-            <table className="w-full text-[12.5px]">
-              <thead className="text-left text-xs text-[var(--c-muted)]"><tr><th className="pb-2 font-medium">類別</th><th className="pb-2 text-right font-medium">期初</th><th className="pb-2 text-right font-medium">期末</th><th className="pb-2 text-right font-medium">變動</th></tr></thead>
+        <div className="report-block mt-6 grid gap-6 lg:grid-cols-2">
+          <Panel title="資產配置變化" flush>
+            <table className="w-full text-[length:var(--fs-sm)]">
+              <thead className="border-b border-[var(--c-line-strong)] text-left text-[length:var(--fs-micro)] tracking-[0.06em] text-[var(--c-muted)]">
+                <tr>
+                  <th scope="col" className="px-5 py-2.5 font-semibold">類別</th>
+                  <th scope="col" className="px-3 py-2.5 text-right font-semibold">期初</th>
+                  <th scope="col" className="px-3 py-2.5 text-right font-semibold">期末</th>
+                  <th scope="col" className="px-5 py-2.5 text-right font-semibold">變動</th>
+                </tr>
+              </thead>
               <tbody>
                 {allocationRows(report.openingAllocation, report.endingAllocation).map((row) => (
-                  <tr key={row.key} className="border-t border-[var(--c-border)]">
-                    <td className="py-2">{ASSET_CLASS_LABEL[row.key] ?? row.key}</td><td className="py-2 text-right tnum">{fmtNum(row.opening, 2)}%</td><td className="py-2 text-right tnum">{fmtNum(row.ending, 2)}%</td><td className="py-2 text-right tnum">{row.change > 0 ? "+" : ""}{fmtNum(row.change, 2)}%</td>
+                  <tr key={row.key} className="border-t border-[var(--c-border-soft)] first:border-t-0">
+                    <th scope="row" className="px-5 py-2.5 text-left font-medium">{ASSET_CLASS_LABEL[row.key] ?? row.key}</th>
+                    <td className="px-3 py-2.5 text-right tnum text-[var(--c-muted)]">{fmtNum(row.opening, 2)}%</td>
+                    <td className="px-3 py-2.5 text-right tnum">{fmtNum(row.ending, 2)}%</td>
+                    <td className="px-5 py-2.5 text-right tnum">{row.change > 0 ? "+" : ""}{fmtNum(row.change, 2)}%</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </ReportSection>
-          <ReportSection title="風險與來源" nested>
-            <dl className="grid grid-cols-2 gap-4">
+          </Panel>
+          <Panel title="風險與來源">
+            <dl className="grid grid-cols-2 gap-x-6 gap-y-4">
               <TextMetric label="最大回撤" value={report.maxDrawdown ? `${(report.maxDrawdown.pct * 100).toFixed(2)}%` : "資料不足"} />
               <TextMetric label="最高單一持倉" value={`${fmtNum(report.topConcentrationPct, 2)}%`} />
               <TextMetric label="最大上漲來源" value={sourceText(report.largestPositiveSource)} mask />
               <TextMetric label="最大下跌來源" value={sourceText(report.largestNegativeSource)} mask />
             </dl>
-          </ReportSection>
+          </Panel>
         </div>
 
-        <ReportSection title="投資決策">
+        <Panel className="report-block mt-6" title="投資決策">
           <div className="grid gap-5 md:grid-cols-3">
-            <DecisionList title={`本月新增（${newDecisions.length}）`} rows={newDecisions.map((decision) => ({ id: decision.id, text: `${decision.decision_date} · ${decision.asset_name}` }))} />
-            <DecisionList title={`本月到期未檢討（${dueDecisions.length}）`} rows={dueDecisions.map((decision) => ({ id: decision.id, text: `${decision.review_date} · ${decision.asset_name}` }))} />
-            <DecisionList title={`本月完成檢討（${reviews.length}）`} rows={reviews.map((review) => ({ id: `${review.reviewed_at}-${review.investment_decisions?.asset_name ?? "deleted"}`, text: `${review.investment_decisions?.asset_name ?? "已刪除決策"} · 品質 ${review.decision_quality}/3 · ${review.reflection}` }))} />
+            <DecisionList title="本月新增" rows={newDecisions.map((decision) => ({ id: decision.id, text: `${decision.decision_date} · ${decision.asset_name}` }))} />
+            <DecisionList title="本月到期未檢討" rows={dueDecisions.map((decision) => ({ id: decision.id, text: `${decision.review_date} · ${decision.asset_name}` }))} />
+            <DecisionList title="本月完成檢討" rows={reviews.map((review) => ({ id: `${review.reviewed_at}-${review.investment_decisions?.asset_name ?? "deleted"}`, text: `${review.investment_decisions?.asset_name ?? "已刪除決策"} · 品質 ${review.decision_quality}/3 · ${review.reflection}` }))} />
           </div>
-        </ReportSection>
+        </Panel>
 
-        <ReportSection title="資料健康狀態">
-          <div className="flex flex-wrap items-center gap-3 text-[12.5px]">
-            <span className={`rounded-full px-2.5 py-1 font-semibold ${report.dataGaps.length === 0 ? "bg-[color-mix(in_srgb,var(--c-up)_12%,transparent)] text-[var(--c-up)]" : "bg-[color-mix(in_srgb,var(--c-down)_12%,transparent)] text-[var(--c-down)]"}`}>
+        <Panel className="report-block mt-6" title="資料健康狀態">
+          <div className="flex flex-wrap items-center gap-3 text-[length:var(--fs-sm)]">
+            {/* 缺口不是虧損，用朱砂註記而不是跌色 */}
+            <Tag tone={report.dataGaps.length === 0 ? "up" : "annot"}>
               {report.dataGaps.length === 0 ? "未發現缺口" : `${report.dataGaps.length} 項缺口`}
+            </Tag>
+            <span className="text-[var(--c-muted)]">
+              期末持倉 <span className="tnum">{report.ending.holdings.length}</span> · 快照資料 <span className="tnum">{snapshots.length}</span> 筆
             </span>
-            <span className="text-[var(--c-muted)]">期末持倉 {report.ending.holdings.length} · 快照資料 {snapshots.length} 筆</span>
           </div>
-          {report.dataGaps.length > 0 && <ul className="mt-3 list-disc space-y-1.5 pl-5 text-xs leading-5 text-[var(--c-muted)]">{report.dataGaps.map((gap) => <li key={gap}>{gap}</li>)}</ul>}
-        </ReportSection>
+          {report.dataGaps.length > 0 && <ul className="mt-3 list-[square] space-y-1.5 pl-5 text-[length:var(--fs-micro)] leading-5 text-[var(--c-muted)]">{report.dataGaps.map((gap) => <li key={gap}>{gap}</li>)}</ul>}
+        </Panel>
 
-        <footer className="report-block mt-7 border-t border-[var(--c-border)] pt-4 text-xs leading-5 text-[var(--c-faint)]">
+        <footer className="report-block mt-7 border-t border-[var(--c-border)] pt-4 text-[length:var(--fs-micro)] leading-5 text-[var(--c-faint)]">
           本報告依 StackWorth 中已記錄的帳戶、交易與快照計算，可能受缺失價格、缺失現金流、報價延遲與歷史欄位不足影響。內容僅供個人紀錄與檢討，不構成投資、稅務或法律建議。過去績效不代表未來結果。
         </footer>
       </main>
@@ -308,24 +327,48 @@ export default async function MonthlyReportPage({
   );
 }
 
-function Kpi({ label, value, mask = false }: { label: string; value: string; mask?: boolean }) {
-  return <div className="report-card rounded-xl border border-[var(--c-border)] bg-[var(--c-surface)] px-4 py-3"><div className="text-xs text-[var(--c-muted)]">{label}</div><div className={`mt-1 text-[16px] font-semibold tnum ${mask ? "amt" : ""}`}>{value}</div></div>;
-}
-
-function ReportSection({ title, children, nested = false }: { title: string; children: React.ReactNode; nested?: boolean }) {
-  return <section className={`report-block ${nested ? "" : "mt-5"} rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 sm:p-6`}><h2 className="mb-4 font-display text-xl font-medium">{title}</h2>{children}</section>;
-}
-
-function ReportMetric({ label, value, warning = false }: { label: string; value: number; warning?: boolean }) {
-  return <div><dt className="text-xs text-[var(--c-muted)]">{label}</dt><dd className={`amt mt-1 text-[15px] font-semibold tnum ${warning ? "text-[var(--c-down)]" : value > 0 ? "text-[var(--c-up)]" : value < 0 ? "text-[var(--c-down)]" : ""}`}>{value > 0 ? "+" : ""}NT$ {fmtFull(value)}</dd></div>;
+// 歸因只是拆解，不是損益，所以不上漲跌色、只帶號（與 /demo/report 同一規則）。
+// 超出對帳容差時加朱砂註記：虛線引線＋文字，不單靠顏色。
+function ReportMetric({ label, value, note }: { label: string; value: number; note?: string }) {
+  return (
+    <div>
+      <dt className="flex items-center gap-2">
+        <SurveyLabel className="shrink-0">{label}</SurveyLabel>
+        {note && <span aria-hidden="true" className="h-0 min-w-3 flex-1 border-t border-dashed border-[var(--c-annot)]" />}
+      </dt>
+      <dd className="amt mt-1.5 text-[length:var(--fs-md)] font-semibold tnum">
+        {value > 0 ? "+" : value < 0 ? "−" : ""}NT$ {fmtFull(Math.abs(value))}
+      </dd>
+      {note && <dd className="mt-1 text-[length:var(--fs-micro)] font-semibold text-[var(--c-annot-text)]">{note}</dd>}
+    </div>
+  );
 }
 
 function TextMetric({ label, value, mask = false }: { label: string; value: string; mask?: boolean }) {
-  return <div><dt className="text-xs text-[var(--c-muted)]">{label}</dt><dd className={`mt-1 text-[13px] font-semibold ${mask ? "amt" : ""}`}>{value}</dd></div>;
+  return (
+    <div>
+      <dt><SurveyLabel>{label}</SurveyLabel></dt>
+      <dd className={`mt-1.5 text-[length:var(--fs-sm)] font-semibold tnum ${mask ? "amt" : ""}`}>{value}</dd>
+    </div>
+  );
 }
 
 function DecisionList({ title, rows }: { title: string; rows: { id: string; text: string }[] }) {
-  return <div><h3 className="text-[12px] font-semibold">{title}</h3>{rows.length === 0 ? <p className="mt-2 text-xs text-[var(--c-faint)]">無紀錄</p> : <ul className="mt-2 space-y-2 text-xs leading-5 text-[var(--c-muted)]">{rows.map((row) => <li key={row.id} className="line-clamp-3">{row.text}</li>)}</ul>}</div>;
+  return (
+    <div>
+      <h3 className="flex items-baseline justify-between gap-2 border-b border-[var(--c-border-soft)] pb-1.5">
+        <SurveyLabel>{title}</SurveyLabel>
+        <span className="text-[length:var(--fs-md)] font-semibold tnum">{rows.length}</span>
+      </h3>
+      {rows.length === 0 ? (
+        <p className="mt-2 text-[length:var(--fs-micro)] text-[var(--c-faint)]">無紀錄</p>
+      ) : (
+        <ul className="mt-2 space-y-2 text-[length:var(--fs-micro)] leading-5 text-[var(--c-muted)]">
+          {rows.map((row) => <li key={row.id} className="line-clamp-3">{row.text}</li>)}
+        </ul>
+      )}
+    </div>
+  );
 }
 
 function allocationRows(opening: Record<string, number>, ending: Record<string, number>) {

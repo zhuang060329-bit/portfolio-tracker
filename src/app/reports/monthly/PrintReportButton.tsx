@@ -20,7 +20,7 @@ export function PrintReportButton() {
           列印／儲存 PDF
         </button>
       </div>
-      <p className="print-only text-xs">
+      <p className="print-only text-[length:var(--fs-micro)]">
         金額遮罩狀態：{privacy === "on" ? "已遮蔽" : "顯示"}
       </p>
     </>
