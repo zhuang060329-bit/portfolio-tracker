@@ -63,6 +63,25 @@ export function Holdings({
 
   const activeCount = holdings.filter((holding) => holding.status !== "archived").length;
 
+  /* 合計列只算有效帳戶：封存帳戶不計入配置，也不該算進總額。
+     未實現只加有成本的帳戶，百分比的分母同一批，跟每列的算法一致。
+     「今日」刻意不合計——各帳戶的今日漲跌基準不同，加權出來的數字
+     會跟上方 hero 的今日變動對不起來，寧可留「—」。 */
+  const totals = useMemo(() => {
+    let value = 0;
+    let pnl = 0;
+    let cost = 0;
+    for (const holding of holdings) {
+      if (holding.status === "archived") continue;
+      value += holding.value;
+      if (holding.cost > 0) {
+        pnl += holding.value - holding.cost;
+        cost += holding.cost;
+      }
+    }
+    return { value, pnl, pnlPct: cost > 0 ? (pnl / cost) * 100 : null };
+  }, [holdings]);
+
   function setSort(key: SortKey) {
     // 只有這裡 arm FLIP。背景刷新報價讓市值變、順序跟著重排時不會動畫。
     flip.capture();
@@ -96,7 +115,9 @@ export function Holdings({
   }
 
   return (
-    <section className="pb-2 pt-5 sm:pb-4 sm:pt-6">
+    /* flex-1 + 註腳 mt-auto：≥1180px 並排時右欄配置圖比帳本高，
+       多出來的高度由帳本與註腳之間吸收，註腳貼齊底邊，不留一塊空白。 */
+    <section className="flex flex-1 flex-col pb-2 pt-5 sm:pb-4 sm:pt-6">
       <div className="flex items-start justify-between gap-4 px-4 sm:px-6">
         <div>
           <h2 className="text-[length:var(--fs-lg)] font-semibold tracking-[-0.015em]">
@@ -328,6 +349,44 @@ export function Holdings({
                   );
                 })}
               </tbody>
+              {/* 合計列：上方一條 line-strong 髮絲線收帳，像帳冊最後一行。 */}
+              <tfoot>
+                <tr className="border-t border-[var(--c-line-strong)] text-[length:var(--fs-sm)]">
+                  <th scope="row" colSpan={2} className="px-6 py-3.5 text-left font-semibold">
+                    合計
+                    <span className="ml-2 text-[length:var(--fs-micro)] font-normal text-[var(--c-muted)]">
+                      {activeCount} 個有效帳戶{showArchived && archivedCount > 0 ? "，不含封存" : ""}
+                    </span>
+                  </th>
+                  <td className="px-5 py-3.5 text-right text-[length:var(--fs-micro)] text-[var(--c-muted)] tnum">
+                    {total > 0 ? "100%" : "—"}
+                  </td>
+                  <td className="amt px-5 py-3.5 text-right font-semibold tnum">
+                    {fmtTwd(totals.value)}
+                  </td>
+                  <td className="px-5 py-3.5 text-right text-[var(--c-faint)]">—</td>
+                  <td
+                    className={`px-6 py-3.5 text-right tnum ${
+                      totals.pnlPct == null ? "text-[var(--c-muted)]" : TONE_TEXT[toneCls(totals.pnl)]
+                    }`}
+                  >
+                    {totals.pnlPct == null ? (
+                      "—"
+                    ) : (
+                      <>
+                        <div className="amt font-semibold">
+                          {sign(totals.pnl)}
+                          {fmtTwd(Math.abs(totals.pnl))}
+                        </div>
+                        <div className="mt-0.5 text-[length:var(--fs-micro)] opacity-80">
+                          {sign(totals.pnl)}
+                          {Math.abs(totals.pnlPct).toFixed(1)}%
+                        </div>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              </tfoot>
             </table>
           </div>
 
@@ -443,6 +502,10 @@ export function Holdings({
               );
             })}
           </div>
+
+          <p className="mt-auto px-4 pt-5 text-[length:var(--fs-micro)] leading-5 text-[var(--c-faint)] sm:px-6">
+            金額皆以 NT$ 計，外幣部位按最新匯率換算。配置量尺為 0–100%，中間刻度在 50%。
+          </p>
         </>
       )}
     </section>
