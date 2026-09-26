@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { PICK_OFF, PICK_ON, TONE_TEXT, sign, toneCls } from "@/components/dashboard/shared";
+import { Stat, StatStrip, SurveyLabel } from "@/components/survey";
 import { ASSET_CLASS_LABEL, MARKET_LABEL } from "@/lib/dashboard-data";
 import { fmtFull, fmtNum } from "@/lib/format";
 import {
@@ -47,6 +49,11 @@ const templates: { label: string; shocks: ScenarioShock[] }[] = [
   },
 ];
 
+// 欄位共用的外觀：方角、line-strong 外框，手機 44px、sm 以上 40px，跟 S2 月報與歷史頁的欄位同一套
+const FIELD =
+  "mt-1 block h-11 w-full border border-[var(--c-line-strong)] px-3 text-[length:var(--fs-sm)] sm:h-10";
+const FIELD_LABEL = "block text-[length:var(--fs-micro)] text-[var(--c-muted)]";
+
 export function ScenarioTab({ data }: { data: ScenarioData }) {
   const [shocks, setShocks] = useState<ScenarioShock[]>(templates[0].shocks);
   const [scopeValue, setScopeValue] = useState("all::");
@@ -74,7 +81,7 @@ export function ScenarioTab({ data }: { data: ScenarioData }) {
 
   if (data.holdings.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-[var(--c-border)] bg-[var(--c-surface)] px-6 py-12 text-center text-sm text-[var(--c-muted)]">
+      <div className="border border-dashed border-[var(--c-line-strong)] bg-[var(--c-surface)] px-6 py-12 text-center text-[length:var(--fs-sm)] text-[var(--c-muted)]">
         目前沒有使用中的持倉可供壓力測試。
       </div>
     );
@@ -105,34 +112,53 @@ export function ScenarioTab({ data }: { data: ScenarioData }) {
     if (additions.length > 0) setShocks((current) => [...current, ...additions].slice(0, 12));
   }
 
+  // 目前規則剛好等於哪個範本（沒有疊加自訂衝擊）就把那顆標成選中；只影響顯示
+  const activeTemplate = templates.find(
+    (template) =>
+      template.shocks.length === shocks.length &&
+      template.shocks.every(
+        (shock, i) => shocks[i]?.id === shock.id && shocks[i].changePct === shock.changePct,
+      ),
+  )?.label;
+  const stressPct = result.stressChangePct * 100;
+  const classDeviation = selected ? deviations[selected.assetClass] : undefined;
+
   return (
-    <div className="space-y-5">
-      <section className="rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] sm:p-6">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h2 className="text-[19px] font-medium">壓力規則</h2>
-            <p className="mt-1 text-[12.5px] text-[var(--c-muted)]">可套用範本，再疊加自訂價格或匯率衝擊。</p>
-          </div>
+    <div className="space-y-6">
+      <Panel
+        title="壓力規則"
+        sub="可套用範本，再疊加自訂價格或匯率衝擊。"
+        action={
           <button type="button" onClick={() => setShocks([])} className="btn btn-outline btn-sm">
             清除規則
           </button>
+        }
+      >
+        <SurveyLabel>範本</SurveyLabel>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {templates.map((template) => {
+            const on = activeTemplate === template.label;
+            return (
+              <button
+                key={template.label}
+                type="button"
+                aria-pressed={on}
+                onClick={() => setShocks(template.shocks.map((shock) => ({ ...shock })))}
+                className={`tap-row h-9 border px-3 text-[length:var(--fs-sm)] ${
+                  on ? `border-[var(--c-accent)] ${PICK_ON}` : `border-[var(--c-border)] ${PICK_OFF}`
+                }`}
+              >
+                {template.label}
+              </button>
+            );
+          })}
         </div>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {templates.map((template) => (
-            <button
-              key={template.label}
-              type="button"
-              onClick={() => setShocks(template.shocks.map((shock) => ({ ...shock })))}
-              className="tap-row rounded-full border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3 py-1.5 text-[12.5px] hover:border-[var(--c-accent)] hover:text-[var(--c-accent)]"
-            >
-              {template.label}
-            </button>
-          ))}
-        </div>
-        <div className="mt-4 grid gap-3 rounded-xl bg-[var(--c-surface-soft)] p-4 sm:grid-cols-[1.4fr_0.7fr_0.7fr_auto] sm:items-end">
-          <label className="text-xs text-[var(--c-muted)]">
+
+        {/* 自訂衝擊：一條髮絲線隔開，跟範本是「先選底、再疊加」的兩步 */}
+        <div className="mt-5 grid gap-3 border-t border-[var(--c-border-soft)] pt-4 sm:grid-cols-[1.4fr_0.7fr_0.7fr_auto] sm:items-end">
+          <label className={FIELD_LABEL}>
             套用範圍
-            <select value={scopeValue} onChange={(event) => setScopeValue(event.target.value)} className="mt-1.5 h-10 w-full rounded-lg border border-[var(--c-border)] bg-[var(--c-surface)] px-3 text-[13px] text-[var(--c-text)]">
+            <select value={scopeValue} onChange={(event) => setScopeValue(event.target.value)} className={FIELD}>
               <option value="all::">全部持倉</option>
               {data.holdings.map((holding) => <option key={holding.id} value={`account::${holding.id}`}>帳戶 · {holding.name}</option>)}
               {unique(data.holdings.map((holding) => holding.assetClass)).map((value) => <option key={`class-${value}`} value={`asset_class::${value}`}>類別 · {ASSET_CLASS_LABEL[value] ?? value}</option>)}
@@ -146,9 +172,14 @@ export function ScenarioTab({ data }: { data: ScenarioData }) {
             加入
           </button>
         </div>
-        <div className="mt-3 flex flex-wrap gap-2" aria-label="目前壓力規則">
+
+        <div className="mt-5 flex items-baseline justify-between gap-3">
+          <SurveyLabel>目前規則</SurveyLabel>
+          <span className="text-[length:var(--fs-micro)] text-[var(--c-faint)] tnum">{shocks.length}／12</span>
+        </div>
+        <div className="mt-2 flex flex-wrap gap-2" aria-label="目前壓力規則">
           {shocks.length === 0 ? (
-            <span className="text-[12px] text-[var(--c-faint)]">目前沒有衝擊規則。</span>
+            <span className="text-[length:var(--fs-micro)] text-[var(--c-faint)]">目前沒有衝擊規則。</span>
           ) : (
             shocks.map((shock) => (
               <button
@@ -156,42 +187,57 @@ export function ScenarioTab({ data }: { data: ScenarioData }) {
                 type="button"
                 onClick={() => setShocks((current) => current.filter((item) => item.id !== shock.id))}
                 aria-label={`移除 ${shockLabel(shock, data.holdings)}`}
-                className="tap-row rounded-lg border border-[var(--c-border)] px-2.5 py-1.5 text-xs text-[var(--c-muted)] hover:border-[var(--c-down)] hover:text-[var(--c-down)]"
+                className="tap-row group inline-flex items-center gap-2 border border-[var(--c-border)] px-2.5 py-1 text-[length:var(--fs-micro)] text-[var(--c-text)] hover:border-[var(--c-line-strong)]"
               >
-                {shockLabel(shock, data.holdings)} ×
+                <span className="tnum">{shockLabel(shock, data.holdings)}</span>
+                <span aria-hidden="true" className="text-[var(--c-faint)] group-hover:text-[var(--c-text)]">×</span>
               </button>
             ))
           )}
         </div>
-      </section>
+      </Panel>
 
-      <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <ResultCard label="目前估值" value={result.currentTotalTwd} />
-        <ResultCard label="壓力後估值" value={result.stressedTotalTwd} />
-        <ResultCard label="壓力損益" value={result.stressChangeTwd} signed tone />
-        <div className="rounded-xl border border-[var(--c-border)] bg-[var(--c-surface)] px-4 py-3">
-          <div className="text-xs text-[var(--c-muted)]">壓力變動率</div>
-          <div className={`mt-1 text-[18px] font-semibold tnum ${result.stressChangePct < 0 ? "text-[var(--c-down)]" : "text-[var(--c-up)]"}`}>
-            {result.stressChangePct > 0 ? "+" : ""}{(result.stressChangePct * 100).toFixed(2)}%
-          </div>
-        </div>
-      </section>
+      <StatStrip cols={4}>
+        <Stat label="目前估值" mask value={`NT$ ${fmtFull(result.currentTotalTwd)}`} />
+        <Stat label="壓力後估值" mask value={`NT$ ${fmtFull(result.stressedTotalTwd)}`} />
+        <Stat
+          label="壓力損益"
+          mask
+          value={
+            <span className={TONE_TEXT[toneCls(result.stressChangeTwd)]}>
+              {sign(result.stressChangeTwd)}NT$ {fmtFull(Math.abs(result.stressChangeTwd))}
+            </span>
+          }
+        />
+        <Stat
+          label="壓力變動率"
+          value={
+            <span className={TONE_TEXT[toneCls(stressPct)]}>
+              {sign(stressPct)}{Math.abs(stressPct).toFixed(2)}%
+            </span>
+          }
+        />
+      </StatStrip>
 
-      <section className="rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 sm:p-6">
-        <h2 className="text-[19px] font-medium">買前 anti-FOMO 檢核</h2>
-        <p className="mt-1 text-[12.5px] text-[var(--c-muted)]">試買只改變本頁試算，不會寫回帳戶或交易。</p>
-        <div className="mt-4 grid gap-3 sm:grid-cols-[1.2fr_1fr_auto] sm:items-end">
-          <label className="text-xs text-[var(--c-muted)]">
+      <Panel title="買前 anti-FOMO 檢核" sub="試買只改變本頁試算，不會寫回帳戶或交易。">
+        <div className="grid gap-3 sm:grid-cols-[1.2fr_1fr_auto] sm:items-end">
+          <label className={FIELD_LABEL}>
             試買帳戶
-            <select value={buyAccountId} onChange={(event) => setBuyAccountId(event.target.value)} className="mt-1.5 h-10 w-full rounded-lg border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3 text-[13px] text-[var(--c-text)]">
+            <select value={buyAccountId} onChange={(event) => setBuyAccountId(event.target.value)} className={FIELD}>
               {data.holdings.map((holding) => <option key={holding.id} value={holding.id}>{holding.name}{holding.symbol ? ` · ${holding.symbol}` : ""}</option>)}
             </select>
           </label>
           <NumberInput label="外部新增金額（TWD）" value={buyAmountTwd} onChange={setBuyAmountTwd} min={0} max={1_000_000_000} step={1000} />
-          <div className="amt pb-2 text-right text-[12px] text-[var(--c-muted)]">買後 NT$ {fmtFull(result.finalTotalTwd)}</div>
+          {/* 讀數跟左邊兩欄一樣是「標籤在上、值在下」，值的高度對齊輸入框 */}
+          <div className="sm:text-right">
+            <span className={FIELD_LABEL}>買後總值</span>
+            <div className="amt mt-1 flex h-11 items-center text-[length:var(--fs-sm)] font-semibold tnum sm:h-10 sm:justify-end">
+              NT$ {fmtFull(result.finalTotalTwd)}
+            </div>
+          </div>
         </div>
         {selected && (
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="mt-5 grid grid-cols-2 gap-px border border-[var(--c-border)] bg-[var(--c-border)] lg:grid-cols-5">
             <GuardFact
               label="單一持倉集中度"
               value={`${fmtNum(selected.finalWeightPct, 2)}% / 上限 ${fmtNum(data.concentrationLimitPct, 2)}%`}
@@ -200,83 +246,103 @@ export function ScenarioTab({ data }: { data: ScenarioData }) {
             <GuardFact
               label="類別目標偏離"
               value={
-                data.allocationTargets[selected.assetClass] == null
+                classDeviation == null || data.allocationTargets[selected.assetClass] == null
                   ? "未設定此類別目標"
-                  : `${deviations[selected.assetClass] > 0 ? "+" : ""}${fmtNum(deviations[selected.assetClass], 2)} 個百分點`
+                  : `${sign(classDeviation)}${fmtNum(Math.abs(classDeviation), 2)} 個百分點`
               }
-              warning={(deviations[selected.assetClass] ?? 0) > 0}
+              warning={(classDeviation ?? 0) > 0}
             />
             <GuardFact label="近 30 日加碼" value={`${data.recentAddsByAccount[selected.id] ?? 0} 次`} warning={(data.recentAddsByAccount[selected.id] ?? 0) > 0} />
             <GuardFact label="待檢討決策" value={`${data.openDecisionsByAccount[selected.id] ?? 0} 筆`} warning={(data.openDecisionsByAccount[selected.id] ?? 0) > 0} />
-            <GuardFact label="目前壓力結果" value={`${result.stressChangePct > 0 ? "+" : ""}${(result.stressChangePct * 100).toFixed(2)}%`} warning={result.stressChangePct < 0} />
+            {/* 五格在手機兩欄時最後一格會落單，跨兩欄補滿，免得露出一塊底色 */}
+            <GuardFact
+              label="目前壓力結果"
+              value={`${sign(stressPct)}${Math.abs(stressPct).toFixed(2)}%`}
+              warning={result.stressChangePct < 0}
+              className="col-span-2 lg:col-span-1"
+            />
           </div>
         )}
-      </section>
+      </Panel>
 
-      <section className="overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)]">
-        <div className="border-b border-[var(--c-border)] px-5 py-4">
-          <h2 className="text-[17px] font-medium">持倉前後權重</h2>
-        </div>
+      <Panel title="持倉前後權重" flush>
         <p className="scroll-cue px-5 pt-2">左右滑動查看完整欄位</p>
         <div className="scroll-region overflow-x-auto" tabIndex={0} aria-label="持倉前後權重表，可水平捲動">
-          <table className="w-full min-w-[660px] text-left text-[13px]">
-            <thead className="bg-[var(--c-surface-soft)] text-xs text-[var(--c-muted)]">
-              <tr><th className="px-5 py-3 font-medium">持倉</th><th className="px-3 py-3 text-right font-medium">目前估值</th><th className="px-3 py-3 text-right font-medium">壓力後</th><th className="px-3 py-3 text-right font-medium">目前權重</th><th className="px-5 py-3 text-right font-medium">買後權重</th></tr>
+          <table className="w-full min-w-[660px] text-left text-[length:var(--fs-sm)]">
+            <thead className="border-b border-[var(--c-line-strong)] text-[length:var(--fs-micro)] tracking-[0.06em] text-[var(--c-muted)]">
+              <tr><th className="px-5 py-2.5 font-semibold">持倉</th><th className="px-3 py-2.5 text-right font-semibold">目前估值</th><th className="px-3 py-2.5 text-right font-semibold">壓力後</th><th className="px-3 py-2.5 text-right font-semibold">目前權重</th><th className="px-5 py-2.5 text-right font-semibold">買後權重</th></tr>
             </thead>
             <tbody>
               {result.holdings.map((holding) => (
-                <tr key={holding.id} className="border-t border-[var(--c-border)] first:border-t-0">
-                  <td className="px-5 py-3.5 font-medium">{holding.name}{holding.symbol ? ` · ${holding.symbol}` : ""}</td>
-                  <td className="amt px-3 py-3.5 text-right tnum">NT$ {fmtFull(holding.valueTwd)}</td>
-                  <td className="amt px-3 py-3.5 text-right tnum">NT$ {fmtFull(holding.stressedValueTwd)}</td>
-                  <td className="px-3 py-3.5 text-right tnum">{fmtNum(holding.currentWeightPct, 2)}%</td>
-                  <td className="px-5 py-3.5 text-right font-semibold tnum">{fmtNum(holding.finalWeightPct, 2)}%</td>
+                <tr key={holding.id} className="border-t border-[var(--c-border-soft)] first:border-t-0">
+                  <td className="px-5 py-3 font-medium">{holding.name}{holding.symbol ? <span className="text-[var(--c-muted)]"> · {holding.symbol}</span> : ""}</td>
+                  <td className="amt px-3 py-3 text-right tnum">NT$ {fmtFull(holding.valueTwd)}</td>
+                  <td className="amt px-3 py-3 text-right tnum">NT$ {fmtFull(holding.stressedValueTwd)}</td>
+                  <td className="px-3 py-3 text-right tnum text-[var(--c-muted)]">{fmtNum(holding.currentWeightPct, 2)}%</td>
+                  <td className="px-5 py-3 text-right font-semibold tnum">{fmtNum(holding.finalWeightPct, 2)}%</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </section>
+      </Panel>
 
-      <aside className="rounded-xl bg-[var(--c-surface-soft)] px-4 py-3 text-xs leading-5 text-[var(--c-muted)]">
+      <aside className="border-t border-[var(--c-border)] pt-3 text-[length:var(--fs-micro)] leading-5 text-[var(--c-faint)]">
         假設：{result.assumptions.join(" ")} 本工具只呈現數學結果與設定門檻，不構成投資建議。
       </aside>
     </div>
   );
 }
 
+// 本頁的一個段落：方框、標題列底下一條髮絲線，跟月報的 Block 同一個結構。
+// flush 給表格用：內容貼齊框線，不加內距。
+function Panel({ title, sub, action, flush = false, children }: { title: string; sub?: string; action?: React.ReactNode; flush?: boolean; children: React.ReactNode }) {
+  return (
+    <section className="border border-[var(--c-border)] bg-[var(--c-surface)]">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-[var(--c-border-soft)] px-5 py-3">
+        <div className="min-w-0">
+          <h2 className="text-[length:var(--fs-lg)] font-semibold">{title}</h2>
+          {sub && <p className="mt-0.5 text-[length:var(--fs-micro)] text-[var(--c-faint)]">{sub}</p>}
+        </div>
+        {action}
+      </div>
+      <div className={flush ? "" : "p-5"}>{children}</div>
+    </section>
+  );
+}
+
 function NumberInput({ label, value, onChange, min, max, step = 1 }: { label: string; value: number; onChange: (value: number) => void; min: number; max: number; step?: number }) {
   return (
-    <label className="text-xs text-[var(--c-muted)]">
+    <label className={FIELD_LABEL}>
       {label}
-      <input type="number" value={value} min={min} max={max} step={step} onChange={(event) => onChange(clampNumber(event.target.value, min, max))} className="mt-1.5 h-10 w-full rounded-lg border border-[var(--c-border)] bg-[var(--c-surface)] px-3 text-right text-[13px] text-[var(--c-text)] tnum" />
+      <input type="number" value={value} min={min} max={max} step={step} onChange={(event) => onChange(clampNumber(event.target.value, min, max))} className={`${FIELD} text-right tnum`} />
     </label>
   );
 }
 
-function ResultCard({ label, value, signed = false, tone = false }: { label: string; value: number; signed?: boolean; tone?: boolean }) {
+/* 檢核格。觸發時不用跌色：這裡說的是「買之前停一下」，不是虧損。
+   改用朱砂註記的規則——值轉成 --c-annot-text，標籤列多一條虛線引線與「注意」兩字，
+   顏色之外還有字與線兩個訊號。 */
+function GuardFact({ label, value, warning, className = "" }: { label: string; value: string; warning: boolean; className?: string }) {
   return (
-    <div className="rounded-xl border border-[var(--c-border)] bg-[var(--c-surface)] px-4 py-3">
-      <div className="text-xs text-[var(--c-muted)]">{label}</div>
-      <div className={`amt mt-1 text-[18px] font-semibold tnum ${tone ? value < 0 ? "text-[var(--c-down)]" : "text-[var(--c-up)]" : ""}`}>
-        {signed && value > 0 ? "+" : ""}NT$ {fmtFull(value)}
+    <div className={`bg-[var(--c-surface)] px-4 py-3 ${className}`}>
+      <div className="flex items-center gap-2">
+        <SurveyLabel className="shrink-0">{label}</SurveyLabel>
+        {warning && (
+          <>
+            <span aria-hidden="true" className="h-0 min-w-3 flex-1 border-t border-dashed border-[var(--c-annot)]" />
+            <span className="shrink-0 text-[length:var(--fs-micro)] font-semibold text-[var(--c-annot-text)]">注意</span>
+          </>
+        )}
       </div>
-    </div>
-  );
-}
-
-function GuardFact({ label, value, warning }: { label: string; value: string; warning: boolean }) {
-  return (
-    <div className={`rounded-xl border px-3.5 py-3 ${warning ? "border-[color-mix(in_srgb,var(--c-down)_35%,var(--c-border))] bg-[color-mix(in_srgb,var(--c-down)_7%,transparent)]" : "border-[var(--c-border)] bg-[var(--c-surface-soft)]"}`}>
-      <div className="text-xs text-[var(--c-muted)]">{label}</div>
-      <div className={`mt-1 text-[12.5px] font-semibold ${warning ? "text-[var(--c-down)]" : ""}`}>{value}</div>
+      <div className={`mt-1.5 text-[length:var(--fs-sm)] font-semibold tnum ${warning ? "text-[var(--c-annot-text)]" : ""}`}>{value}</div>
     </div>
   );
 }
 
 function shockLabel(shock: ScenarioShock, holdings: ScenarioHolding[]): string {
   const kind = shock.kind === "price" ? "價格" : "匯率";
-  const change = `${shock.changePct > 0 ? "+" : ""}${shock.changePct}%`;
+  const change = `${sign(shock.changePct)}${Math.abs(shock.changePct)}%`;
   if (shock.scope === "all") return `全部 · ${kind} ${change}`;
   if (shock.scope === "account") return `${holdings.find((holding) => holding.id === shock.target)?.name ?? "帳戶"} · ${kind} ${change}`;
   if (shock.scope === "asset_class") return `${ASSET_CLASS_LABEL[shock.target ?? ""] ?? shock.target} · ${kind} ${change}`;
