@@ -15,33 +15,33 @@ export function CryptoForm() {
   return (
     <form
       action={action}
-      className="mt-6 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-6 shadow-[var(--c-shadow)]"
+      className="mt-6 border border-[var(--c-border)] bg-[var(--c-surface)] p-5 sm:p-6"
     >
       <div className="flex flex-col gap-5">
-        <label className="flex flex-col gap-[7px] text-xs font-medium text-[var(--c-muted)]">
+        <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
           帳戶名稱
           <input
             name="name"
             required
             placeholder="例：MAX BTC"
-            className="h-[42px] rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3.5 text-sm text-[var(--c-text)] outline-none placeholder:text-[var(--c-faint)] focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+            className="field h-[42px]"
           />
         </label>
 
-        <label className="flex flex-col gap-[7px] text-xs font-medium text-[var(--c-muted)]">
+        <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
           CoinGecko ID（不是符號）
           <input
             name="symbol"
             required
             placeholder="bitcoin / ethereum / solana"
-            className="h-[42px] rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3.5 text-sm text-[var(--c-text)] outline-none placeholder:text-[var(--c-faint)] focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+            className="field h-[42px]"
           />
-          <span className="text-xs text-[var(--c-faint)]">
+          <span className="text-[length:var(--fs-micro)] text-[var(--c-muted)]">
             到 coingecko.com 搜尋幣種頁面，網址 /coins/ 後面那個 id。
           </span>
         </label>
 
-        <label className="flex flex-col gap-[7px] text-xs font-medium text-[var(--c-muted)]">
+        <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
           持有數量
           <input
             name="quantity"
@@ -50,12 +50,12 @@ export function CryptoForm() {
             min="0"
             required
             placeholder="例：0.01"
-            className="h-[42px] rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3.5 text-sm text-[var(--c-text)] outline-none placeholder:text-[var(--c-faint)] focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+            className="field h-[42px]"
           />
         </label>
 
         {state?.error && (
-          <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-down)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-down)_10%,var(--c-surface))] px-3.5 py-2.5 text-sm text-[var(--c-down)]">
+          <p className="border border-[var(--c-down)] px-3.5 py-2.5 text-[length:var(--fs-sm)] text-[var(--c-down)]">
             {state.error}
           </p>
         )}

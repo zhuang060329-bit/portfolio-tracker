@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { AppHeader } from "@/components/AppHeader";
 import { getUnreadCount } from "@/lib/notifications";
+import { PageHead, SurveyLabel } from "@/components/survey";
 import {
   ASSET_CLASS_LABEL,
   MARKET_LABEL,
@@ -35,50 +36,55 @@ export default async function AccountsPage() {
   const active = rows.filter((a) => a.status !== "archived");
   const archived = rows.filter((a) => a.status === "archived");
 
+  const activeTotal = active.reduce((sum, a) => sum + valueOf(a), 0);
+
   return (
     <div className="min-h-dvh bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active="accounts" userEmail={user?.email} unreadCount={unreadCount} />
 
-      <main id="main" tabIndex={-1} className="mx-auto max-w-[880px] px-4 py-9 pb-24 sm:px-6 lg:px-7">
-        <div className="mb-5 flex items-center justify-between gap-3">
-          <div>
-            <h1 className="font-display text-[26px] font-medium tracking-tight">帳戶</h1>
-            <p className="mt-0.5 text-[12.5px] text-[var(--c-muted)]">
-              {active.length} 個使用中
-              {archived.length > 0 && ` · ${archived.length} 個已封存`}
-            </p>
-          </div>
-          <Link
-            href="/accounts/new"
-            className="btn btn-primary shrink-0"
-          >
-            ＋ 新增帳戶
-          </Link>
-        </div>
+      <main id="main" tabIndex={-1} className="mx-auto max-w-[880px] px-4 pb-24 pt-8 sm:px-6 lg:px-7">
+        <PageHead
+          label={
+            <>
+              <span className="tnum">{active.length}</span> 個使用中
+              {archived.length > 0 && (
+                <>
+                  {" · "}
+                  <span className="tnum">{archived.length}</span> 個已封存
+                </>
+              )}
+            </>
+          }
+          title="帳戶"
+          sub="管理視角：列出全部帳戶與目前市值，封存的收在最下方。"
+          action={
+            <Link href="/accounts/new" className="btn btn-primary shrink-0">
+              ＋ 新增帳戶
+            </Link>
+          }
+        />
 
         {rows.length === 0 ? (
-          <section className="rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] px-6 py-12 text-center">
-            <p className="text-[15px]">還沒有任何帳戶。</p>
-            <p className="mt-1 text-[12.5px] text-[var(--c-muted)]">
+          <section className="mt-6 border border-dashed border-[var(--c-line-strong)] bg-[var(--c-surface)] px-6 py-12 text-center">
+            <p className="text-[length:var(--fs-md)]">還沒有任何帳戶。</p>
+            <p className="mt-1 text-[length:var(--fs-sm)] text-[var(--c-muted)]">
               先建立第一個資產帳戶，總覽的淨值、趨勢與配置就會開始累積。
             </p>
-            <Link
-              href="/accounts/new"
-              className="btn btn-primary mt-5"
-            >
+            {/* 頁首已經有主按鈕，這裡用外框按鈕，避免同頁兩顆主按鈕 */}
+            <Link href="/accounts/new" className="btn btn-outline mt-5">
               建立第一個帳戶
             </Link>
           </section>
         ) : (
           <>
-            <AccountList rows={active} />
+            <AccountList rows={active} total={activeTotal} className="mt-6" />
             {archived.length > 0 && (
               <details className="mt-6">
-                <summary className="tap-row cursor-pointer select-none text-[12.5px] text-[var(--c-muted)] hover:text-[var(--c-text)]">
-                  已封存（{archived.length}）
+                <summary className="tap-row cursor-pointer select-none text-[length:var(--fs-sm)] text-[var(--c-muted)] hover:text-[var(--c-text)]">
+                  已封存（<span className="tnum">{archived.length}</span>）
                 </summary>
-                <div className="mt-3 opacity-70">
-                  <AccountList rows={archived} />
+                <div className="mt-3">
+                  <AccountList rows={archived} muted />
                 </div>
               </details>
             )}
@@ -89,36 +95,88 @@ export default async function AccountsPage() {
   );
 }
 
-function AccountList({ rows }: { rows: AccountRow[] }) {
+/* 帳戶帳本：名稱 → 類別與市場 → 代號 → 市值（→ 占比）。
+   寬螢幕有欄名列；窄螢幕欄名收掉，類別與代號併到名稱下方一行。
+   total 只給使用中的清單：封存帳戶的占比沒有意義，也不列合計。 */
+function AccountList({
+  rows,
+  total,
+  muted = false,
+  className = "",
+}: {
+  rows: AccountRow[];
+  total?: number;
+  muted?: boolean;
+  className?: string;
+}) {
+  const showShare = total !== undefined && total > 0;
+  const cols = showShare
+    ? "sm:grid-cols-[minmax(0,1fr)_8rem_6rem_9.5rem_4.5rem]"
+    : "sm:grid-cols-[minmax(0,1fr)_8rem_6rem_9.5rem]";
   return (
-    <section className="overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] shadow-[var(--c-shadow)]">
-      {rows.map((a, i) => (
-        <Link
-          key={a.id}
-          href={`/accounts/${a.id}`}
-          className={`flex items-center gap-4 px-5 py-4 transition-colors hover:bg-[var(--c-surface-soft)] ${
-            i > 0 ? "border-t border-[var(--c-border)]" : ""
-          }`}
-        >
-          <div className="min-w-0 flex-1">
-            <div className="truncate text-[14.5px] font-medium">{a.name}</div>
-            <div className="mt-0.5 text-xs text-[var(--c-muted)]">
-              {ASSET_CLASS_LABEL[a.asset_class] ?? a.asset_class}
-              <span className="mx-1.5 text-[var(--c-faint)]">·</span>
-              {MARKET_LABEL[a.price_market] ?? a.price_market}
-              {a.symbol && (
-                <>
-                  <span className="mx-1.5 text-[var(--c-faint)]">·</span>
-                  {a.symbol}
-                </>
-              )}
+    <section className={`border border-[var(--c-border)] bg-[var(--c-surface)] ${className}`}>
+      <div
+        className={`hidden gap-4 border-b border-[var(--c-line-strong)] px-5 py-2.5 sm:grid ${cols}`}
+        aria-hidden="true"
+      >
+        <SurveyLabel>帳戶</SurveyLabel>
+        <SurveyLabel>類別 · 市場</SurveyLabel>
+        <SurveyLabel>代號</SurveyLabel>
+        <SurveyLabel className="justify-end">市值（TWD）</SurveyLabel>
+        {showShare && <SurveyLabel className="justify-end">占比</SurveyLabel>}
+      </div>
+      {rows.map((a, i) => {
+        const value = valueOf(a);
+        const meta = `${ASSET_CLASS_LABEL[a.asset_class] ?? a.asset_class} · ${
+          MARKET_LABEL[a.price_market] ?? a.price_market
+        }`;
+        return (
+          <Link
+            key={a.id}
+            href={`/accounts/${a.id}`}
+            className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-5 py-3.5 transition-colors hover:bg-[var(--c-row-hover)] ${cols} ${
+              i > 0 ? "border-t border-[var(--c-border-soft)]" : ""
+            } ${muted ? "text-[var(--c-muted)]" : ""}`}
+          >
+            <div className="min-w-0">
+              <div className="truncate text-[length:var(--fs-md)] font-medium">{a.name}</div>
+              <div className="mt-0.5 truncate text-[length:var(--fs-micro)] text-[var(--c-muted)] sm:hidden">
+                {meta}
+                {a.symbol && <span className="font-mono"> · {a.symbol}</span>}
+              </div>
             </div>
+            <div className="hidden truncate text-[length:var(--fs-sm)] text-[var(--c-muted)] sm:block">
+              {meta}
+            </div>
+            <div className="hidden truncate font-mono text-[length:var(--fs-sm)] text-[var(--c-muted)] sm:block">
+              {a.symbol ?? "—"}
+            </div>
+            <div className="amt text-right text-[length:var(--fs-md)] font-semibold tnum">
+              {fmtTwd(value)}
+            </div>
+            {showShare && (
+              <div className="hidden text-right text-[length:var(--fs-sm)] text-[var(--c-muted)] tnum sm:block">
+                {((value / total) * 100).toFixed(1)}%
+              </div>
+            )}
+          </Link>
+        );
+      })}
+      {showShare && (
+        <div
+          className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 border-t border-[var(--c-line-strong)] px-5 py-3 ${cols}`}
+        >
+          <SurveyLabel>合計 · <span className="tnum">{rows.length}</span> 個帳戶</SurveyLabel>
+          <div className="hidden sm:block" />
+          <div className="hidden sm:block" />
+          <div className="amt text-right text-[length:var(--fs-md)] font-semibold tnum">
+            NT$ {fmtTwd(total)}
           </div>
-          <div className="amt shrink-0 text-right text-[14.5px] font-semibold tnum">
-            NT$ {fmtTwd(valueOf(a))}
+          <div className="hidden text-right text-[length:var(--fs-sm)] text-[var(--c-muted)] tnum sm:block">
+            100%
           </div>
-        </Link>
-      ))}
+        </div>
+      )}
     </section>
   );
 }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { AppHeader } from "@/components/AppHeader";
+import { PageHead } from "@/components/survey";
 import { getUnreadCount } from "@/lib/notifications";
 
 export default async function NewAccountIndex() {
@@ -36,37 +37,45 @@ export default async function NewAccountIndex() {
   return (
     <div className="min-h-dvh bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active="accounts" userEmail={user?.email} unreadCount={unreadCount} />
-      <main id="main" tabIndex={-1} className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-        <div className="mb-4 text-sm">
-          <Link href="/" className="text-[var(--c-muted)] hover:text-[var(--c-text)]">
-            ← 回總覽
-          </Link>
-        </div>
-        <header>
-          <h1 className="font-display text-3xl font-semibold tracking-tight">
-            新增帳戶
-          </h1>
-          <p className="mt-2 text-sm text-[var(--c-muted)]">
-            選擇要新增的資產類型。流動資金 / 固定資產 / 應收款 / 負債 等其餘類別會在後續版本加入。
-          </p>
-        </header>
-        <div className="mt-6 grid gap-3 sm:grid-cols-2">
-          {items.map((it) => (
+      <main id="main" tabIndex={-1} className="mx-auto max-w-4xl px-4 pb-24 pt-8 sm:px-6 lg:px-8">
+        <Link
+          href="/accounts"
+          className="text-[length:var(--fs-sm)] text-[var(--c-muted)] hover:text-[var(--c-accent)]"
+        >
+          ← 帳戶
+        </Link>
+        <PageHead
+          className="mt-4"
+          label="新增帳戶"
+          title="選擇資產類型"
+          sub="流動資金 / 固定資產 / 應收款 / 負債 等其餘類別會在後續版本加入。"
+        />
+        {/* 三個選項是同一張圖的三個地塊：共用外框，彼此以髮絲線分隔，不各自浮起 */}
+        <div className="mt-6 grid border border-[var(--c-border)] bg-[var(--c-surface)] sm:grid-cols-3">
+          {items.map((it, i) => (
             <Link
               key={it.href}
               href={it.href}
-              className="group flex items-center gap-4 rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] px-5 py-4 shadow-[var(--c-shadow)] transition-[border-color,box-shadow] hover:border-[var(--c-line-strong)] hover:shadow-lg"
+              className={`group flex items-start gap-4 px-5 py-5 transition-colors hover:bg-[var(--c-row-hover)] sm:flex-col sm:gap-3 ${
+                i > 0 ? "border-t border-[var(--c-border)] sm:border-l sm:border-t-0" : ""
+              }`}
             >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--c-accent-soft)] text-base font-semibold text-[var(--c-accent)]">
+              <span
+                aria-hidden="true"
+                className="flex h-10 w-10 shrink-0 items-center justify-center border border-[var(--c-accent)] bg-[var(--c-accent-soft)] text-base font-semibold text-[var(--c-accent)]"
+              >
                 {it.icon}
               </span>
               <div className="min-w-0 flex-1">
-                <div className="text-[14.5px] font-semibold">{it.title}</div>
-                <div className="mt-0.5 line-clamp-2 text-[12px] text-[var(--c-muted)]">
+                <div className="text-[length:var(--fs-md)] font-semibold">{it.title}</div>
+                <div className="mt-1 text-[length:var(--fs-micro)] leading-5 text-[var(--c-muted)]">
                   {it.desc}
                 </div>
               </div>
-              <span className="text-[var(--c-faint)] transition-colors group-hover:text-[var(--c-accent)]">
+              <span
+                aria-hidden="true"
+                className="self-center text-[var(--c-faint)] transition-colors group-hover:text-[var(--c-accent)] sm:self-end"
+              >
                 →
               </span>
             </Link>
