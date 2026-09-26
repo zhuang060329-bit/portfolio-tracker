@@ -1,13 +1,12 @@
 "use client";
 
-import {
-  allocColor,
-  Donut,
-  fmtCompact,
-  type AllocDatum,
-} from "./DashboardCharts";
+import { allocColor, fmtCompact, type AllocDatum } from "./DashboardCharts";
 import type { AllocTarget } from "./types";
 import { CardHead, sign } from "./shared";
+import { squarify, targetBoundary } from "./treemap";
+
+// 偏離多少算「請注意」。與原本甜甜圈清單的第三級門檻相同。
+const ATTENTION_PP = 5;
 
 function driftInfo(actual: number, target: number) {
   if (!(target > 0)) return null;
@@ -15,14 +14,24 @@ function driftInfo(actual: number, target: number) {
   if (!Number.isFinite(raw)) return null;
   const drift = Math.round(raw * 10) / 10;
   const magnitude = Math.abs(drift);
-  const tone =
-    magnitude < 1
-      ? "var(--c-faint)"
-      : magnitude < 5
-        ? "var(--c-muted)"
-        : "var(--c-accent)";
-  return { text: `${sign(drift)}${magnitude.toFixed(1)}pp`, tone };
+  return {
+    text: `${sign(drift)}${magnitude.toFixed(1)}pp`,
+    level: magnitude < 1 ? "quiet" : magnitude < ATTENTION_PP ? "normal" : "attention",
+  } as const;
 }
+
+/* 地塊的斜線填色：一層 45° 細斜線，底下墊一層很淡的同色。
+   兩層都由類別色 color-mix 出來，不寫死任何顏色。 */
+function hatch(color: string) {
+  return `repeating-linear-gradient(135deg, color-mix(in srgb, ${color} 55%, transparent) 0 1px, transparent 1px 6px), color-mix(in srgb, ${color} 12%, transparent)`;
+}
+
+// 版面在 3:2 的座標系裡算，畫的時候換成百分比，容器用 aspect-[3/2] 鎖住比例，
+// 所以座標系的一單位在兩個方向上等長，地塊的長寬比與面積都跟算的一樣。
+const W = 150;
+const H = 100;
+const pctX = (v: number) => `${(v / W) * 100}%`;
+const pctY = (v: number) => `${(v / H) * 100}%`;
 
 /* 狀態住在 DashboardClient，因為持倉帳本也要用同一個選取。
    hover 與 click 分成兩個是先前修掉的一個 bug：共用一個 state 時
@@ -47,62 +56,123 @@ export function AllocationCard({
   const selected = activeCls
     ? allocation.find((item) => item.cls === activeCls)
     : null;
+  const targetOf = new Map(allocTargets.map((t) => [t.cls, t]));
+  const rects = squarify(
+    allocation.map((d) => d.value),
+    { x: 0, y: 0, w: W, h: H },
+  );
+  const ariaLabel = `資產配置地塊圖：${allocation
+    .map((d) => `${d.label} ${d.pct.toFixed(1)}%`)
+    .join("、")}`;
 
   return (
     <div>
-      <CardHead title="資產配置" sub="目前配置與目標比例" />
-      {/* 圓環與清單只在 640–1179px 之間並排。≥1180px 時本卡被塞進 344px 的窄欄
-          （見 DashboardClient 的並排斷點），並排會把清單擠到 160px——實測欄位
-          需要 8+54+bar+56 加三個間距，長條只剩 12px——所以那個區間上下堆疊。
-          寫成 sm:max-[1180px] 這種區間而不是 sm 疊 min-[1180px]：後者實測
-          被 sm 蓋過（量到 grid-template-columns 仍是 176px 160px），
-          兩條規則的先後順序不該賭。上界寫 1180 而不是 1179，是因為 Tailwind v4
-          把 max-[N] 編成 `not (min-width: N)`，是嚴格小於；寫 1179 時
-          視窗剛好 1179px 會兩條規則都不成立，掉進縫裡。 */}
-      <div className="grid grid-cols-1 items-center gap-6 sm:max-[1180px]:grid-cols-[176px_1fr] sm:max-[1180px]:gap-7">
-        {/* 中心字級從 --fs-2xl 降到 --fs-xl。Donut 的孔徑是算得出來的：
-            size 176 → rad 74、inner 48，孔徑 96px。而 26px 下最寬的字串
-            （「120.0萬」「9,999萬」這類四位數萬）量到 99–104px，本來就壓在
-            圓環內緣上，資產一到千萬級必定疊字。22px 下同一批字串上限 88px，
-            孔徑還剩 8px，而且 fmtCompact 的輸出長度有上界（萬最多四位、
-            億最多三位有效數字），不可能再長。 */}
-        <div className="relative mx-auto h-[176px] w-[176px]">
-          <Donut
-            data={allocation}
-            size={176}
-            onHover={onHover}
-            hoverCls={activeCls}
-          />
-          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-            {selected ? (
-              <>
-                <div className="text-[length:var(--fs-micro)] text-[var(--c-muted)]">
-                  {selected.label}
+      <CardHead title="資產配置" sub="地塊面積＝實際比例，虛線＝目標邊界" />
+      {/* 地塊圖與清單只在 640–1179px 之間並排。≥1180px 時本卡被塞進 344px 的窄欄
+          （見 DashboardClient 的並排斷點），上下堆疊。
+          寫成 sm:max-[1180px] 區間而不是 sm 疊 min-[1180px]：後者實測被 sm 蓋過。
+          上界寫 1180 而不是 1179，是因為 Tailwind v4 把 max-[N] 編成
+          `not (min-width: N)`，是嚴格小於；寫 1179 時視窗剛好 1179px 會掉進縫裡。 */}
+      <div className="grid grid-cols-1 gap-5 sm:max-[1180px]:grid-cols-2 sm:max-[1180px]:items-start sm:max-[1180px]:gap-7">
+        <div>
+          {/* 讀數列：原本甜甜圈中間那個孔的內容。沒有選取時是總額，
+              滑過或釘住一類時換成該類。 */}
+          <div className="mb-2 flex min-h-5 items-baseline justify-between gap-3 text-[length:var(--fs-micro)]">
+            <span className="text-[var(--c-muted)]">
+              {selected ? selected.label : `總資產 · ${allocation.length} 類`}
+            </span>
+            <span className="font-semibold tnum">
+              {selected && <span className="mr-2">{selected.pct.toFixed(1)}%</span>}
+              <span className="amt">
+                NT$ {fmtCompact(selected ? selected.value : total)}
+              </span>
+            </span>
+          </div>
+
+          {/* 地塊本身只給指標裝置用，鍵盤與讀屏走下面的清單（同一組 hover／pin），
+              免得每一類有兩個 tab 停駐點。整張圖用 role="img" 給一句總述。 */}
+          <div role="img" aria-label={ariaLabel} className="relative aspect-[3/2] w-full">
+            {allocation.map((d, i) => {
+              const r = rects[i];
+              if (!(r.w > 0 && r.h > 0)) return null;
+              const color = allocColor(d.cls);
+              const t = targetOf.get(d.cls);
+              const drift = t ? driftInfo(t.actual, t.target) : null;
+              const boundary = t ? targetBoundary(r, t.actual, t.target) : null;
+              const attention = drift?.level === "attention";
+              const dim = activeCls != null && activeCls !== d.cls;
+              // 名稱要多大的地塊才放得下：以窄欄約 300px 寬估，一單位約 2px。
+              const showLabel = r.w >= 26 && r.h >= 16;
+              const showPct = showLabel && r.h >= 22;
+              return (
+                <div
+                  key={d.cls}
+                  aria-hidden="true"
+                  className={`absolute p-px transition-opacity duration-200 ${dim ? "opacity-40" : ""}`}
+                  style={{
+                    left: pctX(r.x),
+                    top: pctY(r.y),
+                    width: pctX(r.w),
+                    height: pctY(r.h),
+                  }}
+                  onMouseEnter={() => onHover(d.cls)}
+                  onMouseLeave={() => onHover(null)}
+                  onClick={() => onPin(d.cls)}
+                >
+                  <div
+                    className="relative h-full w-full overflow-hidden border"
+                    style={{ borderColor: color, background: hatch(color) }}
+                  >
+                    {boundary && (
+                      <span
+                        className={`absolute border-dashed ${
+                          boundary.axis === "x" ? "inset-y-0 border-l" : "inset-x-0 border-t"
+                        }`}
+                        style={{
+                          [boundary.axis === "x" ? "left" : "top"]: `${boundary.at * 100}%`,
+                          borderColor: attention ? "var(--c-annot)" : "var(--c-muted)",
+                        }}
+                      />
+                    )}
+                    {showLabel && (
+                      <span className="absolute left-1.5 top-1.5 flex flex-col items-start gap-0.5 leading-none">
+                        <span
+                          className={`bg-[var(--c-surface)] px-1 py-0.5 text-[length:var(--fs-micro)] ${
+                            pinnedCls === d.cls
+                              ? "font-semibold text-[var(--c-accent)]"
+                              : "font-medium text-[var(--c-text)]"
+                          }`}
+                        >
+                          {d.label}
+                        </span>
+                        {showPct && (
+                          <span className="bg-[var(--c-surface)] px-1 py-0.5 text-[length:var(--fs-micro)] text-[var(--c-muted)] tnum">
+                            {d.pct.toFixed(1)}%
+                          </span>
+                        )}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div className="mt-1 text-[length:var(--fs-xl)] font-semibold tracking-[-0.03em] tnum">
-                  {selected.pct.toFixed(1)}%
-                </div>
-                <div className="amt mt-1 text-[length:var(--fs-micro)] text-[var(--c-faint)] tnum">
-                  NT$ {fmtCompact(selected.value)}
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="text-[length:var(--fs-micro)] text-[var(--c-muted)]">總資產</div>
-                <div className="amt mt-1 text-[length:var(--fs-xl)] font-semibold tracking-[-0.03em] tnum">
-                  {fmtCompact(total)}
-                </div>
-                <div className="mt-1 text-[length:var(--fs-micro)] text-[var(--c-faint)]">
-                  {allocation.length} 類
-                </div>
-              </>
-            )}
+              );
+            })}
           </div>
         </div>
 
-        <div className="flex w-full flex-col gap-1.5">
+        <div className="flex w-full flex-col">
+          <div
+            aria-hidden="true"
+            className="grid grid-cols-[10px_minmax(0,1fr)_auto_58px] gap-2.5 border-b border-[var(--c-line-strong)] px-1.5 pb-1.5 text-[length:var(--fs-micro)] font-semibold tracking-[0.06em] text-[var(--c-muted)]"
+          >
+            <span />
+            <span>類別</span>
+            <span className="text-right">實際／目標</span>
+            <span className="text-right">偏離</span>
+          </div>
           {allocTargets.map((item) => {
             const drift = driftInfo(item.actual, item.target);
+            const attention = drift?.level === "attention";
+            const color = allocColor(item.cls);
             return (
               <button
                 key={item.cls}
@@ -110,8 +180,10 @@ export function AllocationCard({
                 /* 只反映釘住的狀態。hover 是預覽，報成 pressed 會讓讀屏使用者
                    聽到一個他沒有做過的選擇。 */
                 aria-pressed={pinnedCls === item.cls}
-                aria-label={`${item.label}：實際 ${item.actual.toFixed(1)}%、目標 ${item.target.toFixed(0)}%`}
-                className={`grid min-h-11 w-full grid-cols-[auto_54px_1fr_56px] items-center gap-2.5 rounded-[var(--r-control)] px-1.5 text-left ${
+                aria-label={`${item.label}：實際 ${item.actual.toFixed(1)}%${
+                  item.target > 0 ? `、目標 ${item.target.toFixed(0)}%` : ""
+                }${drift ? `、偏離 ${drift.text}${attention ? "，超過 5pp" : ""}` : ""}`}
+                className={`grid min-h-11 w-full grid-cols-[10px_minmax(0,1fr)_auto_58px] items-center gap-2.5 border-b border-[var(--c-border-soft)] px-1.5 text-left transition-opacity duration-200 ${
                   activeCls && activeCls !== item.cls ? "opacity-40" : ""
                 }`}
                 onMouseEnter={() => onHover(item.cls)}
@@ -121,58 +193,56 @@ export function AllocationCard({
                 onClick={() => onPin(item.cls)}
               >
                 <span
-                  className="h-2 w-2 rounded-[var(--r-control)]"
-                  style={{ background: allocColor(item.cls) }}
+                  className="h-2.5 w-2.5 border"
+                  style={{ borderColor: color, background: hatch(color) }}
                 />
-                {/* 釘住的那一類用 PICK 語彙的文字訊號標出來，讓「滑過」與
-                    「按住不放」兩種狀態分得開——只靠其他列變淡的話，兩者一樣。
-                    這裡不取語彙裡的填色：本區塊落在 page 底色上，實測
-                    surface-soft 對 page 在淺色主題只有 1.027:1，等於沒有。 */}
-                <span
-                  className={`truncate text-[length:var(--fs-sm)] ${
-                    pinnedCls === item.cls
-                      ? "font-semibold text-[var(--c-accent)]"
-                      : ""
-                  }`}
-                >
-                  {item.label}
-                </span>
-                <span className="relative h-[5px] bg-[var(--c-border)]">
+                {/* 需要注意的那一類：名稱後面拉一條朱砂虛線引線到偏離值，
+                    偏離值本身加粗。顏色之外還有引線與字重兩個訊號。 */}
+                <span className="flex min-w-0 items-center gap-2">
                   <span
-                    className="motion-progress absolute inset-y-0 left-0 transition-[width] duration-300 ease-out"
-                    style={{
-                      width: `${Math.min(100, item.actual)}%`,
-                      background: allocColor(item.cls),
-                    }}
-                  />
-                  {item.target > 0 && (
+                    className={`truncate text-[length:var(--fs-sm)] ${
+                      pinnedCls === item.cls ? "font-semibold text-[var(--c-accent)]" : ""
+                    }`}
+                  >
+                    {item.label}
+                  </span>
+                  {attention && (
                     <span
-                      className="absolute -bottom-[3px] -top-[3px] w-px bg-[var(--c-text)] shadow-[0_0_0_1px_var(--c-page)]"
-                      style={{
-                        left: `calc(${Math.min(100, item.target)}% - 1px)`,
-                      }}
-                      title={`目標 ${item.target}%`}
+                      aria-hidden="true"
+                      className="h-0 min-w-4 flex-1 border-t border-dashed border-[var(--c-annot)]"
                     />
                   )}
                 </span>
-                <span className="flex flex-col items-end leading-tight">
-                  <span className="text-[length:var(--fs-sm)] font-medium tnum">
-                    {item.actual.toFixed(1)}%
+                <span className="text-right text-[length:var(--fs-sm)] tnum">
+                  {item.actual.toFixed(1)}%
+                  <span className="text-[var(--c-faint)]">
+                    {" "}／{item.target > 0 ? `${item.target.toFixed(0)}%` : "—"}
                   </span>
-                  {drift && (
+                </span>
+                <span
+                  className={`flex items-center justify-end gap-1 text-right text-[length:var(--fs-micro)] tnum ${
+                    !drift
+                      ? "text-[var(--c-faint)]"
+                      : attention
+                        ? "font-semibold text-[var(--c-annot-text)]"
+                        : drift.level === "normal"
+                          ? "font-medium text-[var(--c-muted)]"
+                          : "text-[var(--c-faint)]"
+                  }`}
+                >
+                  {attention && (
                     <span
-                      className="mt-0.5 text-[length:var(--fs-micro)] font-medium tnum"
-                      style={{ color: drift.tone }}
-                    >
-                      {drift.text}
-                    </span>
+                      aria-hidden="true"
+                      className="h-[7px] w-px bg-[var(--c-annot)]"
+                    />
                   )}
+                  {drift ? drift.text : "—"}
                 </span>
               </button>
             );
           })}
-          <p className="mt-1 text-[length:var(--fs-micro)] text-[var(--c-faint)]">
-            細線標示目標配置
+          <p className="mt-2 text-[length:var(--fs-micro)] leading-5 text-[var(--c-faint)]">
+            虛線外側是超出目標的部分；偏離超過 {ATTENTION_PP}pp 的類別以朱砂引線標出。
           </p>
         </div>
       </div>
