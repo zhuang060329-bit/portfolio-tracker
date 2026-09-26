@@ -23,6 +23,12 @@ export default async function AdminUsers() {
     page: 1,
     perPage: 200,
   });
+  if (error) {
+    // 只記錯誤碼與 HTTP 狀態；原文可能帶內部細節，不送到畫面，也不記 email／user_id
+    console.error(
+      `[admin/allowlist] listUsers 失敗 code=${error.code ?? "unknown"} status=${error.status ?? "unknown"}`,
+    );
+  }
 
   const rows: UserRow[] = (data?.users ?? []).map((u) => ({
     id: u.id,
@@ -51,7 +57,7 @@ export default async function AdminUsers() {
 
         {error && (
           <p className="mt-6 border border-[var(--c-down)] px-3.5 py-2.5 text-[length:var(--fs-sm)] text-[var(--c-down)]">
-            讀取使用者列表失敗：{error.message}
+            讀取使用者列表失敗，請稍後重新整理。問題持續的話到伺服器 log 查 [admin/allowlist]。
           </p>
         )}
 
