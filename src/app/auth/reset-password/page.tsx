@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useAnnounceValue } from "@/components/a11y/use-action-announce";
+import { AUTH_ERROR, AUTH_LABEL, AUTH_MAIN, AUTH_OK, AuthCard } from "@/components/AuthCard";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -59,31 +60,26 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <main id="main" tabIndex={-1} className="flex min-h-dvh flex-col items-center justify-center bg-[var(--c-page)] p-6">
-      <div className="w-full max-w-sm rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-8 shadow-[var(--c-shadow)]">
-        <h1 className="font-display text-2xl font-semibold tracking-tight text-[var(--c-text)]">
-          重設密碼
-        </h1>
+    <main id="main" tabIndex={-1} className={AUTH_MAIN}>
+      <AuthCard label="重設密碼" title="設定新密碼">
         {!ready ? (
-          <p className="mt-4 text-sm text-[var(--c-muted)]">
+          <p className="mt-4 text-[length:var(--fs-sm)] leading-relaxed text-[var(--c-muted)]">
             驗證連結中…
             <br />
             若一直停在這頁，可能連結已過期或無效，請回
             <a
               href="/login"
-              className="ml-1 underline hover:text-[var(--c-text)]"
+              className="mx-1 underline underline-offset-4 hover:text-[var(--c-text)]"
             >
               登入頁
             </a>
             重新點「忘記密碼？」。
           </p>
         ) : success ? (
-          <p className="mt-4 rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-up)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-up)_10%,var(--c-surface))] px-3 py-2 text-sm text-[var(--c-up)]">
-            密碼已更新，即將導向首頁…
-          </p>
+          <p className={`mt-5 ${AUTH_OK}`}>密碼已更新，即將導向首頁…</p>
         ) : (
-          <form onSubmit={submit} className="mt-6 flex flex-col gap-3">
-            <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+          <form onSubmit={submit} className="mt-6 flex flex-col gap-4">
+            <label className={AUTH_LABEL}>
               新密碼
               <input
                 type="password"
@@ -93,10 +89,10 @@ export default function ResetPasswordPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="至少 8 個字元"
-                className="rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3 py-2 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+                className="field h-11 py-0 placeholder:text-[var(--c-faint)]"
               />
             </label>
-            <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+            <label className={AUTH_LABEL}>
               再次確認
               <input
                 type="password"
@@ -105,14 +101,10 @@ export default function ResetPasswordPage() {
                 autoComplete="new-password"
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
-                className="rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3 py-2 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+                className="field h-11 py-0"
               />
             </label>
-            {error && (
-              <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-down)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-down)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-down)]">
-                {error}
-              </p>
-            )}
+            {error && <p className={AUTH_ERROR}>{error}</p>}
             <button
               type="submit"
               disabled={busy}
@@ -122,7 +114,7 @@ export default function ResetPasswordPage() {
             </button>
           </form>
         )}
-      </div>
+      </AuthCard>
     </main>
   );
 }

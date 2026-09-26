@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useAnnounceValue } from "@/components/a11y/use-action-announce";
 import { createClient } from "@/lib/supabase/client";
+import { AUTH_ERROR, AUTH_LABEL, AUTH_MAIN, AUTH_OK, AuthCard } from "@/components/AuthCard";
 
 type Mode = "signIn" | "signUp" | "reset";
 
@@ -97,22 +98,24 @@ export default function LoginPage() {
     }
   }
 
-  return (
-    <main id="main" tabIndex={-1} className="flex min-h-dvh flex-col items-center justify-center bg-[var(--c-page)] p-6">
-      <div className="w-full max-w-sm rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-8 shadow-[var(--c-shadow)]">
-        <div className="flex flex-col gap-2">
-          <h1 className="font-display text-2xl font-semibold tracking-tight text-[var(--c-text)]">
-            StackWorth
-          </h1>
-          <p className="text-sm text-[var(--c-muted)]">
-            {mode === "signUp"
-              ? "建立帳號"
-              : mode === "reset"
-                ? "重設密碼"
-                : "登入以管理你的資產"}
-          </p>
-        </div>
+  const modeLabel = mode === "signUp" ? "建立帳號" : mode === "reset" ? "重設密碼" : "登入";
+  const linkCls =
+    "tap-row text-[length:var(--fs-micro)] text-[var(--c-muted)] underline underline-offset-4 hover:text-[var(--c-text)]";
 
+  return (
+    <main id="main" tabIndex={-1} className={AUTH_MAIN}>
+      <AuthCard
+        label={modeLabel}
+        title="StackWorth"
+        sub={
+          mode === "signUp"
+            ? "用 Google 或 Email 建立新帳號"
+            : mode === "reset"
+              ? "輸入註冊時的 Email，我們寄重設連結給你"
+              : "登入以管理你的資產"
+        }
+        footer="首次註冊需點擊驗證信中的連結才能登入。"
+      >
         {mode !== "reset" && (
           <>
             <button
@@ -123,9 +126,9 @@ export default function LoginPage() {
             >
               {loading ? "處理中…" : "使用 Google 登入"}
             </button>
-            <div className="my-5 flex items-center gap-3">
+            <div className="my-5 flex items-center gap-3" aria-hidden="true">
               <div className="h-px flex-1 bg-[var(--c-border)]" />
-              <span className="text-xs text-[var(--c-faint)]">或 Email</span>
+              <span className="text-[length:var(--fs-micro)] text-[var(--c-faint)]">或 Email</span>
               <div className="h-px flex-1 bg-[var(--c-border)]" />
             </div>
           </>
@@ -133,9 +136,9 @@ export default function LoginPage() {
 
         <form
           onSubmit={submitEmail}
-          className={`flex flex-col gap-3 ${mode === "reset" ? "mt-6" : ""}`}
+          className={`flex flex-col gap-4 ${mode === "reset" ? "mt-6" : ""}`}
         >
-          <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+          <label className={AUTH_LABEL}>
             Email
             <input
               type="email"
@@ -144,11 +147,11 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="h-[42px] rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3.5 text-sm text-[var(--c-text)] outline-none placeholder:text-[var(--c-faint)] focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+              className="field h-11 py-0 placeholder:text-[var(--c-faint)]"
             />
           </label>
           {mode !== "reset" && (
-            <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+            <label className={AUTH_LABEL}>
               密碼
               <input
                 type="password"
@@ -158,19 +161,19 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={mode === "signUp" ? "至少 8 個字元" : ""}
-                className="h-[42px] rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3.5 text-sm text-[var(--c-text)] outline-none placeholder:text-[var(--c-faint)] focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+                className="field h-11 py-0 placeholder:text-[var(--c-faint)]"
               />
             </label>
           )}
           {error && (
-            <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-down)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-down)_10%,var(--c-surface))] px-3.5 py-2.5 text-sm text-[var(--c-down)]">
+            <p className={AUTH_ERROR}>
               {error}
             </p>
           )}
           {message && (
-            <div className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-up)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-up)_10%,var(--c-surface))] px-3.5 py-3 text-sm text-[var(--c-up)]">
+            <div className={AUTH_OK}>
               <div className="flex items-start gap-2">
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="mt-[2px] shrink-0"><path d="M3 8l3.5 3.5 6.5-7"/></svg>
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" aria-hidden="true" className="mt-[3px] shrink-0"><path d="M3 8l3.5 3.5 6.5-7"/></svg>
                 <p className="whitespace-pre-line leading-snug">{message}</p>
               </div>
             </div>
@@ -190,49 +193,29 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div className="mt-4 flex flex-col items-center gap-1 text-xs text-[var(--c-muted)]">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-x-4">
           {mode === "signIn" && (
             <>
-              <button
-                type="button"
-                onClick={() => switchMode("signUp")}
-                className="tap-row underline hover:text-[var(--c-text)]"
-              >
+              <button type="button" onClick={() => switchMode("signUp")} className={linkCls}>
                 首次使用？建立帳號
               </button>
-              <button
-                type="button"
-                onClick={() => switchMode("reset")}
-                className="tap-row underline hover:text-[var(--c-text)]"
-              >
+              <button type="button" onClick={() => switchMode("reset")} className={linkCls}>
                 忘記密碼？
               </button>
             </>
           )}
           {mode === "signUp" && (
-            <button
-              type="button"
-              onClick={() => switchMode("signIn")}
-              className="tap-row underline hover:text-[var(--c-text)]"
-            >
+            <button type="button" onClick={() => switchMode("signIn")} className={linkCls}>
               已有帳號？登入
             </button>
           )}
           {mode === "reset" && (
-            <button
-              type="button"
-              onClick={() => switchMode("signIn")}
-              className="tap-row underline hover:text-[var(--c-text)]"
-            >
+            <button type="button" onClick={() => switchMode("signIn")} className={linkCls}>
               ← 返回登入
             </button>
           )}
         </div>
-
-        <p className="mt-4 text-xs text-[var(--c-faint)]">
-          首次註冊需點擊驗證信中的連結才能登入。
-        </p>
-      </div>
+      </AuthCard>
     </main>
   );
 }

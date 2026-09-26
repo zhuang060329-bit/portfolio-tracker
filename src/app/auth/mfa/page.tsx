@@ -1,14 +1,13 @@
 import { Suspense } from "react";
 import { MfaVerifyForm } from "./MfaVerifyForm";
+import { AUTH_MAIN, AuthCard } from "@/components/AuthCard";
 
 export default function MfaVerifyPage() {
   return (
-    <main id="main" tabIndex={-1} className="flex min-h-dvh flex-col items-center justify-center bg-[var(--c-page)] p-6">
+    <main id="main" tabIndex={-1} className={AUTH_MAIN}>
       <Suspense
         fallback={
-          <div className="w-full max-w-sm rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] p-8 text-sm text-[var(--c-muted)] shadow-sm">
-            讀取中…
-          </div>
+          <AuthCard label="二階段驗證" title="驗證碼" sub="讀取中…" />
         }
       >
         <MfaVerifyForm />

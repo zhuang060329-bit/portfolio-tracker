@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { safeInternalPath } from "@/lib/safe-redirect";
 import { useAnnounceValue } from "@/components/a11y/use-action-announce";
+import { AUTH_ERROR, AuthCard } from "@/components/AuthCard";
 
 export function MfaVerifyForm() {
   const router = useRouter();
@@ -66,23 +67,32 @@ export function MfaVerifyForm() {
   }
 
   return (
-    <div className="w-full max-w-sm rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-8 shadow-[var(--c-shadow)]">
-      <div className="flex flex-col gap-2">
-        <h1 className="font-display text-2xl font-semibold tracking-tight text-[var(--c-text)]">
-          驗證碼
-        </h1>
-        <p className="text-sm text-[var(--c-muted)]">
-          {loading
-            ? "讀取中…"
-            : factorName
-              ? `輸入 ${factorName} 產生的 6 位數碼以繼續`
-              : "未設定 MFA"}
-        </p>
-      </div>
+    <AuthCard
+      label="二階段驗證"
+      title="驗證碼"
+      sub={
+        loading
+          ? "讀取中…"
+          : factorName
+            ? `輸入 ${factorName} 產生的 6 位數碼以繼續`
+            : "未設定 MFA"
+      }
+      footer={
+        <form action="/auth/signout" method="post">
+          <button
+            type="submit"
+            className="tap-row text-[length:var(--fs-micro)] text-[var(--c-muted)] underline underline-offset-4 hover:text-[var(--c-text)]"
+          >
+            登出（換帳號或忘記驗證碼）
+          </button>
+        </form>
+      }
+    >
       {factorId && (
-        <form onSubmit={submit} className="mt-6 flex flex-col gap-3">
+        <form onSubmit={submit} className="mt-6 flex flex-col gap-4">
           <input
             aria-label="6 位數 MFA 驗證碼"
+            aria-invalid={error ? true : undefined}
             value={code}
             onChange={(e) =>
               setCode(e.target.value.replace(/\D/g, "").slice(0, 6))
@@ -92,13 +102,9 @@ export function MfaVerifyForm() {
             autoComplete="one-time-code"
             autoFocus
             maxLength={6}
-            className="w-full rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3 py-2 text-center text-lg tabular-nums [font-variant-numeric:lining-nums_tabular-nums] tracking-widest text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+            className="field h-14 py-0 text-center font-mono text-[length:var(--fs-xl)] tracking-[0.4em] tnum placeholder:text-[var(--c-faint)]"
           />
-          {error && (
-            <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-down)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-down)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-down)]">
-              {error}
-            </p>
-          )}
+          {error && <p className={AUTH_ERROR}>{error}</p>}
           <button
             type="submit"
             disabled={busy || code.length < 6}
@@ -108,14 +114,6 @@ export function MfaVerifyForm() {
           </button>
         </form>
       )}
-      <form action="/auth/signout" method="post" className="mt-4">
-        <button
-          type="submit"
-          className="w-full text-xs text-[var(--c-muted)] underline hover:text-[var(--c-text)]"
-        >
-          登出（換帳號或忘記驗證碼）
-        </button>
-      </form>
-    </div>
+    </AuthCard>
   );
 }
