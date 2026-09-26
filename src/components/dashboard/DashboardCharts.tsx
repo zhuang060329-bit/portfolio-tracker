@@ -5,6 +5,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react";
@@ -110,7 +111,38 @@ export function Sparkline({
   );
 }
 
-/* ---------- 淨值面積圖（描繪動畫 + hover）---------- */
+/* 圖表寬度：掛載當下先同步量一次，之後交給 ResizeObserver。
+   只靠 observer 時，寬度要等它第一次非同步回呼才更新；在某些環境（背景分頁、
+   無頭瀏覽器）那一次回呼遲遲不來，圖就停在預設的 720px，右側留一大塊空白。
+   useLayoutEffect 在繪製前執行，使用者看不到 720 → 實際寬度的跳動。 */
+function useChartWidth(
+  ref: React.RefObject<HTMLDivElement | null>,
+  setW: (w: number) => void,
+) {
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const first = el.getBoundingClientRect().width;
+    if (first > 0) setW(first);
+    const ro = new ResizeObserver((e) => {
+      const next = e[0].contentRect.width;
+      if (next > 0) setW(next);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [ref, setW]);
+}
+
+/* 十字準線的軸端讀數：反白小籤，貼在 y 軸與 x 軸上。
+   測量儀器的讀數窗，不是浮動卡片，所以沒有陰影、沒有圓角。 */
+const AXIS_TAG =
+  "tnum pointer-events-none absolute z-[4] whitespace-nowrap bg-[var(--c-text)] px-1 text-[length:var(--fs-axis)] leading-4 text-[var(--c-page)]";
+
+/* 讀數框：髮絲線邊、實底、無陰影。 */
+const READOUT =
+  "tooltip-pop pointer-events-none absolute top-1.5 z-[5] -translate-x-1/2 whitespace-nowrap border border-[var(--c-line-strong)] bg-[var(--c-surface)] px-2.5 py-1.5";
+
+/* ---------- 淨值圖（描繪動畫 + 十字準線）---------- */
 export function TrendChart({
   data,
   height = 300,
@@ -125,11 +157,7 @@ export function TrendChart({
   const [drawn, setDrawn] = useState(false);
   const [len, setLen] = useState(0);
 
-  useEffect(() => {
-    const ro = new ResizeObserver((e) => setW(e[0].contentRect.width));
-    if (wrapRef.current) ro.observe(wrapRef.current);
-    return () => ro.disconnect();
-  }, []);
+  useChartWidth(wrapRef, setW);
   // 描繪動畫：掛載後（非同步）觸發 stroke-dashoffset → 0。
   // 切換區間時由父層的 key 重新掛載本元件來重播。
   useEffect(() => {
@@ -211,7 +239,7 @@ export function TrendChart({
   return (
     <div
       ref={wrapRef}
-      className="relative w-full rounded-[var(--r-control)]"
+      className="relative w-full"
       style={{ touchAction: "pan-y" }}
       tabIndex={0}
       role="group"
@@ -229,13 +257,6 @@ export function TrendChart({
         viewBox={`0 0 ${w} ${H}`}
         style={{ display: "block", overflow: "visible" }}
       >
-        <defs>
-          <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="var(--c-accent)" stopOpacity="0.20" />
-            <stop offset="0.7" stopColor="var(--c-accent)" stopOpacity="0.05" />
-            <stop offset="1" stopColor="var(--c-accent)" stopOpacity="0" />
-          </linearGradient>
-        </defs>
         {ticks.map((t) => (
           <g key={t}>
             <line
@@ -281,7 +302,8 @@ export function TrendChart({
         <path
           className="chart-reveal"
           d={area}
-          fill="url(#trendFill)"
+          fill="var(--c-accent)"
+          fillOpacity="0.07"
           opacity={drawn ? 1 : 0}
           style={{ transition: "opacity .34s ease" }}
         />
@@ -291,15 +313,18 @@ export function TrendChart({
           d={line}
           fill="none"
           stroke="var(--c-accent)"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          strokeWidth="2"
+          strokeLinecap="butt"
+          strokeLinejoin="miter"
+          strokeMiterlimit={2}
           style={{
             strokeDasharray: len,
             strokeDashoffset: drawn ? 0 : len,
             transition: "stroke-dashoffset .34s cubic-bezier(.4,0,.2,1)",
           }}
         />
+        {/* 十字準線：垂直線對到日期、水平線對到數值，兩端在軸上各有一個讀數籤。
+            只有髮絲線，交點一個空心方框；不畫圓點，全站控制項與標記都是直角。 */}
         {hi_ && (
           <g>
             <line
@@ -307,47 +332,71 @@ export function TrendChart({
               x2={nx(hover!)}
               y1={padT}
               y2={H - padB}
-              stroke="var(--c-accent)"
+              stroke="var(--c-muted)"
               strokeWidth="1"
-              strokeDasharray="3 3"
-              opacity="0.5"
+              strokeDasharray="2 3"
             />
-            <circle
-              cx={nx(hover!)}
-              cy={ny(hi_.value)}
-              r="4.5"
-              fill="var(--c-accent)"
-              stroke="var(--c-page)"
-              strokeWidth="2"
+            <line
+              x1={padL}
+              x2={w - padR}
+              y1={ny(hi_.value)}
+              y2={ny(hi_.value)}
+              stroke="var(--c-muted)"
+              strokeWidth="1"
+              strokeDasharray="2 3"
+            />
+            <rect
+              x={nx(hover!) - 4}
+              y={ny(hi_.value) - 4}
+              width="8"
+              height="8"
+              fill="var(--c-surface)"
+              stroke="var(--c-accent)"
+              strokeWidth="1.5"
             />
           </g>
         )}
         {!hi_ && (
-          <circle
+          <rect
             className="chart-reveal"
-            cx={nx(data.length - 1)}
-            cy={ny(data[data.length - 1].value)}
-            r="3.5"
+            x={nx(data.length - 1) - 3}
+            y={ny(data[data.length - 1].value) - 3}
+            width="6"
+            height="6"
             fill="var(--c-accent)"
-            stroke="var(--c-surface)"
-            strokeWidth="2"
             opacity={drawn ? 1 : 0}
             style={{ transition: "opacity .34s ease" }}
           />
         )}
       </svg>
       {hi_ && (
-        <div
-          className="tooltip-pop pointer-events-none absolute top-1.5 z-[5] -translate-x-1/2 whitespace-nowrap rounded-[var(--r-card)] border border-[var(--c-line-strong)] bg-[var(--c-surface-soft)] px-[11px] py-2 shadow-[var(--c-shadow)]"
-          style={{ left: Math.min(Math.max(nx(hover!), 70), w - 70) }}
-        >
-          <div className="amt font-mono text-base font-semibold">
-            NT$ {fmtTwd(hi_.value)}
-          </div>
-          <div className="mt-px text-[length:var(--fs-micro)] text-[var(--c-muted)]">
+        <>
+          <span
+            aria-hidden="true"
+            className={`${AXIS_TAG} amt -translate-x-full -translate-y-1/2`}
+            style={{ left: padL - 3, top: ny(hi_.value) }}
+          >
+            {fmtCompact(hi_.value)}
+          </span>
+          <span
+            aria-hidden="true"
+            className={`${AXIS_TAG} -translate-x-1/2`}
+            style={{
+              left: Math.min(Math.max(nx(hover!), padL + 32), w - padR - 32),
+              top: H - 20,
+            }}
+          >
             {hi_.date}
+          </span>
+          <div
+            className={READOUT}
+            style={{ left: Math.min(Math.max(nx(hover!), 70), w - 70) }}
+          >
+            <div className="amt tnum text-[length:var(--fs-md)] font-semibold">
+              NT$ {fmtTwd(hi_.value)}
+            </div>
           </div>
-        </div>
+        </>
       )}
       <span className="sr-only" aria-live="polite">
         {hi_ ? `${hi_.date}，淨資產 ${fmtTwd(hi_.value)} 元` : ""}
@@ -373,11 +422,7 @@ export function BenchChart({
   const [hover, setHover] = useState<number | null>(null);
   const [drawn, setDrawn] = useState(false);
 
-  useEffect(() => {
-    const ro = new ResizeObserver((e) => setW(e[0].contentRect.width));
-    if (wrapRef.current) ro.observe(wrapRef.current);
-    return () => ro.disconnect();
-  }, []);
+  useChartWidth(wrapRef, setW);
   // 淡入動畫：掛載後（非同步）觸發。切換區間由父層 key 重播。
   useEffect(() => {
     const t = setTimeout(() => setDrawn(true), 40);
@@ -488,7 +533,7 @@ export function BenchChart({
   return (
     <div
       ref={wrapRef}
-      className="relative w-full rounded-[var(--r-control)]"
+      className="relative w-full"
       style={{ touchAction: "pan-y" }}
       tabIndex={0}
       role="group"
@@ -573,10 +618,11 @@ export function BenchChart({
             d={solidPathOf(k)}
             fill="none"
             stroke={colorOf(k)}
-            strokeWidth={k === "portfolio" ? 2.75 : 1.6}
+            strokeWidth={k === "portfolio" ? 2.25 : 1.5}
             strokeDasharray={dashOf(k)}
-            strokeLinecap="round"
-            strokeLinejoin="round"
+            strokeLinecap="butt"
+            strokeLinejoin="miter"
+            strokeMiterlimit={2}
             opacity={drawn ? (k === "portfolio" ? 1 : 0.72) : 0}
             style={{ transition: "opacity .34s ease" }}
           />
@@ -592,8 +638,8 @@ export function BenchChart({
               fill="none"
               stroke={colorOf(k)}
               strokeWidth={k === "portfolio" ? 1.5 : 1.2}
-              strokeDasharray="2 5"
-              strokeLinecap="round"
+              strokeDasharray="2 4"
+              strokeLinecap="butt"
               opacity={drawn ? 0.35 : 0}
               style={{ transition: "opacity .34s ease" }}
             />
@@ -607,8 +653,7 @@ export function BenchChart({
             y2={H - padB}
             stroke="var(--c-muted)"
             strokeWidth="1"
-            strokeDasharray="3 3"
-            opacity="0.4"
+            strokeDasharray="2 3"
           />
         )}
         {hover != null && hover < data.length &&
@@ -616,36 +661,46 @@ export function BenchChart({
             const v = norm[k][hover];
             if (v == null) return null;
             return (
-              <circle
+              <rect
                 key={k}
-                cx={nx(hover)}
-                cy={ny(v)}
-                r="3.5"
-                fill={colorOf(k)}
-                stroke="var(--c-page)"
+                x={nx(hover) - 3.5}
+                y={ny(v) - 3.5}
+                width="7"
+                height="7"
+                fill="var(--c-surface)"
+                stroke={colorOf(k)}
                 strokeWidth="1.5"
               />
             );
           })}
       </svg>
       {hover != null && hover < data.length && (
+        <span
+          aria-hidden="true"
+          className={`${AXIS_TAG} -translate-x-1/2`}
+          style={{
+            left: Math.min(Math.max(nx(hover), padL + 32), w - padR - 32),
+            top: H - 20,
+          }}
+        >
+          {data[hover].date}
+        </span>
+      )}
+      {hover != null && hover < data.length && (
         <div
-          className="tooltip-pop pointer-events-none absolute top-1.5 z-[5] -translate-x-1/2 whitespace-nowrap rounded-[var(--r-card)] border border-[var(--c-line-strong)] bg-[var(--c-surface-soft)] px-[11px] py-2 shadow-[var(--c-shadow)]"
+          className={READOUT}
           style={{ left: Math.min(Math.max(nx(hover), 90), w - 90) }}
         >
-          <div className="mb-1 text-[length:var(--fs-micro)] text-[var(--c-muted)]">
-            {data[hover].date}
-          </div>
           {keys.map((k) => {
             const v = norm[k][hover];
             if (v == null) return null;
             return (
               <div
                 key={k}
-                className="mt-[3px] flex items-center gap-[7px] text-xs"
+                className="flex items-center gap-[7px] text-[length:var(--fs-micro)] leading-5"
               >
                 <span
-                  className="h-[7px] w-[7px] rounded-full"
+                  className="h-[7px] w-[7px] shrink-0"
                   style={{ background: colorOf(k) }}
                 />
                 <span className="text-[var(--c-muted)]">
@@ -654,7 +709,7 @@ export function BenchChart({
                     : (series.find((s) => s.key === k)?.label ?? k)}
                 </span>
                 <span
-                  className="ml-auto font-semibold tnum"
+                  className="ml-auto pl-3 font-semibold tnum"
                   style={{ color: v >= 100 ? "var(--c-up)" : "var(--c-down)" }}
                 >
                   {v >= 100 ? "+" : "−"}

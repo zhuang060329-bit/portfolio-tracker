@@ -60,8 +60,9 @@ export function TrendSection({
     : 0;
 
   return (
-    /* 二級容器。與上方持倉帳本只隔 16px：兩者同級，讀起來要成一組。 */
-    <section className="mt-4 overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)]">
+    /* 二級容器。與上方持倉帳本只隔 16px：兩者同級，讀起來要成一組。
+       survey-frame 的角標畫在框外，所以這裡不能 overflow-hidden。 */
+    <section className="survey-frame mt-4 border border-[var(--c-border)] bg-[var(--c-surface)]">
       <div className="flex flex-col gap-4 px-4 pb-2 pt-5 sm:flex-row sm:items-start sm:justify-between sm:px-6 sm:pt-6">
         <div>
           <h2 className="text-[length:var(--fs-lg)] font-semibold tracking-[-0.015em]">
@@ -89,14 +90,15 @@ export function TrendSection({
         </div>
 
         {hasPerf && (
-          <div className="inline-flex self-start rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-page)] p-1">
+          /* 分段控制：一條髮絲線框住，段與段之間是分隔線，不再是「底座裡放藥丸」。 */
+          <div className="inline-flex self-start divide-x divide-[var(--c-border)] border border-[var(--c-line-strong)]">
             {(["value", "bench"] as const).map((item) => (
               <button
                 key={item}
                 type="button"
                 aria-pressed={mode === item}
                 onClick={() => setMode(item)}
-                className={`tap-row min-h-9 whitespace-nowrap rounded-[var(--r-control)] px-3 text-[length:var(--fs-sm)] ${
+                className={`tap-row min-h-9 whitespace-nowrap px-3 text-[length:var(--fs-sm)] ${
                   mode === item ? PICK_ON : PICK_OFF
                 }`}
               >
@@ -135,22 +137,26 @@ export function TrendSection({
       )}
 
       <div className="mt-2 border-t border-[var(--c-border)] px-4 py-3 sm:px-6">
-        <div className="hide-scrollbar flex gap-1 overflow-x-auto">
-          {RANGES.map((item) => (
-            <button
-              key={item.key}
-              type="button"
-              aria-pressed={range === item.key}
-              onClick={() => setRange(item.key)}
-              /* 區間鈕是主圖表上最常按的控制項，固定拉到 44×44；模式與圖例
-                 則由 .tap-row 在粗指標裝置補到 44px，不擠壓滑鼠版密集版面。 */
-              className={`min-h-11 min-w-11 shrink-0 rounded-[var(--r-control)] px-2.5 text-[length:var(--fs-micro)] ${
-                range === item.key ? PICK_ON : PICK_OFF
-              }`}
-            >
-              {item.key}
-            </button>
-          ))}
+        {/* 區間列同樣是一條分段控制，讀起來像尺上的刻度格。
+            外層負責水平捲動，內層 inline-flex 才不會被撐滿而把框拉長。 */}
+        <div className="hide-scrollbar overflow-x-auto">
+          <div className="inline-flex divide-x divide-[var(--c-border)] border border-[var(--c-line-strong)]">
+            {RANGES.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                aria-pressed={range === item.key}
+                onClick={() => setRange(item.key)}
+                /* 區間鈕是主圖表上最常按的控制項，固定拉到 44×44；模式與圖例
+                   則由 .tap-row 在粗指標裝置補到 44px，不擠壓滑鼠版密集版面。 */
+                className={`tnum min-h-11 min-w-11 shrink-0 px-2.5 text-[length:var(--fs-micro)] ${
+                  range === item.key ? PICK_ON : PICK_OFF
+                }`}
+              >
+                {item.key}
+              </button>
+            ))}
+          </div>
         </div>
 
         {mode === "bench" && (
@@ -209,7 +215,7 @@ function LegendButton({
       /* 開關語彙：邊框深淺 + 透明度，刻意不填色。填色是 PICK_ON 的專屬訊號，
          留給「互斥選擇」用；圖例是各自獨立的布林，兩者不該長得像。
          原本開與關只差透明度一個訊號，關掉的那條與「還沒 hover 過」難分。 */
-      className={`tap-row inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-[var(--r-control)] border px-2.5 text-[length:var(--fs-micro)] font-medium text-[var(--c-text)] hover:bg-[var(--c-surface-soft)] ${
+      className={`tap-row inline-flex min-h-9 shrink-0 items-center gap-1.5 border px-2.5 text-[length:var(--fs-micro)] font-medium text-[var(--c-text)] hover:bg-[var(--c-surface-soft)] ${
         on
           ? "border-[var(--c-line-strong)]"
           : "border-[var(--c-border)] opacity-45"
@@ -222,9 +228,9 @@ function LegendButton({
           x2="19"
           y2="4"
           stroke={color}
-          strokeWidth={dash ? 2 : 3}
+          strokeWidth={dash ? 1.5 : 2.25}
           strokeDasharray={dash}
-          strokeLinecap="round"
+          strokeLinecap="butt"
         />
       </svg>
       {label}
