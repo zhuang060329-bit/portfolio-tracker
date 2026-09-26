@@ -97,6 +97,12 @@
   --c-bench-qqq: #9c93c5;
   --c-bench-0050: #c4849c;
   --c-bench-btc: #d9a15f;
+
+  /* 列印：紙永遠是白的，不跟主題走，所以只在這裡定義、淺色主題不覆寫。
+     墨色取石墨 #101820，框線取淺藍灰；對白紙 17.9:1 與 1.6:1（框線只是分區，不承載資訊）。 */
+  --c-print-paper: #fff;
+  --c-print-ink: #101820;
+  --c-print-rule: #c3cfd3;
   /* 警示文字色。與錯誤訊息同結構（自身 14% 當色底 + 同色文字），對該色底 6.49:1。 */
   --c-warn: #d9b45e;
   /* 圓角全站 0。測繪桌的控制項是方的；斜角只給每頁唯一的主按鈕（見 .btn-primary）。
@@ -1111,8 +1117,8 @@ textarea:disabled {
   .report-page,
   .report-card,
   .report-block {
-    background: #fff !important;
-    color: #101820 !important;
+    background: var(--c-print-paper) !important;
+    color: var(--c-print-ink) !important;
     box-shadow: none !important;
   }
 
@@ -1138,7 +1144,7 @@ textarea:disabled {
   }
 
   .report-block {
-    border-color: #c3cfd3 !important;
+    border-color: var(--c-print-rule) !important;
   }
 
   .report-page main,
