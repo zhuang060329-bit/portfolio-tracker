@@ -330,10 +330,10 @@ export function buildDashboardData(input: DashboardInputs): DashboardData {
   forwardFillBenchmarks(perfData, ["spy", "qqq", "tw0050", "btc"]);
 
   const benchmarks: BenchSeries[] = [
-    { key: "spy", label: "S&P 500", color: "#7FA8C9", dash: "7 4" },
-    { key: "qqq", label: "Nasdaq 100", color: "#9C93C5", dash: "2 4.5" },
-    { key: "tw0050", label: "台股 0050", color: "#C4849C", dash: "12 5" },
-    { key: "btc", label: "BTC", color: "#D9A15F", dash: "8 3 2 3" },
+    { key: "spy", label: "S&P 500", color: "var(--c-bench-spy)", dash: "7 4" },
+    { key: "qqq", label: "Nasdaq 100", color: "var(--c-bench-qqq)", dash: "2 4.5" },
+    { key: "tw0050", label: "台股 0050", color: "var(--c-bench-0050)", dash: "12 5" },
+    { key: "btc", label: "BTC", color: "var(--c-bench-btc)", dash: "8 3 2 3" },
   ];
   const hasPerf =
     perfData.length >= 2 &&

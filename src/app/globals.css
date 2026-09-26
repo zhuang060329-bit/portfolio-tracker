@@ -91,6 +91,12 @@
   --c-alloc-other: #a99bd0;
   --c-alloc-fixed: #bf9f92;
   --c-alloc-receivable: #6bbfcb;
+  /* 趨勢圖的基準線（SPY／QQQ／0050／BTC）。線是判讀所需的圖形物件，需對底 3:1；
+     另有各自的虛線節奏，不單靠顏色區分。深色對 page 6.24–8.07、對 surface 5.73–7.41。 */
+  --c-bench-spy: #7fa8c9;
+  --c-bench-qqq: #9c93c5;
+  --c-bench-0050: #c4849c;
+  --c-bench-btc: #d9a15f;
   /* 警示文字色。與錯誤訊息同結構（自身 14% 當色底 + 同色文字），對該色底 6.49:1。 */
   --c-warn: #d9b45e;
   /* 圓角全站 0。測繪桌的控制項是方的；斜角只給每頁唯一的主按鈕（見 .btn-primary）。
@@ -176,6 +182,12 @@
   --c-alloc-other: #685c8c;
   --c-alloc-fixed: #7a6056;
   --c-alloc-receivable: #2b7a84;
+  /* 基準線。SPY 刻意比測量藍主線淺一階，兩條藍線靠明度分開。
+     對 page 3.47–4.81、對 surface 3.81–5.28。 */
+  --c-bench-spy: #5a82a3;
+  --c-bench-qqq: #6a5f9e;
+  --c-bench-0050: #9a5068;
+  --c-bench-btc: #9a6420;
   /* 對自身 14% 色底 4.89:1。 */
   --c-warn: #7a5a12;
 }
