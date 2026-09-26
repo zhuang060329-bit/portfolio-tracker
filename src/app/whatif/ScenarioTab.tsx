@@ -168,7 +168,7 @@ export function ScenarioTab({ data }: { data: ScenarioData }) {
           </label>
           <NumberInput label="價格衝擊（%）" value={priceChange} onChange={setPriceChange} min={-100} max={300} />
           <NumberInput label="匯率衝擊（%）" value={fxChange} onChange={setFxChange} min={-100} max={300} />
-          <button type="button" onClick={addCustomShock} className="h-11 btn btn-primary btn-fit sm:h-10">
+          <button type="button" onClick={addCustomShock} className="h-11 btn btn-outline btn-fit sm:h-10">
             加入
           </button>
         </div>
