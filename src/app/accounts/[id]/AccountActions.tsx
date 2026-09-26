@@ -171,24 +171,24 @@ export function AccountActions({
             {updatePending ? "抓最新價中…" : "更新價格"}
           </button>
           {updateState?.error && (
-            <span className="text-xs text-[var(--c-down)]">{updateState.error}</span>
+            <span className="text-[length:var(--fs-micro)] text-[var(--c-down)]">{updateState.error}</span>
           )}
           {updateState?.ok && (
-            <span className="text-xs text-[var(--c-up)]">✓ {updateState.ok}</span>
+            <span className="text-[length:var(--fs-micro)] text-[var(--c-up)]">✓ {updateState.ok}</span>
           )}
         </form>
       )}
 
       {/* === 加碼買入 === */}
       {!isManual && (
-        <details className="rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)]">
-          <summary className="cursor-pointer select-none px-4 py-3 text-sm font-medium">
+        <details className="border border-[var(--c-border)] bg-[var(--c-surface)]">
+          <summary className="cursor-pointer select-none px-4 py-3 text-[length:var(--fs-sm)] font-medium transition-colors hover:bg-[var(--c-row-hover)]">
             加碼買入（依 TWD 金額自動換算股數）
           </summary>
           <form action={addAction} className="flex flex-col gap-3 border-t border-[var(--c-border)] p-4">
             <input type="hidden" name="accountId" value={accountId} />
 
-            <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+            <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
               投入金額（TWD）
               <input
                 name="twd"
@@ -199,14 +199,14 @@ export function AccountActions({
                 value={twd}
                 onChange={(e) => setTwd(e.target.value)}
                 placeholder="例：50000"
-                className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+                className="field"
               />
-              <span className="mt-1 text-xs text-[var(--c-faint)]">
+              <span className="font-normal text-[var(--c-muted)]">
                 實際從戶頭扣掉的總金額，含手續費。
               </span>
             </label>
 
-            <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+            <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
               手續費（TWD，選填）
               <input
                 name="feeTwd"
@@ -216,15 +216,15 @@ export function AccountActions({
                 value={buyFee}
                 onChange={(e) => setBuyFee(e.target.value)}
                 placeholder="例：500"
-                className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+                className="field"
               />
-              <span className="mt-1 text-xs text-[var(--c-faint)]">
+              <span className="font-normal text-[var(--c-muted)]">
                 從投入金額中扣除後才換算股數；成本基礎仍記全額。留空 = 不記錄。
               </span>
             </label>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+              <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
                 成交價（{nativeCurrency}，留空 = 市價 {currentPrice || "—"}）
                 <input
                   name="priceOverride"
@@ -234,16 +234,16 @@ export function AccountActions({
                   value={priceOverride}
                   onChange={(e) => setPriceOverride(e.target.value)}
                   placeholder={currentPrice ? String(currentPrice) : ""}
-                  className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+                  className="field"
                 />
                 {isBackdating && !priceOverride && (
-                  <span className="mt-1 text-xs text-[var(--c-accent)]">
+                  <span className="border-l border-dashed border-[var(--c-annot)] pl-1.5 font-normal text-[var(--c-annot-text)]">
                     回填歷史記錄建議填寫當時成交價，否則快照將使用今日價格。
                   </span>
                 )}
               </label>
 
-              <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+              <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
                 匯率 ({nativeCurrency}/TWD，留空 = 目前 {currentFx})
                 <input
                   name="fxOverride"
@@ -254,23 +254,23 @@ export function AccountActions({
                   onChange={(e) => setFxOverride(e.target.value)}
                   placeholder={String(currentFx)}
                   disabled={currentFx === 1}
-                  className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)] disabled:bg-[var(--c-surface-soft)] disabled:text-[var(--c-faint)]"
+                  className="field tnum disabled:text-[var(--c-faint)]"
                 />
               </label>
             </div>
 
-            <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+            <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
               加入時間（留空 = 現在）
               <input
                 name="occurredAt"
                 type="datetime-local"
                 value={occurredAt}
                 onChange={(e) => setOccurredAt(e.target.value)}
-                className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+                className="field"
               />
             </label>
 
-            <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+            <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
               備註（選填）
               <input
                 name="note"
@@ -278,18 +278,18 @@ export function AccountActions({
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="例：5/30 永豐定額"
-                className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+                className="field"
               />
             </label>
 
-            <div className="rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3 py-2 text-xs text-[var(--c-muted)]">
+            <div className="border border-dashed border-[var(--c-line-strong)] bg-[var(--c-surface-soft)] px-3.5 py-2.5 text-[length:var(--fs-micro)] text-[var(--c-muted)]">
               預估加入股數：
-              <span className="ml-1 font-semibold tabular-nums text-[var(--c-text)]">
+              <span className="ml-1 font-semibold tnum text-[var(--c-text)]">
                 {fmtShares(previewShares)}
               </span>
               <span className="mx-2 text-[var(--c-faint)]">·</span>
               加入後總持有：
-              <span className="ml-1 font-semibold tabular-nums text-[var(--c-text)]">
+              <span className="ml-1 font-semibold tnum text-[var(--c-text)]">
                 {fmtShares(previewNewTotal)}
               </span>
               {buyFeeN > 0 && (
@@ -301,12 +301,12 @@ export function AccountActions({
             </div>
 
             {addState?.error && (
-              <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-down)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-down)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-down)]">
+              <p className="border border-[var(--c-down)] px-3 py-2 text-[length:var(--fs-sm)] text-[var(--c-down)]">
                 {addState.error}
               </p>
             )}
             {addState?.ok && (
-              <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-up)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-up)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-up)]">
+              <p className="border border-[var(--c-up)] px-3 py-2 text-[length:var(--fs-sm)] text-[var(--c-up)]">
                 ✓ {addState.ok}
               </p>
             )}
@@ -323,14 +323,14 @@ export function AccountActions({
 
       {/* === 賣出（含已實現損益計算）=== */}
       {!isManual && (
-        <details className="rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)]">
-          <summary className="cursor-pointer select-none px-4 py-3 text-sm font-medium">
+        <details className="border border-[var(--c-border)] bg-[var(--c-surface)]">
+          <summary className="cursor-pointer select-none px-4 py-3 text-[length:var(--fs-sm)] font-medium transition-colors hover:bg-[var(--c-row-hover)]">
             賣出（記錄已實現損益）
           </summary>
           <form action={sellAction} className="flex flex-col gap-3 border-t border-[var(--c-border)] p-4">
             <input type="hidden" name="accountId" value={accountId} />
 
-            <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+            <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
               賣出股數（目前持有 {fmtShares(currentQty)}）
               <input
                 name="sellQty"
@@ -342,11 +342,11 @@ export function AccountActions({
                 value={sellQtyStr}
                 onChange={(e) => setSellQtyStr(e.target.value)}
                 placeholder="例：0.5"
-                className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+                className="field"
               />
             </label>
 
-            <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+            <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
               實收金額（TWD，留空 = 股數 × 市價 × FX − 手續費）
               <input
                 name="proceedsTwd"
@@ -356,14 +356,14 @@ export function AccountActions({
                 value={proceedsStr}
                 onChange={(e) => setProceedsStr(e.target.value)}
                 placeholder={defaultProceeds > 0 ? String(Math.round(defaultProceeds)) : ""}
-                className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+                className="field"
               />
-              <span className="mt-1 text-xs text-[var(--c-faint)]">
+              <span className="font-normal text-[var(--c-muted)]">
                 券商實際匯入帳戶金額（扣完手續費）。留空就用市場估算。
               </span>
             </label>
 
-            <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+            <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
               手續費（TWD，選填）
               <input
                 name="feeTwd"
@@ -373,15 +373,15 @@ export function AccountActions({
                 value={sellFee}
                 onChange={(e) => setSellFee(e.target.value)}
                 placeholder="例：500"
-                className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+                className="field"
               />
-              <span className="mt-1 text-xs text-[var(--c-faint)]">
+              <span className="font-normal text-[var(--c-muted)]">
                 只在「實收金額」留空時從估算值扣除；自行填實收金額時視為已扣過，僅記錄。
               </span>
             </label>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+              <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
                 成交價 ({nativeCurrency}, 留空 = 市價)
                 <input
                   name="priceOverride"
@@ -391,10 +391,10 @@ export function AccountActions({
                   value={sellPriceOv}
                   onChange={(e) => setSellPriceOv(e.target.value)}
                   placeholder={currentPrice ? String(currentPrice) : ""}
-                  className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+                  className="field"
                 />
               </label>
-              <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+              <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
                 匯率 (留空 = 目前 {currentFx})
                 <input
                   name="fxOverride"
@@ -405,47 +405,47 @@ export function AccountActions({
                   onChange={(e) => setSellFxOv(e.target.value)}
                   placeholder={String(currentFx)}
                   disabled={currentFx === 1}
-                  className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)] disabled:bg-[var(--c-surface-soft)] disabled:text-[var(--c-faint)]"
+                  className="field tnum disabled:text-[var(--c-faint)]"
                 />
               </label>
             </div>
 
-            <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+            <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
               成交時間（留空 = 現在）
               <input
                 name="occurredAt"
                 type="datetime-local"
-                className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+                className="field"
               />
             </label>
 
-            <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+            <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
               備註（選填）
               <input
                 name="note"
                 type="text"
                 placeholder="例：6/15 部分獲利了結"
-                className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+                className="field"
               />
             </label>
 
-            <div className="rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3 py-2 text-xs text-[var(--c-muted)]">
+            <div className="border border-dashed border-[var(--c-line-strong)] bg-[var(--c-surface-soft)] px-3.5 py-2.5 text-[length:var(--fs-micro)] text-[var(--c-muted)]">
               <div>
                 預估實收：
-                <span className="amt ml-1 font-semibold tabular-nums text-[var(--c-text)]">
+                <span className="amt ml-1 font-semibold tnum text-[var(--c-text)]">
                   NT$ {fmtTwd(proceedsPreview)}
                 </span>
               </div>
               <div className="mt-1">
                 被賣部位的成本：
-                <span className="amt ml-1 tabular-nums text-[var(--c-text)]">
+                <span className="amt ml-1 tnum text-[var(--c-text)]">
                   NT$ {fmtTwd(allocatedCost)}
                 </span>
               </div>
               <div className="mt-1">
                 預估已實現損益：
                 <span
-                  className={`amt ml-1 font-semibold tabular-nums ${pnlClass(realizedPnlPreview)}`}
+                  className={`amt ml-1 font-semibold tnum ${pnlClass(realizedPnlPreview)}`}
                 >
                   {pnlSign(realizedPnlPreview)}NT$ {fmtTwd(Math.abs(realizedPnlPreview))}
                 </span>
@@ -453,12 +453,12 @@ export function AccountActions({
             </div>
 
             {sellState?.error && (
-              <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-down)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-down)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-down)]">
+              <p className="border border-[var(--c-down)] px-3 py-2 text-[length:var(--fs-sm)] text-[var(--c-down)]">
                 {sellState.error}
               </p>
             )}
             {sellState?.ok && (
-              <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-up)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-up)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-up)]">
+              <p className="border border-[var(--c-up)] px-3 py-2 text-[length:var(--fs-sm)] text-[var(--c-up)]">
                 ✓ {sellState.ok}
               </p>
             )}
@@ -475,14 +475,14 @@ export function AccountActions({
 
       {/* === 配息（非手動）=== */}
       {!isManual && (
-        <details className="rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)]">
-          <summary className="cursor-pointer select-none px-4 py-3 text-sm font-medium">
+        <details className="border border-[var(--c-border)] bg-[var(--c-surface)]">
+          <summary className="cursor-pointer select-none px-4 py-3 text-[length:var(--fs-sm)] font-medium transition-colors hover:bg-[var(--c-row-hover)]">
             記錄配息
           </summary>
           <form action={divAction} className="flex flex-col gap-3 border-t border-[var(--c-border)] p-4">
             <input type="hidden" name="accountId" value={accountId} />
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+              <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
                 金額（TWD）
                 <input
                   name="amount"
@@ -491,34 +491,34 @@ export function AccountActions({
                   min="0"
                   required
                   placeholder="例：1200"
-                  className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+                  className="field"
                 />
               </label>
-              <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+              <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
                 配發日（留空 = 現在）
                 <input
                   name="occurredAt"
                   type="datetime-local"
-                  className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+                  className="field"
                 />
               </label>
             </div>
-            <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+            <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
               備註（選填）
               <input
                 name="note"
                 type="text"
                 placeholder="例：Q2 季配"
-                className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+                className="field"
               />
             </label>
             {divState?.error && (
-              <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-down)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-down)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-down)]">
+              <p className="border border-[var(--c-down)] px-3 py-2 text-[length:var(--fs-sm)] text-[var(--c-down)]">
                 {divState.error}
               </p>
             )}
             {divState?.ok && (
-              <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-up)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-up)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-up)]">
+              <p className="border border-[var(--c-up)] px-3 py-2 text-[length:var(--fs-sm)] text-[var(--c-up)]">
                 ✓ {divState.ok}
               </p>
             )}
@@ -534,14 +534,14 @@ export function AccountActions({
       )}
 
       {/* === 利息（所有帳戶都可記錄）=== */}
-      <details className="rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)]">
-        <summary className="cursor-pointer select-none px-4 py-3 text-sm font-medium">
+      <details className="border border-[var(--c-border)] bg-[var(--c-surface)]">
+        <summary className="cursor-pointer select-none px-4 py-3 text-[length:var(--fs-sm)] font-medium transition-colors hover:bg-[var(--c-row-hover)]">
           記錄利息
         </summary>
         <form action={intAction} className="flex flex-col gap-3 border-t border-[var(--c-border)] p-4">
           <input type="hidden" name="accountId" value={accountId} />
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+            <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
               金額（TWD）
               <input
                 name="amount"
@@ -550,34 +550,34 @@ export function AccountActions({
                 min="0"
                 required
                 placeholder="例：50"
-                className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+                className="field"
               />
             </label>
-            <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+            <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
               入帳日（留空 = 現在）
               <input
                 name="occurredAt"
                 type="datetime-local"
-                className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+                className="field"
               />
             </label>
           </div>
-          <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+          <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
             備註（選填）
             <input
               name="note"
               type="text"
               placeholder="例：玉山活儲 6 月利息"
-              className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+              className="field"
             />
           </label>
           {intState?.error && (
-            <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-down)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-down)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-down)]">
+            <p className="border border-[var(--c-down)] px-3 py-2 text-[length:var(--fs-sm)] text-[var(--c-down)]">
               {intState.error}
             </p>
           )}
           {intState?.ok && (
-            <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-up)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-up)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-up)]">
+            <p className="border border-[var(--c-up)] px-3 py-2 text-[length:var(--fs-sm)] text-[var(--c-up)]">
               ✓ {intState.ok}
             </p>
           )}
@@ -593,13 +593,13 @@ export function AccountActions({
 
       {/* === 增減股數（覆寫總量）=== */}
       {!isManual && (
-        <details className="rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)]">
-          <summary className="cursor-pointer select-none px-4 py-3 text-sm font-medium">
+        <details className="border border-[var(--c-border)] bg-[var(--c-surface)]">
+          <summary className="cursor-pointer select-none px-4 py-3 text-[length:var(--fs-sm)] font-medium transition-colors hover:bg-[var(--c-row-hover)]">
             增減股數 / 數量（直接覆寫總持有）
           </summary>
           <form action={qtyAction} className="flex flex-col gap-3 border-t border-[var(--c-border)] p-4">
             <input type="hidden" name="accountId" value={accountId} />
-            <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+            <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
               新的持有數量（會同時重新抓價並寫入快照）
               <input
                 name="quantity"
@@ -608,19 +608,19 @@ export function AccountActions({
                 min="0"
                 required
                 defaultValue={currentQty}
-                className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+                className="field"
               />
-              <span className="mt-1 text-xs text-[var(--c-faint)]">
+              <span className="font-normal text-[var(--c-muted)]">
                 注意：這只是「校正持有數」，不算真實買賣交易。要精準損益請走「賣出」。
               </span>
             </label>
             {qtyState?.error && (
-              <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-down)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-down)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-down)]">
+              <p className="border border-[var(--c-down)] px-3 py-2 text-[length:var(--fs-sm)] text-[var(--c-down)]">
                 {qtyState.error}
               </p>
             )}
             {qtyState?.ok && (
-              <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-up)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-up)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-up)]">
+              <p className="border border-[var(--c-up)] px-3 py-2 text-[length:var(--fs-sm)] text-[var(--c-up)]">
                 ✓ {qtyState.ok}
               </p>
             )}
@@ -637,13 +637,13 @@ export function AccountActions({
 
       {/* === 修改餘額（manual）=== */}
       {isManual && (
-        <details className="rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)]">
-          <summary className="cursor-pointer select-none px-4 py-3 text-sm font-medium">
+        <details className="border border-[var(--c-border)] bg-[var(--c-surface)]">
+          <summary className="cursor-pointer select-none px-4 py-3 text-[length:var(--fs-sm)] font-medium transition-colors hover:bg-[var(--c-row-hover)]">
             修改餘額
           </summary>
           <form action={balAction} className="flex flex-col gap-3 border-t border-[var(--c-border)] p-4">
             <input type="hidden" name="accountId" value={accountId} />
-            <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+            <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
               新餘額（TWD）
               <input
                 name="balance"
@@ -652,16 +652,16 @@ export function AccountActions({
                 min="0"
                 required
                 defaultValue={currentBalance}
-                className="mt-1 rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2 py-1.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]"
+                className="field"
               />
             </label>
             {balState?.error && (
-              <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-down)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-down)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-down)]">
+              <p className="border border-[var(--c-down)] px-3 py-2 text-[length:var(--fs-sm)] text-[var(--c-down)]">
                 {balState.error}
               </p>
             )}
             {balState?.ok && (
-              <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-up)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-up)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-up)]">
+              <p className="border border-[var(--c-up)] px-3 py-2 text-[length:var(--fs-sm)] text-[var(--c-up)]">
                 ✓ {balState.ok}
               </p>
             )}
@@ -691,7 +691,7 @@ export function AccountActions({
               : "歸檔此帳戶（不再抓價、不計入總值）"}
         </button>
         {archState?.error && (
-          <span className="text-xs text-[var(--c-down)]">{archState.error}</span>
+          <span className="text-[length:var(--fs-micro)] text-[var(--c-down)]">{archState.error}</span>
         )}
       </form>
 
@@ -707,7 +707,7 @@ export function AccountActions({
             刪除帳戶
           </button>
         ) : (
-          <div className="flex flex-wrap items-center gap-2 text-xs">
+          <div className="flex flex-wrap items-center gap-2 text-[length:var(--fs-micro)]">
             <span className="text-[var(--c-down)]">
               將永久刪除此帳戶與其全部交易紀錄、每日快照，無法復原；
               歷史績效曲線也會同步失去這段資料。若只是不想在總覽看到，
@@ -729,7 +729,7 @@ export function AccountActions({
             </button>
           </div>
         )}
-        {delState?.error && <span className="text-xs text-[var(--c-down)]">{delState.error}</span>}
+        {delState?.error && <span className="text-[length:var(--fs-micro)] text-[var(--c-down)]">{delState.error}</span>}
       </form>
     </div>
   );

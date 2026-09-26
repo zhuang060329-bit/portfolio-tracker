@@ -66,14 +66,14 @@ export function TransactionReversal({
       <input type="hidden" name="accountId" value={accountId} />
       <input type="hidden" name="transactionId" value={target.id} />
       <input type="hidden" name="mode" value={mode} />
-      <p className="text-left text-xs font-semibold text-[var(--c-text)]">
+      <p className="text-left text-[length:var(--fs-micro)] font-semibold text-[var(--c-text)]">
         {copy.title}
       </p>
-      <p className="w-[248px] text-left text-xs leading-relaxed text-[var(--c-muted)]">
+      <p className="w-[248px] text-left text-[length:var(--fs-micro)] leading-relaxed text-[var(--c-muted)]">
         {copy.body}
       </p>
       {state?.error && (
-        <p className="w-[248px] rounded-[var(--r-control)] bg-[color-mix(in_srgb,var(--c-down)_14%,transparent)] px-2 py-1.5 text-left text-xs leading-relaxed text-[var(--c-down)]">
+        <p className="w-[248px] border border-[var(--c-down)] px-2 py-1.5 text-left text-[length:var(--fs-micro)] leading-relaxed text-[var(--c-down)]">
           {state.error}
         </p>
       )}

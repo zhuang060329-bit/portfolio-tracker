@@ -64,7 +64,7 @@ function PlanRow({ plan }: { plan: Plan }) {
 
   return (
     <div
-      className={`rounded-[var(--r-card)] border border-[var(--c-border)] p-4 ${
+      className={`border border-[var(--c-border)] p-4 ${
         plan.active
           ? "bg-[var(--c-surface)]"
           : "bg-[var(--c-surface-soft)]"
@@ -72,17 +72,17 @@ function PlanRow({ plan }: { plan: Plan }) {
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="text-sm font-medium [font-variant-numeric:lining-nums_tabular-nums]">
+          <div className="text-[length:var(--fs-sm)] font-medium tnum">
             每月 {plan.day_of_month} 日{" "}
             <span className="text-[var(--c-muted)]">·</span>{" "}
             <span className="amt">NT$ {fmtTwd(Number(plan.amount_twd))}</span>
             {planFee > 0 && (
-              <span className="ml-1.5 text-xs font-normal text-[var(--c-muted)]">
+              <span className="ml-1.5 text-[length:var(--fs-micro)] font-normal text-[var(--c-muted)]">
                 （含手續費 NT$ {fmtTwd(planFee)}）
               </span>
             )}
           </div>
-          <div className="mt-1 text-xs text-[var(--c-muted)]">
+          <div className="mt-1 text-[length:var(--fs-micro)] text-[var(--c-muted)] tnum">
             下次{" "}
             <span className="text-[var(--c-text)]">{plan.next_run_date}</span>
             {plan.last_run_date && (
@@ -92,13 +92,13 @@ function PlanRow({ plan }: { plan: Plan }) {
               </>
             )}
             {!plan.active && (
-              <span className="ml-2 rounded-[var(--r-pill)] bg-[var(--c-border)] px-2 py-0.5 text-xs uppercase tracking-wider text-[var(--c-muted)]">
-                Paused
+              <span className="ml-2 inline-block border border-[var(--c-line-strong)] px-1.5 py-px text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
+                已暫停
               </span>
             )}
           </div>
           {plan.note && (
-            <div className="mt-1 text-xs text-[var(--c-muted)]">
+            <div className="mt-1 text-[length:var(--fs-micro)] text-[var(--c-muted)]">
               備註：{plan.note}
             </div>
           )}
@@ -115,7 +115,7 @@ function PlanRow({ plan }: { plan: Plan }) {
             <div className="relative flex-1 sm:flex-none">
               <span
                 aria-hidden="true"
-                className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-xs text-[var(--c-faint)]"
+                className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-[length:var(--fs-micro)] text-[var(--c-faint)]"
               >
                 NT$
               </span>
@@ -133,7 +133,7 @@ function PlanRow({ plan }: { plan: Plan }) {
                 min="0.01"
                 disabled={!plan.active}
                 defaultValue={Number(plan.amount_twd)}
-                className={`${controlH} w-full rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] py-0 pl-9 pr-2 text-right text-xs text-[var(--c-text)] tnum outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)] disabled:opacity-40 sm:w-[118px]`}
+                className={`${controlH} field w-full py-0 pl-9 pr-2 text-right tnum disabled:opacity-40 sm:w-[118px]`}
               />
             </div>
             <label htmlFor={feeFieldId} className="sr-only">
@@ -142,7 +142,7 @@ function PlanRow({ plan }: { plan: Plan }) {
             <div className="relative flex-1 sm:flex-none">
               <span
                 aria-hidden="true"
-                className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-xs text-[var(--c-faint)]"
+                className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-[length:var(--fs-micro)] text-[var(--c-faint)]"
               >
                 費
               </span>
@@ -156,13 +156,13 @@ function PlanRow({ plan }: { plan: Plan }) {
                 min="0"
                 disabled={!plan.active}
                 defaultValue={planFee}
-                className={`${controlH} w-full rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] py-0 pl-7 pr-2 text-right text-xs text-[var(--c-text)] tnum outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)] disabled:opacity-40 sm:w-[86px]`}
+                className={`${controlH} field w-full py-0 pl-7 pr-2 text-right tnum disabled:opacity-40 sm:w-[86px]`}
               />
             </div>
             <button
               type="submit"
               disabled={execPending || !plan.active}
-              className={`${controlH} btn btn-primary btn-sm btn-fit shrink-0`}
+              className={`${controlH} btn btn-neutral btn-sm btn-fit shrink-0`}
             >
               {execPending ? "執行中…" : "立即執行"}
             </button>
@@ -195,12 +195,12 @@ function PlanRow({ plan }: { plan: Plan }) {
         </div>
       </div>
       {error && (
-        <p className="mt-2 rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-down)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-down)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-down)]">
+        <p className="mt-3 border border-[var(--c-down)] px-3 py-2 text-[length:var(--fs-sm)] text-[var(--c-down)]">
           {error}
         </p>
       )}
       {success && !error && (
-        <p className="mt-2 rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-up)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-up)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-up)]">
+        <p className="mt-3 border border-[var(--c-up)] px-3 py-2 text-[length:var(--fs-sm)] text-[var(--c-up)]">
           {success}
         </p>
       )}
@@ -217,8 +217,8 @@ function AddPlanForm({ accountId }: { accountId: string }) {
   useActionAnnounce(state, pending);
 
   return (
-    <details className="rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)]">
-      <summary className="cursor-pointer select-none px-4 py-3 text-sm font-medium">
+    <details className="border border-[var(--c-border)] bg-[var(--c-surface)]">
+      <summary className="cursor-pointer select-none px-4 py-3 text-[length:var(--fs-sm)] font-medium transition-colors hover:bg-[var(--c-row-hover)]">
         新增定期定額計劃
       </summary>
       <form
@@ -227,7 +227,7 @@ function AddPlanForm({ accountId }: { accountId: string }) {
       >
         <input type="hidden" name="accountId" value={accountId} />
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+          <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
             每次金額（TWD）
             <input
               name="amount"
@@ -236,10 +236,10 @@ function AddPlanForm({ accountId }: { accountId: string }) {
               min="0"
               required
               placeholder="例：10000"
-              className={`mt-1 ${controlFieldH} rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]`}
+              className={`field ${controlFieldH} py-0`}
             />
           </label>
-          <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+          <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
             每期手續費（TWD，留空 = 0）
             <input
               name="fee"
@@ -247,13 +247,13 @@ function AddPlanForm({ accountId }: { accountId: string }) {
               step="any"
               min="0"
               placeholder="例：500"
-              className={`mt-1 ${controlFieldH} rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]`}
+              className={`field ${controlFieldH} py-0`}
             />
-            <span className="text-xs text-[var(--c-faint)]">
+            <span className="font-normal text-[var(--c-muted)]">
               內含於每次金額，扣掉後才換算股數。
             </span>
           </label>
-          <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+          <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
             每月幾日扣款（1-28）
             <input
               name="dayOfMonth"
@@ -262,29 +262,29 @@ function AddPlanForm({ accountId }: { accountId: string }) {
               max="28"
               required
               defaultValue="5"
-              className={`mt-1 ${controlFieldH} rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]`}
+              className={`field ${controlFieldH} py-0`}
             />
           </label>
         </div>
-        <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+        <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
           起始日期（留空 = 今天）
           <input
             name="startDate"
             type="date"
-            className={`mt-1 ${controlFieldH} rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]`}
+            className={`field ${controlFieldH} py-0`}
           />
         </label>
-        <label className="flex flex-col gap-1 text-xs text-[var(--c-muted)]">
+        <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
           備註（選填）
           <input
             name="note"
             type="text"
             placeholder="例：薪資自動撥入"
-            className={`mt-1 ${controlFieldH} rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-2.5 text-sm text-[var(--c-text)] outline-none focus:border-[color-mix(in_srgb,var(--c-accent)_50%,transparent)] focus:shadow-[0_0_0_3px_var(--c-accent-soft)]`}
+            className={`field ${controlFieldH} py-0`}
           />
         </label>
         {state?.error && (
-          <p className="rounded-[var(--r-control)] border border-[color-mix(in_srgb,var(--c-down)_30%,transparent)] bg-[color-mix(in_srgb,var(--c-down)_10%,var(--c-surface))] px-2 py-1 text-xs text-[var(--c-down)]">
+          <p className="border border-[var(--c-down)] px-3 py-2 text-[length:var(--fs-sm)] text-[var(--c-down)]">
             {state.error}
           </p>
         )}
@@ -316,7 +316,7 @@ export function RecurringPlans({
           ))}
         </div>
       ) : (
-        <p className="rounded-[var(--r-card)] border border-dashed border-[var(--c-border)] bg-[var(--c-surface)] px-4 py-6 text-center text-xs text-[var(--c-muted)]">
+        <p className="border border-dashed border-[var(--c-line-strong)] bg-[var(--c-surface)] px-4 py-6 text-center text-[length:var(--fs-sm)] text-[var(--c-muted)]">
           尚無定期定額計劃。展開下方表單建立第一個。
         </p>
       )}

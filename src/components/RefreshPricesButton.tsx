@@ -57,7 +57,7 @@ export function RefreshPricesButton() {
         disabled={pending}
         aria-label="刷新報價"
         title="刷新報價"
-        className="touch-target grid h-8 w-8 place-items-center rounded-[var(--r-control)] text-[var(--c-muted)] transition-colors hover:bg-[var(--c-accent-soft)] hover:text-[var(--c-accent)] disabled:pointer-events-none"
+        className="touch-target grid h-8 w-8 place-items-center text-[var(--c-muted)] transition-colors hover:bg-[var(--c-accent-soft)] hover:text-[var(--c-accent)] disabled:pointer-events-none"
       >
         <svg
           width="13"
@@ -75,7 +75,7 @@ export function RefreshPricesButton() {
         </svg>
       </button>
       {msg && (
-        <span className="whitespace-nowrap text-xs text-[var(--c-faint)]">
+        <span className="whitespace-nowrap text-[length:var(--fs-micro)] text-[var(--c-muted)]">
           {msg}
         </span>
       )}
