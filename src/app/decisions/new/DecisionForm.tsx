@@ -8,6 +8,7 @@ import {
   type DecisionFormState,
 } from "../actions";
 import { useActionAnnounce } from "@/components/a11y/use-action-announce";
+import { Panel } from "@/components/survey";
 
 type AccountOption = {
   id: string;
@@ -43,8 +44,8 @@ export type DecisionFormInitial = {
   tags: string;
 };
 
-const inputClass =
-  "mt-1.5 w-full rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3.5 py-2.5 text-[14px] text-[var(--c-text)] outline-none transition focus:border-[var(--c-accent)] focus:ring-2 focus:ring-[var(--c-accent-soft)]";
+// 外觀走 globals.css 的 .field，焦點交給全站的套準記號
+const inputClass = "field mt-1.5";
 
 export function DecisionForm({
   accounts,
@@ -74,13 +75,14 @@ export function DecisionForm({
   const linkedName = linkedTransaction?.accounts?.name ?? "已刪除帳戶";
 
   return (
-    <form action={action} className="mt-6 space-y-5">
+    <form action={action} className="space-y-5">
       {decisionId && <input type="hidden" name="decisionId" value={decisionId} />}
       {linkedTransaction && (
-        <aside className="rounded-xl border border-[color-mix(in_srgb,var(--c-accent)_35%,var(--c-border))] bg-[var(--c-accent-soft)] px-4 py-3 text-[13px]">
+        <aside className="border-l-2 border-[var(--c-accent)] bg-[var(--c-accent-soft)] px-4 py-3 text-[length:var(--fs-sm)]">
           <div className="font-semibold">已連結交易 · {linkedName}</div>
           <div className="mt-1 text-[var(--c-muted)]">
-            類型 {linkedTransaction.type} · 交易識別碼 {linkedTransaction.id.slice(0, 8)}…
+            類型 {linkedTransaction.type} · 交易識別碼{" "}
+            <span className="font-mono">{linkedTransaction.id.slice(0, 8)}…</span>
           </div>
           <input type="hidden" name="transactionId" value={linkedTransaction.id} />
           <input type="hidden" name="accountId" value={linkedAccountId} />
@@ -176,7 +178,7 @@ export function DecisionForm({
       </FormSection>
 
       {state?.error && (
-        <p className="rounded-lg bg-[color-mix(in_srgb,var(--c-down)_10%,transparent)] px-4 py-3 text-[13px] text-[var(--c-down)]">
+        <p className="border border-[var(--c-down)] px-4 py-3 text-[length:var(--fs-sm)] text-[var(--c-down)]">
           {state.error}
         </p>
       )}
@@ -197,12 +199,7 @@ export function DecisionForm({
 }
 
 function FormSection({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 shadow-[var(--c-shadow)] sm:p-6">
-      <h2 className="mb-4 font-display text-xl font-medium">{title}</h2>
-      {children}
-    </section>
-  );
+  return <Panel title={title}>{children}</Panel>;
 }
 
 function Field({
@@ -217,9 +214,15 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <label className="block text-[13px] font-medium">
-      {label}{required && <span className="ml-1 text-[var(--c-down)]">*</span>}
-      {hint && <span className="mt-0.5 block text-xs font-normal text-[var(--c-muted)]">{hint}</span>}
+    <label className="block text-[length:var(--fs-sm)] font-medium">
+      {label}
+      {/* 必填星號只是視覺提示，欄位本身有 required，輔助技術會自己讀出 */}
+      {required && <span aria-hidden="true" className="ml-1 text-[var(--c-accent)]">*</span>}
+      {hint && (
+        <span className="mt-0.5 block text-[length:var(--fs-micro)] font-normal text-[var(--c-muted)]">
+          {hint}
+        </span>
+      )}
       {children}
     </label>
   );

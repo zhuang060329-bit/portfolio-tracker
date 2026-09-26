@@ -20,8 +20,8 @@ type ReviewInitial = {
   next_improvement: string;
 };
 
-const inputClass =
-  "mt-1.5 w-full rounded-[var(--r-control)] border border-[var(--c-border)] bg-[var(--c-surface-soft)] px-3.5 py-2.5 text-[14px] outline-none focus:border-[var(--c-accent)] focus:ring-2 focus:ring-[var(--c-accent-soft)]";
+// 外觀走 globals.css 的 .field，焦點交給全站的套準記號
+const inputClass = "field mt-1.5";
 
 export function ReviewForm({ decisionId, initial, suggested }: { decisionId: string; initial: ReviewInitial | null; suggested: DecisionReviewMetrics }) {
   const [state, action, pending] = useActionState<DecisionFormState, FormData>(
@@ -31,11 +31,13 @@ export function ReviewForm({ decisionId, initial, suggested }: { decisionId: str
   // saveDecisionReview 成功時回 ok:"檢討已儲存"，hook 會直接用那句。
   useActionAnnounce(state, pending);
   return (
-    <form action={action} className="mt-5 space-y-4">
+    <form action={action} className="space-y-4">
       <input type="hidden" name="decisionId" value={decisionId} />
       {!initial && suggested.startSnapshotDate && suggested.endSnapshotDate && (
-        <p className="rounded-lg bg-[var(--c-surface-soft)] px-3 py-2 text-xs text-[var(--c-muted)]">
-          已依 {suggested.startSnapshotDate} 至 {suggested.endSnapshotDate} 的單價與匯率快照預填報酬；請依實際情況確認。
+        <p className="border-l-2 border-[var(--c-accent)] bg-[var(--c-surface-soft)] px-3 py-2 text-[length:var(--fs-micro)] text-[var(--c-muted)]">
+          已依 <span className="tnum">{suggested.startSnapshotDate}</span> 至{" "}
+          <span className="tnum">{suggested.endSnapshotDate}</span>{" "}
+          的單價與匯率快照預填報酬；請依實際情況確認。
         </p>
       )}
       <Field label="原始假設後來如何發展？" required>
@@ -85,8 +87,8 @@ export function ReviewForm({ decisionId, initial, suggested }: { decisionId: str
       <Field label="下一次要改進什麼？" required>
         <textarea className={`${inputClass} min-h-20 resize-y`} name="nextImprovement" defaultValue={initial?.next_improvement ?? ""} maxLength={2000} required />
       </Field>
-      {state?.error && <p className="text-[13px] text-[var(--c-down)]">{state.error}</p>}
-      {state?.ok && <p className="text-[13px] text-[var(--c-up)]">{state.ok}</p>}
+      {state?.error && <p className="text-[length:var(--fs-sm)] text-[var(--c-down)]">{state.error}</p>}
+      {state?.ok && <p className="text-[length:var(--fs-sm)] text-[var(--c-up)]">✓ {state.ok}</p>}
       <div className="flex justify-end">
         <button type="submit" disabled={pending} className="btn btn-primary">
           {pending ? "儲存中…" : initial ? "更新檢討" : "儲存檢討"}
@@ -98,8 +100,9 @@ export function ReviewForm({ decisionId, initial, suggested }: { decisionId: str
 
 function Field({ label, required = false, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
-    <label className="block text-[13px] font-medium">
-      {label}{required && <span className="ml-1 text-[var(--c-down)]">*</span>}
+    <label className="block text-[length:var(--fs-sm)] font-medium">
+      {label}
+      {required && <span aria-hidden="true" className="ml-1 text-[var(--c-accent)]">*</span>}
       {children}
     </label>
   );

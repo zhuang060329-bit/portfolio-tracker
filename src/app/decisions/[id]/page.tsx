@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
+import { PageHead, Panel, SurveyLabel, Tag } from "@/components/survey";
 import { fmtFull, fmtNum } from "@/lib/format";
 import { calculateDecisionReviewMetrics } from "@/lib/decision-review-metrics";
 import { getUnreadCount } from "@/lib/notifications";
@@ -127,99 +128,147 @@ export default async function DecisionDetailPage({ params }: { params: Promise<{
     })),
   });
 
+  const statusLabel =
+    decision.status === "reviewed" ? "已檢討" : decision.status === "archived" ? "已封存" : "追蹤中";
+
   return (
     <div className="min-h-dvh bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active="decisions" userEmail={user?.email} unreadCount={unreadCount} />
-      <main id="main" tabIndex={-1} className="mx-auto max-w-[920px] px-4 pb-28 pt-9 sm:px-6">
-        <Link href="/decisions" className="text-[13px] text-[var(--c-muted)] hover:text-[var(--c-accent)]">
+      <main id="main" tabIndex={-1} className="mx-auto max-w-[920px] px-4 pb-28 pt-8 sm:px-6">
+        <Link
+          href="/decisions"
+          className="text-[length:var(--fs-sm)] text-[var(--c-muted)] hover:text-[var(--c-accent)]"
+        >
           ← 決策日誌
         </Link>
-        <header className="mt-4 flex flex-wrap items-start gap-3">
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-md bg-[var(--c-accent-soft)] px-2 py-1 text-xs font-semibold text-[var(--c-accent)]">
-                {typeLabels[decision.decision_type] ?? decision.decision_type}
-              </span>
-              <span className="text-[12px] text-[var(--c-muted)] tnum">{decision.decision_date}</span>
-            </div>
-            <h1 className="mt-2 font-display text-3xl font-medium tracking-tight">
-              {decision.asset_name}{decision.symbol ? ` · ${decision.symbol}` : ""}
-            </h1>
-            <p className="mt-1 text-[12.5px] text-[var(--c-muted)]">
-              {decision.accounts?.name ?? "未連結帳戶"} · 信心 {decision.confidence}/3 · 預定檢討 {decision.review_date}
-            </p>
-          </div>
-          {decision.status !== "archived" && (
-            <div className="flex items-center gap-2">
-              <Link href={`/decisions/${decision.id}/edit`} className="btn btn-outline">編輯</Link>
-              <form action={archiveDecision}>
-                <input type="hidden" name="decisionId" value={decision.id} />
-                <button className="btn btn-ghost">
-                  封存
-                </button>
-              </form>
-            </div>
-          )}
-        </header>
+        <PageHead
+          className="mt-4"
+          label={
+            <>
+              {typeLabels[decision.decision_type] ?? decision.decision_type}
+              <span className="tnum">· {decision.decision_date}</span>
+            </>
+          }
+          title={
+            <>
+              {decision.asset_name}
+              {decision.symbol && (
+                <span className="ml-2 font-mono text-[length:var(--fs-lg)] font-medium text-[var(--c-muted)]">
+                  {decision.symbol}
+                </span>
+              )}
+            </>
+          }
+          sub={
+            <>
+              {decision.accounts?.name ?? "未連結帳戶"} · 信心{" "}
+              <span className="tnum">{decision.confidence}/3</span> · 預定檢討{" "}
+              <span className="tnum">{decision.review_date}</span>
+            </>
+          }
+          action={
+            decision.status !== "archived" && (
+              <div className="flex items-center gap-2">
+                <Link href={`/decisions/${decision.id}/edit`} className="btn btn-outline">
+                  編輯
+                </Link>
+                <form action={archiveDecision}>
+                  <input type="hidden" name="decisionId" value={decision.id} />
+                  <button className="btn btn-ghost">封存</button>
+                </form>
+              </div>
+            )
+          }
+        />
 
-        <section className="mt-6 grid gap-4 lg:grid-cols-2">
-          <TextCard title="投資論點" text={decision.thesis} />
-          <TextCard title="失效條件" text={decision.invalidation_conditions} tone="warning" />
-          <TextCard title="可能催化劑" text={decision.catalysts || "未填寫"} />
-          <TextCard title="主要風險" text={decision.risks} tone="warning" />
+        {/* 四格論點用 gap-px 透出髮絲線。下行側（失效條件、主要風險）鋪一層 surface-soft，
+            讓「看多的理由」與「會錯在哪」一眼分成兩群；這不是警示，所以不用朱砂 */}
+        <section className="mt-6 grid gap-px border border-[var(--c-border)] bg-[var(--c-border)] lg:grid-cols-2">
+          <TextCell title="投資論點" text={decision.thesis} />
+          <TextCell title="失效條件" text={decision.invalidation_conditions} downside />
+          <TextCell title="可能催化劑" text={decision.catalysts || "未填寫"} muted={!decision.catalysts} />
+          <TextCell title="主要風險" text={decision.risks} downside />
         </section>
 
-        <section className="mt-4 rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 sm:p-6">
-          <h2 className="font-display text-xl font-medium">事前預期</h2>
-          <dl className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <Panel className="mt-5" title="事前預期" sub={<Tag tone={decision.status === "reviewed" ? "up" : "quiet"}>{statusLabel}</Tag>} flush>
+          <dl className="grid grid-cols-2 gap-px bg-[var(--c-border-soft)] sm:grid-cols-3">
             <Metric label="持有期間" value={`${decision.expected_holding_months} 個月`} />
             <Metric label="目標報酬" value={returnRange(decision.target_return_min_pct, decision.target_return_max_pct)} />
-            <Metric label="可接受跌幅" value={decision.max_drawdown_pct == null ? "未設定" : `${fmtNum(decision.max_drawdown_pct, 2)}%`} />
-            <Metric label="狀態" value={decision.status === "reviewed" ? "已檢討" : decision.status === "archived" ? "已封存" : "追蹤中"} />
+            <Metric
+              label="可接受跌幅"
+              className="col-span-2 sm:col-span-1"
+              value={decision.max_drawdown_pct == null ? "未設定" : `${fmtNum(decision.max_drawdown_pct, 2)}%`}
+            />
           </dl>
           {decision.tags.length > 0 && (
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5 border-t border-[var(--c-border-soft)] px-5 py-3">
               {decision.tags.map((tag) => (
-                <span key={tag} className="rounded-full bg-[var(--c-surface-soft)] px-2.5 py-1 text-xs text-[var(--c-muted)]">{tag}</span>
+                <Tag key={tag}>{tag}</Tag>
               ))}
             </div>
           )}
-        </section>
+        </Panel>
 
         <SnapshotCard snapshot={snapshot} transactionId={decision.transaction_id} />
 
-        <section className="mt-5 rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 sm:p-6">
-          <div>
-            <h2 className="font-display text-xl font-medium">事後檢討</h2>
-            <p className="mt-1 text-[12.5px] text-[var(--c-muted)]">
-              評估決策流程與證據，不以單次盈虧替代判斷品質。
-            </p>
-          </div>
-          <ReviewForm
-            decisionId={decision.id}
-            initial={review}
-            suggested={suggestedMetrics}
-          />
-        </section>
+        <Panel
+          className="mt-5"
+          title="事後檢討"
+          sub="評估決策流程與證據，不以單次盈虧替代判斷品質。"
+        >
+          <ReviewForm decisionId={decision.id} initial={review} suggested={suggestedMetrics} />
+        </Panel>
       </main>
     </div>
   );
 }
 
-function TextCard({ title, text, tone }: { title: string; text: string; tone?: "warning" }) {
+function TextCell({
+  title,
+  text,
+  downside = false,
+  muted = false,
+}: {
+  title: string;
+  text: string;
+  downside?: boolean;
+  muted?: boolean;
+}) {
   return (
-    <article className={`rounded-[var(--r-card)] border bg-[var(--c-surface)] p-5 ${tone === "warning" ? "border-[color-mix(in_srgb,var(--c-down)_25%,var(--c-border))]" : "border-[var(--c-border)]"}`}>
-      <h2 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[var(--c-muted)]">{title}</h2>
-      <p className="mt-2 whitespace-pre-wrap text-[14px] leading-6">{text}</p>
+    <article className={`p-5 ${downside ? "bg-[var(--c-surface-soft)]" : "bg-[var(--c-surface)]"}`}>
+      <h2>
+        <SurveyLabel>{title}</SurveyLabel>
+      </h2>
+      <p
+        className={`mt-2 max-w-[68ch] whitespace-pre-wrap text-[length:var(--fs-md)] leading-7 ${
+          muted ? "text-[var(--c-faint)]" : ""
+        }`}
+      >
+        {text}
+      </p>
     </article>
   );
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+/* 指標格：外層 dl 用 gap-px 透出 border-soft 當格線，格子自己鋪 surface。
+   div 包 dt/dd 在 HTML 規範裡是 dl 允許的分組寫法 */
+function Metric({
+  label,
+  value,
+  mask = false,
+  className = "",
+}: {
+  label: string;
+  value: string;
+  mask?: boolean;
+  className?: string;
+}) {
   return (
-    <div>
-      <dt className="text-xs text-[var(--c-muted)]">{label}</dt>
-      <dd className="mt-1 text-[14px] font-semibold tnum">{value}</dd>
+    <div className={`bg-[var(--c-surface)] px-5 py-3.5 ${className}`}>
+      <dt>
+        <SurveyLabel>{label}</SurveyLabel>
+      </dt>
+      <dd className={`mt-1.5 text-[length:var(--fs-md)] font-semibold tnum ${mask ? "amt" : ""}`}>{value}</dd>
     </div>
   );
 }
@@ -227,31 +276,55 @@ function Metric({ label, value }: { label: string; value: string }) {
 function SnapshotCard({ snapshot, transactionId }: { snapshot: DecisionSnapshot; transactionId: string | null }) {
   const account = snapshot.account;
   return (
-    <section className="mt-5 rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 sm:p-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="font-display text-xl font-medium">建立時情境</h2>
-          <p className="mt-1 text-xs text-[var(--c-muted)]">
-            不可變快照 · {snapshot.captured_at ? new Date(snapshot.captured_at).toLocaleString("zh-TW", { timeZone: "Asia/Taipei" }) : "時間缺失"}
-          </p>
-        </div>
-        {transactionId && <Link href="/activity" className="text-[12.5px] text-[var(--c-accent)] hover:underline">查看關聯活動</Link>}
-      </div>
-      <dl className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <Metric label="組合估值" value={`NT$ ${fmtFull(Number(snapshot.portfolio?.value_twd ?? 0))}`} />
-        <Metric label="帳戶估值" value={account?.value_twd == null ? "資料不足" : `NT$ ${fmtFull(Number(account.value_twd))}`} />
-        <Metric label="配置比重" value={account?.allocation_pct == null ? "資料不足" : `${fmtNum(account.allocation_pct, 2)}%`} />
-        <Metric label="未實現損益" value={account?.unrealized_pnl_twd == null ? "資料不足" : `NT$ ${fmtFull(account.unrealized_pnl_twd)}`} />
+    <Panel
+      className="mt-5"
+      title="建立時情境"
+      sub={
+        <>
+          不可變快照 ·{" "}
+          <span className="tnum">
+            {snapshot.captured_at
+              ? new Date(snapshot.captured_at).toLocaleString("zh-TW", { timeZone: "Asia/Taipei" })
+              : "時間缺失"}
+          </span>
+          {transactionId && (
+            <Link href="/activity" className="ml-3 text-[var(--c-accent)] hover:underline">
+              查看關聯活動 →
+            </Link>
+          )}
+        </>
+      }
+      flush
+    >
+      <dl className="grid grid-cols-2 gap-px bg-[var(--c-border-soft)] sm:grid-cols-4">
+        <Metric label="組合估值" mask value={`NT$ ${fmtFull(Number(snapshot.portfolio?.value_twd ?? 0))}`} />
+        <Metric
+          label="帳戶估值"
+          mask={account?.value_twd != null}
+          value={account?.value_twd == null ? "資料不足" : `NT$ ${fmtFull(Number(account.value_twd))}`}
+        />
+        <Metric
+          label="配置比重"
+          value={account?.allocation_pct == null ? "資料不足" : `${fmtNum(account.allocation_pct, 2)}%`}
+        />
+        <Metric
+          label="未實現損益"
+          mask={account?.unrealized_pnl_twd != null}
+          value={account?.unrealized_pnl_twd == null ? "資料不足" : `NT$ ${fmtFull(account.unrealized_pnl_twd)}`}
+        />
       </dl>
       {snapshot.data_gaps && snapshot.data_gaps.length > 0 && (
-        <div className="mt-4 rounded-lg bg-[color-mix(in_srgb,var(--c-down)_8%,var(--c-surface-soft))] px-4 py-3 text-[12px] text-[var(--c-muted)]">
-          <div className="font-semibold text-[var(--c-down)]">資料缺口</div>
+        /* 資料缺口會讓檢討指標失準，是「請注意」，所以走朱砂虛線框加文字 */
+        <div className="m-5 border border-dashed border-[var(--c-annot)] px-4 py-3 text-[length:var(--fs-sm)] text-[var(--c-muted)]">
+          <div className="font-semibold text-[var(--c-annot-text)]">注意 · 資料缺口</div>
           <ul className="mt-1 list-disc space-y-1 pl-5">
-            {snapshot.data_gaps.map((gap) => <li key={gap}>{gap}</li>)}
+            {snapshot.data_gaps.map((gap) => (
+              <li key={gap}>{gap}</li>
+            ))}
           </ul>
         </div>
       )}
-    </section>
+    </Panel>
   );
 }
 
