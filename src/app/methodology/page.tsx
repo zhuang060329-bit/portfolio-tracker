@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { RegistrationMark } from "@/components/AppHeader";
+import { PageHead } from "@/components/survey";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 export const metadata: Metadata = {
@@ -13,23 +15,15 @@ export const metadata: Metadata = {
 export default function MethodologyPage() {
   return (
     <div className="min-h-dvh bg-[var(--c-page)] text-[var(--c-text)]">
-      <header className="sticky top-0 z-40 border-b border-[var(--c-border)] bg-[color-mix(in_srgb,var(--c-page)_90%,transparent)] backdrop-blur-xl">
+      {/* 實心頁首，與 AppHeader 同一套：不半透明、不模糊。 */}
+      <header className="sticky top-0 z-40 border-b border-[var(--c-line-strong)] bg-[var(--c-page)]">
         <div className="mx-auto flex h-[var(--header-h)] max-w-[1200px] items-center gap-2.5 px-4 sm:px-6 lg:px-7">
           <Link
             href="/"
             className="flex shrink-0 items-center gap-2 text-[var(--c-text)]"
             aria-label="StackWorth 首頁"
           >
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 16 16"
-              fill="currentColor"
-              className="text-[var(--c-accent)]"
-              aria-hidden="true"
-            >
-              <path d="M8 1 L15 8 L8 15 L1 8 Z" />
-            </svg>
+            <RegistrationMark className="text-[var(--c-accent)]" />
             <span className="text-[17px] font-semibold tracking-[-0.025em] sm:text-[18px]">
               StackWorth
             </span>
@@ -46,20 +40,21 @@ export default function MethodologyPage() {
         </div>
       </header>
 
-      <main id="main" tabIndex={-1} className="mx-auto max-w-[760px] px-4 pb-32 pt-8 sm:px-6 sm:pt-12">
-        <header className="mb-10">
-          <h1 className="font-display text-[32px] font-medium tracking-tight sm:text-[38px]">
-            指標怎麼算
-          </h1>
-          <p className="mt-3 text-[15px] leading-relaxed text-[var(--c-muted)]">
-            這頁說明 StackWorth 每個報酬與風險數字的來源與口徑。原則只有一條：
-            <strong className="font-medium text-[var(--c-text)]">
-            當一個數字無法可靠計算時，畫面顯示「—」，而不是猜一個看起來正常的值。
-            </strong>
-          </p>
-        </header>
+      <main id="main" tabIndex={-1} className="mx-auto max-w-[760px] px-4 py-8 pb-28 sm:px-6 sm:py-10 lg:px-7">
+        <PageHead
+          label="計算口徑"
+          title="指標怎麼算"
+          sub={
+            <>
+              這頁說明 StackWorth 每個報酬與風險數字的來源與口徑。原則只有一條：
+              <strong className="font-semibold text-[var(--c-text)]">
+              當一個數字無法可靠計算時，畫面顯示「—」，而不是猜一個看起來正常的值。
+              </strong>
+            </>
+          }
+        />
 
-        <div className="space-y-10">
+        <div>
           <Section
             term="XIRR"
             subtitle="金額加權年化報酬率 · 反映「你實際投入的錢」賺了多少"
@@ -119,14 +114,14 @@ export default function MethodologyPage() {
             <P>
               在「現金流調整後的 TWR 指數」上，逐日更新歷史高點，記錄每一點相對其之前高點的跌幅，
               取最深的一次。因為建立在剔除現金流的指數上，
-              <strong className="font-medium text-[var(--c-text)]">提領不會被誤判成市場虧損</strong>。
+              <strong className="font-semibold text-[var(--c-text)]">提領不會被誤判成市場虧損</strong>。
             </P>
             <Note>期間內沒有出現任何回撤（一路創新高）時顯示「—」。</Note>
           </Section>
 
           <Section term="為什麼會看到「—」" subtitle="這不是壞掉，是刻意的">
             <P>常見原因：</P>
-            <ul className="mt-1 space-y-2 text-[14.5px] leading-relaxed text-[var(--c-muted)]">
+            <ul className="mt-1 list-outside list-[square] pl-5 space-y-2 text-[length:var(--fs-md)] leading-relaxed text-[var(--c-muted)] marker:text-[var(--c-accent)]">
               <Li>資料跨度或快照數量還沒到該指標的門檻（見上方各項）。</Li>
               <Li>求根結果沒通過殘差檢核，代表算出來的數字不可信。</Li>
               <Li>報價來源當天缺資料——缺口以視覺呈現，不用前一日的值硬補一個報酬。</Li>
@@ -144,7 +139,7 @@ export default function MethodologyPage() {
           </Section>
         </div>
 
-        <footer className="mt-16 border-t border-[var(--c-border)] pt-6 text-[13px] text-[var(--c-faint)]">
+        <footer className="mt-12 border-t border-[var(--c-line-strong)] pt-5 text-[length:var(--fs-micro)] leading-relaxed text-[var(--c-faint)]">
           個人財務工具，非投資建議。數字的精確定義以原始碼為準（
           <Code>src/lib/metrics.ts</Code>、<Code>src/lib/xirr.ts</Code>）。
         </footer>
@@ -163,21 +158,24 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section>
-      <h2 className="font-display text-[22px] font-medium tracking-tight">
-        {term}
-      </h2>
-      <p className="mt-1 text-[13px] font-medium text-[var(--c-muted)]">
-        {subtitle}
-      </p>
-      <div className="mt-3 space-y-3">{children}</div>
+    // 每節是一格帳本列：左欄術語、右欄內文，窄螢幕疊成一欄。節與節之間一條髮絲線。
+    <section className="grid gap-x-8 gap-y-3 border-b border-[var(--c-border-soft)] py-8 sm:grid-cols-[168px_1fr]">
+      <div>
+        <h2 className="font-display text-[length:var(--fs-xl)] font-semibold leading-tight">
+          {term}
+        </h2>
+        <p className="mt-1.5 text-[length:var(--fs-micro)] font-semibold leading-relaxed text-[var(--c-muted)]">
+          {subtitle}
+        </p>
+      </div>
+      <div className="space-y-3">{children}</div>
     </section>
   );
 }
 
 function P({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-[14.5px] leading-relaxed text-[var(--c-muted)]">
+    <p className="text-[length:var(--fs-md)] leading-relaxed text-[var(--c-muted)]">
       {children}
     </p>
   );
@@ -185,24 +183,20 @@ function P({ children }: { children: React.ReactNode }) {
 
 function Note({ children }: { children: React.ReactNode }) {
   return (
-    <p className="rounded-[var(--r-control)] border border-[var(--c-border-soft)] bg-[var(--c-surface-soft)] px-3.5 py-2.5 text-[13.5px] leading-relaxed text-[var(--c-muted)]">
+    // 門檻說明：左側一條測量藍實線，像圖面邊上的附註欄。不用朱砂——這是規則，不是警示。
+    <p className="border-l-2 border-[var(--c-accent)] bg-[var(--c-surface-soft)] px-3.5 py-2.5 text-[length:var(--fs-sm)] leading-relaxed text-[var(--c-muted)]">
       {children}
     </p>
   );
 }
 
 function Li({ children }: { children: React.ReactNode }) {
-  return (
-    <li className="flex gap-2.5">
-      <span aria-hidden className="mt-[9px] h-1 w-1 shrink-0 rounded-full bg-[var(--c-accent)]" />
-      <span>{children}</span>
-    </li>
-  );
+  return <li>{children}</li>;
 }
 
 function Code({ children }: { children: React.ReactNode }) {
   return (
-    <code className="rounded bg-[var(--c-surface-soft)] px-1.5 py-0.5 font-mono text-[12.5px] text-[var(--c-text)]">
+    <code className="border border-[var(--c-border-soft)] [box-decoration-break:clone] bg-[var(--c-surface-soft)] px-1 py-px font-mono text-[0.88em] text-[var(--c-text)]">
       {children}
     </code>
   );

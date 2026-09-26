@@ -150,8 +150,9 @@ export function AppHeader({
   );
 }
 
-/* 套準記號：印刷與製圖用來對位的十字圓標，當品牌記號用。 */
-function RegistrationMark({ className = "" }: { className?: string }) {
+/* 套準記號：印刷與製圖用來對位的十字圓標，當品牌記號用。
+   /methodology 的獨立頁首也用同一個，所以匯出。 */
+export function RegistrationMark({ className = "" }: { className?: string }) {
   return (
     <svg
       width="16"
