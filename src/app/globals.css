@@ -312,9 +312,9 @@ main:focus {
   max-width: min(24rem, calc(100vw - 2rem));
   align-items: center;
   gap: 0.625rem;
+  /* 整圈 1px 狀態色邊框：成功綠、失敗紅。不做單邊加粗的側條；
+     旁邊的方形記號帶 ✓／! 字元，不單靠顏色。 */
   border: 1px solid var(--c-line-strong);
-  /* 左緣 3px 狀態色的尺規線：成功綠、失敗紅，旁邊的方形記號帶 ✓／! 字元，不單靠顏色。 */
-  border-left-width: 3px;
   border-radius: var(--r-card);
   background: var(--c-surface);
   padding: 0.75rem 0.875rem;
@@ -339,11 +339,11 @@ main:focus {
 }
 
 .action-toast-success {
-  border-left-color: var(--c-up);
+  border-color: var(--c-up);
 }
 
 .action-toast-error {
-  border-left-color: var(--c-down);
+  border-color: var(--c-down);
 }
 
 .action-toast-success .action-toast-mark {
