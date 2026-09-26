@@ -148,3 +148,33 @@ export function Stat({
     </div>
   );
 }
+
+/* 帶標題列的區塊框：外框髮絲線、標題列下一條 border-soft，內容預設 p-5。
+   flush 時內容貼齊外框，給表格與逐列帳本用（列自己有左右內距）。
+   原本是 /demo/history 的區域元件，S3 的登入頁也要用，所以搬到這裡。 */
+export function Panel({
+  title,
+  sub,
+  action,
+  flush = false,
+  className = "",
+  children,
+}: {
+  title: React.ReactNode;
+  sub?: React.ReactNode;
+  action?: React.ReactNode;
+  flush?: boolean;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className={`border border-[var(--c-border)] bg-[var(--c-surface)] ${className}`}>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-[var(--c-border-soft)] px-5 py-3">
+        <h2 className="text-[length:var(--fs-lg)] font-semibold">{title}</h2>
+        {sub && <div className="text-[length:var(--fs-micro)] text-[var(--c-faint)]">{sub}</div>}
+        {action}
+      </div>
+      <div className={flush ? "" : "p-5"}>{children}</div>
+    </section>
+  );
+}

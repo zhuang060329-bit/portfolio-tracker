@@ -1,5 +1,5 @@
 import { DemoV1Header } from "@/components/DemoV1Header";
-import { PageHead, Stat, StatStrip, Tag } from "@/components/survey";
+import { PageHead, Panel, Stat, StatStrip, Tag } from "@/components/survey";
 import { todayTaipei } from "@/lib/dates";
 import { buildDemoV1Data } from "@/lib/demo-v1-data";
 import { fmtFull, fmtNum } from "@/lib/format";
@@ -47,7 +47,7 @@ export default async function DemoHistoryPage({ searchParams }: { searchParams: 
           <Stat label="匯率效果" mask value={<Signed value={attribution.fxEffectTwd} />} />
         </StatStrip>
         <Bridge attribution={attribution} openingDate={openingDate} targetDate={targetDate} />
-        <Block title="回放日持倉" sub="條長＝佔回放淨值比例" flush>
+        <Panel className="mt-6" title="回放日持倉" sub="條長＝佔回放淨值比例" flush>
           {ending.holdings.map((holding, index) => {
             const pct = ending.totalValueTwd > 0 ? (holding.valueTwd / ending.totalValueTwd) * 100 : 0;
             const openingValue = openingValueOf.get(holding.accountId);
@@ -80,22 +80,10 @@ export default async function DemoHistoryPage({ searchParams }: { searchParams: 
               </div>
             );
           })}
-        </Block>
+        </Panel>
         {attribution.gaps.length > 0 && <p className="mt-4 text-[length:var(--fs-micro)] leading-5 text-[var(--c-muted)]">資料說明：{attribution.gaps.join("；")}</p>}
       </main>
     </div>
-  );
-}
-
-function Block({ title, sub, flush = false, className = "", children }: { title: string; sub?: React.ReactNode; flush?: boolean; className?: string; children: React.ReactNode }) {
-  return (
-    <section className={`mt-6 border border-[var(--c-border)] bg-[var(--c-surface)] ${className}`}>
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-[var(--c-border-soft)] px-5 py-3">
-        <h2 className="text-[length:var(--fs-lg)] font-semibold">{title}</h2>
-        {sub && <div className="text-[length:var(--fs-micro)] text-[var(--c-faint)]">{sub}</div>}
-      </div>
-      <div className={flush ? "" : "p-5"}>{children}</div>
-    </section>
   );
 }
 
@@ -125,7 +113,8 @@ function Bridge({ attribution: a, openingDate, targetDate }: { attribution: Attr
   ];
   const scale = Math.max(...flows.map((row) => Math.abs(row.value)), 1);
   return (
-    <Block
+    <Panel
+      className="mt-6"
       title="淨值變動拆解"
       sub={<Tag tone={a.reconciled ? "up" : "annot"}>{a.reconciled ? "對帳在容差內" : "有待解釋差額"}</Tag>}
       flush
@@ -177,7 +166,7 @@ function Bridge({ attribution: a, openingDate, targetDate }: { attribution: Attr
         條長相對於最大的一項流量，不是淨值的絕對比例。已實現損益 <span className="amt tnum">NT$ {fmtFull(a.realizedPnlMemoTwd)}</span> 只作備忘，不重複加總；
         相對容差 <span className="amt tnum">NT$ {fmtNum(a.toleranceTwd, 2)}</span>（對帳規模的 0.1%）。
       </p>
-    </Block>
+    </Panel>
   );
 }
 

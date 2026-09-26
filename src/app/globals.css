@@ -885,6 +885,39 @@ textarea:disabled {
   }
 }
 
+/* ── 表單欄位 ─────────────────────────────────────────────────────────
+   S3 之前每個表單各寫一串 input class（47 處），多數帶
+   outline-none + focus:shadow-[0_0_0_3px_…] 的光暈：outline-none 把全站焦點規則的
+   1px 外框關掉，只剩套準刻度，再疊一圈圓潤的光暈，跟方角髮絲線的語言對不上。
+   .field 只管外觀，焦點交回 @layer base 的套準記號，不再自己畫。
+   放在 @layer components：呼叫端的 h-11、w-auto、text-center 等 utility 照常蓋得過去。
+   粗指標裝置字級拉到 16px——iOS Safari 對小於 16px 的欄位聚焦時會自動放大整頁。 */
+@layer components {
+  .field {
+    width: 100%;
+    border: 1px solid var(--c-border);
+    background-color: var(--c-surface-soft);
+    padding: 0.5rem 0.75rem;
+    font-size: var(--fs-sm);
+    line-height: 1.5;
+    color: var(--c-text);
+  }
+  .field:hover:not(:disabled):not(:focus-visible) {
+    border-color: var(--c-line-strong);
+  }
+  .field:focus-visible {
+    border-color: var(--c-accent);
+  }
+  .field[aria-invalid="true"] {
+    border-color: var(--c-down);
+  }
+  @media (pointer: coarse) {
+    .field {
+      font-size: 16px;
+    }
+  }
+}
+
 @layer base {
   main {
     animation: page-in 0.22s cubic-bezier(0.4, 0, 0.2, 1) both;
