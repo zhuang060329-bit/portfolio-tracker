@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
+import { PICK_OFF, PICK_ON } from "./dashboard/shared";
 
 /* recharts 是全站最大的第三方相依，但只有帳戶詳情頁這一張折線圖在用
    （儀表板的圖是手刻 SVG）。靜態匯入等於每個進到這頁的人都得先下載完整個
@@ -13,7 +14,7 @@ const NetWorthLine = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="sk h-[260px] w-full rounded-[var(--r-card)]" />
+      <div className="sk h-[260px] w-full" />
     ),
   },
 );
@@ -54,24 +55,26 @@ export function NetWorthPanel({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="inline-flex self-end rounded-md border border-[var(--c-border)] bg-[var(--c-surface)] p-0.5 text-xs">
-        {(Object.keys(RANGE_DAYS) as Range[]).map((r) => (
-          <button
-            key={r}
-            type="button"
-            onClick={() => setRange(r)}
-            className={`tap-row rounded px-2.5 py-1 transition-colors ${
-              range === r
-                ? "bg-[var(--c-accent)] text-[var(--c-btn-strong-text)]"
-                : "text-[var(--c-muted)] hover:text-[var(--c-text)]"
-            }`}
-          >
-            {RANGE_LABEL[r]}
-          </button>
-        ))}
+      {/* 刻度格分段控制，同首頁 TrendSection：髮絲線外框、格間分隔線、44×44 觸控 */}
+      <div className="hide-scrollbar self-end overflow-x-auto">
+        <div className="inline-flex divide-x divide-[var(--c-border)] border border-[var(--c-line-strong)]">
+          {(Object.keys(RANGE_DAYS) as Range[]).map((r) => (
+            <button
+              key={r}
+              type="button"
+              aria-pressed={range === r}
+              onClick={() => setRange(r)}
+              className={`min-h-11 min-w-11 shrink-0 px-2.5 text-[length:var(--fs-micro)] ${
+                range === r ? PICK_ON : PICK_OFF
+              }`}
+            >
+              {RANGE_LABEL[r]}
+            </button>
+          ))}
+        </div>
       </div>
       {filtered.length < 2 ? (
-        <div className="flex h-[260px] items-center justify-center text-sm text-[var(--c-faint)]">
+        <div className="flex h-[260px] items-center justify-center text-[length:var(--fs-sm)] text-[var(--c-faint)]">
           此範圍內資料不足兩天
         </div>
       ) : (

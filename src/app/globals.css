@@ -262,6 +262,13 @@ main:focus {
   filter: blur(5px);
 }
 
+/* 帳戶詳情頁的 Recharts 折線：軸標比照首頁手刻圖（Mono、--fs-axis）。
+   Recharts 的 tick 是 SVG <text>，吃不到 Tailwind class，只能從外層選。 */
+.survey-rechart .recharts-cartesian-axis-tick-value {
+  font-family: var(--font-mono);
+  font-size: var(--fs-axis);
+}
+
 /* 全站數字一律 Plex Mono（2026-09-26 起；之前只限首頁 .ledger）。
    這條在 layer 之外，權重贏過 Tailwind utility：掛了 .tnum 的元素
    就算外層是 font-display 也會是等寬，這是刻意的——數字不跟著標題換字。
