@@ -91,7 +91,7 @@ export function AppHeader({
             >
               <BellIcon />
               {unreadCount > 0 && (
-                <span className="absolute right-0.5 top-0.5 flex h-[18px] min-w-[18px] items-center justify-center bg-[var(--c-accent)] px-1 font-mono text-[11px] font-semibold leading-none text-[var(--c-btn-strong-text)] tnum">
+                <span className="absolute right-0.5 top-0.5 flex h-[18px] min-w-[18px] items-center justify-center bg-[var(--c-accent)] px-1 font-mono text-[length:var(--fs-micro)] font-semibold leading-none text-[var(--c-btn-strong-text)] tnum">
                   {unreadCount > 99 ? "99+" : unreadCount}
                 </span>
               )}
