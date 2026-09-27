@@ -272,28 +272,32 @@ function ProjectionChart({
         ))}
         {hp && (
           <g>
+            {/* 十字準線與交點比照首頁淨值圖：虛線、直角標記 */}
             <line
               x1={nx(hp.m)}
               x2={nx(hp.m)}
               y1={padT}
               y2={H - padB}
-              stroke="var(--c-line-strong)"
+              stroke="var(--c-muted)"
               strokeWidth="1"
+              strokeDasharray="2 3"
             />
-            <circle
-              cx={nx(hp.m)}
-              cy={ny(hp.value)}
-              r="4"
-              fill="var(--c-accent)"
-              stroke="var(--c-page)"
-              strokeWidth="2"
+            <rect
+              x={nx(hp.m) - 4}
+              y={ny(hp.value) - 4}
+              width="8"
+              height="8"
+              fill="var(--c-surface)"
+              stroke="var(--c-accent)"
+              strokeWidth="1.5"
             />
-            <circle
-              cx={nx(hp.m)}
-              cy={ny(hp.contributed)}
-              r="3"
-              fill="var(--c-muted)"
-              stroke="var(--c-page)"
+            <rect
+              x={nx(hp.m) - 3}
+              y={ny(hp.contributed) - 3}
+              width="6"
+              height="6"
+              fill="var(--c-surface)"
+              stroke="var(--c-muted)"
               strokeWidth="1.5"
             />
           </g>
@@ -308,14 +312,14 @@ function ProjectionChart({
             第 {Math.floor(hp.m / 12)} 年 {hp.m % 12} 月
           </div>
           <div className="mt-1 flex items-center gap-2 text-[length:var(--fs-micro)]">
-            <span className="h-2 w-2 rounded-full bg-[var(--c-accent)]" />
+            <span className="h-2 w-2 bg-[var(--c-accent)]" />
             <span className="text-[var(--c-muted)]">淨值</span>
             <span className="amt ml-auto font-semibold tnum">
               NT$ {fmtCompact(hp.value)}
             </span>
           </div>
           <div className="mt-0.5 flex items-center gap-2 text-[length:var(--fs-micro)]">
-            <span className="h-2 w-2 rounded-full bg-[var(--c-muted)]" />
+            <span className="h-2 w-2 bg-[var(--c-muted)]" />
             <span className="text-[var(--c-muted)]">累積投入</span>
             <span className="amt ml-auto font-semibold text-[var(--c-muted)] tnum">
               NT$ {fmtCompact(hp.contributed)}
