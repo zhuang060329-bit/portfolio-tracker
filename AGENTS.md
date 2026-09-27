@@ -165,7 +165,7 @@ npm run dev   # Mac 也可用工作區根的 start-dev-portfolio.command（不�
 - **What-if 模擬**：只算「投入」（負現金流），buy-and-hold，不考慮配息再投資/交易成本
 - **AppHeader unreadCount**：每個 server page 自己 fetch 傳入（保持 sync 元件，避免 client pages 不能 render async server component 的問題）
 - **CSS 變數系統**：避免硬編碼顏色，`:root` 是深色、`[data-theme="light"]` 覆寫
-- **視覺語言是「測繪桌 Survey Table」**（2026-09-26 起翻新，分支 `redesign/survey-table`）：
+- **視覺語言是「測繪桌 Survey Table」**（2026-09-26 起翻新，2026-09-27 併入 main，`2222999`）：
   冷紙底、製圖格線、圓角 0、髮絲線、Plex Mono 等寬數字。跌色（磚紅）與朱砂註記
   刻意分成兩個色，朱砂只用在帶文字與虛線引線的「注意」註記。細節見 `.claude/rules/design.md`
 - **字體自架**：三支字體改 `next/font/local`，檔案 commit 在 `src/app/fonts/`，
