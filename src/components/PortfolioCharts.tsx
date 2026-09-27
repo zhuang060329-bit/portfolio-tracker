@@ -9,6 +9,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { fmtAxisValue, niceTicks } from "./dashboard/chart-scale";
 
 // account 詳情頁仍用這支 recharts 折線；dashboard 已改用手刻 SVG（DashboardCharts.tsx）。
 // 外觀比照 dashboard 的淨值圖：虛線十字準線、直角標記、髮絲線讀數框、Mono 軸標。
@@ -79,6 +80,11 @@ function EndMark({
 }
 
 export function NetWorthLine({ data }: { data: LineDatum[] }) {
+  // Y 軸刻度與首頁同一套：落在 1／2／5 × 10^n 的倍數，標籤用萬／億。
+  // 原本讓 Recharts 自己挑刻度、再以 toFixed(1) 縮成 M，區間窄時相鄰刻度
+  // 會四捨五入成同一個字（2.7M、2.7M、2.6M、2.6M）。
+  const values = data.map((d) => d.value);
+  const { lo, hi, ticks } = niceTicks(Math.min(...values), Math.max(...values));
   return (
     <ResponsiveContainer width="100%" height={260} className="survey-rechart">
       <LineChart data={data} margin={{ top: 10, right: 32, left: 8, bottom: 0 }}>
@@ -94,17 +100,13 @@ export function NetWorthLine({ data }: { data: LineDatum[] }) {
         />
         <YAxis
           tick={AXIS_TICK}
-          tickFormatter={(v: number) =>
-            v >= 1_000_000
-              ? `${(v / 1_000_000).toFixed(1)}M`
-              : v >= 1_000
-                ? `${Math.round(v / 1_000)}k`
-                : String(v)
-          }
+          ticks={ticks}
+          interval={0}
+          tickFormatter={fmtAxisValue}
           axisLine={AXIS_LINE}
           tickLine={false}
           width={48}
-          domain={["dataMin - dataMin * 0.02", "dataMax + dataMax * 0.02"]}
+          domain={[lo, hi]}
         />
         <Tooltip
           content={<Readout />}
