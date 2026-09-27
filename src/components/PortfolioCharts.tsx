@@ -9,7 +9,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { fmtAxisValue, niceTicks } from "./dashboard/chart-scale";
+import { axisLabeler, niceTicks } from "./dashboard/chart-scale";
 
 // account 詳情頁仍用這支 recharts 折線；dashboard 已改用手刻 SVG（DashboardCharts.tsx）。
 // 外觀比照 dashboard 的淨值圖：虛線十字準線、直角標記、髮絲線讀數框、Mono 軸標。
@@ -102,7 +102,7 @@ export function NetWorthLine({ data }: { data: LineDatum[] }) {
           tick={AXIS_TICK}
           ticks={ticks}
           interval={0}
-          tickFormatter={fmtAxisValue}
+          tickFormatter={axisLabeler(ticks)}
           axisLine={AXIS_LINE}
           tickLine={false}
           width={48}

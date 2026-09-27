@@ -11,10 +11,11 @@ import {
 } from "react";
 import { fmtFull, fmtCompact } from "@/lib/format";
 import {
-  fmtAxisValue,
+  axisLabeler,
   labelCapacity,
   niceTicks,
   pickTickIndices,
+  tickDecimals,
 } from "./chart-scale";
 
 // 金額格式統一走 lib/format；fmtTwd 別名保留給既有匯入端。
@@ -175,6 +176,8 @@ export function TrendChart({
   // 原本是 min/max 上下各推 12% 當留白，那段留白沒有刻度，等於白白吃掉
   // 兩成的繪圖高度，線的振幅被壓扁。
   const { lo, hi, ticks } = niceTicks(Math.min(...vals), Math.max(...vals));
+  // 小數位數跟著刻度間距走，區間窄時相鄰標籤才不會四捨五入成同一個字
+  const axisLabel = axisLabeler(ticks);
   const nx = (i: number) => padL + (i / (data.length - 1)) * (w - padL - padR);
   const ny = (v: number) => padT + (1 - (v - lo) / (hi - lo)) * (H - padT - padB);
 
@@ -278,7 +281,7 @@ export function TrendChart({
               textAnchor="end"
               dominantBaseline="middle"
             >
-              {fmtAxisValue(t)}
+              {axisLabel(t)}
             </text>
           </g>
         ))}
@@ -463,6 +466,8 @@ export function BenchChart({
     all.length ? Math.min(...all) : 95,
     all.length ? Math.max(...all) : 105,
   );
+  // 指數在 100 上下只動零點幾時 step 會是 0.2、0.5，toFixed(0) 會印出重複的整數
+  const tickDigits = tickDecimals(ticks);
   const nx = (i: number) => padL + (i / (data.length - 1)) * (w - padL - padR);
   const ny = (v: number) => padT + (1 - (v - lo) / (hi - lo)) * (H - padT - padB);
   const colorOf = (k: string) =>
@@ -569,7 +574,7 @@ export function BenchChart({
               textAnchor="end"
               dominantBaseline="middle"
             >
-              {t.toFixed(0)}
+              {t.toFixed(tickDigits)}
             </text>
           </g>
         ))}

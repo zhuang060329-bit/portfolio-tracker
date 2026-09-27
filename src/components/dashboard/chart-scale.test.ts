@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  axisLabeler,
   fmtAxisValue,
   labelCapacity,
   niceTicks,
   pickTickIndices,
+  tickDecimals,
 } from "./chart-scale";
 
 /** 刻度間距是否處處相等——nice number 的整個重點。 */
@@ -171,5 +173,81 @@ describe("fmtAxisValue", () => {
 
   it("負值用減號（與全站一致，不是 hyphen）", () => {
     expect(fmtAxisValue(-1_200_000)).toBe("−120萬");
+  });
+});
+
+describe("axisLabeler：標籤位數跟著刻度間距走", () => {
+  const labels = (min: number, max: number) => {
+    const { ticks } = niceTicks(min, max);
+    return ticks.map(axisLabeler(ticks));
+  };
+
+  it("刻度間距夠大時與 fmtAxisValue 完全相同", () => {
+    const { ticks } = niceTicks(923_000, 1_247_000);
+    expect(ticks.map(axisLabeler(ticks))).toEqual(ticks.map((t) => fmtAxisValue(t)));
+  });
+
+  it("億級窄區間：原本整排都是 2.5億", () => {
+    expect(labels(250_000_000, 250_300_000)).toEqual([
+      "2.499億",
+      "2.5億",
+      "2.501億",
+      "2.502億",
+      "2.503億",
+      "2.504億",
+    ]);
+  });
+
+  it("百萬級只動幾十元：原本整排都是 123.5萬", () => {
+    expect(labels(1_234_567, 1_234_600)).toEqual([
+      "123.456萬",
+      "123.457萬",
+      "123.458萬",
+      "123.459萬",
+      "123.46萬",
+      "123.461萬",
+    ]);
+  });
+
+  it("千萬以上的窄區間補小數，不再只取整", () => {
+    expect(labels(30_000_000, 30_000_300)).toEqual([
+      "2,999.99萬",
+      "3,000萬",
+      "3,000.01萬",
+      "3,000.02萬",
+      "3,000.03萬",
+      "3,000.04萬",
+    ]);
+  });
+
+  it("各量級、各寬度的區間，相鄰標籤一律不重複", () => {
+    const bases = [37, 5_000, 123_456, 1_200_000, 9_876_543, 30_000_000, 250_000_000, 1_234_567_890];
+    const spans = [1e-4, 1e-3, 5e-3, 0.02, 0.1, 0.5];
+    for (const base of bases) {
+      for (const span of spans) {
+        const out = labels(base, base * (1 + span));
+        expect(new Set(out).size, `${base} × ${span}: ${out.join(" / ")}`).toBe(out.length);
+      }
+    }
+  });
+});
+
+describe("tickDecimals：大盤對照的指數軸", () => {
+  it("整數刻度維持 0 位", () => {
+    expect(tickDecimals(niceTicks(90, 130).ticks)).toBe(0);
+  });
+
+  it("指數只在 100 上下動零點幾時補一位，標籤不重複", () => {
+    const { ticks } = niceTicks(99.6, 100.4);
+    const d = tickDecimals(ticks);
+    expect(d).toBe(1);
+    const out = ticks.map((t) => t.toFixed(d));
+    expect(new Set(out).size).toBe(out.length);
+  });
+
+  it("步距 0.1 不會因浮點誤差少算一位", () => {
+    expect(tickDecimals([0, 0.1])).toBe(1);
+    expect(tickDecimals([0, 0.05])).toBe(2);
+    expect(tickDecimals([100])).toBe(0);
   });
 });

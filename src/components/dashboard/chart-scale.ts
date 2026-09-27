@@ -108,23 +108,62 @@ export function labelCapacity(plotWidth: number): number {
 }
 
 /**
- * 軸刻度專用的緊湊格式。
- *
- * 與 `lib/format.ts` 的 `fmtCompact` 差別只在尾隨的 `.0`：那支刻意保留一位小數，
- * 是為了擋「相鄰刻度四捨五入後塌成同一個字串」（見 D2）。改用 nice number 之後
- * 刻度之間至少差一個 step，本質上不可能塌，於是這裡把沒有意義的 `.0` 去掉，
- * 讓軸讀起來是「120萬 / 110萬 / 100萬」而不是「120.0萬 / 110.0萬」。
- * fmtCompact 仍供圓環中心與被動收入使用，不受影響。
+ * 相鄰刻度差 `step` 時，要幾位小數才分得開。
+ * step 0.2 → 1 位、0.05 → 2 位、1 以上 → 0 位。
+ * 加 1e-9 是因為 log10(0.1) 可能算成 -0.9999999999999999，floor 後少一位。
  */
-export function fmtAxisValue(n: number): string {
+function decimalsFor(step: number): number {
+  if (!(step > 0) || !Number.isFinite(step)) return 0;
+  return Math.max(0, -Math.floor(Math.log10(step) + 1e-9));
+}
+
+function stepOf(ticks: number[]): number {
+  return ticks.length > 1 ? Math.abs(ticks[1] - ticks[0]) : 0;
+}
+
+/** 純數字刻度（大盤對照的指數軸）要顯示的小數位數。整數刻度維持 0 位。 */
+export function tickDecimals(ticks: number[]): number {
+  return decimalsFor(stepOf(ticks));
+}
+
+function formatAxis(n: number, step: number): string {
   const abs = Math.abs(n);
   const minus = n < 0 ? "−" : "";
   const trim = (s: string) => (s.includes(".") ? s.replace(/\.?0+$/, "") : s);
-  if (abs >= 1e8) return minus + trim((abs / 1e8).toFixed(2)) + "億";
+  // 各單位的預設小數位數不變；刻度間距比它細時才加位數。
+  const digits = (base: number, unit: number) => Math.max(base, decimalsFor(step / unit));
+  if (abs >= 1e8) return minus + trim((abs / 1e8).toFixed(digits(2, 1e8))) + "億";
   if (abs >= 1e4) {
     const wan = abs / 1e4;
-    const str = wan >= 1000 ? Math.round(wan).toLocaleString("en-US") : trim(wan.toFixed(1));
+    const str =
+      wan >= 1000
+        ? wan.toLocaleString("en-US", { maximumFractionDigits: digits(0, 1e4) })
+        : trim(wan.toFixed(digits(1, 1e4)));
     return minus + str + "萬";
   }
-  return minus + trim(abs.toFixed(1));
+  return minus + trim(abs.toFixed(digits(1, 1)));
+}
+
+/**
+ * 軸刻度專用的緊湊格式（不知道刻度間距時的預設位數）。
+ *
+ * 與 `lib/format.ts` 的 `fmtCompact` 差別只在尾隨的 `.0`：那支刻意保留一位小數，
+ * 是為了擋「相鄰刻度四捨五入後塌成同一個字串」（見 D2）。這裡把沒有意義的 `.0` 去掉，
+ * 讓軸讀起來是「120萬 / 110萬 / 100萬」而不是「120.0萬 / 110.0萬」。
+ * fmtCompact 仍供圓環中心與被動收入使用，不受影響。
+ *
+ * 畫軸請用 `axisLabeler`：nice number 保證刻度不同值，但不保證四捨五入後字不同。
+ * 帳戶在 120 萬上下只動 2,000 元時，step 是 0.05 萬，只留一位會印出兩個「120.1萬」。
+ */
+export function fmtAxisValue(n: number): string {
+  return formatAxis(n, 0);
+}
+
+/**
+ * 依整組刻度回傳標籤函式，小數位數跟著刻度間距走，保證相鄰標籤不重複。
+ * 刻度間距夠大時輸出與 `fmtAxisValue` 完全相同。
+ */
+export function axisLabeler(ticks: number[]): (n: number) => string {
+  const step = stepOf(ticks);
+  return (n) => formatAxis(n, step);
 }
