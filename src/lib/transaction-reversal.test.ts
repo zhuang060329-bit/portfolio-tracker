@@ -32,6 +32,12 @@ describe("reversalMode", () => {
     }
   });
 
+  it("校正成本不提供：流水沒有校正前的成本可以回推", () => {
+    const base = { type: "adjust_cost", cashflow_twd: 0 };
+    expect(reversalMode(target({ ...base, isLatest: true }))).toBeNull();
+    expect(reversalMode(target({ ...base, isLatest: false }))).toBeNull();
+  });
+
   it("往下調整數量（cashflow 非負或缺漏）不提供", () => {
     expect(
       reversalMode(target({ cashflow_twd: 30_000, isLatest: true })),

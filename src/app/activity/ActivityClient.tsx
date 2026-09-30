@@ -22,7 +22,7 @@ export type ActRow = {
   time: string; // HH:mm Taipei
 };
 
-// 類型樣式：對應真實 DB 的 7 種 type（無 buy；加碼記為 adjust_quantity）。
+// 類型樣式：對應真實 DB 的 8 種 type（無 buy；加碼記為 adjust_quantity）。
 // 顏色只給帶現金流意義的類型：賣出用跌色、配息與利息用漲色、新建用測量藍；
 // 數量與餘額調整是中性操作，用內文色；價格更新最不重要，用 muted。
 // 類型之間靠符號與文字區分，不靠顏色——原本三個寫死的 hex 色在淺色主題下對比不足。
@@ -33,6 +33,7 @@ const ACT_TYPES: Record<
   create: { label: "新建帳戶", color: "var(--c-accent)", glyph: "✦" },
   adjust_quantity: { label: "調整數量", color: "var(--c-text)", glyph: "±" },
   adjust_balance: { label: "修改餘額", color: "var(--c-text)", glyph: "≈" },
+  adjust_cost: { label: "校正成本", color: "var(--c-text)", glyph: "≡" },
   price_update: { label: "更新價格", color: "var(--c-muted)", glyph: "↻" },
   sell: { label: "賣出", color: "var(--c-down)", glyph: "↘" },
   dividend: { label: "配息", color: "var(--c-up)", glyph: "＄" },
@@ -44,6 +45,7 @@ const TYPE_ORDER = [
   "interest",
   "adjust_quantity",
   "adjust_balance",
+  "adjust_cost",
   "price_update",
   "create",
 ];

@@ -10,6 +10,15 @@
 > （`7f5a323`、`3eca6e8`、`a6c86c9`、`7889d53`、`bc40425`、`6c2260b`），
 > 已由 `optimize/2026-09-03` 快轉合併進 `main` 並推送。尚未發版號。
 
+### Added
+- **校正成本**（2026-09-30，分支 `feat/adjust-cost`，尚未合併）。帳戶頁「增減股數」下方
+  多一個表單，把成本基礎直接改成券商帳上的總成本，股數、報價、已實現損益都不動。
+  新建帳戶時成本等於建立當下的市值，既有部位搬進來之後與券商對不上，這是補正的手段。
+  新交易型別 `adjust_cost`，流水現金流記 0：XIRR / TWR 不變，未實現損益改從校正後的
+  成本算起。外幣帳戶的 TWD 成本可留空（沿用現有平均成本匯率）或手填。
+  這筆紀錄不能撤銷；CSV 匯出匯入認得這個型別。
+  **需要先跑 `supabase/migrations/20260930120000_adjust_cost_type.sql`**，再部署程式。
+
 ### Security
 - **CSP 由 `src/proxy.ts` 每 request 產生 nonce**，政策集中在 `src/lib/csp.ts`。
   目前是 `Content-Security-Policy-Report-Only`，開關是 `CSP_ENFORCE`。

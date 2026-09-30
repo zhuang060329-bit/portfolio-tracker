@@ -24,6 +24,7 @@ const TXN_LABEL: Record<string, string> = {
   create: "新建帳戶",
   adjust_quantity: "調整數量",
   adjust_balance: "修改餘額",
+  adjust_cost: "校正成本",
   price_update: "更新價格",
   sell: "賣出",
   dividend: "配息",
@@ -356,6 +357,7 @@ export default async function AccountDetail({
                 currentFx={Number(account.last_fx_rate ?? 1)}
                 nativeCurrency={account.native_currency}
                 currentCost={cost}
+                currentCostNative={costNative}
                 status={(account.status as "active" | "archived") ?? "active"}
               />
             </div>

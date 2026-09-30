@@ -45,7 +45,7 @@ drop type if exists account_status cascade;
 
 create type asset_class as enum ('liquid_cash','fund','stock','crypto','precious_metal','other_investment','fixed_asset','receivable','liability');
 create type price_market as enum ('us','tw','crypto','manual');
-create type txn_type as enum ('create','adjust_quantity','adjust_balance','price_update','sell','dividend','interest');
+create type txn_type as enum ('create','adjust_quantity','adjust_balance','price_update','sell','dividend','interest','adjust_cost');
 create type account_status as enum ('active','archived');
 
 create table profiles (

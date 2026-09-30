@@ -335,6 +335,19 @@ describe.skipIf(!url)("reverse_transaction_mutation (integration)", () => {
     await expect(reverse(down, "undo")).rejects.toThrow(/按比例縮放/);
   });
 
+  it("校正成本不能撤銷也不能沖銷：流水沒有校正前的成本", async () => {
+    const corrected = await insertTxn({
+      type: "adjust_cost",
+      cashflow_twd: 0,
+      created_at: "2026-07-10T02:00:00.000Z",
+    });
+    await expect(reverse(corrected, "undo")).rejects.toThrow(/不支援撤銷/);
+    await expect(reverse(corrected, "reverse")).rejects.toThrow(/不支援撤銷/);
+    const acc = await accountRow();
+    expect(Number(acc.cost_basis_twd)).toBe(1000);
+    expect(Number(acc.cost_basis_native)).toBe(500);
+  });
+
   it("帳戶狀態對不上時擋下，不寫出負數", async () => {
     const id = await insertTxn({ quantity_after: 15.6, cashflow_twd: -600 });
     // 帳戶只有 10 股 1000 成本，撤銷 600 的加碼會讓數量掉到負的。

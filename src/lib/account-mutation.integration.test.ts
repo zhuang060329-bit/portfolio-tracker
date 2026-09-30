@@ -253,6 +253,33 @@ describe.skipIf(!url)("apply_account_mutation (integration)", () => {
     expect(new Date(tx.created_at).toISOString()).toBe("2026-07-01T02:00:00.000Z");
   });
 
+  it("adjust_cost：只改成本，股數不動，現金流 0，當日快照帶校正後的成本", async () => {
+    await call(
+      { cost_basis_twd: 88000, cost_basis_native: 2750 },
+      {
+        type: "adjust_cost",
+        quantity_after: 10,
+        unit_price: 520,
+        fx_rate: 32,
+        value_after_base: 166400,
+        cashflow_twd: 0,
+        note: "校正成本 USD 3,125 → 2,750（TWD 100,000 → 88,000）",
+      },
+      [{ snapshot_date: "2026-07-06", quantity: 10, unit_price: 520, fx_rate: 32, value_base: 166400 }],
+    );
+    const acc = (await db.query("select * from accounts where id = $1", [ACC])).rows[0];
+    expect(Number(acc.quantity)).toBe(10); // patch 沒帶股數，不動
+    expect(Number(acc.cost_basis_twd)).toBe(88000);
+    expect(Number(acc.cost_basis_native)).toBe(2750);
+    const tx = (await db.query("select * from transactions")).rows;
+    expect(tx).toHaveLength(1);
+    expect(tx[0].type).toBe("adjust_cost");
+    expect(Number(tx[0].cashflow_twd)).toBe(0);
+    const snap = (await db.query("select * from account_snapshots")).rows[0];
+    expect(Number(snap.cost_basis_twd)).toBe(88000);
+    expect(Number(snap.cost_basis_native)).toBe(2750);
+  });
+
   it("不存在的帳戶：raise，不寫任何東西", async () => {
     await expect(
       db.query("select apply_account_mutation($1, '{}', null, '[]')", [
