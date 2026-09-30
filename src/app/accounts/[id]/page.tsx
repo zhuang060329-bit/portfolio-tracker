@@ -44,8 +44,10 @@ type TxnRow = {
   created_at: string;
 };
 
+// 這是 server component，不指定時區會用主機時區（Vercel 是 UTC）。
 const fmtTime = (iso: string) =>
   new Date(iso).toLocaleString("zh-TW", {
+    timeZone: "Asia/Taipei",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
