@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import {
   addByAmount,
   adjustBalance,
@@ -173,6 +173,16 @@ export function AccountActions({
   // 跟 server action 用同一支純函式，預覽的數字就是送出後會寫進去的數字。
   const [costNativeStr, setCostNativeStr] = useState("");
   const [costTwdStr, setCostTwdStr] = useState("");
+  // 這兩欄是受控欄位，送出後 React 不會自動重設。不清的話預覽會留著已經寫入的數字，
+  // 再按一次就多一筆相同的校正紀錄。失敗時保留輸入，讓使用者改完重送。
+  const costWasPending = useRef(false);
+  useEffect(() => {
+    if (costWasPending.current && !costPending && costState?.ok) {
+      setCostNativeStr("");
+      setCostTwdStr("");
+    }
+    costWasPending.current = costPending;
+  }, [costPending, costState]);
   const isTwdNative = nativeCurrency === "TWD";
   const costAvgFx = averageCostFx(currentCost, currentCostNative);
   const costPreview =
