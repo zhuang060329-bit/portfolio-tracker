@@ -37,7 +37,7 @@ describe("evaluateDcaTier：0050 在 2026-09-30 的實際資料", () => {
     expect(result.asOf).toBe("2026-09-30");
     expect(result.highDate).toBe("2026-09-23");
     expect(result.drawdownPct.toFixed(2)).toBe("-0.36");
-    expect(result.maPremiumPct.toFixed(2)).toBe("25.95");
+    expect(result.maPremiumPct?.toFixed(2)).toBe("25.95");
     expect(result.tier).toEqual({ kind: "premium", pct: 20, multiplier: 0.8 });
     expect(tieredAmount(8000, result.multiplier)).toBe(6400);
   });
@@ -78,9 +78,9 @@ describe("evaluateDcaTier：級距", () => {
     const high20 = evaluateDcaTier(series([100, 100, 100, 100, 130]), short);
     if (!high10.ok || !high20.ok) throw new Error("應該算得出來");
 
-    expect(high10.maPremiumPct).toBeCloseTo(11.65, 2);
+    expect(high10.maPremiumPct ?? Number.NaN).toBeCloseTo(11.65, 2);
     expect(high10.tier).toEqual({ kind: "premium", pct: 10, multiplier: 0.9 });
-    expect(high20.maPremiumPct).toBeCloseTo(22.64, 2);
+    expect(high20.maPremiumPct ?? Number.NaN).toBeCloseTo(22.64, 2);
     expect(high20.tier).toEqual({ kind: "premium", pct: 20, multiplier: 0.8 });
   });
 
@@ -105,7 +105,7 @@ describe("evaluateDcaTier：級距", () => {
     );
     if (!result.ok) throw new Error(result.error);
 
-    expect(result.maPremiumPct).toBeGreaterThan(20);
+    expect(result.maPremiumPct ?? Number.NaN).toBeGreaterThan(20);
     expect(result.tier).toEqual({ kind: "drawdown", pct: -10, multiplier: 1.25 });
   });
 
@@ -145,12 +145,38 @@ describe("evaluateDcaTier：級距", () => {
   });
 });
 
+describe("evaluateDcaTier：交易日數少於均線天數（對應 Pine 的 ext = na）", () => {
+  it("乖離是 null，不套減碼級距", () => {
+    // 四天就漲 50%，要是硬算均線會落在減碼級距。
+    const result = evaluateDcaTier(series([100, 110, 130, 150]), short);
+    if (!result.ok) throw new Error(result.error);
+
+    expect(result.maPremiumPct).toBeNull();
+    expect(result.tier).toEqual({ kind: "base", pct: null, multiplier: 1 });
+  });
+
+  it("回撤級距照常判定", () => {
+    const result = evaluateDcaTier(series([100, 100, 100, 75]), short);
+    if (!result.ok) throw new Error(result.error);
+
+    expect(result.maPremiumPct).toBeNull();
+    expect(result.drawdownPct).toBe(-25);
+    expect(result.tier).toEqual({ kind: "drawdown", pct: -20, multiplier: 1.5 });
+  });
+
+  it("剛好等於均線天數時算得出乖離", () => {
+    const result = evaluateDcaTier(series([100, 100, 100, 100, 100]), short);
+    if (!result.ok) throw new Error(result.error);
+
+    expect(result.maPremiumPct).toBe(0);
+  });
+});
+
 describe("evaluateDcaTier：算不出來時回錯誤，不猜倍數", () => {
-  it("交易日數少於均線天數", () => {
-    const result = evaluateDcaTier(series([100, 100, 100, 100]), short);
-    expect(result).toEqual({
+  it("空序列", () => {
+    expect(evaluateDcaTier([], short)).toEqual({
       ok: false,
-      error: "歷史資料不足：均線需要 5 個交易日，目前只有 4 個",
+      error: "沒有歷史收盤資料",
     });
   });
 
@@ -179,8 +205,19 @@ describe("tieredAmount", () => {
     expect(tieredAmount(8000, 1.75)).toBe(14000);
   });
 
-  it("四捨五入到整數 TWD", () => {
-    expect(tieredAmount(3333, 1.25)).toBe(4166);
-    expect(tieredAmount(3335, 0.9)).toBe(3002);
+  it("取整到百元，與 Pine 的 math.round(base × mult / 100) × 100 一致", () => {
+    expect(tieredAmount(3333, 1.25)).toBe(4200); // 4166.25
+    expect(tieredAmount(3335, 0.9)).toBe(3000); // 3001.5
+    expect(tieredAmount(5000, 0.9)).toBe(4500);
+    expect(tieredAmount(1000, 1.25)).toBe(1300); // 1250，逢五進位
+  });
+
+  it("1 倍時也取整", () => {
+    expect(tieredAmount(3333, 1)).toBe(3300);
+    expect(tieredAmount(3350, 1)).toBe(3400);
+  });
+
+  it("基準金額太小時取整後是 0，由呼叫端決定要不要採用", () => {
+    expect(tieredAmount(40, 1)).toBe(0);
   });
 });
