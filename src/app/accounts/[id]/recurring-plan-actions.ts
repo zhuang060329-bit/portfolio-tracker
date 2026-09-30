@@ -5,6 +5,12 @@ import { createClient } from "@/lib/supabase/server";
 import { todayTaipei } from "@/lib/dates";
 import { firstMonthlyRunDate } from "@/lib/recurring-plan-schedule";
 import { CreateRecurringPlanSchema } from "@/lib/schemas/action/create-recurring-plan";
+import {
+  DcaTierConfigSchema,
+  dcaTierConfigErrorMessage,
+  readDcaTierConfigForm,
+} from "@/lib/schemas/domain/dca-tier-config";
+import type { DcaTierConfig } from "@/lib/dca-tiers";
 import type { FormState } from "./action-shared";
 
 export async function createRecurringPlan(
@@ -42,6 +48,23 @@ export async function createRecurringPlan(
     return { error: "手動帳戶無法設定定期定額" };
   }
 
+  // 級距加減碼：表單選了才讀那組欄位。固定金額的計畫完全不帶 tier_config 這個 key，
+  // 所以資料庫還沒跑 20260930180000_recurring_tier_config.sql 時，固定金額照樣建得起來。
+  let tierConfig: DcaTierConfig | null = null;
+  if (String(formData.get("tierMode") ?? "") === "tier") {
+    // 含息序列只接了 FinMind，美股與加密沒有資料來源。
+    if (account.price_market !== "tw") {
+      return { error: "級距加減碼目前只支援台股帳戶" };
+    }
+    const tierParsed = DcaTierConfigSchema.safeParse(
+      readDcaTierConfigForm(formData),
+    );
+    if (!tierParsed.success) {
+      return { error: dcaTierConfigErrorMessage(tierParsed.error) };
+    }
+    tierConfig = tierParsed.data;
+  }
+
   const startDateFinal = startDate ?? todayTaipei();
   const { error: insertError } = await supabase.from("recurring_plans").insert({
     user_id: user.id,
@@ -53,8 +76,18 @@ export async function createRecurringPlan(
     next_run_date: firstMonthlyRunDate(startDateFinal, dayOfMonth),
     active: true,
     note,
+    ...(tierConfig ? { tier_config: tierConfig } : {}),
   });
-  if (insertError) return { error: insertError.message };
+  if (insertError) {
+    // PGRST204：PostgREST 的 schema cache 裡沒有這個欄位，也就是 migration 還沒跑。
+    if (tierConfig && insertError.code === "PGRST204") {
+      return {
+        error:
+          "資料庫還沒有級距設定的欄位，請先套用 supabase/migrations/20260930180000_recurring_tier_config.sql",
+      };
+    }
+    return { error: insertError.message };
+  }
 
   revalidatePath(`/accounts/${accountId}`);
   return { ok: "定期定額計畫已建立" };

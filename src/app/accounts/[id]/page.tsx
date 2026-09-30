@@ -1,9 +1,15 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { fetchAllPages } from "@/lib/supabase/paginate";
 import { createClient } from "@/lib/supabase/server";
 import { AccountActions } from "./AccountActions";
-import { RecurringPlans, type Plan } from "./RecurringPlans";
+import {
+  AddRecurringPlanForm,
+  RecurringPlanList,
+  type Plan,
+} from "./RecurringPlans";
+import { TieredPlanList } from "./TieredPlanList";
 import { TransactionReversal } from "./TransactionReversal";
 import { NetWorthPanel } from "@/components/NetWorthPanel";
 import { AppHeader } from "@/components/AppHeader";
@@ -71,7 +77,7 @@ export default async function AccountDetail({
     unreadCount,
     { data: account },
     { data: txns },
-    { data: plansData },
+    { data: plansData, error: plansError },
     { data: snapsData },
   ] = await Promise.all([
     supabase.auth.getUser(),
@@ -98,7 +104,7 @@ export default async function AccountDetail({
     supabase
       .from("recurring_plans")
       .select(
-        "id,amount_twd,fee_twd,day_of_month,start_date,next_run_date,last_run_date,active,note",
+        "id,amount_twd,fee_twd,day_of_month,start_date,next_run_date,last_run_date,active,note,tier_config",
       )
       .eq("account_id", id)
       .order("active", { ascending: false })
@@ -115,6 +121,13 @@ export default async function AccountDetail({
   ]);
   if (!account) notFound();
   const plans = (plansData ?? []) as Plan[];
+  // 級距要用含息序列算，資料來源只有 FinMind（台股）。沒有級距計畫就不抓。
+  const tierSymbol =
+    account.price_market === "tw" &&
+    account.symbol &&
+    plans.some((plan) => plan.tier_config != null)
+      ? String(account.symbol)
+      : null;
   const lineData = ((snapsData ?? []) as {
     snapshot_date: string;
     value_base: number;
@@ -370,10 +383,30 @@ export default async function AccountDetail({
             <section>
               <SectionHead title="定期定額" />
               <p className="mt-2 text-[length:var(--fs-micro)] leading-5 text-[var(--c-muted)]">
-                「立即執行」會依當下市價換算股數買入，並把下次執行日推到下個月。執行前可改「本期金額」加碼或減碼，只影響這一次；計劃的每月金額與自動執行維持不變。
+                「立即執行」會依當下市價換算股數買入，並把下次執行日推到下個月。執行前可改「本期金額」加碼或減碼，只影響這一次；計劃的每月金額與自動執行維持不變。級距計劃會把「本期金額」預填成依回撤與均線算出的建議金額。
               </p>
-              <div className="mt-3">
-                <RecurringPlans plans={plans} accountId={account.id} />
+              <div className="mt-3 flex flex-col gap-3">
+                {plansError ? (
+                  // 查詢失敗時 plans 是空的，不能讓畫面說成「尚無計劃」。
+                  <p className="border border-dashed border-[var(--c-annot)] px-4 py-3 text-[length:var(--fs-sm)] leading-6 text-[var(--c-muted)]">
+                    <span className="font-semibold text-[var(--c-annot-text)]">
+                      注意
+                    </span>{" "}
+                    讀不到定期定額計劃。若剛部署新版，請確認資料庫已套用最新的 migration。
+                  </p>
+                ) : tierSymbol ? (
+                  <Suspense
+                    fallback={<RecurringPlanList plans={plans} tiersPending />}
+                  >
+                    <TieredPlanList plans={plans} symbol={tierSymbol} />
+                  </Suspense>
+                ) : (
+                  <RecurringPlanList plans={plans} />
+                )}
+                <AddRecurringPlanForm
+                  accountId={account.id}
+                  tierAvailable={account.price_market === "tw"}
+                />
               </div>
             </section>
           )}
