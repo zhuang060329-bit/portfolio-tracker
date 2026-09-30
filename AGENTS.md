@@ -84,6 +84,7 @@ src/
 │   ├── dca-tiers.ts             ← 定期定額級距加減碼的判定與金額（純函式，含測試）
 │   ├── total-return-series.ts   ← 由股價、除權息、分割重建含息序列（純函式，含測試）
 │   ├── dca-tier-status.ts       ← 帳戶頁計劃列要顯示的級距狀態（純函式，含測試）
+│   ├── recurring-tier-amount.ts ← cron 執行級距計劃時要帶的本期金額（含測試）
 │   ├── notifications.ts         ← getUnreadCount
 │   ├── admin.ts                 ← isAdmin(email)
 │   ├── dates.ts                 ← todayTaipei()
@@ -284,8 +285,23 @@ npm run dev   # Mac 也可用工作區根的 start-dev-portfolio.command（不�
     格式由 `src/lib/schemas/domain/dca-tier-config.ts` 把關，讀回來格式不對時顯示錯誤，
     不拿預設值頂替。需要 `supabase/migrations/20260930180000_recurring_tier_config.sql`，
     **要在程式部署前跑**：帳戶頁的查詢帶了這一欄，欄位不存在時整個查詢失敗。
-  - **只預填「本期金額」，不自動套用**。排程（cron）仍用 `amount_twd` 基準金額；
-    要套用級距得在排程日之前手動按「立即執行」。cron 自動套用是另一階段，還沒做。
+  - **帳戶頁預填「本期金額」，cron 自動套用**（cron 這一段 2026-09-30 加）。
+    cron 執行級距計劃前由 `src/lib/recurring-tier-amount.ts` 算出本期金額，
+    `executeRecurringPlan` 以 `tierAmount` 帶給 RPC，流水備註寫
+    「定期定額(cron·級距，基準 N)」。固定金額計劃的 cron 照舊不接受任何金額，
+    手續費覆寫也照舊拒絕；RPC 以 `tier_config is not null` 當最後一道檢查。
+    需要 `supabase/migrations/20260930200000_recurring_cron_tier_amount.sql`。
+  - **cron 算不出級距就不買，不退回基準金額**。FinMind 失敗、額度用完、設定格式無效、
+    序列最後一筆超過 14 天，該期都記成失敗（log 的 `tierFailed`），計劃維持到期、
+    隔天重試。理由：回撤 30% 那天剛好抓不到資料、安靜地只買 1 倍，事後從流水看不出來。
+    代價：FinMind 連續失敗時計劃會一直不執行，而且只有 Vercel log 看得到，沒有通知。
+    這與手動執行不同——帳戶頁算不出級距時，「本期金額」退回基準金額、照樣可以按。
+  - **cron 用的是前一個交易日的收盤**。FinMind 文件寫 `TaiwanStockPrice` 週一至五
+    17:30 更新，cron 在台北 14:00 跑，所以級距判定與成交價是同一天的收盤。
+    14:00 當下是否真的還沒有當日資料沒有實測過。
+  - **cron 抓序列不走快取**（`fetchTwTotalReturnSeries(symbol, { fresh: true })`，
+    `cache: "no-store"`），同一次執行每個代號只抓一次，每檔扣 3 次 FinMind 額度。
+    `fetch` 的 `cache: "no-store"` 與 `next.revalidate` 不能同時給，Next 會兩個都忽略。
   - **金額取整到百元**（`Math.round(base × 倍數 / 100) × 100`，與 Pine Script 相同），
     所以 1 倍時也會取整：基準 3,333 的建議金額是 3,300。
   - **含息序列用 `unstable_cache` 快取一小時**（`src/lib/prices/finmind-total-return-cached.ts`）。
@@ -294,7 +310,8 @@ npm run dev   # Mac 也可用工作區根的 start-dev-portfolio.command（不�
     是因為後者要開 Cache Components，而全站因 CSP nonce 是動態渲染。
     它是 stale-while-revalidate：過期後第一個請求仍拿到舊序列，所以畫面寫出
     「依 YYYY-MM-DD 收盤」。
-  - **抓不到歷史股價不擋頁面**：級距計劃各帶一則朱砂註記，本期金額退回基準金額。
+  - **抓不到歷史股價不擋頁面**：級距計劃各帶一則朱砂註記，本期金額退回基準金額
+    （只有手動執行如此，cron 見上）。
   - **沒有編輯功能**。既有計劃要改成級距，只能刪掉重建。
 - **手動帳戶**：不適用 addByAmount；FAB 與部分 query 自動排除
 - **服務選擇**：全部用免費額度可運作；個人單用不會撞限

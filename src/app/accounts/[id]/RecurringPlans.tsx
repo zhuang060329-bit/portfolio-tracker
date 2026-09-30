@@ -279,6 +279,11 @@ function TierStrip({
   pending: boolean;
 }) {
   const baseText = `NT$ ${fmtTwd(planAmount)}`;
+  // 手動執行算不出級距時退回基準金額，cron 則是該期不買（recurring-tier-amount.ts）。
+  // 兩邊行為不同，所以要寫出來。
+  const cronSkipText = plan.active
+    ? "自動執行時如果還是算不出級距，當天不會買入，隔天再試。"
+    : "";
 
   return (
     <div className="mt-3 border-t border-[var(--c-border)] pt-3">
@@ -299,11 +304,12 @@ function TierStrip({
         </p>
       ) : !tier ? (
         <TierNote>
-          這個帳戶算不出級距，本期金額是基準金額 {baseText}。
+          這個帳戶算不出級距，本期金額是基準金額 {baseText}。{cronSkipText}
         </TierNote>
       ) : !tier.ok ? (
         <TierNote>
           {tier.error}，這次沒有套用級距，本期金額是基準金額 {baseText}。
+          {cronSkipText}
         </TierNote>
       ) : (
         <>
@@ -347,9 +353,8 @@ function TierStrip({
               ，取整到百元），已填入本期金額。
               {plan.active && (
                 <>
-                  自動執行仍用基準金額，要套用級距請在{" "}
                   <span className="tnum">{plan.next_run_date}</span>{" "}
-                  之前按「立即執行」。
+                  自動執行時會用當時最新的收盤（通常是前一個交易日）重算級距，金額可能與這裡不同；算不出級距時當天不買，隔天再試。
                 </>
               )}
             </p>
@@ -473,7 +478,7 @@ function TierConfigFields() {
       </div>
       <p className="text-[length:var(--fs-micro)] font-normal leading-5 text-[var(--c-muted)]">
         {
-          "預設值與 TradingView 指標「DCA 七級距加減碼 v2 (含息序列)」相同。上面的「每次金額」是 1 倍時的基準金額，建議金額取整到百元；回撤與高於均線同時成立時以回撤為準。排程日的自動執行仍用基準金額，要套用級距請在排程日之前按「立即執行」。"
+          "預設值與 TradingView 指標「DCA 七級距加減碼 v2 (含息序列)」相同。上面的「每次金額」是 1 倍時的基準金額，建議金額取整到百元；回撤與高於均線同時成立時以回撤為準。排程日的自動執行會用當時最新的收盤（通常是前一個交易日）重算級距後買入；算不出級距時當天不買，隔天再試。"
         }
       </p>
     </div>

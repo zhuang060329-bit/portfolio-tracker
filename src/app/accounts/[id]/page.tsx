@@ -383,7 +383,7 @@ export default async function AccountDetail({
             <section>
               <SectionHead title="定期定額" />
               <p className="mt-2 text-[length:var(--fs-micro)] leading-5 text-[var(--c-muted)]">
-                「立即執行」會依當下市價換算股數買入，並把下次執行日推到下個月。執行前可改「本期金額」加碼或減碼，只影響這一次；計劃的每月金額與自動執行維持不變。級距計劃會把「本期金額」預填成依回撤與均線算出的建議金額。
+                「立即執行」會依當下市價換算股數買入，並把下次執行日推到下個月。執行前可改「本期金額」加碼或減碼，只影響這一次；計劃的每月金額與自動執行維持不變。級距計劃會把「本期金額」預填成依回撤與均線算出的建議金額，自動執行時也依級距買入。
               </p>
               <div className="mt-3 flex flex-col gap-3">
                 {plansError ? (
