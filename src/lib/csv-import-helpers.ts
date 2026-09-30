@@ -5,7 +5,8 @@
 
 /**
  * transactions.type 的完整 enum。
- * 前四個來自 supabase/schema.sql，後三個由 realized-pnl-cashflow.sql 補上。
+ * 前四個來自 supabase/schema.sql，sell / dividend / interest 由 realized-pnl-cashflow.sql 補上，
+ * adjust_cost 由 migrations/20260930120000_adjust_cost_type.sql 補上。
  * 注意「買進」在 DB 裡沒有專屬型別，一律記成 adjust_quantity，
  * 跟手動「股數調整」共用同一個值，靠 note 才分得出來。
  */
@@ -13,6 +14,7 @@ export type TxnType =
   | "create"
   | "adjust_quantity"
   | "adjust_balance"
+  | "adjust_cost"
   | "price_update"
   | "sell"
   | "dividend"
@@ -103,6 +105,7 @@ const TYPE_ALIASES: Record<TxnType, string[]> = {
     "股數調整",
   ],
   adjust_balance: ["adjust_balance", "balance", "餘額調整", "修改餘額"],
+  adjust_cost: ["adjust_cost", "校正成本", "成本校正"],
   price_update: ["price_update", "price update", "報價更新", "更新報價"],
   sell: ["sell", "sold", "賣出", "賣", "減碼"],
   dividend: ["dividend", "div", "配息", "股息", "息收"],

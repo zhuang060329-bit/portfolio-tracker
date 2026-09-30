@@ -71,10 +71,11 @@ const WITH_COST = { hasCostBasis: true };
 const NO_COST = { hasCostBasis: false };
 
 describe("isPositionType", () => {
-  it("四種部位異動為 true，收益與報價更新為 false", () => {
+  it("五種部位異動為 true，收益與報價更新為 false", () => {
     expect(isPositionType("create")).toBe(true);
     expect(isPositionType("adjust_quantity")).toBe(true);
     expect(isPositionType("adjust_balance")).toBe(true);
+    expect(isPositionType("adjust_cost")).toBe(true);
     expect(isPositionType("sell")).toBe(true);
     expect(isPositionType("dividend")).toBe(false);
     expect(isPositionType("interest")).toBe(false);
@@ -124,6 +125,17 @@ describe("buildImportPlan：部位異動只允許寫進全新帳戶", () => {
   it("帳戶已有交易時退回部位列", () => {
     const plan = buildImportPlan(
       [buyRow()],
+      accounts(account({ hasExistingTransactions: true })),
+      WITH_COST,
+    );
+    expect(plan.imported).toBe(0);
+    expect(plan.skipped).toBe(1);
+    expect(plan.errors[0]).toContain("已有交易紀錄");
+  });
+
+  it("校正成本設定的是成本的絕對值，帳戶已有交易時一樣退回", () => {
+    const plan = buildImportPlan(
+      [buyRow({ type: "adjust_cost", amountTwd: 0 })],
       accounts(account({ hasExistingTransactions: true })),
       WITH_COST,
     );
@@ -245,6 +257,41 @@ describe("buildImportPlan：部位終態", () => {
       "2026-01-05T02:00:00.000Z",
       "2026-05-05T02:00:00.000Z",
     ]);
+  });
+
+  it("最後一列是校正成本：股數照抄、成本取校正後的值、現金流維持 0", () => {
+    const plan = buildImportPlan(
+      [
+        buyRow({
+          occurredAt: new Date("2026-01-05T02:00:00.000Z"),
+          quantityAfter: 110,
+          costBasisTwd: 365000,
+          costBasisNative: 12100,
+        }),
+        buyRow({
+          type: "adjust_cost",
+          occurredAt: new Date("2026-02-05T02:00:00.000Z"),
+          amountTwd: 0,
+          quantityAfter: 110,
+          costBasisTwd: 365000,
+          costBasisNative: 12100,
+        }),
+      ],
+      accounts(account({ realizedPnlTwd: 1000 })),
+      WITH_COST,
+    );
+    expect(plan.errors).toEqual([]);
+    expect(plan.transactions.map((t) => t.type)).toEqual([
+      "adjust_quantity",
+      "adjust_cost",
+    ]);
+    expect(plan.transactions[1].cashflow_twd).toBe(0);
+    const patch = plan.accountPatches[0].patch;
+    expect(patch.quantity).toBe(110);
+    expect(patch.cost_basis_twd).toBe(365000);
+    expect(patch.cost_basis_native).toBe(12100);
+    // 校正成本沒有已實現損益，帳戶原值不動。
+    expect(patch.realized_pnl_twd).toBe(1000);
   });
 
   it("賣出的已實現損益累加進帳戶", () => {

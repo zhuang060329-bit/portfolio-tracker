@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import {
   addByAmount,
   adjustBalance,
+  adjustCostBasis,
   adjustQuantity,
   archiveAccount,
   deleteAccount,
@@ -15,6 +16,7 @@ import {
   type FormState,
 } from "./actions";
 import { useActionAnnounce } from "@/components/a11y/use-action-announce";
+import { averageCostFx, resolveCostCorrection } from "@/lib/cost-correction";
 
 type Props = {
   accountId: string;
@@ -25,8 +27,12 @@ type Props = {
   currentFx: number;
   nativeCurrency: string;
   currentCost: number;
+  currentCostNative: number;
   status: "active" | "archived";
 };
+
+const fmtNative = (n: number, digits: number) =>
+  n.toLocaleString("en-US", { maximumFractionDigits: digits });
 
 const fmtShares = (n: number) =>
   Number.isFinite(n) && n > 0
@@ -49,6 +55,7 @@ export function AccountActions({
   currentFx,
   nativeCurrency,
   currentCost,
+  currentCostNative,
   status,
 }: Props) {
   const isManual = market === "manual";
@@ -78,6 +85,10 @@ export function AccountActions({
     adjustQuantity,
     undefined,
   );
+  const [costState, costAction, costPending] = useActionState<FormState, FormData>(
+    adjustCostBasis,
+    undefined,
+  );
   const [balState, balAction, balPending] = useActionState<FormState, FormData>(
     adjustBalance,
     undefined,
@@ -100,6 +111,7 @@ export function AccountActions({
   useActionAnnounce(divState, divPending, "配息已記錄");
   useActionAnnounce(intState, intPending, "利息已記錄");
   useActionAnnounce(qtyState, qtyPending, "股數已調整");
+  useActionAnnounce(costState, costPending, "成本已校正");
   useActionAnnounce(balState, balPending, "餘額已修改");
   useActionAnnounce(delState, delPending);
   useActionAnnounce(archState, archPending);
@@ -155,6 +167,29 @@ export function AccountActions({
   const realizedPnlPreview =
     Number.isFinite(proceedsPreview) && sellQtyN > 0 && sellQtyN <= currentQty
       ? proceedsPreview - allocatedCost
+      : 0;
+
+  // === 校正成本預覽 ===
+  // 跟 server action 用同一支純函式，預覽的數字就是送出後會寫進去的數字。
+  const [costNativeStr, setCostNativeStr] = useState("");
+  const [costTwdStr, setCostTwdStr] = useState("");
+  const isTwdNative = nativeCurrency === "TWD";
+  const costAvgFx = averageCostFx(currentCost, currentCostNative);
+  const costPreview =
+    costNativeStr.trim() === ""
+      ? null
+      : resolveCostCorrection({
+          nativeCurrency,
+          quantity: currentQty,
+          currentCostTwd: currentCost,
+          currentCostNative,
+          lastFxRate: currentFx,
+          costNative: Number(costNativeStr),
+          costTwd: costTwdStr.trim() === "" ? null : Number(costTwdStr),
+        });
+  const costPreviewPnl =
+    costPreview?.ok === true
+      ? currentQty * currentPrice * currentFx - costPreview.costTwd
       : 0;
 
   return (
@@ -630,6 +665,114 @@ export function AccountActions({
               className="btn btn-neutral self-start"
             >
               {qtyPending ? "套用中…" : "套用"}
+            </button>
+          </form>
+        </details>
+      )}
+
+      {/* === 校正成本（只改成本基礎，不動股數與現金流）=== */}
+      {!isManual && (
+        <details className="border border-[var(--c-border)] bg-[var(--c-surface)]">
+          <summary className="cursor-pointer select-none px-4 py-3 text-[length:var(--fs-sm)] font-medium transition-colors hover:bg-[var(--c-row-hover)]">
+            校正成本（對齊券商的總成本，不改股數）
+          </summary>
+          <form action={costAction} className="flex flex-col gap-3 border-t border-[var(--c-border)] p-4">
+            <input type="hidden" name="accountId" value={accountId} />
+
+            <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
+              總成本（{nativeCurrency}，目前 {fmtNative(currentCostNative, isTwdNative ? 0 : 2)}）
+              <input
+                name="costNative"
+                type="number"
+                step="any"
+                min="0"
+                required
+                value={costNativeStr}
+                onChange={(e) => setCostNativeStr(e.target.value)}
+                placeholder={currentCostNative > 0 ? String(currentCostNative) : ""}
+                className="field"
+              />
+              <span className="font-normal text-[var(--c-muted)]">
+                填券商顯示的總成本，不是均價。
+              </span>
+            </label>
+
+            {!isTwdNative && (
+              <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
+                TWD 總成本（選填，目前 {fmtTwd(currentCost)}）
+                <input
+                  name="costTwd"
+                  type="number"
+                  step="any"
+                  min="0"
+                  value={costTwdStr}
+                  onChange={(e) => setCostTwdStr(e.target.value)}
+                  className="field"
+                />
+                <span className="font-normal text-[var(--c-muted)]">
+                  {costAvgFx != null
+                    ? `留空 = 沿用目前的平均成本匯率 ${fmtNative(costAvgFx, 4)} 換算。`
+                    : `留空 = 用最後報價匯率 ${currentFx} 換算。`}
+                </span>
+              </label>
+            )}
+
+            <label className="flex flex-col gap-[7px] text-[length:var(--fs-micro)] font-semibold text-[var(--c-muted)]">
+              備註（選填）
+              <input
+                name="note"
+                type="text"
+                maxLength={200}
+                placeholder="例：依券商 9/30 庫存"
+                className="field"
+              />
+            </label>
+
+            <div className="border border-dashed border-[var(--c-line-strong)] bg-[var(--c-surface-soft)] px-3.5 py-2.5 text-[length:var(--fs-micro)] text-[var(--c-muted)]">
+              {costPreview?.ok === true ? (
+                <>
+                  校正後均價：
+                  <span className="ml-1 font-semibold tnum text-[var(--c-text)]">
+                    {nativeCurrency} {fmtNative(costPreview.costNative / currentQty, 6)}
+                  </span>
+                  <span className="mx-2 text-[var(--c-faint)]">·</span>
+                  TWD 成本：
+                  <span className="ml-1 font-semibold tnum text-[var(--c-text)]">
+                    NT$ {fmtTwd(costPreview.costTwd)}
+                  </span>
+                  <span className="mx-2 text-[var(--c-faint)]">·</span>
+                  未實現損益：
+                  <span className={`ml-1 font-semibold tnum ${pnlClass(costPreviewPnl)}`}>
+                    {pnlSign(costPreviewPnl)}NT$ {fmtTwd(Math.abs(costPreviewPnl))}
+                  </span>
+                </>
+              ) : costPreview ? (
+                costPreview.error
+              ) : (
+                "填入總成本後顯示校正後的均價與未實現損益。"
+              )}
+              <div className="mt-1 text-[var(--c-faint)]">
+                只改成本，股數與現金流不動：未實現損益改從這個成本算起，XIRR 與 TWR
+                仍從建立帳戶當天的市值算起。這筆紀錄不能撤銷，填錯時再校正一次。
+              </div>
+            </div>
+
+            {costState?.error && (
+              <p className="border border-[var(--c-down)] px-3 py-2 text-[length:var(--fs-sm)] text-[var(--c-down)]">
+                {costState.error}
+              </p>
+            )}
+            {costState?.ok && (
+              <p className="border border-[var(--c-up)] px-3 py-2 text-[length:var(--fs-sm)] text-[var(--c-up)]">
+                ✓ {costState.ok}
+              </p>
+            )}
+            <button
+              type="submit"
+              disabled={costPending}
+              className="btn btn-neutral self-start"
+            >
+              {costPending ? "套用中…" : "校正成本"}
             </button>
           </form>
         </details>

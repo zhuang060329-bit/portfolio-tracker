@@ -23,6 +23,8 @@ const POSITION_TYPES: ReadonlySet<TxnType> = new Set<TxnType>([
   "create",
   "adjust_quantity",
   "adjust_balance",
+  // 校正成本不動股數，但設定的是成本的絕對值，跟其他部位異動同一條規則。
+  "adjust_cost",
   "sell",
 ]);
 

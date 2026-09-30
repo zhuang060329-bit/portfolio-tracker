@@ -19,8 +19,9 @@
 
 | 13 | `migrations/20260811120000_api_budget.sql` | `api_usage` 表 + `consume_api_quota`：免費報價 API 的全域每日預算，防止共用 key 被打爆 | ✅ |
 | 14 | `migrations/20260818130000_reversal_negative_fee.sql` | 放寬 `transactions_fee_twd_check`，讓沖銷列可以帶負數手續費。**修 bug：** 不跑的話「沖銷較早的一筆」只要原始交易記過手續費就會失敗 | ✅ |
+| 15 | `migrations/20260930120000_adjust_cost_type.sql` | `txn_type` enum 加 `adjust_cost`（校正成本）。不改任何函式。**要在程式部署前跑：** 沒跑的話「校正成本」表單會收到 `invalid input value for enum txn_type`，整筆 rollback、帳戶不會被改到 | ✅ |
 
-既有 StackWorth 部署若已完成 1–13，只執行第 14 個 versioned migration。先在測試或預覽資料庫驗證，再套用正式環境；本 repository 不會自動修改 production schema。
+既有 StackWorth 部署若已完成 1–14，只執行第 15 個 versioned migration。先在測試或預覽資料庫驗證，再套用正式環境；本 repository 不會自動修改 production schema。
 
 ## 注意事項
 

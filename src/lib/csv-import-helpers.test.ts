@@ -50,6 +50,7 @@ describe("normalizeType", () => {
     expect(normalizeType("股息")).toBe("dividend");
     expect(normalizeType("利息")).toBe("interest");
     expect(normalizeType("存款利息")).toBe("interest");
+    expect(normalizeType("校正成本")).toBe("adjust_cost");
   });
 
   it("無法辨識回傳 null", () => {
@@ -73,6 +74,7 @@ describe("normalizeType", () => {
   it("認得匯出檔寫的 enum 原文", () => {
     expect(normalizeType("adjust_quantity")).toBe("adjust_quantity");
     expect(normalizeType("adjust_balance")).toBe("adjust_balance");
+    expect(normalizeType("adjust_cost")).toBe("adjust_cost");
     expect(normalizeType("price_update")).toBe("price_update");
     expect(normalizeType("create")).toBe("create");
     expect(normalizeType("sell")).toBe("sell");
@@ -250,7 +252,13 @@ describe("classifyRow", () => {
   });
 
   it("沒有成本基礎欄時，部位異動列全部退回，配息不受影響", () => {
-    for (const type of ["create", "adjust_quantity", "sell", "adjust_balance"] as const) {
+    for (const type of [
+      "create",
+      "adjust_quantity",
+      "sell",
+      "adjust_balance",
+      "adjust_cost",
+    ] as const) {
       const v = classifyRow(row({ type, quantityAfter: 10, valueBase: 100 }), noCost);
       expect(v.kind).toBe("reject");
       expect(v.kind === "reject" && v.reason).toContain("成本基礎");
@@ -272,6 +280,18 @@ describe("classifyRow", () => {
     expect(classifyRow(row({ type: "sell", quantityAfter: -1 }), withCost).kind).toBe(
       "reject",
     );
+  });
+
+  it("校正成本跟買賣同一條路：看異動後股數", () => {
+    // 校正成本不動股數，quantity_after 記的是當下持有數，匯出檔一定有值。
+    expect(
+      classifyRow(row({ type: "adjust_cost", amountTwd: 0, quantityAfter: 10 }), withCost)
+        .kind,
+    ).toBe("apply");
+    expect(
+      classifyRow(row({ type: "adjust_cost", amountTwd: 0, quantityAfter: null }), withCost)
+        .kind,
+    ).toBe("reject");
   });
 
   it("餘額調整看市值，不看股數", () => {

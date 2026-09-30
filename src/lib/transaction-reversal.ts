@@ -21,6 +21,9 @@ export function reversalMode(t: ReversalTarget): "undo" | "reverse" | null {
   if (t.isReversal || t.alreadyReversed) return null;
   // 建立帳戶要刪整個帳戶；更新報價沒有現金流。
   if (t.type === "create" || t.type === "price_update") return null;
+  // 校正成本的流水沒有記校正前的成本（transactions 沒有成本欄），回推不了；
+  // 填錯時再校正一次。RPC 端落在「這個交易型別不支援撤銷」。
+  if (t.type === "adjust_cost") return null;
   // 往下調整數量的成本是按比例縮放的，行內資訊不足以回推。
   if (
     t.type === "adjust_quantity" &&

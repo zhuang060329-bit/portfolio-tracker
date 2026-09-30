@@ -80,6 +80,7 @@ src/
 │   ├── alerts-scan.ts           ← cron 內呼叫的警示掃描
 │   ├── alert-actions.ts, allowlist-actions.ts, profile-actions.ts
 │   ├── contributions.ts         ← applyContribution 共用 helper
+│   ├── cost-correction.ts       ← 校正成本的換算與備註（純函式，含測試）
 │   ├── notifications.ts         ← getUnreadCount
 │   ├── admin.ts                 ← isAdmin(email)
 │   ├── dates.ts                 ← todayTaipei()
@@ -251,6 +252,28 @@ npm run dev   # Mac 也可用工作區根的 start-dev-portfolio.command（不�
     不是「顯示少的」。
   - `accounts` / `profiles` / `alerts` / `investment_decisions` **刻意不分頁**：
     個人使用不會接近 1000 列，加分頁只是多幾趟往返。要改成多使用者再回來看。
+- **校正成本（`adjust_cost`）只改成本基礎，其他都不動**（2026-09-30 加）。
+  起因：新建帳戶時成本固定等於建立當下的市值（`src/app/accounts/new/actions.ts`），
+  把既有部位搬進來之後，成本與券商帳上的數字對不上，未實現損益跟著錯。
+  建立帳戶那條路這次沒改，校正成本是事後補正的手段。要點：
+  - **流水 `cashflow_twd` 記 0**。所以 XIRR / TWR / Sharpe / 回撤不受影響，
+    代價是兩組數字的起算點不同：未實現損益從校正後的成本算起，
+    XIRR 與 TWR 仍從建立帳戶當天的市值算起。表單說明有寫這件事，別刪。
+  - **不抓報價**。流水與當日快照沿用帳戶的 `last_unit_price` / `last_fx_rate`，
+    不花 API 每日預算；還沒有報價的帳戶不寫快照（市值會被記成 0）。
+  - **外幣帳戶的 TWD 成本留空時，沿用現有的平均成本匯率**
+    （`cost_basis_twd ÷ cost_basis_native`），不用最新報價匯率。
+    校正的是原幣成本，換匯匯率沒有新資訊，換成最新匯率會憑空多出匯差損益。
+    換算邏輯在 `src/lib/cost-correction.ts`，server action 與表單預覽共用。
+  - **過去的快照不回填**。`account_snapshots` 在校正日之前的列保留舊成本，
+    歷史重播選舊日期時看到的仍是舊成本。
+  - **不能撤銷也不能沖銷**。`transactions` 沒有成本欄，校正前的數字只寫在備註，
+    RPC 回推不了。`reverse_transaction_mutation` 對它走 else 分支直接拒絕，
+    `reversalMode` 回 null 所以 UI 不顯示按鈕。填錯就再校正一次。
+    副作用：校正之後，它之前的賣出不再是最新一筆，也就不能撤銷了。
+  - **CSV 匯入把它當部位型別**（設定的是成本絕對值），只能匯進尚無交易的帳戶。
+  - 需要 `supabase/migrations/20260930120000_adjust_cost_type.sql`（enum 加值），
+    **要在程式部署前跑**，順序見 `supabase/README.md`。
 - **手動帳戶**：不適用 addByAmount；FAB 與部分 query 自動排除
 - **服務選擇**：全部用免費額度可運作；個人單用不會撞限
 

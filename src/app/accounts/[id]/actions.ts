@@ -3,6 +3,7 @@
 import {
   addByAmount as addByAmountAction,
   adjustBalance as adjustBalanceAction,
+  adjustCostBasis as adjustCostBasisAction,
   adjustQuantity as adjustQuantityAction,
   updatePrice as updatePriceAction,
 } from "./valuation-actions";
@@ -31,6 +32,10 @@ export async function updatePrice(previous: FormState, formData: FormData) {
 
 export async function adjustQuantity(previous: FormState, formData: FormData) {
   return adjustQuantityAction(previous, formData);
+}
+
+export async function adjustCostBasis(previous: FormState, formData: FormData) {
+  return adjustCostBasisAction(previous, formData);
 }
 
 export async function addByAmount(previous: FormState, formData: FormData) {
