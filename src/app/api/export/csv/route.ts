@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { EXPORT_CSV_HEADER, escapeCsvCell } from "@/lib/csv";
 import { fetchAllPages } from "@/lib/supabase/paginate";
+import { todayTaipei } from "@/lib/dates";
 
 // CSV 匯出：所有自己帳戶的 transactions（RLS 已綁 user_id）。
 // 帶 UTF-8 BOM，Excel 開啟中文不亂碼。
@@ -106,7 +107,8 @@ export async function GET() {
   }
 
   const csv = "﻿" + lines.join("\n");
-  const today = new Date().toLocaleDateString("en-CA");
+  // 檔名日期用台北時區。主機是 UTC，不指定的話台北 00:00–08:00 下載會是前一天。
+  const today = todayTaipei();
 
   return new Response(csv, {
     headers: {
