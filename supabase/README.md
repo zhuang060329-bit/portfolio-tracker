@@ -20,7 +20,7 @@
 | 13 | `migrations/20260811120000_api_budget.sql` | `api_usage` 表 + `consume_api_quota`：免費報價 API 的全域每日預算，防止共用 key 被打爆 | ✅ |
 | 14 | `migrations/20260818130000_reversal_negative_fee.sql` | 放寬 `transactions_fee_twd_check`，讓沖銷列可以帶負數手續費。**修 bug：** 不跑的話「沖銷較早的一筆」只要原始交易記過手續費就會失敗 | ✅ |
 | 15 | `migrations/20260930120000_adjust_cost_type.sql` | `txn_type` enum 加 `adjust_cost`（校正成本）。不改任何函式。**要在程式部署前跑：** 沒跑的話「校正成本」表單會收到 `invalid input value for enum txn_type`，整筆 rollback、帳戶不會被改到 | ✅ |
-| 16 | `migrations/20260930180000_recurring_tier_config.sql` | `recurring_plans.tier_config`（jsonb，可為空）：定期定額的級距加減碼設定。不改任何函式與 RLS。**要在程式部署前跑：** 沒跑的話帳戶頁的定期定額區塊會顯示「讀不到定期定額計畫」；cron 不受影響 | ✅ |
+| 16 | `migrations/20260930180000_recurring_tier_config.sql` | `recurring_plans.tier_config`（jsonb，可為空）：定期定額的級距加減碼設定。不改任何函式與 RLS。**要在程式部署前跑：** 沒跑的話帳戶頁的定期定額區塊會顯示「讀不到定期定額計畫」；cron 查到期計劃時也帶這一欄（級距自動套用之後），沒跑的話查詢失敗、log 印 `queryFailed=true`，當天所有計劃都不執行 | ✅ |
 | 17 | `migrations/20260930200000_recurring_cron_tier_amount.sql` | `execute_recurring_plan_mutation`：cron 可以對有 `tier_config` 的計劃帶本期金額（級距加減碼自動套用），流水備註寫「定期定額(cron·級距，基準 N)」；固定金額計劃與手續費覆寫照舊拒絕。簽名不變。**要在第 16 支之後跑。** 與程式部署的先後都不會弄壞資料：程式先上的話，級距計劃該期被舊函式拒絕、隔天重試 | ✅ |
 
 既有 StackWorth 部署若已完成 1–16，只執行第 17 個 versioned migration。先在測試或預覽資料庫驗證，再套用正式環境；本 repository 不會自動修改 production schema。

@@ -55,6 +55,7 @@ export function parseFinmindSplits(rows: FinmindRow[]): SplitEvent[] {
 async function fetchDataset(
   dataset: string,
   symbol: string,
+  fresh: boolean,
 ): Promise<FinmindRow[]> {
   const url =
     `https://api.finmindtrade.com/api/v4/data?dataset=${dataset}` +
@@ -64,7 +65,10 @@ async function fetchDataset(
     url,
     {
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      next: { revalidate: 3600 },
+      // cache 與 next.revalidate 不能同時給（Next 會兩個都忽略），所以二選一。
+      ...(fresh
+        ? { cache: "no-store" as const }
+        : { next: { revalidate: 3600 } }),
     },
     1,
   );
@@ -87,16 +91,22 @@ export type TwTotalReturnSeries = {
 /**
  * 抓三個資料集並重建含息序列。每次呼叫扣 3 次 FinMind 額度，
  * 扣不到（ApiBudgetExceededError）就一個請求都不打。
+ *
+ * fresh 給 cron 用：跳過 Next 的 fetch 快取，一定打到 FinMind。
+ * 預設的 revalidate 3600 在帳戶頁夠用（畫面有寫依哪一天收盤），
+ * 但 cron 是拿這份序列決定買多少，不該用到一小時前別的請求留下的回應。
  */
 export async function fetchTwTotalReturnSeries(
   symbol: string,
+  options: { fresh?: boolean } = {},
 ): Promise<TwTotalReturnSeries> {
   await consumeApiQuota("finmind", 3);
 
+  const fresh = options.fresh ?? false;
   const [priceRows, dividendRows, splitRows] = await Promise.all([
-    fetchDataset("TaiwanStockPrice", symbol),
-    fetchDataset("TaiwanStockDividendResult", symbol),
-    fetchDataset("TaiwanStockSplitPrice", symbol),
+    fetchDataset("TaiwanStockPrice", symbol, fresh),
+    fetchDataset("TaiwanStockDividendResult", symbol, fresh),
+    fetchDataset("TaiwanStockSplitPrice", symbol, fresh),
   ]);
 
   const prices = parseFinmindPrices(priceRows);
