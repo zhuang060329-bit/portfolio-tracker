@@ -132,6 +132,20 @@ export function AccountActions({
   ].join("-");
   const isBackdating = occurredAt !== "" && occurredAt.slice(0, 10) < todayDate;
   const [note, setNote] = useState("");
+  // 六欄都是受控欄位，送出後 React 不會自動重設。不清的話再按一次就重複記一筆加碼。
+  // 失敗時保留輸入，讓使用者改完重送。
+  const addWasPending = useRef(false);
+  useEffect(() => {
+    if (addWasPending.current && !addPending && addState?.ok) {
+      setTwd("");
+      setBuyFee("");
+      setPriceOverride("");
+      setFxOverride("");
+      setOccurredAt("");
+      setNote("");
+    }
+    addWasPending.current = addPending;
+  }, [addPending, addState]);
   const twdN = Number(twd);
   const priceN = priceOverride ? Number(priceOverride) : currentPrice;
   const fxN = fxOverride ? Number(fxOverride) : currentFx;
@@ -152,6 +166,18 @@ export function AccountActions({
   const [sellFee, setSellFee] = useState("");
   const [sellPriceOv, setSellPriceOv] = useState("");
   const [sellFxOv, setSellFxOv] = useState("");
+  // 同加碼：這五欄受控，成功後要自己清。成交時間與備註是非受控欄位，React 會重設。
+  const sellWasPending = useRef(false);
+  useEffect(() => {
+    if (sellWasPending.current && !sellPending && sellState?.ok) {
+      setSellQtyStr("");
+      setProceedsStr("");
+      setSellFee("");
+      setSellPriceOv("");
+      setSellFxOv("");
+    }
+    sellWasPending.current = sellPending;
+  }, [sellPending, sellState]);
   const sellQtyN = Number(sellQtyStr);
   const sellPriceN = sellPriceOv ? Number(sellPriceOv) : currentPrice;
   const sellFxN = sellFxOv ? Number(sellFxOv) : currentFx;
