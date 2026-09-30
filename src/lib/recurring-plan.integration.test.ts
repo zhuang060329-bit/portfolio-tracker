@@ -23,6 +23,8 @@ describe.skipIf(!url)("execute_recurring_plan_mutation (integration)", () => {
       "supabase/migrations/20260718032234_stackworth_v1.sql",
       "supabase/migrations/20260810155500_recurring_amount_override.sql",
       "supabase/migrations/20260810230000_transaction_fee.sql",
+      "supabase/migrations/20260930180000_recurring_tier_config.sql",
+      "supabase/migrations/20260930200000_recurring_cron_tier_amount.sql",
     ]);
     // 第二條連線在 schema 重建之後才接：它只用來驗併發，沒必要讓它經歷
     // 一次 drop schema，也省得去想連線層的快取。
@@ -305,6 +307,67 @@ describe.skipIf(!url)("execute_recurring_plan_mutation (integration)", () => {
     expect(await count(db, "transactions")).toBe(0);
   });
 
+  it("cron 可對級距計劃帶本期金額，備註標明級距與基準金額", async () => {
+    await setTierConfig(db, PLAN_ID);
+
+    // 基準 200、級距算出 300：單位 TWD 為 100，故加 3 股而非 2 股。
+    const result = (
+      await execute(db, PLAN_ID, "2026-07-05", "cron", 300)
+    ).rows[0];
+    expect(result.executed).toBe(true);
+    expect(Number(result.shares_added)).toBeCloseTo(3, 8);
+    expect(toDate(result.next_run_date)).toBe("2026-08-05");
+
+    const account = await accountRow(db);
+    expect(Number(account.cost_basis_twd)).toBe(1300);
+
+    const transaction = (await db.query("select * from transactions")).rows[0];
+    expect(Number(transaction.cashflow_twd)).toBe(-300);
+    expect(transaction.note).toContain("定期定額(cron·級距，基準 200.00)");
+
+    const run = (await db.query("select * from recurring_plan_runs")).rows[0];
+    expect(run.source).toBe("cron");
+    expect(Number(run.amount_twd)).toBe(300);
+
+    // 基準金額不因某一期套了級距而改變。
+    const plan = (
+      await db.query("select * from recurring_plans where id = $1", [PLAN_ID])
+    ).rows[0];
+    expect(Number(plan.amount_twd)).toBe(200);
+  });
+
+  it("級距計劃的 cron 沒帶金額時用基準金額，備註不標級距", async () => {
+    await setTierConfig(db, PLAN_ID);
+
+    const result = (await execute(db)).rows[0];
+    expect(result.executed).toBe(true);
+    expect(Number(result.shares_added)).toBeCloseTo(2, 8);
+
+    const transaction = (await db.query("select * from transactions")).rows[0];
+    expect(Number(transaction.cashflow_twd)).toBe(-200);
+    expect(transaction.note).toContain("定期定額(cron)");
+    expect(transaction.note).not.toContain("級距");
+  });
+
+  it("級距計劃的 cron 仍不接受覆寫手續費", async () => {
+    await setTierConfig(db, PLAN_ID);
+
+    await expect(
+      execute(db, PLAN_ID, "2026-07-05", "cron", 300, 40),
+    ).rejects.toThrow(/自動執行不接受覆寫手續費/);
+    expect(await count(db, "recurring_plan_runs")).toBe(0);
+    expect(await count(db, "transactions")).toBe(0);
+  });
+
+  it("級距計劃手動覆寫金額的備註仍是本期調整", async () => {
+    await setTierConfig(db, PLAN_ID);
+
+    await execute(db, PLAN_ID, "2026-07-05", "manual", 300);
+    const transaction = (await db.query("select * from transactions")).rows[0];
+    expect(transaction.note).toContain("本期調整");
+    expect(transaction.note).not.toContain("級距");
+  });
+
   it("覆寫金額需為正數且不得超過 1 億", async () => {
     await expect(
       execute(db, PLAN_ID, "2026-07-05", "manual", 0),
@@ -334,6 +397,21 @@ async function insertPlan(
       start_date, next_run_date, active
     ) values ($1, $2, $3, $4, $5, 5, '2026-07-01', '2026-07-05', true)`,
     [id, USER_ID, ACCOUNT_ID, amount, fee],
+  );
+}
+
+// 函式只看 tier_config 是不是 null，內容由應用層驗證，這裡放預設級距即可。
+async function setTierConfig(client: Client, id: string) {
+  await client.query(
+    "update recurring_plans set tier_config = $2::jsonb where id = $1",
+    [
+      id,
+      JSON.stringify({
+        maLength: 200,
+        drawdown: [{ pct: -10, multiplier: 1.25 }],
+        premium: [{ pct: 10, multiplier: 0.9 }],
+      }),
+    ],
   );
 }
 
