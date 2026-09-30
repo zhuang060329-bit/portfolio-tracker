@@ -81,6 +81,9 @@ src/
 │   ├── alert-actions.ts, allowlist-actions.ts, profile-actions.ts
 │   ├── contributions.ts         ← applyContribution 共用 helper
 │   ├── cost-correction.ts       ← 校正成本的換算與備註（純函式，含測試）
+│   ├── dca-tiers.ts             ← 定期定額級距加減碼的判定與金額（純函式，含測試）
+│   ├── total-return-series.ts   ← 由股價、除權息、分割重建含息序列（純函式，含測試）
+│   ├── dca-tier-status.ts       ← 帳戶頁計劃列要顯示的級距狀態（純函式，含測試）
 │   ├── notifications.ts         ← getUnreadCount
 │   ├── admin.ts                 ← isAdmin(email)
 │   ├── dates.ts                 ← todayTaipei()
@@ -274,6 +277,25 @@ npm run dev   # Mac 也可用工作區根的 start-dev-portfolio.command（不�
   - **CSV 匯入把它當部位型別**（設定的是成本絕對值），只能匯進尚無交易的帳戶。
   - 需要 `supabase/migrations/20260930120000_adjust_cost_type.sql`（enum 加值），
     **要在程式部署前跑**，順序見 `supabase/README.md`。
+- **定期定額級距加減碼**（2026-09-30 加，只支援台股）。照使用者的 TradingView 指標
+  「DCA 七級距加減碼 v2 (含息序列)」算：含息序列的前高回撤決定加碼，
+  高於均線的幅度決定減碼，兩者同時成立以回撤為準。要點：
+  - **級距設定存在 `recurring_plans.tier_config`（jsonb，可為空）**，null 是固定金額。
+    格式由 `src/lib/schemas/domain/dca-tier-config.ts` 把關，讀回來格式不對時顯示錯誤，
+    不拿預設值頂替。需要 `supabase/migrations/20260930180000_recurring_tier_config.sql`，
+    **要在程式部署前跑**：帳戶頁的查詢帶了這一欄，欄位不存在時整個查詢失敗。
+  - **只預填「本期金額」，不自動套用**。排程（cron）仍用 `amount_twd` 基準金額；
+    要套用級距得在排程日之前手動按「立即執行」。cron 自動套用是另一階段，還沒做。
+  - **金額取整到百元**（`Math.round(base × 倍數 / 100) × 100`，與 Pine Script 相同），
+    所以 1 倍時也會取整：基準 3,333 的建議金額是 3,300。
+  - **含息序列用 `unstable_cache` 快取一小時**（`src/lib/prices/finmind-total-return-cached.ts`）。
+    `fetchTwTotalReturnSeries` 每呼叫一次先扣 3 次 FinMind 額度，裡面 fetch 的
+    `revalidate` 擋不掉這個扣減。用 `unstable_cache` 而不是 `"use cache"`，
+    是因為後者要開 Cache Components，而全站因 CSP nonce 是動態渲染。
+    它是 stale-while-revalidate：過期後第一個請求仍拿到舊序列，所以畫面寫出
+    「依 YYYY-MM-DD 收盤」。
+  - **抓不到歷史股價不擋頁面**：級距計劃各帶一則朱砂註記，本期金額退回基準金額。
+  - **沒有編輯功能**。既有計劃要改成級距，只能刪掉重建。
 - **手動帳戶**：不適用 addByAmount；FAB 與部分 query 自動排除
 - **服務選擇**：全部用免費額度可運作；個人單用不會撞限
 
