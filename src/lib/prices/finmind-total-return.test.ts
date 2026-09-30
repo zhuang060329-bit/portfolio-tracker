@@ -105,6 +105,26 @@ describe("fetchTwTotalReturnSeries", () => {
     expect(result.series[0].close).toBeLessThan(60);
   });
 
+  it("預設走一小時的 fetch 快取，fresh 改成 no-store 且兩者不同時出現", async () => {
+    const fetchMock = stubFetch();
+    const initOf = (call: unknown[]) =>
+      call[1] as RequestInit & { next?: { revalidate?: number } };
+
+    await fetchTwTotalReturnSeries("0050");
+    for (const call of fetchMock.mock.calls) {
+      expect(initOf(call).next).toEqual({ revalidate: 3600 });
+      expect(initOf(call).cache).toBeUndefined();
+    }
+
+    fetchMock.mockClear();
+    await fetchTwTotalReturnSeries("0050", { fresh: true });
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    for (const call of fetchMock.mock.calls) {
+      expect(initOf(call).cache).toBe("no-store");
+      expect(initOf(call).next).toBeUndefined();
+    }
+  });
+
   it("額度用完時一個請求都不打", async () => {
     const fetchMock = stubFetch();
     quotaMock.mockRejectedValue(new Error("台股報價今日的共用額度已用完"));

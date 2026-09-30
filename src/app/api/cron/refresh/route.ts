@@ -7,6 +7,11 @@ import { executeRecurringPlan } from "@/lib/contributions";
 import { scanAlerts } from "@/lib/alerts-scan";
 import { refreshAccountPrices, type MarketStat } from "@/lib/refresh-prices";
 import { PROVIDER_LABEL } from "@/lib/prices/router";
+import { fetchTwTotalReturnSeries } from "@/lib/prices/finmind-total-return";
+import {
+  memoizeSeriesLoader,
+  resolveCronTierAmount,
+} from "@/lib/recurring-tier-amount";
 import type { Market } from "@/lib/prices/types";
 
 export const dynamic = "force-dynamic";
@@ -35,7 +40,7 @@ async function runDuePlans(supabase: SupabaseClient) {
   const today = todayTaipei();
   const { data, error } = await supabase
     .from("recurring_plans")
-    .select("id,account_id,next_run_date")
+    .select("id,account_id,next_run_date,amount_twd,tier_config")
     .eq("active", true)
     .lte("next_run_date", today);
   if (error) {
@@ -45,6 +50,8 @@ async function runDuePlans(supabase: SupabaseClient) {
       ok: 0,
       skipped: 0,
       failed: 0,
+      tiered: 0,
+      tierFailed: 0,
       queryFailed: true,
       errors: [`查詢定期定額計畫失敗 code=${error.code ?? "unknown"}`],
     };
@@ -53,7 +60,17 @@ async function runDuePlans(supabase: SupabaseClient) {
   let ok = 0;
   let skipped = 0;
   let failed = 0;
+  // tiered：依級距金額執行成功的筆數（含在 ok 裡）。
+  // tierFailed：算不出級距而沒執行的筆數（含在 failed 裡），隔天的 cron 會重試。
+  let tiered = 0;
+  let tierFailed = 0;
   const errors: string[] = [];
+
+  // 級距要用最新的收盤判定，不能拿帳戶頁那份快取一小時的序列，所以 fresh。
+  // 每抓一檔扣 3 次 FinMind 額度，同一次執行裡每個代號只抓一次。
+  const loadSeries = memoizeSeriesLoader((symbol: string) =>
+    fetchTwTotalReturnSeries(symbol, { fresh: true }),
+  );
 
   for (const plan of data ?? []) {
     try {
@@ -68,12 +85,30 @@ async function runDuePlans(supabase: SupabaseClient) {
         continue;
       }
 
+      // 已歸檔的帳戶不算級距：反正會被 executeRecurringPlan 擋下，不必為它扣額度。
+      const tier =
+        account.status === "archived"
+          ? ({ kind: "fixed" } as const)
+          : await resolveCronTierAmount({ plan, account, today, loadSeries });
+      if (tier.kind === "error") {
+        // 算不出級距就不執行，不退回基準金額。計劃維持到期，隔天重試。
+        failed++;
+        tierFailed++;
+        if (tier.cause !== undefined) {
+          // 原文只進 log，不回給呼叫端。
+          console.error(`${TAG} plan ${plan.id} 級距序列例外`, tier.cause);
+        }
+        errors.push(`plan ${plan.id}: 級距未套用（${tier.error}）`);
+        continue;
+      }
+
       const result = await executeRecurringPlan({
         supabase,
         planId: plan.id,
         expectedRunDate: plan.next_run_date,
         account,
         source: "cron",
+        tierAmount: tier.kind === "tiered" ? tier.amount : null,
       });
       if (!result.ok) {
         failed++;
@@ -86,6 +121,7 @@ async function runDuePlans(supabase: SupabaseClient) {
       }
 
       ok++;
+      if (tier.kind === "tiered") tiered++;
     } catch (error) {
       failed++;
       // 原文只進 log，不回給呼叫端。
@@ -94,7 +130,7 @@ async function runDuePlans(supabase: SupabaseClient) {
     }
   }
 
-  return { ok, skipped, failed, queryFailed: false, errors };
+  return { ok, skipped, failed, tiered, tierFailed, queryFailed: false, errors };
 }
 
 export async function GET(request: Request) {
@@ -128,7 +164,8 @@ export async function GET(request: Request) {
   const plans = await runDuePlans(supabase);
   console.log(
     `${TAG} 定期定額 ok=${plans.ok} skipped=${plans.skipped}` +
-      ` failed=${plans.failed} queryFailed=${plans.queryFailed}` +
+      ` failed=${plans.failed} tiered=${plans.tiered}` +
+      ` tierFailed=${plans.tierFailed} queryFailed=${plans.queryFailed}` +
       ` ms=${Date.now() - plansStart}`,
   );
 

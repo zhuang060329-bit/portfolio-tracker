@@ -177,6 +177,77 @@ describe("executeRecurringPlan", () => {
     expect(rpc).not.toHaveBeenCalled();
   });
 
+  it("cron 的級距金額以 p_amount_override 傳給 RPC", async () => {
+    const { client, rpc } = clientWithRpc({
+      data: [
+        {
+          executed: true,
+          shares_added: "0.4",
+          new_quantity: "12.4",
+          next_run_date: "2026-08-05",
+        },
+      ],
+      error: null,
+    });
+
+    const result = await executeRecurringPlan({
+      supabase: client,
+      planId: "plan-1",
+      expectedRunDate: "2026-07-05",
+      account: ACCOUNT,
+      source: "cron",
+      executedAt: EXECUTED_AT,
+      tierAmount: 6400,
+    });
+
+    expect(result.ok).toBe(true);
+    expect(rpc).toHaveBeenCalledWith(
+      "execute_recurring_plan_mutation",
+      expect.objectContaining({
+        p_source: "cron",
+        p_amount_override: 6400,
+        p_fee_override: null,
+      }),
+    );
+  });
+
+  it("級距金額只有 cron 能帶，手動執行在抓價前就被拒絕", async () => {
+    const { client, rpc } = clientWithRpc({ data: null, error: null });
+
+    const result = await executeRecurringPlan({
+      supabase: client,
+      planId: "plan-1",
+      expectedRunDate: "2026-07-05",
+      account: ACCOUNT,
+      source: "manual",
+      tierAmount: 6400,
+    });
+
+    expect(result).toEqual({ ok: false, error: "級距金額只能由自動執行帶入" });
+    expect(quoteMock).not.toHaveBeenCalled();
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it.each([0, -100, Number.NaN, Number.POSITIVE_INFINITY])(
+    "級距金額 %s 無效，在抓價前就被拒絕",
+    async (tierAmount) => {
+      const { client, rpc } = clientWithRpc({ data: null, error: null });
+
+      const result = await executeRecurringPlan({
+        supabase: client,
+        planId: "plan-1",
+        expectedRunDate: "2026-07-05",
+        account: ACCOUNT,
+        source: "cron",
+        tierAmount,
+      });
+
+      expect(result).toEqual({ ok: false, error: "級距金額無效" });
+      expect(quoteMock).not.toHaveBeenCalled();
+      expect(rpc).not.toHaveBeenCalled();
+    },
+  );
+
   it("stale caller 回傳未執行，不視為錯誤", async () => {
     const { client } = clientWithRpc({
       data: [

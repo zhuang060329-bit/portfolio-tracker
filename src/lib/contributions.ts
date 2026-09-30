@@ -154,7 +154,11 @@ type RecurringRpcRow = {
 
 // 報價在應用層取得；帳戶增量、流水、快照、ledger 與排程推進由單一 RPC 提交。
 // amountOverride / feeOverride 只給 manual 用：本期改用指定值，計劃的預設值不變。
-// cron 一律不帶（RPC 端也會拒絕），自動執行維持計劃設定的金額與手續費。
+// cron 一律不帶（RPC 端也會拒絕），自動執行維持計劃設定的手續費。
+// tierAmount 只給 cron 用：級距計劃依含息序列算出的本期金額
+// （recurring-tier-amount.ts）。與 amountOverride 分成兩個參數，是為了讓
+// 「cron 不接受人為覆寫」這條規則維持原樣；兩者到 RPC 都是 p_amount_override，
+// RPC 只在計劃有 tier_config 時才接受 cron 帶金額。
 export async function executeRecurringPlan(args: {
   supabase: SupabaseClient;
   planId: string;
@@ -164,16 +168,24 @@ export async function executeRecurringPlan(args: {
   executedAt?: Date;
   amountOverride?: number | null;
   feeOverride?: number | null;
+  tierAmount?: number | null;
 }): Promise<RecurringExecutionResult> {
   const { supabase, planId, expectedRunDate, account, source } = args;
   const amountOverride = args.amountOverride ?? null;
   const feeOverride = args.feeOverride ?? null;
+  const tierAmount = args.tierAmount ?? null;
 
   if (source === "cron" && amountOverride !== null) {
     return { ok: false, error: "自動執行不接受覆寫金額" };
   }
   if (source === "cron" && feeOverride !== null) {
     return { ok: false, error: "自動執行不接受覆寫手續費" };
+  }
+  if (source !== "cron" && tierAmount !== null) {
+    return { ok: false, error: "級距金額只能由自動執行帶入" };
+  }
+  if (tierAmount !== null && (!Number.isFinite(tierAmount) || tierAmount <= 0)) {
+    return { ok: false, error: "級距金額無效" };
   }
 
   if (account.status === "archived") {
@@ -214,7 +226,7 @@ export async function executeRecurringPlan(args: {
       p_fx_rate: quote.fxToBase,
       p_priced_at: quote.asOf,
       p_source: source,
-      p_amount_override: amountOverride,
+      p_amount_override: amountOverride ?? tierAmount,
       p_fee_override: feeOverride,
     },
   );
