@@ -1,10 +1,20 @@
 import { AppHeader } from "@/components/AppHeader";
+import { UnlessDemo } from "@/components/DemoSkeleton";
 
 const skeleton = "sk rounded-[var(--r-control)]";
 const panel =
   "overflow-hidden rounded-[var(--r-card)] border border-[var(--c-border)] bg-[var(--c-surface)] p-5 sm:p-6";
 
-export default function HomeLoading() {
+// 這一層包住整個 app，Demo 路徑改用 Demo 自己的骨架，原因見 DemoSkeleton
+export default function RootLoading() {
+  return (
+    <UnlessDemo>
+      <HomeLoading />
+    </UnlessDemo>
+  );
+}
+
+function HomeLoading() {
   return (
     <div className="min-h-dvh bg-[var(--c-page)] text-[var(--c-text)]">
       <AppHeader active="portfolio" authPending />

@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import Link from "next/link";
 import { AUTH_MAIN, AuthCard } from "@/components/AuthCard";
+import { HomeLink } from "@/components/HomeLink";
 
 // 全域錯誤邊界。Next 16 要求 client component。
 export default function GlobalError({
@@ -46,9 +46,7 @@ export default function GlobalError({
           <button type="button" onClick={reset} className="btn btn-primary btn-lg flex-1">
             重試
           </button>
-          <Link href="/" className="btn btn-outline btn-lg flex-1">
-            回首頁
-          </Link>
+          <HomeLink className="btn btn-outline btn-lg flex-1" />
         </div>
       </AuthCard>
     </main>

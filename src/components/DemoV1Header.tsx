@@ -3,7 +3,7 @@ import { PrivacyToggle } from "./PrivacyToggle";
 import { SurveyNav } from "./SurveyNav";
 import { ThemeToggle } from "./ThemeToggle";
 
-type DemoActive = "overview" | "decisions" | "history" | "scenario" | "report";
+export type DemoActive = "overview" | "decisions" | "history" | "scenario" | "report";
 
 export function DemoV1Header({ active }: { active: DemoActive }) {
   const items: { href: string; label: string; key: DemoActive }[] = [
@@ -14,8 +14,8 @@ export function DemoV1Header({ active }: { active: DemoActive }) {
     { href: "/demo/report", label: "月報", key: "report" },
   ];
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--c-line-strong)] bg-[var(--c-page)]">
-      <div className="mx-auto flex min-h-[var(--header-h)] max-w-[1200px] flex-wrap items-center gap-x-2 px-4 sm:flex-nowrap sm:px-6">
+    <header data-demo-header className="sticky top-0 z-40 border-b border-[var(--c-line-strong)] bg-[var(--c-page)]">
+      <div className="mx-auto flex min-h-[var(--header-h)] max-w-[1200px] flex-wrap items-center gap-x-2 px-4 sm:flex-nowrap sm:px-6 lg:px-7">
         <Link href="/demo" className="flex min-h-11 items-center gap-2 font-semibold tracking-[-0.02em]">
           StackWorth
           {/* 朱砂框的「樣張」戳記：提醒這一頁的數字是示範資料。框是朱砂、字用內文色，
