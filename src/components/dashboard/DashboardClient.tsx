@@ -150,6 +150,7 @@ export function DashboardClient({
           <div className="flex min-w-0 flex-col">
             <Holdings
               demo={demo}
+              fitTable={demo}
               holdings={data.holdings}
               total={summary.total}
               marketLabel={data.marketLabel}
@@ -174,11 +175,12 @@ export function DashboardClient({
 
         {/* 三級。脫掉容器落回 page 背景，靠頂線分區；與二級之間隔 40px，
             把「這是附註」講清楚。資產配置搬去二級之後這裡只剩績效指標，
-            內容欄寬收在 640px：四格數字撐滿 1144px 會稀得讀不成一組。 */}
+            內容欄寬收在 640px：四格數字撐滿 1144px 會稀得讀不成一組。
+            /demo 例外：被動收入搬到右欄並排（split），兩欄各約 550px，右半不再空著。 */}
         <section className="mt-10 border-t border-[var(--c-border)] pt-7">
           {metricsHasContent ? (
-            <div className="max-w-[640px]">
-              <MetricsCard s={summary} />
+            <div className={demo ? "" : "max-w-[640px]"}>
+              <MetricsCard s={summary} split={demo} />
             </div>
           ) : (
             <p className="text-[length:var(--fs-sm)] text-[var(--c-faint)]">

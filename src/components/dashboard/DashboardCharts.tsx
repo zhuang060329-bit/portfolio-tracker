@@ -254,11 +254,13 @@ export function TrendChart({
       onTouchMove={onTouch}
       onKeyDown={onKeyDown}
     >
+      {/* server 端還量不到容器寬，w 先是預設的 720；max-width 讓 hydration 前的圖縮進容器，
+          不把手機頁面撐出橫向捲動（實測 375 寬時頁面被撐到 737）。高度不跟著縮，hydration 後不跳版。 */}
       <svg
         width={w}
         height={H}
         viewBox={`0 0 ${w} ${H}`}
-        style={{ display: "block", overflow: "visible" }}
+        style={{ display: "block", overflow: "visible", maxWidth: "100%" }}
       >
         {ticks.map((t) => (
           <g key={t}>
@@ -550,11 +552,12 @@ export function BenchChart({
       onTouchMove={onTouch}
       onKeyDown={onKeyDown}
     >
+      {/* max-width 的原因同 TrendChart */}
       <svg
         width={w}
         height={H}
         viewBox={`0 0 ${w} ${H}`}
-        style={{ display: "block", overflow: "visible" }}
+        style={{ display: "block", overflow: "visible", maxWidth: "100%" }}
       >
         {ticks.map((t) => (
           <g key={t}>

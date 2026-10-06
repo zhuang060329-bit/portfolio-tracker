@@ -2,8 +2,10 @@
    這支檔刻意不加 "use client"——全部是無狀態的純標記，server 頁面直接用，
    client 元件 import 也照常。dashboard/shared.tsx 的 SurveyLabel 從這裡轉出。 */
 
-/* 測量註記的標籤：前面一個 7px 的十字套準記號，後面是字。
-   十字只是記號，不帶意義，所以對輔助技術隱藏。
+/* 測量註記的標籤：前面一個 7px 的 L 形角標，後面是字。
+   原本是十字，小字下讀起來像「+」，緊接在帶號金額上方時跟正負號混在一起；
+   改成跟 .survey-frame 四角同一個 L 形，不會被讀成任何運算符號。
+   記號不帶意義，所以對輔助技術隱藏。
    字仍用 Plex Sans：中文會落到 Noto Sans TC，Mono 只在數字上用。 */
 export function SurveyLabel({
   children,
@@ -17,7 +19,7 @@ export function SurveyLabel({
       className={`inline-flex items-center gap-1.5 text-[length:var(--fs-micro)] font-semibold tracking-[0.06em] text-[var(--c-muted)] ${className}`}
     >
       <svg width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" className="shrink-0">
-        <path d="M3.5 0V7M0 3.5H7" stroke="var(--c-accent)" strokeWidth="1" />
+        <path d="M0.5 7V0.5H7" fill="none" stroke="var(--c-accent)" strokeWidth="1" />
       </svg>
       {children}
     </span>
@@ -106,16 +108,21 @@ const STRIP_COLS: Record<3 | 4 | 5, string> = {
 
 export function StatStrip({
   cols,
+  colsClass,
   children,
   className = "",
 }: {
   cols: 3 | 4 | 5;
+  /* 取代 cols 對應的 sm 欄數 class，給格子在 sm 就排不下的頁面用
+     （例：五格金額在 768px 每格只剩約 110px，「NT$ 1,221,841」會斷成兩行）。
+     不給就照 cols，既有頁面不受影響。 */
+  colsClass?: string;
   children: React.ReactNode;
   className?: string;
 }) {
   return (
     <section
-      className={`grid grid-cols-2 gap-px border border-[var(--c-border)] bg-[var(--c-border)] ${STRIP_COLS[cols]} ${className}`}
+      className={`grid grid-cols-2 gap-px border border-[var(--c-border)] bg-[var(--c-border)] ${colsClass ?? STRIP_COLS[cols]} ${className}`}
     >
       {children}
     </section>
@@ -180,3 +187,8 @@ export function Panel({
     </section>
   );
 }
+
+/* 斜線地塊的填色：與首頁 AllocationCard 的 hatch() 同一個配方。
+   那支是 client 元件，server 頁面不能呼叫，所以月報與歷史回放的地塊條從這裡取。 */
+export const PARCEL_HATCH =
+  "repeating-linear-gradient(135deg, color-mix(in srgb, var(--c-accent) 55%, transparent) 0 1px, transparent 1px 6px), color-mix(in srgb, var(--c-accent) 12%, transparent)";

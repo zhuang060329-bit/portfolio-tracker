@@ -4,7 +4,9 @@ import { fmtTwd, fmtCompact } from "./DashboardCharts";
 import type { DashSummary } from "./types";
 import { CardHead, sign, toneCls, TONE_TEXT, type Tone } from "./shared";
 
-export function MetricsCard({ s }: { s: DashSummary }) {
+/* split：寬螢幕（lg）時被動收入改成右欄的帳本，與四格指標並排。
+   目前只有 /demo 開；正式首頁維持上下排、欄寬 640px。 */
+export function MetricsCard({ s, split = false }: { s: DashSummary; split?: boolean }) {
   const metrics =
     s.twrShowable && s.twrCum != null
       ? [
@@ -60,68 +62,71 @@ export function MetricsCard({ s }: { s: DashSummary }) {
       : null;
 
   return (
-    <div>
-      <CardHead
-        title="績效指標"
-        sub="基於每日淨值快照"
-        action={
-          <a
-            href="/methodology"
-            target="_blank"
-            rel="noopener noreferrer"
-            /* 這條連結原本只有 11px 字、沒有垂直內距，實測高度 17px，
-               低於 WCAG 2.5.8（AA）的 24×24。補 min-h-6 撐到 24px；
-               寬度本來就有 70px 有餘。周圍的鈕是 36–44px，這裡是行內文字連結，
-               取 AA 的下限而不是跟著長成一顆鈕。 */
-            className="mt-0.5 inline-flex min-h-6 shrink-0 items-center gap-1 text-[length:var(--fs-micro)] font-medium text-[var(--c-muted)] hover:text-[var(--c-text)]"
-          >
-            指標怎麼算
-            <svg
-              width="11"
-              height="11"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
+    <div className={split && s.hasIncome ? "lg:grid lg:grid-cols-2 lg:gap-x-10" : ""}>
+      <div>
+        <CardHead
+          title="績效指標"
+          sub="基於每日淨值快照"
+          action={
+            <a
+              href="/methodology"
+              target="_blank"
+              rel="noopener noreferrer"
+              /* 這條連結原本只有 11px 字、沒有垂直內距，實測高度 17px，
+                 低於 WCAG 2.5.8（AA）的 24×24。補 min-h-6 撐到 24px；
+                 寬度本來就有 70px 有餘。周圍的鈕是 36–44px，這裡是行內文字連結，
+                 取 AA 的下限而不是跟著長成一顆鈕。 */
+              className="mt-0.5 inline-flex min-h-6 shrink-0 items-center gap-1 text-[length:var(--fs-micro)] font-medium text-[var(--c-muted)] hover:text-[var(--c-text)]"
             >
-              <path d="M7 17 17 7M9 7h8v8" />
-            </svg>
-          </a>
-        }
-      />
-      {/* 去掉圓角外框：這裡原本是「卡片裡再放一個盒子」（V6），兩層圓角兩層邊。
-          現在三級本身沒有容器，四格之間只留底色透出的 1px 分隔線。 */}
-      <div className="grid grid-cols-2 gap-px bg-[var(--c-border)]">
-        {(metrics ?? [
-          { label: "TWR 累積", value: "—", tone: "flat" as Tone, hint: "快照未滿 30 天" },
-          { label: "TWR 年化", value: "—", tone: "flat" as Tone, hint: "快照未滿 30 天" },
-          { label: "最大回撤", value: "—", tone: "flat" as Tone, hint: "快照未滿 30 天" },
-          { label: "Sharpe", value: "—", tone: "flat" as Tone, hint: "快照未滿 30 天" },
-        ]).map((metric, index) => (
-          /* 沒有外框之後，內距只留在分隔線那一側，格子內容才會與區段左右緣切齊。 */
-          <div
-            key={metric.label}
-            className={`bg-[var(--c-page)] py-3.5 ${index % 2 === 0 ? "pr-4" : "pl-4"}`}
-          >
-            <div className="text-[length:var(--fs-micro)] font-medium text-[var(--c-muted)]">
-              {metric.label}
-            </div>
+              指標怎麼算
+              <svg
+                width="11"
+                height="11"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M7 17 17 7M9 7h8v8" />
+              </svg>
+            </a>
+          }
+        />
+        {/* 去掉圓角外框：這裡原本是「卡片裡再放一個盒子」（V6），兩層圓角兩層邊。
+            現在三級本身沒有容器，四格之間只留底色透出的 1px 分隔線。 */}
+        <div className="grid grid-cols-2 gap-px bg-[var(--c-border)]">
+          {(metrics ?? [
+            { label: "TWR 累積", value: "—", tone: "flat" as Tone, hint: "快照未滿 30 天" },
+            { label: "TWR 年化", value: "—", tone: "flat" as Tone, hint: "快照未滿 30 天" },
+            { label: "最大回撤", value: "—", tone: "flat" as Tone, hint: "快照未滿 30 天" },
+            { label: "Sharpe", value: "—", tone: "flat" as Tone, hint: "快照未滿 30 天" },
+          ]).map((metric, index) => (
+            /* 沒有外框之後，內距只留在分隔線那一側，格子內容才會與區段左右緣切齊。 */
             <div
-              className={`mt-2 text-[length:var(--fs-xl)] font-semibold tracking-[-0.025em] tnum ${TONE_TEXT[metric.tone]}`}
+              key={metric.label}
+              className={`bg-[var(--c-page)] py-3.5 ${index % 2 === 0 ? "pr-4" : "pl-4"}`}
             >
-              {metric.value}
+              <div className="text-[length:var(--fs-micro)] font-medium text-[var(--c-muted)]">
+                {metric.label}
+              </div>
+              <div
+                className={`mt-2 text-[length:var(--fs-xl)] font-semibold tracking-[-0.025em] tnum ${TONE_TEXT[metric.tone]}`}
+              >
+                {metric.value}
+              </div>
+              <div className="mt-1 min-h-[16px] text-[length:var(--fs-micro)] leading-4 text-[var(--c-faint)]">
+                {metric.hint}
+              </div>
             </div>
-            <div className="mt-1 min-h-[16px] text-[length:var(--fs-micro)] leading-4 text-[var(--c-faint)]">
-              {metric.hint}
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
-      {s.hasIncome && (
+      {s.hasIncome && split && <IncomeLedger s={s} />}
+      {s.hasIncome && !split && (
         <div className="mt-5 border-t border-[var(--c-border)] pt-4">
           <div className="mb-3 flex items-baseline justify-between gap-3">
             <span className="text-[length:var(--fs-sm)] font-semibold">被動收入</span>
@@ -140,6 +145,43 @@ export function MetricsCard({ s }: { s: DashSummary }) {
           </p>
         </div>
       )}
+    </div>
+  );
+}
+
+/* 被動收入的帳本版：五列同一把尺，金額右對齊、全額不縮寫，
+   列高刻意與左邊四格指標的總高相近，兩欄底緣才會大致對齊。 */
+function IncomeLedger({ s }: { s: DashSummary }) {
+  const rows: { label: string; value: number; up?: boolean }[] = [
+    { label: "今年累積", value: s.incomeYtd, up: true },
+    { label: "近 12 月", value: s.income12m, up: true },
+    { label: "月均", value: s.monthlyAvg },
+    { label: "累計配息", value: s.dividendAll },
+    { label: "累計利息", value: s.interestAll },
+  ];
+  return (
+    <div className="mt-8 border-t border-[var(--c-border)] pt-6 lg:mt-0 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0">
+      <CardHead
+        title="被動收入"
+        sub="股息與利息，折合台幣"
+        action={
+          <span className="mt-0.5 shrink-0 text-[length:var(--fs-micro)] font-semibold text-[var(--c-accent)] tnum">
+            配息率 {s.yieldOnCost.toFixed(2)}%
+          </span>
+        }
+      />
+      <dl className="divide-y divide-[var(--c-border)]">
+        {rows.map((row) => (
+          <div key={row.label} className="flex items-baseline justify-between gap-4 py-2.5">
+            <dt className="text-[length:var(--fs-micro)] font-medium text-[var(--c-muted)]">{row.label}</dt>
+            <dd
+              className={`amt text-[length:var(--fs-md)] font-semibold tnum ${row.up ? "text-[var(--c-up)]" : ""}`}
+            >
+              NT$ {fmtTwd(row.value)}
+            </dd>
+          </div>
+        ))}
+      </dl>
     </div>
   );
 }

@@ -136,7 +136,7 @@ function factorFor(
     .reduce((factor, shock) => factor * Math.max(0, 1 + clampChange(shock.changePct) / 100), 1);
 }
 
-function matchesScope(holding: ScenarioHolding, shock: ScenarioShock): boolean {
+export function matchesScope(holding: ScenarioHolding, shock: ScenarioShock): boolean {
   if (shock.scope === "all") return true;
   if (shock.scope === "account") return holding.id === shock.target;
   if (shock.scope === "asset_class") return holding.assetClass === shock.target;

@@ -26,6 +26,7 @@ export function Holdings({
   showArchived,
   demo,
   activeCls,
+  fitTable = false,
 }: {
   holdings: Holding[];
   total: number;
@@ -35,6 +36,11 @@ export function Holdings({
   demo?: boolean;
   /* 旁邊資產配置正在指的類別。null 代表沒有任何類別被選。 */
   activeCls?: string | null;
+  /* fitTable：表格與卡片的切換改看本區塊的容器寬，不看視窗寬。
+     表格 min-w 760px，但視窗 768–810px 時本區塊只有 718–760px，md 斷點已經切到表格，
+     右邊的「未實現」欄被裁掉一半、又沒有任何可捲動的提示。開了之後容器不到 760px 就用卡片。
+     預設關，正式首頁不受影響。 */
+  fitTable?: boolean;
 }) {
   const [sortKey, setSortKey] = useState<SortKey>("value");
   const [direction, setDirection] = useState(-1);
@@ -108,6 +114,11 @@ export function Holdings({
       ? "bg-[var(--c-surface-soft)] shadow-[inset_2px_0_0_var(--c-accent)]"
       : "";
 
+  /* 損益百分比小字：12px 再疊 opacity-80，淺色主題漲色只剩 3.86:1、跌色 3.96:1，低於 WCAG AA 的 4.5。
+     拿掉透明度後兩個主題都過，層次仍由字級（12px 對 13px 半粗）撐住。
+     Demo 先改；正式首頁維持原樣，等使用者決定。 */
+  const pctSubCls = `mt-0.5 text-[length:var(--fs-micro)]${demo ? "" : " opacity-80"}`;
+
   function dayCell(day: number | null) {
     return day == null || day === 0
       ? "—"
@@ -117,7 +128,7 @@ export function Holdings({
   return (
     /* flex-1 + 註腳 mt-auto：≥1180px 並排時右欄配置圖比帳本高，
        多出來的高度由帳本與註腳之間吸收，註腳貼齊底邊，不留一塊空白。 */
-    <section className="flex flex-1 flex-col pb-2 pt-5 sm:pb-4 sm:pt-6">
+    <section className={`flex flex-1 flex-col pb-2 pt-5 sm:pb-4 sm:pt-6 ${fitTable ? "@container" : ""}`}>
       <div className="flex items-start justify-between gap-4 px-4 sm:px-6">
         <div>
           <h2 className="text-[length:var(--fs-lg)] font-semibold tracking-[-0.015em]">
@@ -162,7 +173,7 @@ export function Holdings({
           <div
             role="group"
             aria-label="排序方式"
-            className="hide-scrollbar mt-4 flex items-center gap-1.5 overflow-x-auto px-4 pb-1 md:hidden"
+            className={`hide-scrollbar mt-4 flex items-center gap-1.5 overflow-x-auto px-4 pb-1 ${fitTable ? "@min-[760px]:hidden" : "md:hidden"}`}
           >
             <span className="shrink-0 text-[length:var(--fs-micro)] text-[var(--c-faint)]">
               排序
@@ -185,7 +196,7 @@ export function Holdings({
             ))}
           </div>
 
-          <div className="mt-4 hidden overflow-x-auto md:block">
+          <div className={`mt-4 hidden overflow-x-auto ${fitTable ? "@min-[760px]:block" : "md:block"}`}>
             <table className="w-full min-w-[760px] border-collapse text-[length:var(--fs-sm)]">
               {/* 改版前欄寬全交給瀏覽器自動分配，結果與資訊量相反：實測「配置」
                   拿到 243px（全表最寬）卻只裝得下 93px 的內容，「市場」用 167px
@@ -302,7 +313,7 @@ export function Holdings({
                                 className="absolute bottom-0 left-1/2 h-[5px] w-px bg-[var(--c-line-strong)]"
                               />
                               <span
-                                className="absolute bottom-0 left-0 block h-1"
+                                className="fc-ink absolute bottom-0 left-0 block h-1"
                                 style={{
                                   width: `${Math.min(100, share)}%`,
                                   background: allocColor(holding.cls),
@@ -336,7 +347,7 @@ export function Holdings({
                               {sign(pnl)}
                               {fmtTwd(Math.abs(pnl))}
                             </div>
-                            <div className="mt-0.5 text-[length:var(--fs-micro)] opacity-80">
+                            <div className={pctSubCls}>
                               {sign(pnl)}
                               {Math.abs(pnlPct).toFixed(1)}%
                             </div>
@@ -378,7 +389,7 @@ export function Holdings({
                           {sign(totals.pnl)}
                           {fmtTwd(Math.abs(totals.pnl))}
                         </div>
-                        <div className="mt-0.5 text-[length:var(--fs-micro)] opacity-80">
+                        <div className={pctSubCls}>
                           {sign(totals.pnl)}
                           {Math.abs(totals.pnlPct).toFixed(1)}%
                         </div>
@@ -390,7 +401,7 @@ export function Holdings({
             </table>
           </div>
 
-          <div className="mt-2 border-t border-[var(--c-border)] md:hidden">
+          <div className={`mt-2 border-t border-[var(--c-border)] ${fitTable ? "@min-[760px]:hidden" : "md:hidden"}`}>
             {rows.map((holding) => {
               const pnl = holding.value - holding.cost;
               const pnlPct = holding.cost > 0 ? (pnl / holding.cost) * 100 : 0;
@@ -471,7 +482,7 @@ export function Holdings({
                   {share != null && (
                     <div className="absolute inset-x-0 bottom-0 h-[3px] overflow-hidden bg-[var(--c-border)]">
                       <span
-                        className="block h-full"
+                        className="fc-ink block h-full"
                         style={{
                           width: `${Math.min(100, share)}%`,
                           background: allocColor(holding.cls),

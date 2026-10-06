@@ -2,7 +2,8 @@
 
 import { usePrivacy } from "@/components/PrivacyToggle";
 
-export function PrintReportButton() {
+/** touchHeight：手機 44px、sm 以上 40px，跟同列改成觸控高度的月份欄位對齊。預設關，正式月報不受影響 */
+export function PrintReportButton({ touchHeight = false }: { touchHeight?: boolean } = {}) {
   const privacy = usePrivacy();
   return (
     <>
@@ -15,7 +16,7 @@ export function PrintReportButton() {
         <button
           type="button"
           onClick={() => window.print()}
-          className="btn btn-primary h-10"
+          className={`btn btn-primary ${touchHeight ? "h-11 sm:h-10" : "h-10"}`}
         >
           列印／儲存 PDF
         </button>

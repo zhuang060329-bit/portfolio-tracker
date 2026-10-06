@@ -1,6 +1,8 @@
 import type { DashboardInputs, AccountRow } from "@/lib/dashboard-data";
+import type { ReplaySnapshot, ReplayTransaction } from "@/lib/history-replay";
 
-const EPOCH = "2025-01-01";
+export const DEMO_EPOCH = "2025-01-01";
+const EPOCH = DEMO_EPOCH;
 
 function hashStr(value: string): number {
   let hash = 0x811c9dc5;
@@ -85,10 +87,57 @@ function buildPriceSeries(
 type Ledger = {
   qty: number;
   cost: number;
+  costNative: number;
   realized: number;
 };
 
-export function buildDemoInputs(today: string): DashboardInputs {
+type LedgerKey = "voo" | "tw0050" | "btc";
+
+const LEDGER_ACCOUNT: Record<LedgerKey, string> = {
+  voo: "demo-voo",
+  tw0050: "demo-0050",
+  btc: "demo-btc",
+};
+
+/** 證券帳戶在首筆買進那天建立；現金與黃金在 EPOCH 建立。 */
+export const DEMO_SECURITIES_OPENED_AT = "2025-01-06T09:30:00+08:00";
+export const DEMO_MANUAL_OPENED_AT = `${EPOCH}T09:00:00+08:00`;
+
+export const DEMO_ALLOCATION_TARGETS: Record<string, number> = {
+  fund: 40,
+  stock: 20,
+  crypto: 15,
+  liquid_cash: 20,
+  precious_metal: 5,
+};
+
+/* 單一持倉的集中度上限（%）。情境頁的買前檢核與月報的風險註記共用，兩頁門檻才不會各說各話。 */
+export const DEMO_CONCENTRATION_LIMIT_PCT = 35;
+
+export type DemoSimulation = {
+  price: {
+    VOO: Map<string, number>;
+    "0050": Map<string, number>;
+    BTC: Map<string, number>;
+    fx: Map<string, number>;
+  };
+  ledgers: Record<LedgerKey, Ledger>;
+  cashAt: (date: string) => number;
+  goldAt: (date: string) => number;
+  cfRows: DashboardInputs["cfRows"];
+  incomeRows: DashboardInputs["incomeRows"];
+  snapRows: DashboardInputs["snapRows"];
+  /** 與 cfRows 同一份現金流，帶上帳戶與交易型別，給歷史回放與月報用 */
+  transactions: ReplayTransaction[];
+  /** 每個帳戶自建立日起的每日快照，估值與 snapRows 相同 */
+  snapshots: ReplaySnapshot[];
+};
+
+/**
+ * 總覽頁與 Demo 子頁共用的模擬。總覽只取 cfRows / snapRows，
+ * 子頁取 transactions / snapshots，兩邊的金額出自同一本帳。
+ */
+export function simulateDemo(today: string): DemoSimulation {
   const price = {
     VOO: buildPriceSeries("VOO", today),
     "0050": buildPriceSeries("0050", today),
@@ -99,45 +148,62 @@ export function buildDemoInputs(today: string): DashboardInputs {
   const cfRows: DashboardInputs["cfRows"] = [];
   const incomeRows: DashboardInputs["incomeRows"] = [];
   const snapRows: DashboardInputs["snapRows"] = [];
-  const ledgers: Record<string, Ledger> = {
-    voo: { qty: 0, cost: 0, realized: 0 },
-    tw0050: { qty: 0, cost: 0, realized: 0 },
-    btc: { qty: 0, cost: 0, realized: 0 },
+  const transactions: ReplayTransaction[] = [];
+  const snapshots: ReplaySnapshot[] = [];
+  const ledgers: Record<LedgerKey, Ledger> = {
+    voo: { qty: 0, cost: 0, costNative: 0, realized: 0 },
+    tw0050: { qty: 0, cost: 0, costNative: 0, realized: 0 },
+    btc: { qty: 0, cost: 0, costNative: 0, realized: 0 },
   };
 
-  const unitTwd = (account: string, date: string): number => {
-    if (account === "voo") return price.VOO.get(date)! * price.fx.get(date)!;
-    if (account === "btc") return price.BTC.get(date)! * price.fx.get(date)!;
+  const nativePrice = (account: LedgerKey, date: string): number => {
+    if (account === "voo") return price.VOO.get(date)!;
+    if (account === "btc") return price.BTC.get(date)!;
     return price["0050"].get(date)!;
   };
+  const fxOf = (account: LedgerKey, date: string): number =>
+    account === "tw0050" ? 1 : price.fx.get(date)!;
+  const unitTwd = (account: LedgerKey, date: string): number =>
+    nativePrice(account, date) * fxOf(account, date);
 
-  const buy = (account: string, date: string, amountTwd: number) => {
-    const unitPrice = unitTwd(account, date);
-    ledgers[account].qty += amountTwd / unitPrice;
-    ledgers[account].cost += amountTwd;
-    cfRows.push({
-      created_at: `${date}T09:30:00+08:00`,
-      cashflow_twd: -amountTwd,
-    });
+  const record = (
+    accountId: string,
+    type: string,
+    createdAt: string,
+    cashflowTwd: number,
+    realizedPnlTwd: number | null = null,
+  ) => {
+    cfRows.push({ created_at: createdAt, cashflow_twd: cashflowTwd });
+    transactions.push({ accountId, type, cashflowTwd, realizedPnlTwd, createdAt });
   };
 
-  const sell = (account: string, date: string, amountTwd: number) => {
+  const buy = (account: LedgerKey, date: string, amountTwd: number) => {
     const ledger = ledgers[account];
-    const unitPrice = unitTwd(account, date);
-    const quantity = amountTwd / unitPrice;
+    const type = ledger.qty === 0 ? "create" : "adjust_quantity";
+    ledger.qty += amountTwd / unitTwd(account, date);
+    ledger.cost += amountTwd;
+    ledger.costNative += amountTwd / fxOf(account, date);
+    record(LEDGER_ACCOUNT[account], type, `${date}T09:30:00+08:00`, -amountTwd);
+  };
+
+  const sell = (account: LedgerKey, date: string, amountTwd: number) => {
+    const ledger = ledgers[account];
+    const quantity = amountTwd / unitTwd(account, date);
     const averageCost = ledger.cost / ledger.qty;
-    ledger.realized += amountTwd - averageCost * quantity;
+    const averageCostNative = ledger.costNative / ledger.qty;
+    const realized = amountTwd - averageCost * quantity;
+    ledger.realized += realized;
     ledger.cost -= averageCost * quantity;
+    ledger.costNative -= averageCostNative * quantity;
     ledger.qty -= quantity;
-    cfRows.push({
-      created_at: `${date}T10:00:00+08:00`,
-      cashflow_twd: amountTwd,
-    });
+    record(LEDGER_ACCOUNT[account], "sell", `${date}T10:00:00+08:00`, amountTwd, realized);
   };
 
   const cashAt = (date: string): number =>
     date >= "2026-03-01" ? 265_000 : date >= "2025-08-01" ? 230_000 : 190_000;
   const goldAt = (date: string): number => {
+    // 建立當天的估值要等於建立時記的投入 58,000，否則月報 2025-01 會多出一筆未解釋差額
+    if (date === EPOCH) return 58_000;
     const days =
       (Date.parse(`${date}T00:00:00Z`) - Date.parse(`${EPOCH}T00:00:00Z`)) /
         86_400_000 +
@@ -148,16 +214,14 @@ export function buildDemoInputs(today: string): DashboardInputs {
   };
 
   const income = (
+    accountId: string,
     date: string,
     type: "dividend" | "interest",
     amount: number,
   ) => {
-    const row = {
-      created_at: `${date}T12:00:00+08:00`,
-      cashflow_twd: amount,
-    };
-    cfRows.push(row);
-    incomeRows.push({ ...row, type });
+    const createdAt = `${date}T12:00:00+08:00`;
+    record(accountId, type, createdAt, amount, amount);
+    incomeRows.push({ created_at: createdAt, cashflow_twd: amount, type });
   };
 
   for (const date of eachDay(EPOCH, today)) {
@@ -170,16 +234,16 @@ export function buildDemoInputs(today: string): DashboardInputs {
 
     // 手動資產的投入需進 XIRR；首日現金流視為 TWR 期初資本。
     if (date === EPOCH) {
-      cfRows.push(
-        { created_at: `${date}T09:00:00+08:00`, cashflow_twd: -190_000 },
-        { created_at: `${date}T09:00:00+08:00`, cashflow_twd: -58_000 },
-      );
+      record("demo-cash", "create", DEMO_MANUAL_OPENED_AT, -190_000);
+      record("demo-gold", "create", DEMO_MANUAL_OPENED_AT, -58_000);
     }
     if (date === "2025-08-01" || date === "2026-03-01") {
-      cfRows.push({
-        created_at: `${date}T09:00:00+08:00`,
-        cashflow_twd: date === "2025-08-01" ? -40_000 : -35_000,
-      });
+      record(
+        "demo-cash",
+        "adjust_balance",
+        `${date}T09:00:00+08:00`,
+        date === "2025-08-01" ? -40_000 : -35_000,
+      );
     }
     if (day === "05" && date > "2025-01-06") {
       buy("voo", date, 12_000);
@@ -189,6 +253,7 @@ export function buildDemoInputs(today: string): DashboardInputs {
     if (date === "2025-10-16") sell("tw0050", date, 30_000);
     if (day === "20" && (month === "01" || month === "07") && date > "2025-01-20") {
       income(
+        "demo-0050",
         date,
         "dividend",
         Math.round(ledgers.tw0050.qty * unitTwd("tw0050", date) * 0.015),
@@ -196,13 +261,14 @@ export function buildDemoInputs(today: string): DashboardInputs {
     }
     if (day === "25" && ["03", "06", "09", "12"].includes(month)) {
       income(
+        "demo-voo",
         date,
         "dividend",
         Math.round(ledgers.voo.qty * unitTwd("voo", date) * 0.003),
       );
     }
     if (day === "28" && ["03", "06", "09", "12"].includes(month)) {
-      income(date, "interest", 780);
+      income("demo-cash", date, "interest", 780);
     }
 
     snapRows.push(
@@ -232,7 +298,69 @@ export function buildDemoInputs(today: string): DashboardInputs {
         value_base: goldAt(date),
       },
     );
+
+    if (date >= DEMO_SECURITIES_OPENED_AT.slice(0, 10)) {
+      for (const account of ["voo", "tw0050", "btc"] as const) {
+        const ledger = ledgers[account];
+        snapshots.push({
+          accountId: LEDGER_ACCOUNT[account],
+          date,
+          quantity: ledger.qty,
+          unitPrice: nativePrice(account, date),
+          fxRate: fxOf(account, date),
+          valueBase: ledger.qty * unitTwd(account, date),
+          costBasisTwd: ledger.cost,
+          costBasisNative: ledger.costNative,
+          realizedPnlTwd: ledger.realized,
+          accountStatus: "active",
+        });
+      }
+    }
+    // 活存以「餘額 × 1」記，增減是投入而不是價格變動；黃金以 1 單位 × 估值記，估值變動算價格效果。
+    snapshots.push(
+      {
+        accountId: "demo-cash",
+        date,
+        quantity: cashAt(date),
+        unitPrice: 1,
+        fxRate: 1,
+        valueBase: cashAt(date),
+        costBasisTwd: cashAt(date),
+        costBasisNative: cashAt(date),
+        realizedPnlTwd: 0,
+        accountStatus: "active",
+      },
+      {
+        accountId: "demo-gold",
+        date,
+        quantity: 1,
+        unitPrice: goldAt(date),
+        fxRate: 1,
+        valueBase: goldAt(date),
+        costBasisTwd: 58_000,
+        costBasisNative: 58_000,
+        realizedPnlTwd: 0,
+        accountStatus: "active",
+      },
+    );
   }
+
+  return {
+    price,
+    ledgers,
+    cashAt,
+    goldAt,
+    cfRows,
+    incomeRows,
+    snapRows,
+    transactions,
+    snapshots,
+  };
+}
+
+export function buildDemoInputs(today: string): DashboardInputs {
+  const { price, ledgers, cashAt, goldAt, cfRows, incomeRows, snapRows } =
+    simulateDemo(today);
 
   const fxToday = price.fx.get(today)!;
   const pricedAt = `${today}T14:05:00+08:00`;
@@ -345,13 +473,7 @@ export function buildDemoInputs(today: string): DashboardInputs {
     includeArchivedHoldings: false,
     cfRows,
     incomeRows,
-    allocationTargets: {
-      fund: 40,
-      stock: 20,
-      crypto: 15,
-      liquid_cash: 20,
-      precious_metal: 5,
-    },
+    allocationTargets: { ...DEMO_ALLOCATION_TARGETS },
     snapRows,
     bench,
     fxHistory,

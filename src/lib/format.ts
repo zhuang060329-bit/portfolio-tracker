@@ -8,6 +8,21 @@
 
 export const fmtFull = (n: number) => Math.round(n).toLocaleString("en-US");
 
+// 帶正負號的台幣全位數：「+NT$ 1,234」「−NT$ 1,234」「NT$ 0」。號放在幣別前，用 U+2212。
+// 先取整再判號：0.4 元的殘差顯示「NT$ 0」而不是「+NT$ 0」，−0.4 也不會變成「NT$ -0」。
+export function fmtSignedTwd(n: number): string {
+  const r = Math.round(n);
+  if (r === 0) return "NT$ 0";
+  return `${r > 0 ? "+" : "−"}NT$ ${Math.abs(r).toLocaleString("en-US")}`;
+}
+
+// 帶正負號的百分比（輸入已是百分點）：「+1.52%」「−1.08%」「0.00%」。同樣先取位數再判號，避免「-0.00%」。
+export function fmtSignedPct(pct: number, digits = 2): string {
+  const s = Math.abs(pct).toFixed(digits);
+  if (Number(s) === 0) return `${s}%`;
+  return `${pct > 0 ? "+" : "−"}${s}%`;
+}
+
 function trimZero(str: string): string {
   return str.replace(/\.?0+$/, "");
 }

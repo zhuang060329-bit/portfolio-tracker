@@ -1,7 +1,7 @@
 /* 歷史回放的淨值變動拆解帳，/demo/history 與登入後 /history 共用。
    無狀態純標記，不加 "use client"。 */
-import { Panel, Tag } from "@/components/survey";
-import { fmtFull, fmtNum } from "@/lib/format";
+import { PARCEL_HATCH, Panel, Tag } from "@/components/survey";
+import { fmtFull, fmtNum, fmtSignedTwd } from "@/lib/format";
 import type { AttributionResult } from "@/lib/history-replay";
 
 type BridgeRow = { key: string; label: string; note?: string; value: number; total?: boolean; alert?: boolean };
@@ -11,8 +11,19 @@ type BridgeRow = { key: string; label: string; note?: string; value: number; tot
    期初 + 投入 + 範圍加入 + 市價 + 匯率 + 收入 + 未解釋 − 提領 − 範圍移出 ＝ 期末。
    每列的條從中軸往左（減）或往右（加）長，長度相對於最大的一項流量——
    刻意不用從 0 起算的瀑布圖，因為流量只有淨值的幾個百分點，照絕對尺度畫會看不見。
-   歸因是拆解不是損益，所以條一律測量藍；只有未解釋差額超出容差時換朱砂虛線加「注意」。 */
-export function HistoryBridge({ attribution: a, openingDate, targetDate }: { attribution: AttributionResult; openingDate: string; targetDate: string }) {
+   歸因是拆解不是損益，所以條一律測量藍；只有未解釋差額超出容差時換朱砂虛線加「注意」。
+   parcel：條改成月報同款的斜線地塊，並從中軸往外長出。目前只有 /demo/history 開，正式版 /history 維持實心條。 */
+export function HistoryBridge({
+  attribution: a,
+  openingDate,
+  targetDate,
+  parcel = false,
+}: {
+  attribution: AttributionResult;
+  openingDate: string;
+  targetDate: string;
+  parcel?: boolean;
+}) {
   const flows: BridgeRow[] = [
     { key: "contrib", label: "期間投入", value: a.contributionsTwd },
     ...(a.scopeContributionTwd !== 0 ? [{ key: "scope-in", label: "範圍加入", note: "帳戶納入組合", value: a.scopeContributionTwd }] : []),
@@ -70,8 +81,21 @@ export function HistoryBridge({ attribution: a, openingDate, targetDate }: { att
                 <span className="absolute inset-y-[-6px] left-1/2 w-px bg-[var(--c-line-strong)]" />
                 {width > 0 && (
                   <span
-                    className={`absolute inset-y-0 ${row.alert ? "border border-dashed border-[var(--c-annot)]" : "bg-[var(--c-accent)]"}`}
-                    style={negative ? { right: "50%", width: `${width}%` } : { left: "50%", width: `${Math.max(width, 0.4)}%` }}
+                    className={`absolute inset-y-0 ${
+                      row.alert
+                        ? "border border-dashed border-[var(--c-annot)]"
+                        : parcel
+                          ? "border border-[var(--c-accent)]"
+                          : "bg-[var(--c-accent)]"
+                    } ${parcel ? "parcel-grow" : ""}`}
+                    style={{
+                      ...(negative ? { right: "50%", width: `${width}%` } : { left: "50%", width: `${Math.max(width, 0.4)}%` }),
+                      ...(parcel && {
+                        ...(row.alert ? {} : { background: PARCEL_HATCH }),
+                        // 貼著中軸的那一側當原點，條才會從零往外長
+                        transformOrigin: negative ? "right center" : "left center",
+                      }),
+                    }}
                   />
                 )}
               </div>
@@ -80,7 +104,7 @@ export function HistoryBridge({ attribution: a, openingDate, targetDate }: { att
         })}
       </dl>
       <p className="border-t border-[var(--c-border-soft)] px-5 py-3 text-[length:var(--fs-micro)] leading-5 text-[var(--c-faint)]">
-        條長相對於最大的一項流量，不是淨值的絕對比例。已實現損益 <span className="amt tnum">NT$ {fmtFull(a.realizedPnlMemoTwd)}</span> 只作備忘，不重複加總；
+        條長相對於最大的一項流量，不是淨值的絕對比例。已實現損益 <span className="amt tnum">{fmtSignedTwd(a.realizedPnlMemoTwd)}</span> 只作備忘，不重複加總；
         相對容差 <span className="amt tnum">NT$ {fmtNum(a.toleranceTwd, 2)}</span>（對帳規模的 0.1%）。
       </p>
     </Panel>
@@ -89,5 +113,5 @@ export function HistoryBridge({ attribution: a, openingDate, targetDate }: { att
 
 // 帶正負號的金額。只有號與數字，顏色由呼叫端決定——歸因效果是拆解不是損益，不上漲跌色。
 export function Signed({ value }: { value: number }) {
-  return <>{value > 0 ? "+" : value < 0 ? "−" : ""}NT$ {fmtFull(Math.abs(value))}</>;
+  return <>{fmtSignedTwd(value)}</>;
 }

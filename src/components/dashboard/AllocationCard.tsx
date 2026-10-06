@@ -200,7 +200,7 @@ export function AllocationCard({
                     偏離值本身加粗。顏色之外還有引線與字重兩個訊號。 */}
                 <span className="flex min-w-0 items-center gap-2">
                   <span
-                    className={`truncate text-[length:var(--fs-sm)] ${
+                    className={`min-w-0 break-words text-[length:var(--fs-sm)] ${
                       pinnedCls === item.cls ? "font-semibold text-[var(--c-accent)]" : ""
                     }`}
                   >
