@@ -16,6 +16,12 @@ import {
 } from "./metrics";
 import { computeXirr } from "./xirr";
 
+/**
+ * 期間短於這個天數就不算 XIRR。4 天漲 1% 年化後會是三位數，與首頁「資料不足不顯示」同一個理由。
+ * 用 28 而不是 30，完整的二月（28 天）才不會被擋掉；當月未過完的月報才會顯示「資料不足」。
+ */
+export const MIN_XIRR_SPAN_DAYS = 28;
+
 export type MonthBounds = {
   month: string;
   startDate: string;
@@ -159,7 +165,12 @@ export function buildMonthlyReport({
       when: new Date(`${bounds.endDate}T23:59:59+08:00`),
     },
   ];
-  const xirrAnnualized = hasScopeChange ? null : computeXirr(xirrFlows);
+  const xirrSpanDays =
+    (Date.parse(`${bounds.endDate}T00:00:00Z`) -
+      Date.parse(`${bounds.openingDate}T00:00:00Z`)) /
+    86_400_000;
+  const xirrAnnualized =
+    hasScopeChange || xirrSpanDays < MIN_XIRR_SPAN_DAYS ? null : computeXirr(xirrFlows);
 
   const continuousIds = opening.holdings
     .map((holding) => holding.accountId)

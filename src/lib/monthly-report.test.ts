@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildMonthlyReport, getMonthBounds } from "./monthly-report";
+import { buildMonthlyReport, getMonthBounds, MIN_XIRR_SPAN_DAYS } from "./monthly-report";
 import type { ReplayAccount, ReplaySnapshot } from "./history-replay";
 
 describe("getMonthBounds", () => {
@@ -92,5 +92,55 @@ describe("buildMonthlyReport", () => {
     expect(report.attribution.marketPriceEffectTwd).toBe(150);
     expect(report.attribution.residualTwd).toBe(0);
     expect(report.twr).toBeCloseTo(0.1, 8);
+  });
+
+  describe("XIRR 期間門檻", () => {
+    const account: ReplayAccount = {
+      id: "a",
+      name: "測試帳戶",
+      assetClass: "stock",
+      symbol: "AAA",
+      priceMarket: "tw",
+      createdAt: "2025-12-01T00:00:00+08:00",
+    };
+    const priced = (date: string, unitPrice: number): ReplaySnapshot => ({
+      accountId: "a",
+      date,
+      quantity: 10,
+      unitPrice,
+      fxRate: 1,
+      valueBase: 10 * unitPrice,
+      costBasisTwd: 1000,
+      costBasisNative: 1000,
+      realizedPnlTwd: 0,
+      accountStatus: "active",
+    });
+    const report = (bounds: NonNullable<ReturnType<typeof getMonthBounds>>, snapshots: ReplaySnapshot[]) =>
+      buildMonthlyReport({ bounds, accounts: [account], snapshots, statusEvents: [], transactions: [] });
+
+    it(`當月只過了 4 天（少於 ${MIN_XIRR_SPAN_DAYS} 天）不年化`, () => {
+      const result = report(
+        { ...getMonthBounds("2026-07")!, endDate: "2026-07-04" },
+        [priced("2026-06-30", 100), priced("2026-07-04", 101)],
+      );
+      expect(result.xirrAnnualized).toBeNull();
+      expect(result.twr).toBeCloseTo(0.01, 8);
+    });
+
+    it("完整的月份照常計算", () => {
+      const result = report(getMonthBounds("2026-07")!, [
+        priced("2026-06-30", 100),
+        priced("2026-07-31", 101),
+      ]);
+      expect(result.xirrAnnualized).not.toBeNull();
+    });
+
+    it("完整的二月（28 天）不會被擋掉", () => {
+      const result = report(getMonthBounds("2026-02")!, [
+        priced("2026-01-31", 100),
+        priced("2026-02-28", 101),
+      ]);
+      expect(result.xirrAnnualized).not.toBeNull();
+    });
   });
 });
